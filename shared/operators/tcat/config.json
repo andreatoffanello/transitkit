@@ -1,0 +1,34 @@
+{
+  "id": "tcat",
+  "name": "TCAT",
+  "fullName": "Tompkins Consolidated Area Transit",
+  "url": "https://tcatbus.com",
+  "region": "Ithaca, New York",
+  "country": "US",
+  "timezone": "America/New_York",
+  "gtfs_url": "https://s3.amazonaws.com/tcat-gtfs/tcat-ny-us.zip",
+  "locale": ["en"],
+  "theme": {
+    "primaryColor": "#003366",
+    "accentColor": "#0066CC",
+    "textOnPrimary": "#FFFFFF"
+  },
+  "store": {
+    "title": "TCAT Transit - Ithaca Bus",
+    "subtitle": "Bus schedules for Ithaca & Cornell University",
+    "keywords": "tcat,ithaca,cornell,bus,transit,tompkins county"
+  },
+  "map": {
+    "centerLat": 42.44,
+    "centerLng": -76.50,
+    "defaultZoom": 12
+  },
+  "features": {
+    "enableMap": true,
+    "enableGeolocation": true,
+    "enableFavorites": true,
+    "enableNotifications": true
+  },
+  "exclude_patterns": [],
+  "terminal_overrides": {}
+}

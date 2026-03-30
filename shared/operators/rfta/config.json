@@ -1,0 +1,34 @@
+{
+  "id": "rfta",
+  "name": "RFTA",
+  "fullName": "Roaring Fork Transportation Authority",
+  "url": "https://www.rfta.com",
+  "region": "Aspen / Glenwood Springs, Colorado",
+  "country": "US",
+  "timezone": "America/Denver",
+  "gtfs_url": "https://www.rfta.com/RFTAGTFSExport.zip",
+  "locale": ["en"],
+  "theme": {
+    "primaryColor": "#1B5E20",
+    "accentColor": "#4CAF50",
+    "textOnPrimary": "#FFFFFF"
+  },
+  "store": {
+    "title": "RFTA Transit - Aspen Bus",
+    "subtitle": "Schedules & live departures for Roaring Fork Valley",
+    "keywords": "rfta,aspen,bus,transit,glenwood springs,ski,velocirfta,brt"
+  },
+  "map": {
+    "centerLat": 39.35,
+    "centerLng": -107.0,
+    "defaultZoom": 10
+  },
+  "features": {
+    "enableMap": true,
+    "enableGeolocation": true,
+    "enableFavorites": true,
+    "enableNotifications": true
+  },
+  "exclude_patterns": [],
+  "terminal_overrides": {}
+}

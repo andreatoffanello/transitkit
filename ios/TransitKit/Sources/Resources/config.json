@@ -1,0 +1,41 @@
+{
+  "id": "appaltrans",
+  "name": "AppalCART",
+  "fullName": "Appalachian District Transportation Authority",
+  "url": "https://appalachiantransit.com",
+  "region": "Boone, North Carolina",
+  "country": "US",
+  "timezone": "America/New_York",
+  "gtfs_url": "https://s3.amazonaws.com/etatransit.gtfs/appalcart.etaspot.net/gtfs.zip",
+  "gtfs_rt": {
+    "vehicle_positions": "https://s3.amazonaws.com/etatransit.gtfs/appalcart.etaspot.net/position_updates.pb",
+    "trip_updates": "https://s3.amazonaws.com/etatransit.gtfs/appalcart.etaspot.net/trip_updates.pb",
+    "alerts": "https://s3.amazonaws.com/etatransit.gtfs/appalcart.etaspot.net/alerts.pb"
+  },
+  "locale": [
+    "en"
+  ],
+  "theme": {
+    "primaryColor": "#1A3A6B",
+    "accentColor": "#F5A623",
+    "textOnPrimary": "#FFFFFF"
+  },
+  "store": {
+    "title": "Boone Bus \u2014 Community App",
+    "subtitle": "AppalCART schedules & live departures for Boone and App State",
+    "keywords": "appalachian transit,boone,bus,app state,appalachian state university,appalcart,nc"
+  },
+  "map": {
+    "centerLat": 36.2168,
+    "centerLng": -81.6746,
+    "defaultZoom": 13
+  },
+  "features": {
+    "enableMap": true,
+    "enableGeolocation": true,
+    "enableFavorites": true,
+    "enableNotifications": true
+  },
+  "exclude_patterns": [],
+  "terminal_overrides": {}
+}

@@ -446,9 +446,25 @@ def build_route_directions(
                 ]
 
             if ordered_station_ids:
+                # Derive a meaningful headsign:
+                # - circular route (first raw stop == last raw stop): use route long name
+                # - linear route (first != last): use "First Stop → Last Stop"
+                # Check circularity on raw stop_ids BEFORE deduplication
+                raw_first = stop_to_station.get(stops_for_trip[0]["stop_id"].strip()) if stops_for_trip else None
+                raw_last = stop_to_station.get(stops_for_trip[-1]["stop_id"].strip()) if stops_for_trip else None
+                first_id = ordered_station_ids[0]
+                last_id = ordered_station_ids[-1]
+                if raw_first == raw_last:
+                    long_name = r.get("route_long_name", "").strip().strip('"')
+                    derived_headsign = long_name if long_name else headsign
+                else:
+                    first_name = stations.get(first_id, {}).get("name", first_id)
+                    last_name = stations.get(last_id, {}).get("name", last_id)
+                    derived_headsign = f"{first_name} → {last_name}"
+
                 directions.append({
                     "id": direction_id,
-                    "headsign": headsign,
+                    "headsign": derived_headsign,
                     "stopIds": ordered_station_ids,
                     "shape": shape_coords,
                 })
@@ -615,6 +631,7 @@ def build_routes_list(
             "color": f"#{color}" if not color.startswith("#") else color,
             "textColor": f"#{text_color}" if not text_color.startswith("#") else text_color,
             "transitType": transit_type,
+            "route_url": r.get("route_url", "").strip(),
             "directions": route_dirs,
         })
     return routes

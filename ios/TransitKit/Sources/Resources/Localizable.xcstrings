@@ -1,0 +1,1021 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "tab_home" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Home" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Home" } }
+      }
+    },
+    "home_quick_access" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Quick access" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Accesso rapido" } }
+      }
+    },
+    "home_favorites_empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No favorites yet" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessun preferito ancora" } }
+      }
+    },
+    "home_favorites_empty_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Star a stop in the Schedules tab to see it here." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiungi una fermata ai preferiti dalla tab Orari." } }
+      }
+    },
+    "tab_schedules" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Schedules" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Orari" } }
+      }
+    },
+    "tab_map" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Map" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Mappa" } }
+      }
+    },
+    "tab_info" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Info" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Info" } }
+      }
+    },
+    "tab_settings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Impostazioni" } }
+      }
+    },
+    "next_departures" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Next departures" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Prossime partenze" } }
+      }
+    },
+    "full_schedule" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Full schedule" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Orario completo" } }
+      }
+    },
+    "all_stops" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All stops" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tutte le fermate" } }
+      }
+    },
+    "all_lines" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All lines" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tutte le linee" } }
+      }
+    },
+    "stops" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Stops" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Fermate" } }
+      }
+    },
+    "lines" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Lines" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Linee" } }
+      }
+    },
+    "search_placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search..." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cerca..." } }
+      }
+    },
+    "search_stop_placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search stops..." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cerca fermate..." } }
+      }
+    },
+    "search_line_placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Search lines..." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cerca linee..." } }
+      }
+    },
+    "segment_stops" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Stops" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Fermate" } }
+      }
+    },
+    "segment_lines" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Lines" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Linee" } }
+      }
+    },
+    "filter_all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tutti" } }
+      }
+    },
+    "weekdays" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Weekdays" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Feriali" } }
+      }
+    },
+    "weekends" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Weekends" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Festivi" } }
+      }
+    },
+    "every_day" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Every day" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tutti i giorni" } }
+      }
+    },
+    "day_mon" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Monday" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Lunedì" } }
+      }
+    },
+    "day_tue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tuesday" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Martedì" } }
+      }
+    },
+    "day_wed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Wednesday" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Mercoledì" } }
+      }
+    },
+    "day_thu" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Thursday" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Giovedì" } }
+      }
+    },
+    "day_fri" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Friday" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Venerdì" } }
+      }
+    },
+    "day_sat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Saturday" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Sabato" } }
+      }
+    },
+    "day_sun" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sunday" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Domenica" } }
+      }
+    },
+    "no_departures" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No departures" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuna partenza" } }
+      }
+    },
+    "no_stops_found" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No stops found" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuna fermata trovata" } }
+      }
+    },
+    "favorites" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Favorites" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Preferiti" } }
+      }
+    },
+    "settings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Impostazioni" } }
+      }
+    },
+    "about" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Info" } }
+      }
+    },
+    "notifications" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notifications" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Notifiche" } }
+      }
+    },
+    "tickets_and_fares" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tickets & fares" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Biglietti e tariffe" } }
+      }
+    },
+    "points_of_sale" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Points of sale" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Punti vendita" } }
+      }
+    },
+    "operator_info" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Operator info" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Info operatore" } }
+      }
+    },
+    "powered_by_transitkit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Powered by TransitKit" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Powered by TransitKit" } }
+      }
+    },
+    "error_loading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unable to load data" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Impossibile caricare i dati" } }
+      }
+    },
+    "error_no_data" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No data available" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessun dato disponibile" } }
+      }
+    },
+    "error_retry" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Retry" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Riprova" } }
+      }
+    },
+    "lines_loading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Loading lines..." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Caricamento linee..." } }
+      }
+    },
+    "lines_no_result" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No lines found" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuna linea trovata" } }
+      }
+    },
+    "lines_no_result_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Try a different search term" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Prova con un altro termine" } }
+      }
+    },
+    "filter_all_lines" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tutte" } }
+      }
+    },
+    "show_more" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Show %lld more" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Mostra altri %lld" } }
+      }
+    },
+    "show_more %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Show %lld more" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Mostra altri %lld" } }
+      }
+    },
+    "tab_home" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Home" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Home" } }
+      }
+    },
+    "home_quick_access" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Quick access" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Accesso rapido" } }
+      }
+    },
+    "home_favorites" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Favorites" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Preferiti" } }
+      }
+    },
+    "home_no_favorites" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No favorites yet" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessun preferito ancora" } }
+      }
+    },
+    "minutes_away" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "in %lld min" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "in %lld min" } }
+      }
+    },
+    "one_minute" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "1 min" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "1 min" } }
+      }
+    },
+    "departing_now" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Now" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ora" } }
+      }
+    },
+    "no_departures_for_line" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No departures for line %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuna partenza per la linea %@" } }
+      }
+    },
+    "show_all_departures" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Show all" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Mostra tutte" } }
+      }
+    },
+    "transfer_here" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Transfer" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cambio" } }
+      }
+    },
+    "add_to_favorites" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add to favorites" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiungi ai preferiti" } }
+      }
+    },
+    "remove_from_favorites" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove from favorites" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rimuovi dai preferiti" } }
+      }
+    },
+    "stop_notifications" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Stop notifications" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Notifiche fermata" } }
+      }
+    },
+    "stop_notifications_placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notifications for this stop coming soon" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Le notifiche per questa fermata arriveranno presto" } }
+      }
+    },
+    "stops_served" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Stops served" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Fermate servite" } }
+      }
+    },
+    "stops_loading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Loading stops..." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Caricamento fermate..." } }
+      }
+    },
+    "stops_no_result" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No stops found" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuna fermata trovata" } }
+      }
+    },
+    "stops_no_result_hint" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Try a different search term" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Prova con un altro termine" } }
+      }
+    },
+    "direction_label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Direction" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Direzione" } }
+      }
+    },
+    "line_official_schedule" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Official schedule" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Orario ufficiale" } }
+      }
+    },
+    "reset_map_view" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reset map view" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ripristina mappa" } }
+      }
+    },
+    "center_on_location" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Center on my location" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Centra sulla mia posizione" } }
+      }
+    },
+    "see_all_departures" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "See all departures" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Vedi tutte le partenze" } }
+      }
+    },
+    "no_departures_today" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No departures today" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuna partenza oggi" } }
+      }
+    },
+    "action_remove" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Rimuovi" } }
+      }
+    },
+    "close_label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Close" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Chiudi" } }
+      }
+    },
+    "trip_no_data" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Trip data not available" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Dati corsa non disponibili" } }
+      }
+    },
+    "settings_about" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Info" } }
+      }
+    },
+    "settings_favorites" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Favorites" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Preferiti" } }
+      }
+    },
+    "settings_favorites_none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "None saved" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuno salvato" } }
+      }
+    },
+    "settings_favorites_count" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld saved" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld salvate" } }
+      }
+    },
+    "settings_notifications" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notifications" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Notifiche" } }
+      }
+    },
+    "settings_notifications_footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Receive alerts for your favorite stops." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ricevi avvisi per le fermate preferite." } }
+      }
+    },
+    "settings_language" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Language" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Lingua" } }
+      }
+    },
+    "settings_language_footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Change in iOS Settings → TransitKit." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cambia in Impostazioni iOS → TransitKit." } }
+      }
+    },
+    "settings_version" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Version" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Versione" } }
+      }
+    },
+    "settings_section_favorites" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Favorites" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Preferiti" } }
+      }
+    },
+    "settings_section_notifications" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notifications" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Notifiche" } }
+      }
+    },
+    "settings_section_language" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Language" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Lingua" } }
+      }
+    },
+    "settings_section_about" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Info" } }
+      }
+    },
+    "info_section_fares" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tickets & Fares" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Biglietti e tariffe" } }
+      }
+    },
+    "info_section_points_of_sale" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Points of sale" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Punti vendita" } }
+      }
+    },
+    "info_section_operator" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Operator" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Operatore" } }
+      }
+    },
+    "info_section_data" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Data" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Dati" } }
+      }
+    },
+    "info_see_all_fares" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "See all fares" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Vedi tutte le tariffe" } }
+      }
+    },
+    "info_data_last_updated" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Last updated" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ultimo aggiornamento" } }
+      }
+    },
+    "info_data_valid_until" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Valid until" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Valido fino al" } }
+      }
+    },
+    "info_data_source" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Data source" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Sorgente dati" } }
+      }
+    },
+    "fare_column_type" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Type" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tipo" } }
+      }
+    },
+    "fare_column_price" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Price" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Prezzo" } }
+      }
+    },
+    "fare_buy_online" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Buy online" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Acquista online" } }
+      }
+    },
+    "fare_visit_website" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Visit website" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Visita il sito" } }
+      }
+    },
+    "operator_website" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Website" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Sito web" } }
+      }
+    },
+    "operator_phone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Phone" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Telefono" } }
+      }
+    },
+    "operator_email" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Email" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Email" } }
+      }
+    },
+    "operator_privacy_policy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Privacy Policy" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Privacy Policy" } }
+      }
+    },
+    "operator_data_attribution" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "GTFS data provided by the operator." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Dati GTFS forniti dall'operatore." } }
+      }
+    },
+    "operator_gtfs_description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "General Transit Feed Specification" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "General Transit Feed Specification" } }
+      }
+    },
+    "about_powered_by" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Powered by TransitKit" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Powered by TransitKit" } }
+      }
+    },
+    "about_operator_website" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Operator website" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Sito dell'operatore" } }
+      }
+    },
+    "about_privacy_policy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Privacy Policy" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Privacy Policy" } }
+      }
+    },
+    "about_licenses" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Licenses" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Licenze" } }
+      }
+    },
+    "about_licenses_description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open source libraries used in this app." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Librerie open source utilizzate nell'app." } }
+      }
+    },
+    "nav_title_about" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Info" } }
+      }
+    },
+    "nav_title_fares" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Fares" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tariffe" } }
+      }
+    },
+    "nav_title_favorites" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Favorites" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Preferiti" } }
+      }
+    },
+    "nav_title_operator" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Operator" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Operatore" } }
+      }
+    },
+    "favorites_empty_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No favorites yet" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessun preferito ancora" } }
+      }
+    },
+    "favorites_empty_subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Star stops in the Schedules tab to save them here." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Salva le fermate preferite dalla tab Orari." } }
+      }
+    },
+    "empty_no_stops_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No stops found" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuna fermata trovata" } }
+      }
+    },
+    "empty_no_stops_subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Try a different search term." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Prova un altro termine di ricerca." } }
+      }
+    },
+    "empty_no_lines_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No lines found" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuna linea trovata" } }
+      }
+    },
+    "empty_no_lines_subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Try a different search term." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Prova un altro termine di ricerca." } }
+      }
+    },
+    "empty_no_departures_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No departures" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuna partenza" } }
+      }
+    },
+    "empty_no_departures_subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No departures scheduled for this stop." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuna partenza programmata per questa fermata." } }
+      }
+    },
+    "empty_no_results_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No results" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessun risultato" } }
+      }
+    },
+    "empty_no_results_subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Try adjusting your search." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Prova a modificare la ricerca." } }
+      }
+    },
+    "lines_result_count" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld lines found" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld linee trovate" } }
+      }
+    },
+    "stops_result_count" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld stops found" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld fermate trovate" } }
+      }
+    },
+    "stops_count" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld stops" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld fermate" } }
+      }
+    },
+    "toggle_route_overlay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Toggle route %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Mostra percorso %@" } }
+      }
+    },
+    "about_version" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Version %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Versione %@" } }
+      }
+    },
+    "trip_line_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Line %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Linea %@" } }
+      }
+    },
+    "dock_label" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Dock %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Pontile %@" } }
+      }
+    },
+    "line_badge_a11y" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Line %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Linea %@" } }
+      }
+    },
+    "a11y_stop_lines_count" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%@, %lld lines" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%@, %lld linee" } }
+      }
+    },
+    "a11y_navigate_to_stop" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Navigate to stop" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Naviga alla fermata" } }
+      }
+    },
+    "a11y_hint_show_line_stops" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Shows stops for this line" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Mostra le fermate di questa linea" } }
+      }
+    },
+    "home_greeting_morning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Good morning" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Buongiorno" } }
+      }
+    },
+    "home_greeting_afternoon" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Good afternoon" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Buon pomeriggio" } }
+      }
+    },
+    "home_greeting_evening" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Good evening" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Buonasera" } }
+      }
+    },
+    "hero_stops" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "stops" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "fermate" } }
+      }
+    },
+    "hero_lines" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "lines" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "linee" } }
+      }
+    },
+    "quick_stops" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "stops" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "fermate" } }
+      }
+    },
+    "quick_lines" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "lines" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "linee" } }
+      }
+    },
+    "nearby_stops" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Nearby stops" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Fermate vicine" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

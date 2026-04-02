@@ -1,0 +1,18 @@
+<!-- @license lucide-static v1.7.0 - ISC -->
+<svg
+  class="lucide lucide-funicular"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M22 3 2 21" />
+  <rect x="4" y="10" width="10" height="8" rx="1" transform="rotate(-36 4 10)" />
+  <path d="m5 15 1.5 1.5" />
+  <path d="m9 12 1.5 1.5" />
+</svg>

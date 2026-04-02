@@ -1,0 +1,73 @@
+name: TransitKit
+options:
+  bundleIdPrefix: com.transitkit
+  deploymentTarget:
+    iOS: "17.0"
+  xcodeVersion: "16.0"
+  groupSortPosition: top
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    ENABLE_PREVIEWS: YES
+    SWIFT_STRICT_CONCURRENCY: complete
+
+targets:
+  TransitKit:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: TransitKit/Sources
+    resources:
+      - path: TransitKit/Sources/Resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.transitkit.${OPERATOR_ID}
+        DEVELOPMENT_TEAM: ""
+        INFOPLIST_FILE: TransitKit/Sources/App/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_STYLE: Automatic
+      configs:
+        Release:
+          SWIFT_OPTIMIZATION_LEVEL: -O
+          SWIFT_COMPILATION_MODE: wholemodule
+          ENABLE_TESTABILITY: NO
+          DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+        Debug:
+          SWIFT_OPTIMIZATION_LEVEL: -Onone
+          SWIFT_COMPILATION_MODE: singlefile
+          ENABLE_TESTABILITY: YES
+    info:
+      path: TransitKit/Sources/App/Info.plist
+      properties:
+        CFBundleDisplayName: "$(PRODUCT_NAME)"
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        NSLocationWhenInUseUsageDescription: "Used to find nearby stops."
+        UILaunchScreen:
+          UIColorName: SystemBackground
+        UIBackgroundModes:
+          - fetch
+        CFBundleURLTypes:
+          - CFBundleURLSchemes:
+              - transitkit
+            CFBundleURLName: "com.transitkit.${OPERATOR_ID}"
+    dependencies:
+      - framework: MapKit.framework
+    scheme:
+      testTargets:
+        - TransitKitTests
+
+  TransitKitTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: TransitKit/Tests
+    dependencies:
+      - target: TransitKit
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES

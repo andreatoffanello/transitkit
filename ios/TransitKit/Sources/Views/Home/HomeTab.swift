@@ -41,11 +41,6 @@ struct HomeTab: View {
 
                     // Near you (GPS-based)
                     nearbyStopsSection
-
-                    // Main stops (hub stops by line count, always visible)
-                    if !store.stops.isEmpty {
-                        mainStopsSection
-                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
@@ -372,54 +367,43 @@ struct HomeTab: View {
         // If denied or no nearby stops: section hidden silently
     }
 
-    // MARK: - Main Stops (hub stops by line count)
-
-    private var mainStops: [ResolvedStop] {
-        store.stops
-            .sorted { $0.lineNames.count > $1.lineNames.count }
-            .prefix(3)
-            .map { $0 }
-    }
-
-    @ViewBuilder
-    private var mainStopsSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            sectionHeader(String(localized: "main_stops"))
-            VStack(spacing: 8) {
-                ForEach(mainStops) { stop in
-                    Button {
-                        selectedMainStop = stop
-                    } label: {
-                        mainStopCard(stop)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-    }
-
     private func mainStopCard(_ stop: ResolvedStop) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        let departures = store.upcomingDepartures(forStopId: stop.id, limit: 2)
+        let transitTypeIcon: Image = stop.transitTypes.first.map { $0.icon.image }
+            ?? LucideIcon.bus.image
+
+        return VStack(alignment: .leading, spacing: 8) {
+            // Top row: stop name + transit type icon
             HStack(spacing: 8) {
                 Text(stop.name)
                     .font(.subheadline.bold())
                     .foregroundStyle(AppTheme.textPrimary)
                     .lineLimit(1)
                 Spacer()
-                (stop.transitTypes.first ?? .bus).icon.image
+                transitTypeIcon
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(AppTheme.textSecondary)
             }
-            FlowLayout(spacing: 4) {
-                ForEach(stop.lineNames.prefix(4), id: \.self) { lineName in
-                    let route = store.routes.first { $0.name == lineName }
-                    LineBadge(
-                        lineName: lineName,
-                        color: route?.color ?? "#666666",
-                        textColor: route?.textColor ?? "#FFFFFF",
-                        transitType: route?.transitType ?? .bus,
-                        size: .small
-                    )
+
+            // Departure rows
+            if departures.isEmpty {
+                Text(String(localized: "no_departures_today"))
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.textTertiary)
+            } else {
+                ForEach(departures) { dep in
+                    HStack(spacing: 6) {
+                        LineBadge(departure: dep, size: .small)
+                        Text(dep.headsign)
+                            .font(.caption)
+                            .foregroundStyle(AppTheme.textSecondary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                        Spacer()
+                        TimelineView(.periodic(from: .now, by: 30)) { _ in
+                            TimeDisplay(departure: dep)
+                        }
+                    }
                 }
             }
         }
@@ -427,6 +411,7 @@ struct HomeTab: View {
         .adaptiveGlass(in: RoundedRectangle(cornerRadius: 12), withShadow: false)
         .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
     }
+
 
     private var emptyFavoritesCard: some View {
         VStack(spacing: 8) {

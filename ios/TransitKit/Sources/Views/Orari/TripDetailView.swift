@@ -190,7 +190,7 @@ struct TripDetailView: View {
             .padding(.horizontal, 8)
 
             // Stop info
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(stop.name)
                     .font(.system(size: 15, weight: isTerminal || isOrigin ? .semibold : .regular))
                     .foregroundStyle(isPast ? AppTheme.textTertiary : isOrigin ? lineColor : AppTheme.textPrimary)
@@ -200,7 +200,7 @@ struct TripDetailView: View {
                 if !otherLines.isEmpty && !isPast {
                     HStack(spacing: 3) {
                         LucideIcon.refreshCw.image
-                            .font(.system(size: 9, weight: .bold))
+                            .font(.system(size: 8, weight: .bold))
                             .foregroundStyle(AppTheme.textTertiary)
                         ForEach(otherLines.prefix(4), id: \.self) { name in
                             let r = store.routes.first { $0.name == name }
@@ -214,11 +214,10 @@ struct TripDetailView: View {
                         }
                         if otherLines.count > 4 {
                             Text("+\(otherLines.count - 4)")
-                                .font(.system(size: 9, weight: .bold))
+                                .font(.system(size: 8, weight: .bold))
                                 .foregroundStyle(AppTheme.textTertiary)
                         }
                     }
-                    .padding(.top, 1)
                 }
             }
 
@@ -235,7 +234,7 @@ struct TripDetailView: View {
                 .foregroundStyle(AppTheme.textTertiary)
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 4)
+        .padding(.vertical, 3)
         .background(
             isOrigin
                 ? AnyView(

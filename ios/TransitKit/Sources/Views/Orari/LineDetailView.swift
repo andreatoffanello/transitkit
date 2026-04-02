@@ -114,12 +114,12 @@ struct LineDetailView: View {
 
                         VStack(alignment: .leading, spacing: 2) {
                             Text(route.longName)
-                                .font(.system(.title3, weight: .bold))
+                                .font(.system(size: 20, weight: .bold))
                                 .foregroundStyle(.white)
                                 .lineLimit(2)
 
                             Text(route.transitType.displayName)
-                                .font(.system(.footnote, weight: .medium))
+                                .font(.system(size: 13, weight: .medium))
                                 .foregroundStyle(.white.opacity(0.8))
                         }
 
@@ -162,14 +162,14 @@ struct LineDetailView: View {
     private var stopsListHeader: some View {
         HStack(spacing: 6) {
             LucideIcon.mapPin.image
-                .font(.caption.weight(.semibold))
+                .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(lineColor)
             Text(String(localized: "stops_served"))
-                .font(.subheadline.weight(.semibold))
+                .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(AppTheme.textSecondary)
             Spacer()
             Text("\(stopsInDirection.count)")
-                .font(.caption.weight(.bold))
+                .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(lineColor)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 3)
@@ -225,14 +225,14 @@ struct LineDetailView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             HStack(spacing: 6) {
                                 Text(stop.name)
-                                    .font(.system(.subheadline, weight: isTerminal ? .semibold : .regular))
+                                    .font(.system(size: 15, weight: isTerminal ? .semibold : .regular))
                                     .foregroundStyle(AppTheme.textPrimary)
                                     .lineLimit(1)
 
                                 Spacer(minLength: 4)
 
                                 LucideIcon.chevronRight.image
-                                    .font(.system(.caption2, weight: .semibold))
+                                    .font(.system(size: 10, weight: .semibold))
                                     .foregroundStyle(AppTheme.textTertiary)
                             }
 

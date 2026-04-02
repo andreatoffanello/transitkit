@@ -92,15 +92,29 @@ struct LineBadge: View {
         self.size = size
     }
 
-    /// Returns a contrast-safe text color. If the supplied `textColor` is empty or
-    /// one of the bare sentinel values (no semantic override), WCAG luminance is used
-    /// to pick the highest-contrast option (#FFFFFF or #000000).
+    /// Returns a contrast-safe text color. Sentinel/generic values are always resolved
+    /// via WCAG luminance. Custom colors are kept only when they pass the WCAG 4.5:1
+    /// contrast ratio against the badge background; otherwise the computed contrast is used.
     private static func resolvedTextColor(_ textColor: String, background: String) -> String {
         let sentinels: Set<String> = ["", "000000", "FFFFFF", "#000000", "#FFFFFF"]
-        guard !sentinels.contains(textColor) else {
+        // For sentinel/generic values, always compute WCAG contrast
+        if sentinels.contains(textColor) {
             return contrastingTextColor(for: background)
         }
-        return textColor
+        // For custom colors, verify WCAG 4.5:1 — if it fails, override with computed contrast
+        let candidate = textColor.hasPrefix("#") ? textColor : "#\(textColor)"
+        let bg = background.hasPrefix("#") ? background : "#\(background)"
+        // Quick luminance check inline to avoid importing ColorUtils separately
+        func lum(_ hex: String) -> Double {
+            func lin(_ c: Double) -> Double { c <= 0.04045 ? c/12.92 : pow((c+0.055)/1.055, 2.4) }
+            let h = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+            var v: UInt64 = 0; Scanner(string: h).scanHexInt64(&v)
+            guard h.count == 6 else { return 0 }
+            return 0.2126*lin(Double((v>>16)&0xFF)/255) + 0.7152*lin(Double((v>>8)&0xFF)/255) + 0.0722*lin(Double(v&0xFF)/255)
+        }
+        let Lbg = lum(bg); let Lfg = lum(candidate)
+        let ratio = Lbg > Lfg ? (Lbg+0.05)/(Lfg+0.05) : (Lfg+0.05)/(Lbg+0.05)
+        return ratio >= 4.5 ? candidate : contrastingTextColor(for: background)
     }
 
     private var bgColor: Color { Color(hex: color) }

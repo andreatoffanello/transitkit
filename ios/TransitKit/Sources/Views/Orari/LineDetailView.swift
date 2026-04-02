@@ -7,9 +7,11 @@ struct LineDetailView: View {
     @State private var selectedDirectionId: Int = 0
 
     private var lineColor: Color {
-        let c = Color(hex: route.color)
-        // Guard against white/very-light colors
-        return isVeryLight(c) ? .blue : c
+        Color(hex: route.color)
+    }
+
+    private var headerTextColor: Color {
+        Color(hex: contrastingTextColor(for: route.color))
     }
 
     private var selectedDirection: RouteDirection? {
@@ -107,7 +109,7 @@ struct LineDetailView: View {
                         // Large badge
                         Text(route.name)
                             .font(.system(size: 28, weight: .black, design: .rounded))
-                            .foregroundStyle(Color(hex: route.textColor))
+                            .foregroundStyle(headerTextColor)
                             .padding(.horizontal, 16)
                             .padding(.vertical, 8)
                             .background(.white.opacity(0.2), in: RoundedRectangle(cornerRadius: 10))
@@ -115,12 +117,12 @@ struct LineDetailView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(route.longName)
                                 .font(.system(size: 20, weight: .bold))
-                                .foregroundStyle(.white)
+                                .foregroundStyle(headerTextColor)
                                 .lineLimit(2)
 
                             Text(route.transitType.displayName)
                                 .font(.system(size: 13, weight: .medium))
-                                .foregroundStyle(.white.opacity(0.8))
+                                .foregroundStyle(headerTextColor.opacity(0.85))
                         }
 
                         Spacer()
@@ -240,7 +242,8 @@ struct LineDetailView: View {
                             if stop.lineNames.count > 1 {
                                 HStack(spacing: 3) {
                                     LucideIcon.refreshCw.image
-                                        .font(.system(size: 9, weight: .semibold))
+                                        .resizable()
+                                        .frame(width: 10, height: 10)
                                         .foregroundStyle(AppTheme.accent)
                                     Text(String(localized: "transfer_here"))
                                         .font(.system(size: 10, weight: .medium))
@@ -294,12 +297,4 @@ struct LineDetailView: View {
         }
     }
 
-    // MARK: - Helpers
-
-    private func isVeryLight(_ color: Color) -> Bool {
-        let uiColor = UIColor(color)
-        var white: CGFloat = 0
-        uiColor.getWhite(&white, alpha: nil)
-        return white > 0.85
-    }
 }

@@ -30,7 +30,7 @@
       </div>
 
       <!-- Contacts -->
-      <div v-if="config?.contact" class="bg-white dark:bg-white/5 rounded-2xl p-4 space-y-3">
+      <div v-if="config?.contact?.phone || config?.contact?.email" class="bg-white dark:bg-white/5 rounded-2xl p-4 space-y-3">
         <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Contatti</p>
         <a
           v-if="config.contact.phone"
@@ -81,9 +81,12 @@ useHead({
   meta: [
     {
       name: 'description',
-      content: computed(() =>
-        `Orari, linee e fermate di ${config.value?.fullName ?? ''}. ${config.value?.region ?? ''}.`,
-      ),
+      content: computed(() => {
+        const name = config.value?.fullName ?? config.value?.name ?? ''
+        const region = config.value?.region
+        const location = region ? ` — ${region}` : ''
+        return `${name}${location}. Orari, linee e fermate. Bus schedule and timetables.`
+      }),
     },
     {
       property: 'og:title',
@@ -91,9 +94,12 @@ useHead({
     },
     {
       property: 'og:description',
-      content: computed(() =>
-        `Orari, linee e fermate di ${config.value?.fullName ?? ''}. ${config.value?.region ?? ''}.`,
-      ),
+      content: computed(() => {
+        const name = config.value?.fullName ?? config.value?.name ?? ''
+        const region = config.value?.region
+        const location = region ? ` — ${region}` : ''
+        return `${name}${location}. Orari, linee e fermate. Bus schedule and timetables.`
+      }),
     },
   ],
 })

@@ -271,7 +271,7 @@ private struct LineRowContent: View {
                 color: route.color,
                 textColor: route.textColor,
                 transitType: route.transitType,
-                size: .medium
+                size: .big
             )
 
             VStack(alignment: .leading, spacing: 2) {
@@ -282,10 +282,8 @@ private struct LineRowContent: View {
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
 
-                // Stop sequence marquee
-                let stops = store.stopsForRoute(route.id, directionId: route.directions.first?.id ?? 0)
-                let sequence = stops.map(\.name).joined(separator: " → ")
-                if !sequence.isEmpty {
+                // Stop sequence marquee — reads from pre-cached store dictionary (O(1))
+                if let sequence = store.routeStopSequences[route.id], !sequence.isEmpty {
                     MarqueeText(
                         text: sequence,
                         font: .system(size: 11),

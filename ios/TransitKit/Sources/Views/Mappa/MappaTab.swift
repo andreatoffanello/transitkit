@@ -28,11 +28,19 @@ struct MappaTab: View {
     /// Zoom threshold below which cluster mode activates (zoom < threshold → clusters).
     private let clusterZoomThreshold: Double = 12.0
 
+    // MARK: Rendered annotations (computed async in cameraTask, never in body)
+    @State private var renderedClusters: [StopCluster] = []
+    @State private var renderedStops: [ResolvedStop] = []
+    private let maxIndividualAnnotations = 250
+
     // MARK: Selection
     /// Used only for the highlighted-annotation visual state (isSelected).
     @State private var selectedStop: ResolvedStop?
     /// Drives direct push navigation to StopDetailView (Batch C — 1-tap flow).
     @State private var navigationDestinationStop: ResolvedStop? = nil
+
+    // MARK: Fullscreen expand
+    @State private var isExpanded = false
 
     // MARK: Route overlay
     @State private var selectedRoute: Route?
@@ -71,7 +79,8 @@ struct MappaTab: View {
     // MARK: - Body
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
+        ZStack {
+            // Full-bleed map — extends under status bar and lateral edges
             mapContent
                 .mapStyle(.standard(pointsOfInterest: .excludingAll))
                 .onMapCameraChange(frequency: .continuous) { context in
@@ -84,9 +93,9 @@ struct MappaTab: View {
                             zoomLevel = newZoom
                         }
                         visibleRegion = context.region
-                        // Convert latitude span to a zoom-like scalar (larger = more zoomed in).
                         let span = context.region.span.latitudeDelta
                         mapZoomLevel = log2(360.0 / max(span, 0.000001))
+                        updateAnnotations()
                     }
                 }
                 .onAppear {
@@ -98,42 +107,64 @@ struct MappaTab: View {
                         }
                     }
                 }
+                .ignoresSafeArea()
 
-            // MARK: Map controls overlay
-            mapControls
-
-            // MARK: Route overlay toggle (when a route is selected)
-            if let route = selectedRoute {
+            // MARK: Compact controls (top-right, respects safe area)
+            if !isExpanded {
                 VStack {
-                    Spacer()
                     HStack {
-                        RouteOverlayToggle(
-                            isVisible: $showRouteOverlay,
-                            routeName: route.name,
-                            routeColor: route.color
-                        )
                         Spacer()
+                        mapControls
                     }
-                    .padding(.leading, 16)
-                    .padding(.bottom, 16)
+                    Spacer()
+                    // Route overlay toggle
+                    if let route = selectedRoute {
+                        HStack {
+                            RouteOverlayToggle(
+                                isVisible: $showRouteOverlay,
+                                routeName: route.name,
+                                routeColor: route.color
+                            )
+                            Spacer()
+                        }
+                        .padding(.leading, 16)
+                        .padding(.bottom, 16)
+                    }
+                }
+            }
+
+            // MARK: Expanded controls (right + close bottom-center)
+            if isExpanded {
+                expandedControls
+                if let route = selectedRoute {
+                    VStack {
+                        Spacer()
+                        HStack {
+                            RouteOverlayToggle(
+                                isVisible: $showRouteOverlay,
+                                routeName: route.name,
+                                routeColor: route.color
+                            )
+                            Spacer()
+                        }
+                        .padding(.leading, 16)
+                        .padding(.bottom, 100)
+                    }
                 }
             }
         }
-        // Batch C — StopMapSheet replaced by direct push navigation.
-        // The sheet block below is kept commented out for reference and can be
-        // re-enabled if the 2-tap preview flow is ever needed again.
-        //
-        // .sheet(item: $selectedStop) { stop in
-        //     StopMapSheet(stop: stop) { stop in
-        //         selectedStop = nil
-        //     }
-        //     .presentationDetents([.fraction(0.35), .medium])
-        //     .presentationDragIndicator(.visible)
-        //     .presentationBackgroundInteraction(.enabled(upThrough: .medium))
-        //     .interactiveDismissDisabled(false)
-        // }
+        .toolbar(.hidden, for: .navigationBar)
+        .toolbar(isExpanded ? .hidden : .visible, for: .tabBar)
         .navigationDestination(item: $navigationDestinationStop) { stop in
             StopDetailView(stop: stop)
+        }
+        .onChange(of: mapReady) { _, ready in
+            guard ready else { return }
+            updateAnnotations()
+        }
+        .onChange(of: store.stops.count) { _, _ in
+            guard mapReady else { return }
+            updateAnnotations()
         }
         .accessibilityIdentifier("mappa_tab")
     }
@@ -148,10 +179,10 @@ struct MappaTab: View {
             }
 
             // MARK: Stop annotations (cluster mode at far zoom, individual at close zoom)
+            // renderedClusters / renderedStops are pre-computed in cameraTask (debounced 150ms)
+            // and never recalculated during body rendering for zero per-frame cost.
             if mapZoomLevel < clusterZoomThreshold {
-                // Cluster mode: bin nearby stops into count badges.
-                let clusters = clusteredStops(from: visibleStops)
-                ForEach(clusters) { cluster in
+                ForEach(renderedClusters) { cluster in
                     Annotation(
                         "",
                         coordinate: CLLocationCoordinate2D(
@@ -166,8 +197,7 @@ struct MappaTab: View {
                     }
                 }
             } else {
-                // Individual stop mode: show each stop as its own annotation.
-                ForEach(visibleStops) { stop in
+                ForEach(renderedStops) { stop in
                     Annotation(
                         "",
                         coordinate: CLLocationCoordinate2D(latitude: stop.lat, longitude: stop.lng),
@@ -182,6 +212,9 @@ struct MappaTab: View {
                             // Batch C: 1-tap flow — push StopDetailView directly.
                             selectedStop = stop   // keeps annotation highlighted briefly
                             navigationDestinationStop = stop
+                            if isExpanded {
+                                withAnimation { isExpanded = false }
+                            }
                         }
                     }
                 }
@@ -241,9 +274,118 @@ struct MappaTab: View {
             }
             .accessibilityLabel(String(localized: "reset_map_view"))
             .accessibilityIdentifier("btn_map_reset")
+
+            // Expand to fullscreen
+            Button {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                    isExpanded = true
+                }
+            } label: {
+                LucideIcon.maximize2.sized(16)
+                    .foregroundStyle(.primary)
+                    .frame(width: 44, height: 44)
+                    .background(.regularMaterial)
+                    .clipShape(Circle())
+                    .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+            }
+            .accessibilityLabel("Espandi mappa")
+            .accessibilityIdentifier("btn_map_expand")
         }
         .padding(.top, 12)
         .padding(.trailing, 16)
+    }
+
+    // MARK: - Expanded Overlay Controls
+
+    private var expandedControls: some View {
+        ZStack {
+            // Controls on the right side
+            VStack {
+                HStack {
+                    Spacer()
+                    VStack(spacing: 8) {
+                        if config.features.enableGeolocation {
+                            Button {
+                                mapPosition = .userLocation(
+                                    fallback: .region(MKCoordinateRegion(
+                                        center: CLLocationCoordinate2D(
+                                            latitude: config.map.centerLat,
+                                            longitude: config.map.centerLng
+                                        ),
+                                        span: MKCoordinateSpan(latitudeDelta: 0.015, longitudeDelta: 0.015)
+                                    ))
+                                )
+                            } label: {
+                                LucideIcon.navigation.sized(16)
+                                    .foregroundStyle(.primary)
+                                    .frame(width: 44, height: 44)
+                                    .background(.regularMaterial)
+                                    .clipShape(Circle())
+                                    .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+                            }
+                            .accessibilityLabel(String(localized: "center_on_location"))
+                        }
+
+                        Button {
+                            let center = CLLocationCoordinate2D(
+                                latitude: config.map.centerLat,
+                                longitude: config.map.centerLng
+                            )
+                            let span = Self.spanForZoom(config.map.defaultZoom)
+                            withAnimation {
+                                mapPosition = .region(MKCoordinateRegion(center: center, span: span))
+                            }
+                        } label: {
+                            LucideIcon.map.sized(16)
+                                .foregroundStyle(.primary)
+                                .frame(width: 44, height: 44)
+                                .background(.regularMaterial)
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+                        }
+                        .accessibilityLabel(String(localized: "reset_map_view"))
+                    }
+                    .padding(.top, 12)
+                    .padding(.trailing, 16)
+                }
+                Spacer()
+            }
+
+            // Close button — bottom center
+            VStack {
+                Spacer()
+                Button {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
+                        isExpanded = false
+                    }
+                } label: {
+                    LucideIcon.x.sized(20)
+                        .foregroundStyle(.primary)
+                        .frame(width: 56, height: 56)
+                        .background(.regularMaterial)
+                        .clipShape(Circle())
+                        .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
+                }
+                .accessibilityLabel("Chiudi mappa")
+                .accessibilityIdentifier("btn_map_collapse")
+                .padding(.bottom, 44)
+            }
+        }
+    }
+
+    // MARK: - Annotation update
+
+    /// Computes and atomically sets renderedClusters / renderedStops based on current zoom.
+    /// Called from cameraTask (debounced) and on initial load — never from body.
+    private func updateAnnotations() {
+        let stops = visibleStops
+        if mapZoomLevel < clusterZoomThreshold {
+            renderedClusters = clusteredStops(from: stops)
+            renderedStops = []
+        } else {
+            renderedClusters = []
+            renderedStops = Array(stops.prefix(maxIndividualAnnotations))
+        }
     }
 
     // MARK: - Clustering

@@ -6,17 +6,19 @@ import MapKit
 struct StopDetailView: View {
     let stop: ResolvedStop
     @Environment(ScheduleStore.self) private var store
+    @Environment(DeepLinkRouter.self) private var router
     @State private var mapPosition: MapCameraPosition = .automatic
     @State private var showFullSchedule = false
     @State private var showMoreDepartures = false
     @State private var filterLine: String?
     @State private var linesExpanded = false
-    @State private var showNotificationsSheet = false
     @Environment(FavoritesManager.self) private var favoritesManager
 
     @State private var mapExpanded: Bool = false
     @State private var expandedMapPosition: MapCameraPosition = .automatic
     @State private var showMapAppPicker = false
+    /// Incremented every 30s to force re-evaluation of departure times and remove past entries.
+    @State private var refreshTick: Int = 0
 
     private let initialVisibleCount = 5
 
@@ -27,6 +29,7 @@ struct StopDetailView: View {
     // MARK: - Departures
 
     private var upcomingDepartures: [Departure] {
+        _ = refreshTick // ensures SwiftUI re-evaluates this when the tick fires
         let deps = store.upcomingDepartures(forStopId: stop.id, limit: 15)
         guard let line = filterLine else { return deps }
         return deps.filter { $0.lineName == line }
@@ -78,7 +81,8 @@ struct StopDetailView: View {
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.visible, for: .tabBar)
+        .toolbar(.hidden, for: .tabBar)
+        .toolbar(.visible, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .principal) {
                 VStack(spacing: 1) {
@@ -90,60 +94,38 @@ struct StopDetailView: View {
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                HStack(spacing: 4) {
-                    Button {
-                        showNotificationsSheet = true
-                    } label: {
-                        Image(systemName: "bell")
-                            .foregroundStyle(AppTheme.accent)
-                    }
-                    .accessibilityLabel(String(localized: "stop_notifications"))
-                    .accessibilityIdentifier("btn_notifications")
-
-                    Button {
-                        favoritesManager.toggle(stop.id)
-                    } label: {
-                        Image(systemName: favoritesManager.isFavorite(stop.id) ? "star.fill" : "star")
-                            .foregroundStyle(AppTheme.accent)
-                    }
-                    .accessibilityLabel(favoritesManager.isFavorite(stop.id)
-                        ? String(localized: "remove_from_favorites")
-                        : String(localized: "add_to_favorites"))
-                    .accessibilityIdentifier("btn_favorite")
+                Button {
+                    favoritesManager.toggle(stop.id)
+                } label: {
+                    Image(systemName: favoritesManager.isFavorite(stop.id) ? "star.fill" : "star")
+                        .foregroundStyle(AppTheme.accent)
                 }
+                .accessibilityLabel(favoritesManager.isFavorite(stop.id)
+                    ? String(localized: "remove_from_favorites")
+                    : String(localized: "add_to_favorites"))
+                .accessibilityIdentifier("btn_favorite")
             }
-        }
-        .sheet(isPresented: $showNotificationsSheet) {
-            NavigationStack {
-                VStack(spacing: 16) {
-                    Text(String(localized: "stop_notifications"))
-                        .font(.headline)
-                    Text(String(localized: "stop_notifications_placeholder"))
-                        .font(.subheadline)
-                        .foregroundStyle(AppTheme.textSecondary)
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(AppTheme.background.ignoresSafeArea())
-                .navigationTitle(stop.name)
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button { showNotificationsSheet = false } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
-            }
-            .presentationDetents([.medium])
         }
         .fullScreenCover(isPresented: $showFullSchedule) {
             FullScheduleSheet(stop: stop)
         }
         .onAppear {
             centerOnStop()
+            if router.openScheduleForStop == stop.id {
+                router.openScheduleForStop = nil
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                    showFullSchedule = true
+                }
+            }
         }
         .onDisappear { }
+        .task {
+            // Refresh departure times every 30s so past entries disappear automatically
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(15))
+                refreshTick &+= 1
+            }
+        }
     }
 
     // MARK: - Map Header
@@ -492,7 +474,7 @@ struct StopDetailView: View {
                             color: badge.route?.color ?? "#666666",
                             textColor: badge.route?.textColor ?? "#FFFFFF",
                             transitType: badge.route?.transitType ?? .bus,
-                            size: .small
+                            size: .medium
                         )
                     }
                     if allBadges.count > compactLimit {
@@ -654,7 +636,7 @@ private struct DepartureRowContent: View {
                 color: departure.color,
                 textColor: departure.textColor,
                 transitType: departure.transitType,
-                size: .small
+                size: .big
             )
 
             // Headsign
@@ -914,7 +896,7 @@ private struct FullScheduleSheet: View {
                                     .foregroundStyle(AppTheme.textPrimary)
                                     .frame(width: 52, alignment: .leading)
 
-                                LineBadge(departure: dep, size: .small)
+                                LineBadge(departure: dep, size: .big)
 
                                 Text(dep.headsign)
                                     .font(.system(size: 14))

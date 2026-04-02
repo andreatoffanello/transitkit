@@ -48,7 +48,7 @@ struct DepartureRow: View {
     var body: some View {
         HStack(spacing: 8) {
             // Line badge
-            LineBadge(departure: departure, size: .small)
+            LineBadge(departure: departure, size: .big)
 
             // Headsign
             Text(departure.headsign)

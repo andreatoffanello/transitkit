@@ -5,6 +5,7 @@ struct LineDetailView: View {
     let route: Route
     @Environment(ScheduleStore.self) private var store
     @Environment(VehicleStore.self) private var vehicleStore
+    @Environment(DeepLinkRouter.self) private var router
     @State private var selectedDirectionId: Int = 0
     @State private var showLineMap = false
 
@@ -72,13 +73,40 @@ struct LineDetailView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbarColorScheme(headerTextColor == .white ? .dark : .light, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showLineMap = true
+                } label: {
+                    LucideIcon.map.sized(18)
+                        .foregroundStyle(headerTextColor)
+                }
+                .accessibilityLabel("Mappa linea")
+                .accessibilityIdentifier("btn_line_map")
+            }
+        }
+        .fullScreenCover(isPresented: $showLineMap) {
+            LineMapView(route: route, directionId: selectedDirectionId)
+        }
         .navigationDestination(for: ResolvedStop.self) { stop in
             StopDetailView(stop: stop)
         }
         .onAppear {
-            if let first = route.directions.first {
+            if let dirId = router.pendingDirectionId,
+               route.directions.contains(where: { $0.id == dirId }) {
+                selectedDirectionId = dirId
+                router.pendingDirectionId = nil
+            } else if let first = route.directions.first {
                 selectedDirectionId = first.id
+            }
+            if router.autoOpenMap {
+                router.autoOpenMap = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                    showLineMap = true
+                }
             }
         }
     }
@@ -88,19 +116,13 @@ struct LineDetailView: View {
     private var lineHeader: some View {
         VStack(spacing: 0) {
             ZStack(alignment: .bottomLeading) {
-                // Background gradient
+                // Background gradient — extends behind navbar via ignoresSafeArea
                 LinearGradient(
                     colors: [lineColor, lineColor.opacity(0.7)],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
-
-                // Subtle light overlay
-                LinearGradient(
-                    colors: [.white.opacity(0.15), .clear],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
+                .ignoresSafeArea(.all, edges: .top)
 
                 // Content
                 VStack(alignment: .leading, spacing: 10) {
@@ -290,7 +312,7 @@ struct LineDetailView: View {
                     color: r?.color ?? "#666666",
                     textColor: r?.textColor ?? "#FFFFFF",
                     transitType: r?.transitType ?? .bus,
-                    size: .small
+                    size: .medium
                 )
             }
             if overflow > 0 {

@@ -5,9 +5,11 @@ import SwiftUI
 struct OrariTab: View {
     @Environment(ScheduleStore.self) private var store
     @Environment(SearchHistoryStore.self) private var searchHistoryStore
+    @Environment(DeepLinkRouter.self) private var router
     @State private var segment: OrariSegment = .stops
     @State private var searchQuery = ""
     @State private var selectedTransitType: TransitType?
+    @State private var path = NavigationPath()
 
     enum OrariSegment: String, CaseIterable {
         case stops
@@ -29,7 +31,7 @@ struct OrariTab: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             VStack(spacing: 0) {
                 // Segmented picker
                 segmentedBar
@@ -85,11 +87,18 @@ struct OrariTab: View {
                 let _ = searchHistoryStore.recordLine(route.id)
                 LineDetailView(route: route)
             }
+            .navigationDestination(for: TripTarget.self) { target in
+                TripDetailView(departure: target.departure, fromStop: target.fromStop, isRoot: true)
+            }
             .task {
                 if store.stops.isEmpty && !store.isLoading {
                     await store.load()
                 }
             }
+            .onAppear { consumePending() }
+            .onChange(of: router.pendingRoute) { _, _ in consumePending() }
+            .onChange(of: router.pendingStop) { _, _ in consumePending() }
+            .onChange(of: router.pendingTrip) { _, _ in consumePending() }
         }
     }
 
@@ -147,6 +156,30 @@ struct OrariTab: View {
         )
         .padding(.horizontal, 16)
         .padding(.bottom, 8)
+    }
+
+    // MARK: - Filter Chips
+
+    // MARK: - Deep Link
+
+    private func consumePending() {
+        if let route = router.pendingRoute {
+            router.pendingRoute = nil
+            path = NavigationPath()
+            segment = .lines
+            path.append(route)
+        } else if let stop = router.pendingStop {
+            router.pendingStop = nil
+            path = NavigationPath()
+            segment = .stops
+            path.append(stop)
+        } else if let trip = router.pendingTrip {
+            router.pendingTrip = nil
+            path = NavigationPath()
+            segment = .stops
+            path.append(trip.fromStop)
+            path.append(trip)
+        }
     }
 
     // MARK: - Filter Chips

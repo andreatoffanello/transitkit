@@ -293,33 +293,26 @@ private struct StopRowContent: View {
     }
 
     var body: some View {
-        HStack(spacing: 12) {
-            // Transit type icon
-            primaryType.icon.sized(15)
-                .foregroundStyle(AppTheme.accent)
-                .frame(width: 28, height: 28)
-                .background(AppTheme.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 7))
-
+        HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 5) {
-                // Stop name
-                HStack(spacing: 6) {
+                // Row 1: name  ·  Spacer  ·  modal type icons
+                HStack(spacing: 0) {
                     Text(stop.name)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(AppTheme.textPrimary)
                         .lineLimit(1)
 
-                    // Multi-type indicator
-                    if stop.transitTypes.count > 1 {
-                        HStack(spacing: 3) {
-                            ForEach(Array(stop.transitTypes).sorted(by: { $0.rawValue < $1.rawValue }), id: \.self) { type in
-                                type.icon.sized(9)
-                                    .foregroundStyle(AppTheme.textTertiary)
-                            }
+                    Spacer(minLength: 6)
+
+                    HStack(spacing: 4) {
+                        ForEach(Array(stop.transitTypes).sorted(by: { $0.rawValue < $1.rawValue }), id: \.self) { type in
+                            type.icon.sized(12)
+                                .foregroundStyle(AppTheme.textSecondary)
                         }
                     }
                 }
 
-                // Line badges (first 6)
+                // Row 2: line badges
                 if !stop.lineNames.isEmpty {
                     HStack(spacing: 4) {
                         ForEach(lineBadges, id: \.name) { badge in
@@ -328,7 +321,7 @@ private struct StopRowContent: View {
                                 color: badge.route?.color ?? "#666666",
                                 textColor: badge.route?.textColor ?? "#FFFFFF",
                                 transitType: badge.route?.transitType ?? primaryType,
-                                size: .small
+                                size: .medium
                             )
                         }
                         if stop.lineNames.count > 6 {
@@ -345,8 +338,6 @@ private struct StopRowContent: View {
                     }
                 }
             }
-
-            Spacer(minLength: 8)
 
             LucideIcon.chevronRight.image
                 .font(.caption.weight(.semibold))

@@ -6,6 +6,7 @@ struct ContentView: View {
     let config: OperatorConfig
     @Environment(ScheduleStore.self) private var store
     @Environment(VehicleStore.self) private var vehicleStore
+    @Environment(DeepLinkRouter.self) private var router
     @State private var selectedTab = 0
 
     var body: some View {
@@ -71,6 +72,16 @@ struct ContentView: View {
                 }
                 .tag(4)
                 .accessibilityIdentifier("tab_settings")
+        }
+        .environment(\.vehiclePositionsUrl, config.gtfsRt?.vehiclePositionsUrl)
+        .onChange(of: router.pendingRoute) { _, route in
+            if route != nil { selectedTab = 1 }
+        }
+        .onChange(of: router.pendingStop) { _, stop in
+            if stop != nil { selectedTab = 1 }
+        }
+        .onChange(of: router.pendingTrip) { _, trip in
+            if trip != nil { selectedTab = 1 }
         }
         .toolbarBackground(.ultraThinMaterial, for: .tabBar)
         .modifier(TabBarVisibilityModifier())

@@ -23,27 +23,34 @@ struct StopCard: View {
     var distance: String? = nil
 
     var body: some View {
-        HStack(spacing: 12) {
-            // Transit type icon stack
-            transitTypeIcons
-
-            // Stop info
-            VStack(alignment: .leading, spacing: 6) {
-                // Name row
-                HStack(spacing: 6) {
+        HStack(spacing: 8) {
+            // Stop info: two rows
+            VStack(alignment: .leading, spacing: 5) {
+                // Row 1: name + distance  ·  Spacer  ·  modal type icons
+                HStack(spacing: 0) {
                     Text(name)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(AppTheme.textPrimary)
                         .lineLimit(1)
 
                     if let distance {
-                        Text(distance)
+                        Text("  \(distance)")
                             .font(.caption2.weight(.medium))
                             .foregroundStyle(AppTheme.textTertiary)
                     }
+
+                    Spacer(minLength: 6)
+
+                    // Modal type icons — small, no background box
+                    HStack(spacing: 4) {
+                        ForEach(transitTypes.sorted(by: { $0.rawValue < $1.rawValue }), id: \.rawValue) { type in
+                            type.icon.sized(12)
+                                .foregroundStyle(AppTheme.textSecondary)
+                        }
+                    }
                 }
 
-                // Line badges (flow layout, capped at visible count)
+                // Row 2: line badges
                 if !lines.isEmpty {
                     HStack(spacing: 4) {
                         ForEach(lines.prefix(6), id: \.name) { line in
@@ -52,7 +59,7 @@ struct StopCard: View {
                                 color: line.color,
                                 textColor: line.textColor,
                                 transitType: transitTypes.first ?? .bus,
-                                size: .tiny
+                                size: .medium
                             )
                         }
                         if lines.count > 6 {
@@ -67,13 +74,9 @@ struct StopCard: View {
                 }
             }
 
-            Spacer(minLength: 8)
-
             // Next departure time
             if let dep = nextDeparture {
-                VStack(alignment: .trailing, spacing: 2) {
-                    TimeDisplay(departure: dep)
-                }
+                TimeDisplay(departure: dep)
             }
 
             LucideIcon.chevronRight.sized(11)
@@ -87,36 +90,6 @@ struct StopCard: View {
     }
 
     // MARK: - Private
-
-    @ViewBuilder
-    private var transitTypeIcons: some View {
-        if transitTypes.count == 1, let type = transitTypes.first {
-            ZStack {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(AppTheme.accent.opacity(0.1))
-                    .frame(width: 36, height: 36)
-                type.icon.sized(16)
-                    .foregroundStyle(AppTheme.accent)
-            }
-        } else if transitTypes.count > 1 {
-            VStack(spacing: 2) {
-                ForEach(transitTypes.prefix(3), id: \.rawValue) { type in
-                    type.icon.sized(11)
-                        .foregroundStyle(AppTheme.accent)
-                }
-            }
-            .frame(width: 36)
-        } else {
-            // Fallback: generic stop icon
-            ZStack {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(AppTheme.accent.opacity(0.1))
-                    .frame(width: 36, height: 36)
-                LucideIcon.mapPin.sized(16)
-                    .foregroundStyle(AppTheme.accent)
-            }
-        }
-    }
 
     private var accessibilityLabel: String {
         var parts = [name]

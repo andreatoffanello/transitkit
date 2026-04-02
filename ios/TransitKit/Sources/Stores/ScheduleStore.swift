@@ -18,6 +18,13 @@ class ScheduleStore {
     // MARK: Lookup tables (built once on load)
     private(set) var scheduleData: ScheduleData?
     private var routeById: [String: Route] = [:]
+    private var stopById: [String: ResolvedStop] = [:]
+    /// Pre-computed stop-sequence strings for each route (first direction).
+    /// Key = routeId, value = "Stop A → Stop B → …" ready for MarqueeText.
+    private(set) var routeStopSequences: [String: String] = [:]
+    /// Pre-computed set of trip IDs per route ID.
+    /// Used to filter GTFS-RT vehicle positions to a specific route.
+    private(set) var tripIdsByRouteId: [String: Set<String>] = [:]
 
     private let loader: ScheduleLoader
     private var operatorConfig: OperatorConfig? = nil
@@ -86,6 +93,35 @@ class ScheduleStore {
                 docks: stop.docks ?? []
             )
         }
+
+        // O(1) stop lookup used by stopsForRoute and sequence cache
+        stopById = Dictionary(uniqueKeysWithValues: stops.map { ($0.id, $0) })
+
+        // Pre-cache stop-sequence strings for MarqueeText (first direction per route)
+        routeStopSequences = Dictionary(uniqueKeysWithValues: routes.compactMap { route in
+            guard let dir = route.directions.first else { return nil }
+            let names = dir.stopIds.compactMap { stopById[$0]?.name }
+            guard !names.isEmpty else { return nil }
+            return (route.id, names.joined(separator: " → "))
+        })
+
+        // Build trip ID → route ID mapping for GTFS-RT vehicle filtering
+        var tripMap: [String: Set<String>] = [:]
+        for stop in data.stops {
+            for (_, deps) in stop.departures {
+                for compact in deps {
+                    guard compact.count > 5 else { continue }
+                    let lineIdx = compact[1].intValue
+                    let tripIdIdx = compact[5].intValue
+                    guard lineIdx < data.routeIds.count,
+                          tripIdIdx < data.tripIds.count else { continue }
+                    let routeId = data.routeIds[lineIdx]
+                    let tripId = data.tripIds[tripIdIdx]
+                    tripMap[routeId, default: []].insert(tripId)
+                }
+            }
+        }
+        tripIdsByRouteId = tripMap
     }
 
     // MARK: - Departures for a stop
@@ -194,9 +230,7 @@ class ScheduleStore {
               let direction = route.directions.first(where: { $0.id == directionId })
         else { return [] }
 
-        return direction.stopIds.compactMap { stopId in
-            stops.first { $0.id == stopId }
-        }
+        return direction.stopIds.compactMap { stopById[$0] }
     }
 
     // MARK: - Trip detail

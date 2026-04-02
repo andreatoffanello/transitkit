@@ -19,6 +19,7 @@
 		AA00BB11CC22DD33AA00BB11 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00BB11CC22DD33AA00BB00 /* LocationManager.swift */; };
 		2BCA1D7672AA34A413EA9F64 /* OrariTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 265421698770DB34151D287D /* OrariTab.swift */; };
 		30E9F573C22D358FC846D364 /* StopMapSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24A2F8550F9D65EFD7B990BA /* StopMapSheet.swift */; };
+		6DAEEC32E27041A99CCEBE4E /* LineMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85B475C63D31473B8657BB83 /* LineMapView.swift */; };
 		35FDAB23947D090227ED347E /* config.json in Resources */ = {isa = PBXBuildFile; fileRef = CC677A39447A949F646FA8DF /* config.json */; };
 		295C0E21D8D347BCA84031DE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E3DD1D0873E34BB0B0595D79 /* Assets.xcassets */; };
 		379B6C3D2E804EEE3E5257C7 /* TimeDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3298ECC36B6DC09D4139EC06 /* TimeDisplay.swift */; };
@@ -41,6 +42,7 @@
 		98A9534E14CA4F1B1DF87822 /* schedules.json in Resources */ = {isa = PBXBuildFile; fileRef = EB0D2941E87A9FC1F213D9C7 /* schedules.json */; };
 		A187D445C8D1E57438EDC41F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F971BA014101FAA050D40F9 /* ContentView.swift */; };
 		A651F455DD5D78C38E388882 /* TransitKitApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC580DFF98B83E2C0726F26 /* TransitKitApp.swift */; };
+		B3F1A2C9D4E5F6078A9B0C1D /* DeepLinkRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2D3E4F5A6B7C8D9E0F1A2B3 /* DeepLinkRouter.swift */; };
 		B513766EF6F25125E6EB8868 /* OperatorInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AFA7E5BB483BAD38EF55BD7 /* OperatorInfoView.swift */; };
 		B58FCF53043DB2955FCC1AA3 /* StopDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA621C317C78061A2EE1BCE /* StopDetailView.swift */; };
 		B9D2D53997DA76D3C57489BA /* SettingsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1860A6235DAC2FB85C1237E4 /* SettingsTab.swift */; };
@@ -56,6 +58,7 @@
 		EE88776655443322EE887765 /* SearchHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE88776655443322EE887764 /* SearchHistoryStore.swift */; };
 		BB22334455667788BBCCDDEE /* LineFilterChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22334455667788BBCC0002 /* LineFilterChip.swift */; };
 		FF00112233445566FF001122 /* MarqueeText.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF00112233445566FF000001 /* MarqueeText.swift */; };
+		AA11223344556677AA001122 /* MarqueeLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11223344556677AA000001 /* MarqueeLabel.swift */; };
 		CC33445566778899CCDDEEFF /* HomeTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33445566778899CCDD0003 /* HomeTab.swift */; };
 		DD44556677889900DDEEFF11 /* StopCluster.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD44556677889900DDEE0004 /* StopCluster.swift */; };
 		EE55667788990011EEFF1122 /* ClusterAnnotationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE55667788990011EEFF0005 /* ClusterAnnotationView.swift */; };
@@ -93,6 +96,7 @@
 		21DA2366D32AF5DBEACB5DC2 /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
 		CD9E1F4B7A83DC521E6B0947 /* LucideIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LucideIcon.swift; sourceTree = "<group>"; };
 		24A2F8550F9D65EFD7B990BA /* StopMapSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopMapSheet.swift; sourceTree = "<group>"; };
+		85B475C63D31473B8657BB83 /* LineMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineMapView.swift; sourceTree = "<group>"; };
 		265421698770DB34151D287D /* OrariTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrariTab.swift; sourceTree = "<group>"; };
 		282C0DBEBC4A33831DC99EBA /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
 		3298ECC36B6DC09D4139EC06 /* TimeDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeDisplay.swift; sourceTree = "<group>"; };
@@ -113,6 +117,7 @@
 		6F971BA014101FAA050D40F9 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		6FC30DB536DCC2557E2B1AF6 /* LineDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineDetailView.swift; sourceTree = "<group>"; };
 		7EC580DFF98B83E2C0726F26 /* TransitKitApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransitKitApp.swift; sourceTree = "<group>"; };
+		C2D3E4F5A6B7C8D9E0F1A2B3 /* DeepLinkRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkRouter.swift; sourceTree = "<group>"; };
 		916321D65DB9CA29A8CBE188 /* InfoTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoTab.swift; sourceTree = "<group>"; };
 		9601C0115B556918E079DD02 /* StopsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopsListView.swift; sourceTree = "<group>"; };
 		A7410BEEC0AEB17E6FFB2785 /* FilterChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterChip.swift; sourceTree = "<group>"; };
@@ -136,6 +141,7 @@
 		EE88776655443322EE887764 /* SearchHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchHistoryStore.swift; sourceTree = "<group>"; };
 		BB22334455667788BBCC0002 /* LineFilterChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineFilterChip.swift; sourceTree = "<group>"; };
 		FF00112233445566FF000001 /* MarqueeText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarqueeText.swift; sourceTree = "<group>"; };
+		AA11223344556677AA000001 /* MarqueeLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarqueeLabel.swift; sourceTree = "<group>"; };
 		CC33445566778899CCDD0003 /* HomeTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeTab.swift; sourceTree = "<group>"; };
 		DD44556677889900DDEE0004 /* StopCluster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopCluster.swift; sourceTree = "<group>"; };
 		EE55667788990011EEFF0005 /* ClusterAnnotationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClusterAnnotationView.swift; sourceTree = "<group>"; };
@@ -251,6 +257,7 @@
 				AF29A33249EEAAC16698F765 /* RouteOverlay.swift */,
 				5481BF9847C559057368FA6B /* StopAnnotationView.swift */,
 				24A2F8550F9D65EFD7B990BA /* StopMapSheet.swift */,
+				85B475C63D31473B8657BB83 /* LineMapView.swift */,
 			);
 			path = Mappa;
 			sourceTree = "<group>";
@@ -277,6 +284,7 @@
 				B10BEFD5CA21B9EBA3ADE1D7 /* LineBadge.swift */,
 				BB22334455667788BBCC0002 /* LineFilterChip.swift */,
 				FF00112233445566FF000001 /* MarqueeText.swift */,
+				AA11223344556677AA000001 /* MarqueeLabel.swift */,
 				EC6BBEB0DCFFFF27DB881B02 /* SkeletonView.swift */,
 				C69F73160D11EE306A2190B7 /* StopCard.swift */,
 				3298ECC36B6DC09D4139EC06 /* TimeDisplay.swift */,
@@ -353,6 +361,7 @@
 			isa = PBXGroup;
 			children = (
 				6F971BA014101FAA050D40F9 /* ContentView.swift */,
+				C2D3E4F5A6B7C8D9E0F1A2B3 /* DeepLinkRouter.swift */,
 				38AB28B4038DBF3ED421D1D0 /* Info.plist */,
 				7EC580DFF98B83E2C0726F26 /* TransitKitApp.swift */,
 			);
@@ -495,16 +504,19 @@
 				28924DA06A3B5D02B0C0DCB6 /* StopAnnotationView.swift in Sources */,
 				EDD673EC6CD887E9DDD47422 /* StopCard.swift in Sources */,
 				B58FCF53043DB2955FCC1AA3 /* StopDetailView.swift in Sources */,
+				6DAEEC32E27041A99CCEBE4E /* LineMapView.swift in Sources */,
 				30E9F573C22D358FC846D364 /* StopMapSheet.swift in Sources */,
 				0D3364F8923B6F37D3DD18D1 /* StopsListView.swift in Sources */,
 				379B6C3D2E804EEE3E5257C7 /* TimeDisplay.swift in Sources */,
 				A651F455DD5D78C38E388882 /* TransitKitApp.swift in Sources */,
+				B3F1A2C9D4E5F6078A9B0C1D /* DeepLinkRouter.swift in Sources */,
 				7F5F190ECED7C0E360386483 /* TripDetailView.swift in Sources */,
 				AA11223344556677AABBCCDD /* ColorUtils.swift in Sources */,
 				FF99887766554433FF998876 /* HeadsignNormalizer.swift in Sources */,
 				EE88776655443322EE887765 /* SearchHistoryStore.swift in Sources */,
 				BB22334455667788BBCCDDEE /* LineFilterChip.swift in Sources */,
 				FF00112233445566FF001122 /* MarqueeText.swift in Sources */,
+				AA11223344556677AA001122 /* MarqueeLabel.swift in Sources */,
 				CC33445566778899CCDDEEFF /* HomeTab.swift in Sources */,
 				DD44556677889900DDEEFF11 /* StopCluster.swift in Sources */,
 				EE55667788990011EEFF1122 /* ClusterAnnotationView.swift in Sources */,

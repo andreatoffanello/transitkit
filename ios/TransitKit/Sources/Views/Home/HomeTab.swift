@@ -241,7 +241,7 @@ struct HomeTab: View {
             } else {
                 ForEach(departures) { dep in
                     HStack(spacing: 6) {
-                        LineBadge(departure: dep, size: .small)
+                        LineBadge(departure: dep, size: .big)
                         Text(dep.headsign)
                             .font(.caption)
                             .foregroundStyle(AppTheme.textSecondary)
@@ -394,7 +394,7 @@ struct HomeTab: View {
             } else {
                 ForEach(departures) { dep in
                     HStack(spacing: 6) {
-                        LineBadge(departure: dep, size: .small)
+                        LineBadge(departure: dep, size: .big)
                         Text(dep.headsign)
                             .font(.caption)
                             .foregroundStyle(AppTheme.textSecondary)

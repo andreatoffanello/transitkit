@@ -12,6 +12,7 @@ struct TransitKitApp: App {
     @State private var operatorConfig: OperatorConfig?
     @State private var loadingConfig: OperatorConfig?
     @State private var configError: String?
+    @State private var router = DeepLinkRouter()
 
     var body: some Scene {
         WindowGroup {
@@ -23,6 +24,7 @@ struct TransitKitApp: App {
                         .environment(searchHistoryStore)
                         .environment(locationManager)
                         .environment(vehicleStore)
+                        .environment(router)
                         .tint(AppTheme.accent)
                 } else if let configError {
                     errorView(message: configError)
@@ -31,6 +33,62 @@ struct TransitKitApp: App {
                 }
             }
             .task { await bootstrap() }
+            .onOpenURL { url in handleDeepLink(url) }
+        }
+    }
+
+    // MARK: - Deep Link Handling
+
+    private func handleDeepLink(_ url: URL) {
+        guard url.scheme == "transitkit" else { return }
+        if let store {
+            resolve(url: url, store: store)
+        } else {
+            // App still loading — queue URL, processed after bootstrap
+            router.pendingUrl = url
+        }
+    }
+
+    private func resolve(url: URL, store: ScheduleStore) {
+        // URL structure: transitkit://<command>/<arg1>/<arg2>/...
+        // host = command, pathComponents (filtered) = args
+        let command = url.host ?? ""
+        let parts = url.pathComponents.filter { $0 != "/" }
+        guard !parts.isEmpty else { return }
+
+        switch command {
+
+        // transitkit://line/<routeId>
+        // transitkit://line/<routeId>/map
+        // transitkit://line/<routeId>/map/<directionId>
+        case "line":
+            guard let route = store.route(forId: parts[0]) else { return }
+            let openMap = parts.count >= 2 && parts[1] == "map"
+            router.autoOpenMap = openMap
+            router.pendingDirectionId = openMap && parts.count >= 3 ? Int(parts[2]) : nil
+            router.pendingRoute = route
+
+        // transitkit://stop/<stopId>
+        // transitkit://stop/<stopId>/schedule
+        case "stop":
+            guard let stop = store.stops.first(where: { $0.id == parts[0] }) else { return }
+            router.openScheduleForStop = parts.count >= 2 && parts[1] == "schedule" ? stop.id : nil
+            router.pendingStop = stop
+
+        // transitkit://trip/<stopId>/<routeId>/<time>   (time = "HH:MM")
+        case "trip":
+            guard parts.count >= 3,
+                  let stop = store.stops.first(where: { $0.id == parts[0] })
+            else { return }
+            let routeId = parts[1]
+            let time = parts[2]
+            let deps = store.todayDepartures(forStopId: stop.id)
+            guard let dep = deps.first(where: { $0.routeId == routeId && $0.time == time })
+            else { return }
+            router.pendingTrip = TripTarget(departure: dep, fromStop: stop)
+
+        default:
+            break
         }
     }
 
@@ -50,6 +108,10 @@ struct TransitKitApp: App {
             operatorConfig = config
             vehicleStore = VehicleStore(vehiclePositionsUrl: config.gtfsRt?.vehiclePositionsUrl)
             vehicleStore.startPolling()
+            if let pending = router.pendingUrl {
+                router.pendingUrl = nil
+                resolve(url: pending, store: scheduleStore)
+            }
         } catch {
             configError = error.localizedDescription
         }

@@ -2,79 +2,84 @@ import SwiftUI
 
 // MARK: - Badge Size
 
-/// Size presets for the line badge, matching transit-scale design.
+/// Size presets for the line badge.
+/// - `big`: primary contexts — departure rows and lines list (13pt, shows transit icon)
+/// - `medium`: secondary contexts — stop badge lists, coincidences, headers (11pt, no icon)
 enum BadgeSize {
-    case tiny    // map pins, very compact
-    case small   // departure rows, stop cards
-    case medium  // line detail headers, filters
+    case big    // departure rows, lines list, trip headers
+    case medium // stop badge lists, coincidences, stop headers
 
     var fontSize: CGFloat {
         switch self {
-        case .tiny:   8
-        case .small:  11
-        case .medium: 13
+        case .big:    13
+        case .medium: 11
         }
     }
 
     var iconSize: CGFloat {
         switch self {
-        case .tiny:   8
-        case .small:  12
-        case .medium: 16
+        case .big:    16
+        case .medium: 12
         }
     }
 
     var hPadding: CGFloat {
         switch self {
-        case .tiny:   4
-        case .small:  6
-        case .medium: 10
+        case .big:    10
+        case .medium: 6
         }
     }
 
     var vPadding: CGFloat {
         switch self {
-        case .tiny:   2
-        case .small:  3
-        case .medium: 5
+        case .big:    5
+        case .medium: 3
         }
     }
 
     var spacing: CGFloat {
         switch self {
-        case .tiny:   2
-        case .small:  3
-        case .medium: 4
+        case .big:    4
+        case .medium: 3
         }
     }
 
-    /// Show transit type icon only on medium size; smaller sizes rely on color alone.
-    var showIcon: Bool { self == .medium }
+    /// Show transit type icon only on big size; medium relies on color alone.
+    var showIcon: Bool { self == .big }
 }
 
 // MARK: - LineBadge
 
 /// Pill-shaped badge showing a transit line name with GTFS route color.
-/// Takes colors directly from the `Departure` model or from explicit hex strings.
+/// Handles GTFS color theming and WCAG 4.5:1 text legibility automatically.
 ///
 /// Usage:
 /// ```swift
-/// LineBadge(lineName: "BRT", color: "#c1cd23", textColor: "#000000", transitType: .bus)
-/// LineBadge(departure: dep, size: .small)
+/// LineBadge(departure: dep, size: .big)
+/// LineBadge(lineName: "BRT", color: "#c1cd23", textColor: "#000000", transitType: .bus, size: .medium)
 /// ```
 struct LineBadge: View {
     let lineName: String
     let color: String      // hex background, e.g. "#FF6600"
     let textColor: String  // hex foreground, e.g. "#FFFFFF"
     let transitType: TransitType
-    var size: BadgeSize = .small
+    var size: BadgeSize = .medium
 
     /// Convenience init from a Departure model.
-    init(departure: Departure, size: BadgeSize = .small) {
+    init(departure: Departure, size: BadgeSize = .big) {
         self.lineName = departure.lineName
         self.color = departure.color
         self.textColor = LineBadge.resolvedTextColor(departure.textColor, background: departure.color)
         self.transitType = departure.transitType
+        self.size = size
+    }
+
+    /// Convenience init from a Route model.
+    init(route: Route, size: BadgeSize = .big) {
+        self.lineName = route.name
+        self.color = route.color
+        self.textColor = LineBadge.resolvedTextColor(route.textColor, background: route.color)
+        self.transitType = route.transitType
         self.size = size
     }
 
@@ -83,7 +88,7 @@ struct LineBadge: View {
         color: String,
         textColor: String,
         transitType: TransitType,
-        size: BadgeSize = .small
+        size: BadgeSize = .medium
     ) {
         self.lineName = lineName
         self.color = color
@@ -104,7 +109,6 @@ struct LineBadge: View {
         // For custom colors, verify WCAG 4.5:1 — if it fails, override with computed contrast
         let candidate = textColor.hasPrefix("#") ? textColor : "#\(textColor)"
         let bg = background.hasPrefix("#") ? background : "#\(background)"
-        // Quick luminance check inline to avoid importing ColorUtils separately
         func lum(_ hex: String) -> Double {
             func lin(_ c: Double) -> Double { c <= 0.04045 ? c/12.92 : pow((c+0.055)/1.055, 2.4) }
             let h = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)

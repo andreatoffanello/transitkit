@@ -77,7 +77,7 @@ struct TripDetailView: View {
 
     private var tripHeader: some View {
         HStack(spacing: 12) {
-            LineBadge(departure: departure, size: .medium)
+            LineBadge(departure: departure, size: .big)
 
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 5) {
@@ -207,7 +207,7 @@ struct TripDetailView: View {
                                 color: r?.color ?? "#666666",
                                 textColor: r?.textColor ?? "#FFFFFF",
                                 transitType: r?.transitType ?? .bus,
-                                size: .small
+                                size: .medium
                             )
                         }
                         if otherLines.count > 4 {

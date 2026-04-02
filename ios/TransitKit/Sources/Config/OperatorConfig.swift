@@ -127,7 +127,9 @@ enum ConfigLoader {
             throw ConfigError.fileNotFound
         }
         let data = try Data(contentsOf: url)
-        return try JSONDecoder().decode(OperatorConfig.self, from: data)
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return try decoder.decode(OperatorConfig.self, from: data)
     }
 
     enum ConfigError: LocalizedError {

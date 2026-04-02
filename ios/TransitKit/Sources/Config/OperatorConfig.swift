@@ -83,6 +83,12 @@ struct OperatorConfig: Codable {
         let vehiclePositionsUrl: String?
         let tripUpdatesUrl: String?
         let serviceAlertsUrl: String?
+
+        enum CodingKeys: String, CodingKey {
+            case vehiclePositionsUrl = "vehicle_positions"
+            case tripUpdatesUrl = "trip_updates"
+            case serviceAlertsUrl = "service_alerts"
+        }
     }
 }
 

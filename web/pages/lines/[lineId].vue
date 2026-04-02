@@ -6,11 +6,11 @@
     >
       <NuxtLink
         to="/lines"
-        aria-label="Torna alle linee"
+        :aria-label="s.backToLines"
         class="text-sm opacity-70 mr-2"
         :style="{ color: headerText }"
       >
-        ← Linee
+        ← {{ s.backToLines }}
       </NuxtLink>
       <span
         class="text-lg font-bold flex-1 text-center"
@@ -59,14 +59,14 @@
       </div>
 
       <p v-if="currentStops.length === 0" class="text-center py-8 text-gray-400 text-sm">
-        Nessuna fermata disponibile per questa direzione.
+        {{ s.noStops }}
       </p>
     </template>
 
     <div v-else role="alert" class="text-center py-16 text-gray-400">
-      <p class="text-lg font-medium">Linea non trovata</p>
+      <p class="text-lg font-medium">{{ s.lineNotFound }}</p>
       <NuxtLink to="/lines" class="mt-4 inline-block text-sm underline">
-        Torna alle linee
+        {{ s.backToLines }}
       </NuxtLink>
     </div>
   </div>
@@ -79,6 +79,7 @@ const nuxtRoute = useRoute()
 const lineId = computed(() => String(nuxtRoute.params.lineId))
 
 const { config, schedules, pending } = await useOperator()
+const s = useStrings(config)
 
 const route = computed(() =>
   schedules.value?.routes.find(r => r.id === lineId.value) ?? null,

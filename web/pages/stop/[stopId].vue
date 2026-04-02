@@ -7,7 +7,7 @@
     >
       <NuxtLink
         to="/"
-        aria-label="Torna alla home"
+        :aria-label="s.backToHome"
         class="text-sm opacity-70 mr-2"
         :style="{ color: config?.theme.textOnPrimary }"
       >
@@ -47,7 +47,7 @@
           id="section-adesso"
           class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2"
         >
-          Adesso
+          {{ s.sectionNow }}
         </h2>
 
         <div
@@ -59,10 +59,11 @@
             :key="dep.id"
             :departure="dep"
             :now="now"
+            :locale="config?.locale[0]"
           />
         </div>
         <p v-else class="text-sm text-gray-400 py-4">
-          Nessuna partenza nelle prossime 2 ore.
+          {{ s.noDepartures }}
         </p>
 
         <!-- Indicatore realtime — visibile solo quando il feed GTFS-RT è attivo -->
@@ -72,7 +73,7 @@
           role="status"
         >
           <span class="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" aria-hidden="true" />
-          Aggiornato in tempo reale
+          {{ s.updatedRealtime }}
         </p>
       </section>
 
@@ -82,7 +83,7 @@
           id="section-orari"
           class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2"
         >
-          Orari
+          {{ s.sectionSchedule }}
         </h2>
 
         <DayGroupTabs
@@ -100,10 +101,11 @@
                 :key="dep.id"
                 :departure="dep"
                 :now="now"
+                :locale="config?.locale[0]"
               />
             </div>
             <p v-else class="text-sm text-gray-400 py-4">
-              Nessun orario disponibile.
+              {{ s.noSchedule }}
             </p>
           </template>
         </DayGroupTabs>
@@ -117,17 +119,17 @@
           rel="noopener noreferrer"
           class="flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
         >
-          📍 Apri in Google Maps
+          📍 {{ s.openInGoogleMaps }}
         </a>
       </footer>
     </template>
 
     <!-- Fermata non trovata -->
     <div v-else role="alert" class="text-center py-16 text-gray-400">
-      <p class="text-lg font-medium">Fermata non trovata</p>
+      <p class="text-lg font-medium">{{ s.stopNotFound }}</p>
       <p class="text-sm mt-1">ID: {{ stopId }}</p>
       <NuxtLink to="/" class="mt-4 inline-block text-accent text-sm underline">
-        Torna alla home
+        {{ s.backToHome }}
       </NuxtLink>
     </div>
   </div>
@@ -141,6 +143,7 @@ const route = useRoute()
 const stopId = computed(() => String(route.params.stopId))
 
 const { config, schedules } = await useOperator()
+const s = useStrings(config)
 
 // pending: true finché almeno uno dei dati non è ancora caricato
 const pending = computed(() => !config.value || !schedules.value)

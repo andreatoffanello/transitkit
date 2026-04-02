@@ -84,23 +84,23 @@ describe('parseDayGroup', () => {
   it('parsa key weekdays', () => {
     const dg = parseDayGroup('mon,tue,wed,thu,fri')
     expect(dg.days).toEqual(['mon', 'tue', 'wed', 'thu', 'fri'])
-    expect(dg.displayLabel).toBe('Lun–Ven')
+    expect(dg.displayLabel).toBe('Mon–Fri')
   })
 
   it('parsa sabato singolo', () => {
     const dg = parseDayGroup('sat')
     expect(dg.days).toEqual(['sat'])
-    expect(dg.displayLabel).toBe('Sab')
+    expect(dg.displayLabel).toBe('Sat')
   })
 
   it('parsa tutti i giorni', () => {
     const dg = parseDayGroup('mon,tue,wed,thu,fri,sat,sun')
-    expect(dg.displayLabel).toBe('Ogni giorno')
+    expect(dg.displayLabel).toBe('Every day')
   })
 
   it('parsa sab-dom insieme', () => {
     const dg = parseDayGroup('sat,sun')
-    expect(dg.displayLabel).toBe('Sab–Dom')
+    expect(dg.displayLabel).toBe('Sat–Sun')
   })
 })
 

@@ -6,14 +6,14 @@
     >
       <NuxtLink
         to="/"
-        aria-label="Torna alla home"
+        :aria-label="s.backToHome"
         :style="{ color: config?.theme.textOnPrimary }"
         class="text-sm opacity-70 mr-2"
       >
         ← {{ config?.name ?? '' }}
       </NuxtLink>
       <span class="text-lg font-bold flex-1 text-center" :style="{ color: config?.theme.textOnPrimary }">
-        Linee
+        {{ s.linesPageTitle }}
       </span>
     </header>
 
@@ -48,7 +48,7 @@
       </div>
 
       <div v-if="routesByType.length === 0" class="text-center py-16 text-gray-400">
-        Nessuna linea disponibile.
+        {{ s.noLines }}
       </div>
     </template>
   </div>
@@ -58,22 +58,10 @@
 import type { TransitType } from '~/types'
 
 const { config, schedules, pending } = await useOperator()
-
-const TRANSIT_TYPE_LABELS: Record<TransitType, string> = {
-  bus: 'Bus',
-  tram: 'Tram',
-  metro: 'Metro',
-  rail: 'Treno',
-  ferry: 'Ferry',
-  cable_tram: 'Funivia',
-  gondola: 'Gondola',
-  funicular: 'Funicolare',
-  trolleybus: 'Filobus',
-  monorail: 'Monorotaia',
-}
+const s = useStrings(config)
 
 function transitTypeLabel(type: string): string {
-  return TRANSIT_TYPE_LABELS[type as TransitType] ?? type
+  return s.value.transitTypes[type as TransitType] ?? type
 }
 
 const routesByType = computed(() => {

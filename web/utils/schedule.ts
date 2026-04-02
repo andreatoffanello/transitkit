@@ -2,8 +2,8 @@ import type { ScheduleData, Departure, DayGroup } from '~/types'
 
 const WEEKDAY_ABBR = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const
 const WEEKDAY_LABELS: Record<string, string> = {
-  mon: 'Lun', tue: 'Mar', wed: 'Mer', thu: 'Gio',
-  fri: 'Ven', sat: 'Sab', sun: 'Dom',
+  mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu',
+  fri: 'Fri', sat: 'Sat', sun: 'Sun',
 }
 
 export function parseDayGroup(key: string): DayGroup {
@@ -16,9 +16,9 @@ export function parseDayGroup(key: string): DayGroup {
 }
 
 function buildDisplayLabel(days: string[]): string {
-  if (days.length === 7) return 'Ogni giorno'
-  if (days.length === 5 && days.every(d => !['sat', 'sun'].includes(d))) return 'Lun–Ven'
-  if (days.length === 2 && days.includes('sat') && days.includes('sun')) return 'Sab–Dom'
+  if (days.length === 7) return 'Every day'
+  if (days.length === 5 && days.every(d => !['sat', 'sun'].includes(d))) return 'Mon–Fri'
+  if (days.length === 2 && days.includes('sat') && days.includes('sun')) return 'Sat–Sun'
   if (days.length === 1) return WEEKDAY_LABELS[days[0] ?? ''] ?? days[0] ?? ''
   return days.map(d => WEEKDAY_LABELS[d] ?? d).join(', ')
 }

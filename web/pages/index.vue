@@ -16,7 +16,7 @@
           color: config?.theme.primaryColor,
         }"
       >
-        Orari e linee
+        {{ s.linesAndSchedules }}
       </NuxtLink>
     </div>
 
@@ -24,14 +24,14 @@
     <div class="max-w-lg mx-auto px-4 py-8 space-y-4">
       <!-- Store info (app link) -->
       <div v-if="config?.store" class="bg-white dark:bg-white/5 rounded-2xl p-4">
-        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">App ufficiale</p>
+        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">{{ s.officialApp }}</p>
         <p class="font-semibold">{{ config.store.title }}</p>
         <p class="text-sm text-gray-400">{{ config.store.subtitle }}</p>
       </div>
 
       <!-- Contacts -->
       <div v-if="config?.contact?.phone || config?.contact?.email" class="bg-white dark:bg-white/5 rounded-2xl p-4 space-y-3">
-        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Contatti</p>
+        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">{{ s.contacts }}</p>
         <a
           v-if="config.contact.phone"
           :href="`tel:${config.contact.phone}`"
@@ -56,7 +56,7 @@
         rel="noopener noreferrer"
         class="flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-100 dark:bg-white/10 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
       >
-        🌐 Sito ufficiale
+        🌐 {{ s.officialWebsite }}
       </a>
 
       <!-- Privacy link -->
@@ -67,7 +67,7 @@
         rel="noopener noreferrer"
         class="block text-center text-xs text-gray-400 underline"
       >
-        Privacy policy
+        {{ s.privacy }}
       </a>
     </div>
   </div>
@@ -75,6 +75,7 @@
 
 <script setup lang="ts">
 const { config } = await useOperator()
+const s = useStrings(config)
 
 useHead({
   title: computed(() => `${config.value?.fullName ?? config.value?.name ?? ''} — Orari e linee`),

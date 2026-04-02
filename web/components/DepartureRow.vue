@@ -32,11 +32,15 @@
 
 <script setup lang="ts">
 import type { Departure } from '~/types'
+import { getStrings } from '~/utils/strings'
 
 const props = defineProps<{
   departure: Departure
   now?: number
+  locale?: string
 }>()
+
+const s = computed(() => getStrings(props.locale))
 
 function effectiveMinutes(nowMs: number): number {
   // Use pre-computed minutesFromMidnight instead of re-parsing the time string
@@ -56,8 +60,8 @@ const displayTime = computed(() => {
   const diffMin = effectiveMinutes(nowMs)
 
   if (diffMin < 0) return props.departure.time
-  if (diffMin === 0) return 'Ora'
-  if (diffMin < 60) return `${diffMin} min`
+  if (diffMin === 0) return s.value.now
+  if (diffMin < 60) return `${diffMin} ${s.value.minutes}`
   return props.departure.time
 })
 

@@ -60,8 +60,7 @@ struct StopAnnotationView: View {
                     Circle()
                         .fill(pinColor)
                         .frame(width: iconSize - 3, height: iconSize - 3)
-                    dominantType.icon.image
-                        .font(.system(size: symbolSize, weight: .bold))
+                    dominantType.icon.sized(symbolSize)
                         .foregroundStyle(.white)
                 }
                 .shadow(color: .black.opacity(0.2), radius: 2.5, y: 1)

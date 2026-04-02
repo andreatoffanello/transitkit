@@ -72,8 +72,7 @@ struct RouteOverlayToggle: View {
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(isVisible ? Color(.label) : AppTheme.textTertiary)
 
-                (isVisible ? LucideIcon.eye : LucideIcon.eyeOff).image
-                    .font(.system(size: 11))
+                (isVisible ? LucideIcon.eye : LucideIcon.eyeOff).sized(11)
                     .foregroundStyle(isVisible ? AppTheme.accent : AppTheme.textTertiary)
             }
             .padding(.horizontal, 10)

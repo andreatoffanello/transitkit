@@ -113,8 +113,7 @@ struct FavoritesListView: View {
     private var emptyState: some View {
         VStack(spacing: 16) {
             Spacer()
-            LucideIcon.star.image
-                .font(.system(size: 48))
+            LucideIcon.star.sized(48)
                 .foregroundStyle(AppTheme.textTertiary)
             Text(String(localized: "favorites_empty_title"))
                 .font(.title3.weight(.semibold))

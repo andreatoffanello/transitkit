@@ -128,8 +128,7 @@ struct SettingsTab: View {
                 .fill(iconColor.opacity(0.12))
                 .frame(width: 32, height: 32)
                 .overlay(
-                    icon.image
-                        .font(.system(size: 14, weight: .semibold))
+                    icon.sized(14)
                         .foregroundStyle(iconColor)
                 )
             VStack(alignment: .leading, spacing: 2) {

@@ -52,8 +52,7 @@ struct LineDetailView: View {
                     if let routeUrl = route.url, let url = URL(string: routeUrl) {
                         Link(destination: url) {
                             HStack(spacing: 6) {
-                                LucideIcon.externalLink.image
-                                    .font(.system(size: 14, weight: .semibold))
+                                LucideIcon.externalLink.sized(14)
                                 Text(String(localized: "line_official_schedule"))
                                     .font(.system(size: 14, weight: .semibold))
                             }
@@ -163,8 +162,7 @@ struct LineDetailView: View {
 
     private var stopsListHeader: some View {
         HStack(spacing: 6) {
-            LucideIcon.mapPin.image
-                .font(.system(size: 11, weight: .semibold))
+            LucideIcon.mapPin.sized(11)
                 .foregroundStyle(lineColor)
             Text(String(localized: "stops_served"))
                 .font(.system(size: 13, weight: .semibold))
@@ -233,8 +231,7 @@ struct LineDetailView: View {
 
                                 Spacer(minLength: 4)
 
-                                LucideIcon.chevronRight.image
-                                    .font(.system(size: 10, weight: .semibold))
+                                LucideIcon.chevronRight.sized(10)
                                     .foregroundStyle(AppTheme.textTertiary)
                             }
 

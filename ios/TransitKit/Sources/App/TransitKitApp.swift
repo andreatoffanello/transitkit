@@ -93,8 +93,7 @@ struct TransitKitApp: App {
 
     private func errorView(message: String) -> some View {
         VStack(spacing: 20) {
-            LucideIcon.alertTriangle.image
-                .font(.system(size: 40))
+            LucideIcon.alertTriangle.sized(40)
                 .foregroundStyle(AppTheme.realtimeRed)
 
             Text(String(localized: "error_loading"))

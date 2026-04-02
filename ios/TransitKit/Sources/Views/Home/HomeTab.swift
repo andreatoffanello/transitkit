@@ -95,8 +95,7 @@ struct HomeTab: View {
                     .foregroundStyle(AppTheme.textPrimary)
                     .lineLimit(1)
                 HStack(spacing: 6) {
-                    LucideIcon.clock.image
-                        .font(.system(size: 10, weight: .medium))
+                    LucideIcon.clock.sized(10)
                         .foregroundStyle(AppTheme.textSecondary)
                     Text("\(store.stops.count) \(String(localized: "hero_stops"))")
                         .font(.caption)
@@ -104,8 +103,7 @@ struct HomeTab: View {
                     Text("\u{00B7}")
                         .font(.caption)
                         .foregroundStyle(AppTheme.textSecondary)
-                    LucideIcon.bus.image
-                        .font(.system(size: 10, weight: .medium))
+                    LucideIcon.bus.sized(10)
                         .foregroundStyle(AppTheme.textSecondary)
                     Text("\(store.routes.count) \(String(localized: "hero_lines"))")
                         .font(.caption)
@@ -273,8 +271,7 @@ struct HomeTab: View {
                 Circle()
                     .fill(AppTheme.accent.opacity(0.12))
                     .frame(width: 56, height: 56)
-                LucideIcon.mapPin.image
-                    .font(.system(size: 24, weight: .semibold))
+                LucideIcon.mapPin.sized(24)
                     .foregroundStyle(AppTheme.accent)
             }
 

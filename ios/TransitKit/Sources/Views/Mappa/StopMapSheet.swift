@@ -52,8 +52,7 @@ struct StopMapSheet: View {
                         Text(String(localized: "see_all_departures"))
                             .font(.system(size: 14, weight: .semibold))
                         Spacer()
-                        LucideIcon.chevronRight.image
-                            .font(.system(size: 12, weight: .semibold))
+                        LucideIcon.chevronRight.sized(12)
                     }
                     .foregroundStyle(AppTheme.accent)
                     .padding(.vertical, 10)
@@ -82,8 +81,7 @@ struct StopMapSheet: View {
                 HStack(spacing: 6) {
                     ForEach(Array(stop.transitTypes).sorted(by: { $0.rawValue < $1.rawValue }), id: \.self) { type in
                         HStack(spacing: 3) {
-                            type.icon.image
-                                .font(.system(size: 11))
+                            type.icon.sized(11)
                             Text(type.displayName)
                                 .font(.system(size: 11, weight: .medium))
                         }

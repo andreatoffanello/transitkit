@@ -123,8 +123,7 @@ struct LineBadge: View {
     var body: some View {
         HStack(spacing: size.spacing) {
             if size.showIcon {
-                transitType.icon.image
-                    .font(.system(size: size.iconSize, weight: .semibold))
+                transitType.icon.sized(size.iconSize)
                     .foregroundStyle(fgColor)
             }
             Text(lineName)

@@ -129,8 +129,7 @@ struct StopsListView: View {
     private var emptyState: some View {
         VStack(spacing: 12) {
             Spacer()
-            LucideIcon.search.image
-                .font(.system(size: 28))
+            LucideIcon.search.sized(28)
                 .foregroundStyle(AppTheme.textTertiary)
             Text(String(localized: "stops_no_result"))
                 .font(.headline)
@@ -296,8 +295,7 @@ private struct StopRowContent: View {
     var body: some View {
         HStack(spacing: 12) {
             // Transit type icon
-            primaryType.icon.image
-                .font(.system(size: 15, weight: .semibold))
+            primaryType.icon.sized(15)
                 .foregroundStyle(AppTheme.accent)
                 .frame(width: 28, height: 28)
                 .background(AppTheme.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 7))
@@ -314,8 +312,7 @@ private struct StopRowContent: View {
                     if stop.transitTypes.count > 1 {
                         HStack(spacing: 3) {
                             ForEach(Array(stop.transitTypes).sorted(by: { $0.rawValue < $1.rawValue }), id: \.self) { type in
-                                type.icon.image
-                                    .font(.system(size: 9, weight: .semibold))
+                                type.icon.sized(9)
                                     .foregroundStyle(AppTheme.textTertiary)
                             }
                         }

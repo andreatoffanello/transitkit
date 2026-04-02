@@ -129,8 +129,7 @@ struct LinesListView: View {
     private var emptyState: some View {
         VStack(spacing: 12) {
             Spacer()
-            LucideIcon.train.image
-                .font(.system(size: 28))
+            LucideIcon.train.sized(28)
                 .foregroundStyle(AppTheme.textTertiary)
             Text(String(localized: "lines_no_result"))
                 .font(.headline)
@@ -302,8 +301,7 @@ private struct LineRowContent: View {
                 if showTransitType || showDirections {
                     HStack(spacing: 6) {
                         if showTransitType {
-                            route.transitType.icon.image
-                                .font(.system(size: 10, weight: .medium))
+                            route.transitType.icon.sized(10)
                                 .foregroundStyle(AppTheme.textTertiary)
                             Text(route.transitType.displayName)
                                 .font(.caption2.weight(.medium))

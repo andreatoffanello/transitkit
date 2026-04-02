@@ -36,8 +36,7 @@ struct TripDetailView: View {
                     stopsTimeline(stops: stops)
                 } else {
                     VStack(spacing: 8) {
-                        LucideIcon.alertTriangle.image
-                            .font(.system(size: 28))
+                        LucideIcon.alertTriangle.sized(28)
                             .foregroundStyle(AppTheme.textTertiary)
                         Text(String(localized: "trip_no_data"))
                             .font(.system(size: 14))
@@ -61,8 +60,7 @@ struct TripDetailView: View {
                     Button {
                         dismiss()
                     } label: {
-                        LucideIcon.circleX.image
-                            .font(.system(size: 24))
+                        LucideIcon.circleX.sized(24)
                             .foregroundStyle(.secondary)
                     }
                     .accessibilityLabel(String(localized: "close_label"))
@@ -83,8 +81,7 @@ struct TripDetailView: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 5) {
-                    LucideIcon.chevronRight.image
-                        .font(.system(size: 11, weight: .bold))
+                    LucideIcon.chevronRight.sized(11)
                         .foregroundStyle(AppTheme.textSecondary)
                     Text(departure.headsign)
                         .font(.system(size: 16, weight: .semibold))
@@ -230,8 +227,7 @@ struct TripDetailView: View {
                     .opacity(isPast ? 0.55 : 1)
             }
 
-            LucideIcon.chevronRight.image
-                .font(.system(size: 10, weight: .medium))
+            LucideIcon.chevronRight.sized(10)
                 .foregroundStyle(AppTheme.textTertiary)
         }
         .padding(.horizontal, 20)

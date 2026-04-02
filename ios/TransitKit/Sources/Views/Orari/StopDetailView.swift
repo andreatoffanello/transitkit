@@ -157,8 +157,7 @@ struct StopDetailView: View {
                         Circle()
                             .fill(AppTheme.accent)
                             .frame(width: 28, height: 28)
-                        (stop.transitTypes.first ?? .bus).icon.image
-                            .font(.system(size: 13, weight: .bold))
+                        (stop.transitTypes.first ?? .bus).icon.sized(13)
                             .foregroundStyle(.white)
                     }
                     .shadow(color: .black.opacity(0.2), radius: 3, y: 1)
@@ -182,8 +181,7 @@ struct StopDetailView: View {
                     mapExpanded = true
                 }
             } label: {
-                LucideIcon.maximize2.image
-                    .font(.system(size: 14, weight: .semibold))
+                LucideIcon.maximize2.sized(14)
                     .foregroundStyle(.primary)
                     .frame(width: 32, height: 32)
                     .background(.regularMaterial, in: Capsule())
@@ -212,8 +210,7 @@ struct StopDetailView: View {
                                 Circle()
                                     .fill(AppTheme.accent)
                                     .frame(width: 32, height: 32)
-                                (stop.transitTypes.first ?? .bus).icon.image
-                                    .font(.system(size: 15, weight: .bold))
+                                (stop.transitTypes.first ?? .bus).icon.sized(15)
                                     .foregroundStyle(.white)
                             }
                             .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
@@ -254,8 +251,7 @@ struct StopDetailView: View {
                             mapExpanded = false
                         }
                     } label: {
-                        LucideIcon.x.image
-                            .font(.system(size: 14, weight: .semibold))
+                        LucideIcon.x.sized(14)
                             .foregroundStyle(.primary)
                             .frame(width: 44, height: 44)
                             .background(.regularMaterial, in: Capsule())
@@ -374,8 +370,7 @@ struct StopDetailView: View {
                         }
                     } label: {
                         HStack(spacing: 4) {
-                            LucideIcon.chevronDown.image
-                                .font(.system(size: 11, weight: .semibold))
+                            LucideIcon.chevronDown.sized(11)
                             Text(String(localized: "show_more \(extraCount)"))
                                 .font(.system(size: 13, weight: .medium))
                         }
@@ -405,8 +400,7 @@ struct StopDetailView: View {
                 .padding(.horizontal, 20)
             } else if !store.isLoading {
                 VStack(spacing: 8) {
-                    LucideIcon.clock.image
-                        .font(.system(size: 28))
+                    LucideIcon.clock.sized(28)
                         .foregroundStyle(AppTheme.textTertiary)
                     Text(String(localized: "no_departures"))
                         .font(.system(size: 14))
@@ -422,8 +416,7 @@ struct StopDetailView: View {
                     showFullSchedule = true
                 } label: {
                     HStack(spacing: 6) {
-                        LucideIcon.clock.image
-                            .font(.system(size: 14, weight: .semibold))
+                        LucideIcon.clock.sized(14)
                         Text(String(localized: "full_schedule"))
                             .font(.system(size: 14, weight: .semibold))
                     }
@@ -453,8 +446,7 @@ struct StopDetailView: View {
                 HStack(spacing: 6) {
                     ForEach(Array(stop.transitTypes).sorted(by: { $0.rawValue < $1.rawValue }), id: \.self) { type in
                         HStack(spacing: 4) {
-                            type.icon.image
-                                .font(.system(size: 11, weight: .medium))
+                            type.icon.sized(11)
                             Text(type.displayName)
                                 .font(.system(size: 12, weight: .medium))
                         }
@@ -466,8 +458,7 @@ struct StopDetailView: View {
             Spacer()
 
             Button { openInMaps() } label: {
-                LucideIcon.navigation.image
-                    .font(.system(size: 18))
+                LucideIcon.navigation.sized(18)
                     .foregroundStyle(AppTheme.accent)
                     .frame(width: 44, height: 44)
                     .background(AppTheme.accent.opacity(0.1))
@@ -511,8 +502,7 @@ struct StopDetailView: View {
                                     .font(.system(size: 11, weight: .semibold, design: .rounded))
                                     .foregroundStyle(AppTheme.textSecondary)
                             }
-                            (linesExpanded ? LucideIcon.x : LucideIcon.chevronDown).image
-                                .font(.system(size: 9, weight: .semibold))
+                            (linesExpanded ? LucideIcon.x : LucideIcon.chevronDown).sized(9)
                                 .foregroundStyle(AppTheme.textTertiary)
                         }
                         .padding(.horizontal, 6)
@@ -786,8 +776,7 @@ private struct FullScheduleSheet: View {
                     Button {
                         dismiss()
                     } label: {
-                        LucideIcon.circleX.image
-                            .font(.system(size: 24))
+                        LucideIcon.circleX.sized(24)
                             .foregroundStyle(.secondary)
                     }
                     .accessibilityIdentifier("btn_close_schedule")
@@ -886,8 +875,7 @@ private struct FullScheduleSheet: View {
         return VStack(spacing: 0) {
             if departures.isEmpty {
                 VStack(spacing: 8) {
-                    LucideIcon.clock.image
-                        .font(.system(size: 28))
+                    LucideIcon.clock.sized(28)
                         .foregroundStyle(AppTheme.textTertiary)
                     Text(String(localized: "no_departures"))
                         .font(.system(size: 14))

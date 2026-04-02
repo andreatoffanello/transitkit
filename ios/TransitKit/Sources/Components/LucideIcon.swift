@@ -59,6 +59,16 @@ enum LucideIcon: String, CaseIterable {
         Image(rawValue, bundle: .main)
             .renderingMode(.template)
     }
+
+    /// Returns a properly-sized image view using .resizable() + .frame().
+    /// Use this instead of .image + .font(.system(size:)) for any explicit pixel size.
+    func sized(_ pt: CGFloat) -> some View {
+        Image(rawValue, bundle: .main)
+            .renderingMode(.template)
+            .resizable()
+            .scaledToFit()
+            .frame(width: pt, height: pt)
+    }
 }
 
 // MARK: - SwiftUI Convenience

@@ -210,8 +210,7 @@ struct MappaTab: View {
                         ))
                     )
                 } label: {
-                    LucideIcon.navigation.image
-                        .font(.system(size: 16))
+                    LucideIcon.navigation.sized(16)
                         .foregroundStyle(.primary)
                         .frame(width: 44, height: 44)
                         .background(.regularMaterial)
@@ -233,8 +232,7 @@ struct MappaTab: View {
                     mapPosition = .region(MKCoordinateRegion(center: center, span: span))
                 }
             } label: {
-                LucideIcon.map.image
-                    .font(.system(size: 16))
+                LucideIcon.map.sized(16)
                     .foregroundStyle(.primary)
                     .frame(width: 44, height: 44)
                     .background(.regularMaterial)

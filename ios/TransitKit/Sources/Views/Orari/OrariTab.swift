@@ -113,8 +113,7 @@ struct OrariTab: View {
 
     private var searchBar: some View {
         HStack(spacing: 8) {
-            LucideIcon.search.image
-                .font(.system(size: 15, weight: .medium))
+            LucideIcon.search.sized(15)
                 .foregroundStyle(AppTheme.textTertiary)
 
             TextField(
@@ -133,8 +132,7 @@ struct OrariTab: View {
                 Button {
                     searchQuery = ""
                 } label: {
-                    LucideIcon.circleX.image
-                        .font(.system(size: 14))
+                    LucideIcon.circleX.sized(14)
                         .foregroundStyle(AppTheme.textTertiary)
                 }
                 .accessibilityIdentifier("btn_clear_search")

@@ -76,8 +76,7 @@ struct StopCard: View {
                 }
             }
 
-            LucideIcon.chevronRight.image
-                .font(.system(size: 11, weight: .medium))
+            LucideIcon.chevronRight.sized(11)
                 .foregroundStyle(AppTheme.textTertiary)
         }
         .padding(12)
@@ -96,15 +95,13 @@ struct StopCard: View {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(AppTheme.accent.opacity(0.1))
                     .frame(width: 36, height: 36)
-                type.icon.image
-                    .font(.system(size: 16, weight: .semibold))
+                type.icon.sized(16)
                     .foregroundStyle(AppTheme.accent)
             }
         } else if transitTypes.count > 1 {
             VStack(spacing: 2) {
                 ForEach(transitTypes.prefix(3), id: \.rawValue) { type in
-                    type.icon.image
-                        .font(.system(size: 11, weight: .semibold))
+                    type.icon.sized(11)
                         .foregroundStyle(AppTheme.accent)
                 }
             }
@@ -115,8 +112,7 @@ struct StopCard: View {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(AppTheme.accent.opacity(0.1))
                     .frame(width: 36, height: 36)
-                LucideIcon.mapPin.image
-                    .font(.system(size: 16, weight: .semibold))
+                LucideIcon.mapPin.sized(16)
                     .foregroundStyle(AppTheme.accent)
             }
         }

@@ -283,7 +283,7 @@ struct LineDetailView: View {
                     color: r?.color ?? "#666666",
                     textColor: r?.textColor ?? "#FFFFFF",
                     transitType: r?.transitType ?? .bus,
-                    size: .tiny
+                    size: .small
                 )
             }
             if overflow > 0 {

@@ -200,8 +200,9 @@ struct TripDetailView: View {
                 if !otherLines.isEmpty && !isPast {
                     HStack(spacing: 3) {
                         LucideIcon.refreshCw.image
-                            .font(.system(size: 8, weight: .bold))
-                            .foregroundStyle(AppTheme.textTertiary)
+                            .resizable()
+                            .frame(width: 10, height: 10)
+                            .foregroundStyle(AppTheme.accent)
                         ForEach(otherLines.prefix(4), id: \.self) { name in
                             let r = store.routes.first { $0.name == name }
                             LineBadge(
@@ -209,7 +210,7 @@ struct TripDetailView: View {
                                 color: r?.color ?? "#666666",
                                 textColor: r?.textColor ?? "#FFFFFF",
                                 transitType: r?.transitType ?? .bus,
-                                size: .tiny
+                                size: .small
                             )
                         }
                         if otherLines.count > 4 {

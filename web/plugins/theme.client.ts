@@ -18,6 +18,12 @@ function applyTheme(cfg: OperatorConfig | null | undefined): void {
   root.style.setProperty('--color-primary', cfg.theme.primaryColor)
   root.style.setProperty('--color-accent', cfg.theme.accentColor)
   root.style.setProperty('--color-text-on-primary', cfg.theme.textOnPrimary)
+
+  // Update browser chrome color (mobile browsers)
+  const themeColorMeta = document.querySelector('meta[name="theme-color"]')
+  if (themeColorMeta) {
+    themeColorMeta.setAttribute('content', cfg?.theme.primaryColor ?? '#003366')
+  }
 }
 
 export default defineNuxtPlugin((nuxtApp) => {

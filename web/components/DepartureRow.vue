@@ -39,19 +39,15 @@ const props = defineProps<{
 }>()
 
 function effectiveMinutes(nowMs: number): number {
-  const parts = props.departure.time.split(':')
-  const h = parseInt(parts[0] ?? '0', 10)
-  const m = parseInt(parts[1] ?? '0', 10)
-
-  const depDate = new Date(nowMs)
-  depDate.setHours(h, m, 0, 0)
-
-  let diffMin = Math.round((depDate.getTime() - nowMs) / 60_000)
-
+  // Use pre-computed minutesFromMidnight instead of re-parsing the time string
+  // This correctly handles post-midnight times (e.g., 25:30 = 1530 min)
+  const midnight = new Date(nowMs)
+  midnight.setHours(0, 0, 0, 0)
+  const nowMin = Math.floor((nowMs - midnight.getTime()) / 60_000)
+  let diffMin = props.departure.minutesFromMidnight - nowMin
   if (props.departure.realtimeDelay !== undefined) {
     diffMin += Math.round(props.departure.realtimeDelay / 60)
   }
-
   return diffMin
 }
 

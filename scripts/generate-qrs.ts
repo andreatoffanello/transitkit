@@ -20,7 +20,9 @@ import path from 'path'
 function getArg(flag: string): string | undefined {
   const args = process.argv.slice(2)
   const idx = args.indexOf(flag)
-  return idx !== -1 ? args[idx + 1] : undefined
+  if (idx === -1 || idx + 1 >= args.length) return undefined
+  const value = args[idx + 1]
+  return value !== undefined && !value.startsWith('--') ? value : undefined
 }
 
 const operatorId = getArg('--operator')
@@ -28,6 +30,11 @@ const hostOverride = getArg('--host')
 
 if (!operatorId) {
   console.error('Usage: npx tsx scripts/generate-qrs.ts --operator <operatorId> [--host <hostname>]')
+  process.exit(1)
+}
+
+if (!/^[a-z0-9_-]+$/i.test(operatorId)) {
+  console.error('Error: operatorId must be alphanumeric (letters, numbers, hyphens, underscores only)')
   process.exit(1)
 }
 
@@ -40,10 +47,14 @@ const OUTPUT_DIR = path.join(process.cwd(), 'qr', operatorId)
 // ---- Helpers ----
 
 function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
+  return (
+    name
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // strip combining diacritics
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || 'unnamed'
+  )
 }
 
 // ---- Main ----
@@ -71,26 +82,51 @@ async function main(): Promise<void> {
 
   // 3. Generate one QR per stop
   let generated = 0
+  const errors: Array<{ stopId: string; name: string; error: string }> = []
   for (const stop of data.stops) {
-    const url = `https://${WEB_HOST}/stop/${stop.id}`
-    const filename = `stop-${stop.id}-${slugify(stop.name)}.png`
-    const filepath = path.join(OUTPUT_DIR, filename)
+    if (!stop.id || typeof stop.name !== 'string') {
+      errors.push({ stopId: stop.id ?? 'unknown', name: String(stop.name ?? ''), error: 'Missing id or name' })
+      continue
+    }
 
-    await QRCode.toFile(filepath, url, {
-      type: 'png',
-      width: 300,
-      margin: 2,
-      errorCorrectionLevel: 'H',
-      color: { dark: '#000000', light: '#FFFFFF' },
-    })
+    try {
+      const url = `https://${WEB_HOST}/stop/${stop.id}`
+      const filename = `stop-${stop.id}-${slugify(stop.name)}.png`
+      const filepath = path.join(OUTPUT_DIR, filename)
 
-    generated++
-    if (generated % 50 === 0) {
+      await QRCode.toFile(filepath, url, {
+        type: 'png',
+        width: 300,
+        margin: 2,
+        errorCorrectionLevel: 'H',
+        color: { dark: '#000000', light: '#FFFFFF' },
+      })
+
+      generated++
+    } catch (err) {
+      errors.push({
+        stopId: stop.id,
+        name: stop.name,
+        error: err instanceof Error ? err.message : String(err),
+      })
+    }
+
+    if (generated % 50 === 0 && generated > 0) {
       process.stdout.write(`\r  ${generated}/${data.stops.length} fermate...`)
     }
   }
 
-  console.log(`\n✓ ${generated} QR code generati in ${OUTPUT_DIR}/`)
+  // Final progress clear
+  if (generated > 0) process.stdout.write('\n')
+
+  if (errors.length > 0) {
+    console.error(`\n⚠ ${errors.length} QR non generati:`)
+    for (const e of errors) console.error(`  [${e.stopId}] ${e.name}: ${e.error}`)
+    console.log(`\n✓ ${generated} QR code generati in ${OUTPUT_DIR}/`)
+    process.exit(1)
+  }
+
+  console.log(`✓ ${generated} QR code generati in ${OUTPUT_DIR}/`)
   console.log(`  Formato URL: https://${WEB_HOST}/stop/{stopId}`)
   console.log()
   console.log("Consegna la cartella qr/ all'operatore (zip o Google Drive).")

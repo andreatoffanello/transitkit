@@ -231,18 +231,16 @@ struct HomeTab: View {
                     .foregroundStyle(AppTheme.textTertiary)
             } else {
                 ForEach(departures) { dep in
-                    TimelineView(.periodic(from: .now, by: 30)) { _ in
-                        HStack(spacing: 6) {
-                            LineBadge(departure: dep, size: .small)
-                            Text(dep.headsign)
-                                .font(.caption)
-                                .foregroundStyle(AppTheme.textSecondary)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
-                            Spacer()
-                            Text(countdownText(for: dep))
-                                .font(.caption.weight(.semibold).monospacedDigit())
-                                .foregroundStyle(countdownColor(for: dep))
+                    HStack(spacing: 6) {
+                        LineBadge(departure: dep, size: .small)
+                        Text(dep.headsign)
+                            .font(.caption)
+                            .foregroundStyle(AppTheme.textSecondary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                        Spacer()
+                        TimelineView(.periodic(from: .now, by: 30)) { _ in
+                            TimeDisplay(departure: dep)
                         }
                     }
                 }
@@ -251,30 +249,6 @@ struct HomeTab: View {
         .padding(12)
         .adaptiveGlass(in: RoundedRectangle(cornerRadius: 12), withShadow: false)
         .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
-    }
-
-    // MARK: - Countdown
-
-    private func countdownText(for departure: Departure) -> String {
-        let cal = Calendar.current
-        let now = Date()
-        let nowMins = cal.component(.hour, from: now) * 60 + cal.component(.minute, from: now)
-        let diff = departure.minutesFromMidnight - nowMins
-        if diff <= 0 { return departure.time }
-        if diff == 1 { return String(localized: "one_minute") }
-        return String(format: NSLocalizedString("minutes_away", comment: ""), diff)
-    }
-
-    private func countdownColor(for departure: Departure) -> Color {
-        let mins = departure.minutesFromMidnight - currentMinutesFromMidnight()
-        return mins <= 5 ? AppTheme.realtimeGreen : AppTheme.accent
-    }
-
-    private func currentMinutesFromMidnight() -> Int {
-        let cal = Calendar.current
-        let h = cal.component(.hour, from: Date())
-        let m = cal.component(.minute, from: Date())
-        return h * 60 + m
     }
 
     private var emptyFavoritesCard: some View {

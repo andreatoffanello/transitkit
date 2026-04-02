@@ -142,13 +142,13 @@ struct HomeTab: View {
                 quickCard(
                     icon: LucideIcon.clock.image,
                     label: String(localized: "tab_schedules"),
-                    subtitle: "\(store.stops.count) \(String(localized: "quick_stops"))",
+                    subtitle: String(localized: "quick_find_stop"),
                     tab: 1
                 )
                 quickCard(
                     icon: LucideIcon.map.image,
                     label: String(localized: "tab_map"),
-                    subtitle: "\(store.routes.count) \(String(localized: "quick_lines"))",
+                    subtitle: String(localized: "quick_explore_map"),
                     tab: 2
                 )
                 quickCard(

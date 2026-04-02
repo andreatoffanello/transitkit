@@ -1023,6 +1023,20 @@
         "it" : { "stringUnit" : { "state" : "translated", "value" : "linee" } }
       }
     },
+    "quick_find_stop" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Find a stop" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cerca una fermata" } }
+      }
+    },
+    "quick_explore_map" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Explore map" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Esplora la mappa" } }
+      }
+    },
     "quick_stops" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -24,6 +24,7 @@ enum LucideIcon: String, CaseIterable {
     case crosshair = "lucide-crosshair"
     case globe = "lucide-globe"
     case externalLink = "lucide-external-link"
+    case maximize2 = "lucide-maximize-2"
 
     // Actions
     case chevronRight = "lucide-chevron-right"

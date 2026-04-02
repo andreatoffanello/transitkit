@@ -1,13 +1,12 @@
 import SwiftUI
 import MapKit
 
-/// Full stop detail screen: map with bottom sheet showing departures and full schedule.
+/// Full stop detail screen: inline 3D map header + hero expand overlay showing departures.
 /// THE MOST IMPORTANT VIEW — shows next departures, full schedule by day, line filtering, dock indicators.
 struct StopDetailView: View {
     let stop: ResolvedStop
     @Environment(ScheduleStore.self) private var store
     @State private var mapPosition: MapCameraPosition = .automatic
-    @State private var showMap = false
     @State private var showFullSchedule = false
     @State private var showMoreDepartures = false
     @State private var filterLine: String?
@@ -17,13 +16,8 @@ struct StopDetailView: View {
     @State private var selectedNearbyStop: ResolvedStop?
     @Environment(FavoritesManager.self) private var favoritesManager
 
-    // Inline card heights (replaces system sheet — keeps tab bar visible)
-    private static let peekHeight: CGFloat = 160
-    private static let mediumFraction: CGFloat = 0.50
-    // sheetDetent used only by notifications sheet
-    @State private var cardExpanded = false   // false = medium, true = large
-    @State private var cardHeightOverride: CGFloat? = nil
-    @GestureState private var dragState: CGFloat = 0
+    @Namespace private var mapNamespace
+    @State private var mapExpanded: Bool = false
 
     private let initialVisibleCount = 5
 
@@ -61,38 +55,36 @@ struct StopDetailView: View {
     // MARK: - Body
 
     var body: some View {
-        GeometryReader { geo in
-            let screenHeight = geo.size.height
-            let mediumHeight = screenHeight * Self.mediumFraction
-            let resolvedHeight: CGFloat = {
-                if cardExpanded { return screenHeight }
-                return cardHeightOverride ?? mediumHeight
-            }()
-            let clampedHeight = max(Self.peekHeight, min(screenHeight, resolvedHeight + dragState))
-
-            ZStack(alignment: .bottom) {
-                // Map background (or plain bg before map loads)
-                Color(.systemBackground)
-                    .ignoresSafeArea()
-
-                if showMap {
-                    mapContent
-                        .ignoresSafeArea(edges: .bottom)
-                        .transition(.opacity)
+        ZStack {
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    mapHeader
+                    stopInlineContent
                 }
+            }
+            .background(AppTheme.background.ignoresSafeArea())
 
-                // Inline bottom card — does NOT cover the tab bar
-                bottomCard(height: clampedHeight, screenHeight: screenHeight)
+            if mapExpanded {
+                expandedMapOverlay
+                    .transition(.identity)
+                    .zIndex(10)
             }
         }
-        .navigationTitle(stop.name)
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarRole(.editor)
         .toolbar(.visible, for: .tabBar)
         .toolbar {
+            ToolbarItem(placement: .principal) {
+                VStack(spacing: 1) {
+                    Text(stop.name)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(AppTheme.textPrimary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: 4) {
-                    // Notifications button
                     Button {
                         showNotificationsSheet = true
                     } label: {
@@ -102,7 +94,6 @@ struct StopDetailView: View {
                     .accessibilityLabel(String(localized: "stop_notifications"))
                     .accessibilityIdentifier("btn_notifications")
 
-                    // Favorites button
                     Button {
                         favoritesManager.toggle(stop.id)
                     } label: {
@@ -113,14 +104,6 @@ struct StopDetailView: View {
                         ? String(localized: "remove_from_favorites")
                         : String(localized: "add_to_favorites"))
                     .accessibilityIdentifier("btn_favorite")
-
-                    // Navigate button
-                    Button { openInMaps() } label: {
-                        LucideIcon.navigation.image
-                            .foregroundStyle(AppTheme.accent)
-                    }
-                    .accessibilityLabel(String(localized: "a11y_navigate_to_stop"))
-                    .accessibilityIdentifier("btn_navigate")
                 }
             }
         }
@@ -139,9 +122,7 @@ struct StopDetailView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            showNotificationsSheet = false
-                        } label: {
+                        Button { showNotificationsSheet = false } label: {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundStyle(.secondary)
                         }
@@ -155,11 +136,6 @@ struct StopDetailView: View {
         }
         .onAppear {
             centerOnStop()
-            let delay: UInt64 = UIAccessibility.isReduceMotionEnabled ? 50_000_000 : 350_000_000
-            Task {
-                try? await Task.sleep(nanoseconds: delay)
-                withAnimation(.easeIn(duration: 0.15)) { showMap = true }
-            }
         }
         .task {
             nearbyStopsData = store.nearbyStops(to: stop)
@@ -172,56 +148,10 @@ struct StopDetailView: View {
         }
     }
 
-    // MARK: - Inline Bottom Card
-
-    private func bottomCard(height: CGFloat, screenHeight: CGFloat) -> some View {
-        let mediumHeight = screenHeight * Self.mediumFraction
-        let drag = DragGesture(minimumDistance: 8)
-            .updating($dragState) { value, state, _ in
-                state = -value.translation.height
-            }
-            .onEnded { value in
-                let velocity = -value.predictedEndTranslation.height
-                let current = cardHeightOverride ?? mediumHeight
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.78)) {
-                    if velocity > 300 || current > mediumHeight * 1.3 {
-                        cardExpanded = true
-                        cardHeightOverride = screenHeight
-                    } else if velocity < -300 || current < Self.peekHeight * 1.5 {
-                        cardExpanded = false
-                        cardHeightOverride = Self.peekHeight
-                    } else {
-                        cardExpanded = false
-                        cardHeightOverride = mediumHeight
-                    }
-                }
-            }
-
-        return VStack(spacing: 0) {
-            // Drag handle
-            Capsule()
-                .fill(Color.secondary.opacity(0.4))
-                .frame(width: 36, height: 5)
-                .padding(.top, 8)
-                .padding(.bottom, 4)
-
-            // Scrollable content
-            ScrollView(showsIndicators: false) {
-                stopSheetContent
-            }
-        }
-        .frame(height: height)
-        .frame(maxWidth: .infinity)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .shadow(color: .black.opacity(0.12), radius: 16, y: -4)
-        .gesture(drag)
-        .animation(.interactiveSpring(), value: height)
-    }
-
-    // MARK: - Map Content
+    // MARK: - Map Header
 
     @ViewBuilder
-    private var mapContent: some View {
+    private var mapHeader: some View {
         Map(position: $mapPosition) {
             if stop.docks.isEmpty {
                 Annotation(stop.name, coordinate: stopCoordinate) {
@@ -244,120 +174,203 @@ struct StopDetailView: View {
                 }
             }
         }
-        .mapStyle(.standard(pointsOfInterest: .excludingAll))
-        .safeAreaInset(edge: .bottom) {
-            Color.clear.frame(height: cardExpanded ? 0 : cardHeightOverride ?? UIScreen.main.bounds.height * Self.mediumFraction)
+        .matchedGeometryEffect(id: "stopMap", in: mapNamespace)
+        .mapStyle(.standard(elevation: .realistic, pointsOfInterest: .excludingAll))
+        .frame(height: 190)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .disabled(true)
+        .overlay(alignment: .bottomTrailing) {
+            Button {
+                withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
+                    mapExpanded = true
+                }
+            } label: {
+                LucideIcon.maximize2.image
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.primary)
+                    .frame(width: 32, height: 32)
+                    .background(.regularMaterial, in: Capsule())
+            }
+            .buttonStyle(.plain)
+            .padding(10)
+            .accessibilityLabel("Espandi mappa")
+            .accessibilityIdentifier("btn_expand_map")
         }
+        .padding(.horizontal, 16)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
     }
 
-    // MARK: - Sheet Content
+    // MARK: - Expanded Map Overlay
 
-    private var stopSheetContent: some View {
+    @ViewBuilder
+    private var expandedMapOverlay: some View {
+        let expandedCamera = MapCameraPosition.camera(MapCamera(
+            centerCoordinate: stopCoordinate,
+            distance: 350,
+            heading: 0,
+            pitch: 65
+        ))
+
+        Map(initialPosition: expandedCamera) {
+            if stop.docks.isEmpty {
+                Annotation(stop.name, coordinate: stopCoordinate) {
+                    ZStack {
+                        Circle()
+                            .fill(AppTheme.accent)
+                            .frame(width: 32, height: 32)
+                        (stop.transitTypes.first ?? .bus).icon.image
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+                    .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+                }
+            } else {
+                ForEach(stop.docks, id: \.letter) { dock in
+                    let coord = CLLocationCoordinate2D(latitude: dock.lat, longitude: dock.lng)
+                    Annotation(String(localized: "dock_label \(dock.letter)"), coordinate: coord) {
+                        DockPin(letter: dock.letter)
+                    }
+                }
+            }
+        }
+        .matchedGeometryEffect(id: "stopMap", in: mapNamespace)
+        .mapStyle(.standard(elevation: .realistic, pointsOfInterest: .excludingAll))
+        .ignoresSafeArea(.all)
+        .overlay(alignment: .topTrailing) {
+            Button {
+                withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
+                    mapExpanded = false
+                }
+            } label: {
+                LucideIcon.x.image
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.primary)
+                    .frame(width: 36, height: 36)
+                    .background(.regularMaterial, in: Capsule())
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 60)
+            .padding(.trailing, 16)
+            .accessibilityLabel("Chiudi mappa")
+            .accessibilityIdentifier("btn_close_map")
+        }
+        .gesture(
+            DragGesture(minimumDistance: 20)
+                .onEnded { value in
+                    if value.translation.height > 80 {
+                        withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
+                            mapExpanded = false
+                        }
+                    }
+                }
+        )
+    }
+
+    // MARK: - Inline Content (below map header)
+
+    private var stopInlineContent: some View {
         let allNext = upcomingDepartures
         let visible = showMoreDepartures ? allNext : Array(allNext.prefix(initialVisibleCount))
         let extraCount = allNext.count - initialVisibleCount
 
-        return ScrollView {
-            VStack(spacing: 0) {
-                // Peek header
-                peekHeader
+        return VStack(spacing: 0) {
+            // Stop name header
+            inlineStopHeader
 
-                // Lines section
-                linesSection
+            // Lines section
+            linesSection
 
-                // Nearby stops
-                nearbyStopsSection
+            // Nearby stops
+            nearbyStopsSection
 
-                // Next departures
-                if !visible.isEmpty {
-                    nextDeparturesSection(visible)
+            // Next departures
+            if !visible.isEmpty {
+                nextDeparturesSection(visible)
 
-                    if !showMoreDepartures && extraCount > 0 {
-                        Button {
-                            withAnimation(.spring(duration: 0.3)) {
-                                showMoreDepartures = true
-                            }
-                        } label: {
-                            HStack(spacing: 4) {
-                                LucideIcon.chevronDown.image
-                                    .font(.system(size: 11, weight: .semibold))
-                                Text(String(localized: "show_more \(extraCount)"))
-                                    .font(.system(size: 13, weight: .medium))
-                            }
-                            .foregroundStyle(AppTheme.accent)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 4)
-                    }
-                } else if filterLine != nil && upcomingDepartures.isEmpty {
-                    // Filter active but no results for this line
-                    VStack(spacing: 12) {
-                        Text(String(localized: "no_departures_for_line \(filterLine ?? "")"))
-                            .font(.subheadline)
-                            .foregroundStyle(AppTheme.textSecondary)
-                            .multilineTextAlignment(.center)
-                        Button(String(localized: "show_all_departures")) {
-                            withAnimation { filterLine = nil }
-                        }
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(AppTheme.accent)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 24)
-                    .padding(.horizontal, 20)
-                } else if !store.isLoading {
-                    VStack(spacing: 8) {
-                        LucideIcon.clock.image
-                            .font(.system(size: 28))
-                            .foregroundStyle(AppTheme.textTertiary)
-                        Text(String(localized: "no_departures"))
-                            .font(.system(size: 14))
-                            .foregroundStyle(AppTheme.textSecondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 32)
-                }
-
-                // Full schedule button
-                if !allDayGroups.isEmpty {
+                if !showMoreDepartures && extraCount > 0 {
                     Button {
-                        showFullSchedule = true
+                        withAnimation(.spring(duration: 0.3)) {
+                            showMoreDepartures = true
+                        }
                     } label: {
-                        HStack(spacing: 6) {
-                            LucideIcon.clock.image
-                                .font(.system(size: 14, weight: .semibold))
-                            Text(String(localized: "full_schedule"))
-                                .font(.system(size: 14, weight: .semibold))
+                        HStack(spacing: 4) {
+                            LucideIcon.chevronDown.image
+                                .font(.system(size: 11, weight: .semibold))
+                            Text(String(localized: "show_more \(extraCount)"))
+                                .font(.system(size: 13, weight: .medium))
                         }
                         .foregroundStyle(AppTheme.accent)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(AppTheme.accent.opacity(0.08))
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .padding(.vertical, 10)
+                        .contentShape(Rectangle())
                     }
-                    .accessibilityIdentifier("btn_full_schedule")
-                    .padding(.horizontal, 20)
-                    .padding(.top, 4)
-                    .padding(.bottom, 20)
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 4)
                 }
+            } else if filterLine != nil && upcomingDepartures.isEmpty {
+                VStack(spacing: 12) {
+                    Text(String(localized: "no_departures_for_line \(filterLine ?? "")"))
+                        .font(.subheadline)
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .multilineTextAlignment(.center)
+                    Button(String(localized: "show_all_departures")) {
+                        withAnimation { filterLine = nil }
+                    }
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(AppTheme.accent)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 24)
+                .padding(.horizontal, 20)
+            } else if !store.isLoading {
+                VStack(spacing: 8) {
+                    LucideIcon.clock.image
+                        .font(.system(size: 28))
+                        .foregroundStyle(AppTheme.textTertiary)
+                    Text(String(localized: "no_departures"))
+                        .font(.system(size: 14))
+                        .foregroundStyle(AppTheme.textSecondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 32)
+            }
+
+            // Full schedule button
+            if !allDayGroups.isEmpty {
+                Button {
+                    showFullSchedule = true
+                } label: {
+                    HStack(spacing: 6) {
+                        LucideIcon.clock.image
+                            .font(.system(size: 14, weight: .semibold))
+                        Text(String(localized: "full_schedule"))
+                            .font(.system(size: 14, weight: .semibold))
+                    }
+                    .foregroundStyle(AppTheme.accent)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(AppTheme.accent.opacity(0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                }
+                .accessibilityIdentifier("btn_full_schedule")
+                .padding(.horizontal, 20)
+                .padding(.top, 4)
+                .padding(.bottom, 100)
             }
         }
     }
 
-    // MARK: - Peek Header
+    // MARK: - Inline Stop Header
 
-    private var peekHeader: some View {
+    private var inlineStopHeader: some View {
         HStack(alignment: .center, spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(stop.name)
                     .font(.system(size: 22, weight: .bold))
                     .foregroundStyle(AppTheme.textPrimary)
 
-                // Transit type badges
                 HStack(spacing: 6) {
                     ForEach(Array(stop.transitTypes).sorted(by: { $0.rawValue < $1.rawValue }), id: \.self) { type in
                         HStack(spacing: 4) {
@@ -594,14 +607,14 @@ struct StopDetailView: View {
                 centerCoordinate: center,
                 distance: max(distance, 500),
                 heading: 0,
-                pitch: 0
+                pitch: 50
             ))
         } else {
             mapPosition = .camera(MapCamera(
                 centerCoordinate: stopCoordinate,
-                distance: 700,
+                distance: 400,
                 heading: 0,
-                pitch: 0
+                pitch: 50
             ))
         }
     }

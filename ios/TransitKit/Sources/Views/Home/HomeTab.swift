@@ -89,7 +89,7 @@ struct HomeTab: View {
                     Text("\u{00B7}")
                         .font(.caption)
                         .foregroundStyle(AppTheme.textSecondary)
-                    Image(systemName: "bus")
+                    LucideIcon.bus.image
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(AppTheme.textSecondary)
                     Text("\(store.routes.count) \(String(localized: "hero_lines"))")

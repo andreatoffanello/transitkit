@@ -10,6 +10,7 @@ struct HomeTab: View {
     @Environment(ScheduleStore.self) private var store
     @Environment(FavoritesManager.self) private var favoritesManager
     @Environment(LocationManager.self) private var locationManager
+    @Environment(VehicleStore.self) private var vehicleStore
 
     private var config: OperatorConfig? { try? ConfigLoader.load() }
     @State private var selectedMainStop: ResolvedStop?
@@ -400,6 +401,9 @@ struct HomeTab: View {
                             .lineLimit(1)
                             .truncationMode(.tail)
                         Spacer()
+                        if vehicleStore.isLive(tripId: dep.tripId) {
+                            LiveBadge()
+                        }
                         TimelineView(.periodic(from: .now, by: 30)) { _ in
                             TimeDisplay(departure: dep)
                         }

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { decodeDepartures, getTodayDayGroupKey, parseDayGroup } from '~/utils/schedule'
 import type { ScheduleData } from '~/types'
 
@@ -67,6 +67,12 @@ describe('decodeDepartures', () => {
     expect(result).toHaveLength(0)
   })
 
+  it('salta righe con indici negativi', () => {
+    const compact: (string | number)[][] = [['07:35', -1, 0]]
+    const result = decodeDepartures(compact, mockScheduleData)
+    expect(result).toHaveLength(0)
+  })
+
   it('applica headsignMap se fornita', () => {
     const compact: (string | number)[][] = [['07:35', 0, 0]]
     const result = decodeDepartures(compact, mockScheduleData, { Centro: 'Center' })
@@ -99,15 +105,17 @@ describe('parseDayGroup', () => {
 })
 
 describe('getTodayDayGroupKey', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('restituisce la key che contiene il giorno corrente', () => {
     const departures: Record<string, (string | number)[][]> = {
       'mon,tue,wed,thu,fri': [['07:00', 0, 0]],
       'sat,sun': [['09:00', 0, 0]],
     }
-    const originalGetDay = Date.prototype.getDay
-    Date.prototype.getDay = () => 1 // Monday
+    vi.spyOn(Date.prototype, 'getDay').mockReturnValue(1) // Monday
     const key = getTodayDayGroupKey(departures)
-    Date.prototype.getDay = originalGetDay
     expect(key).toBe('mon,tue,wed,thu,fri')
   })
 

@@ -48,8 +48,10 @@ export function decodeDepartures(
     const headsignIdx = Number(compact[2])
 
     if (
+      lineIdx < 0 ||
       lineIdx >= data.lineNames.length ||
       lineIdx >= data.routeIds.length ||
+      headsignIdx < 0 ||
       headsignIdx >= data.headsigns.length
     ) continue
 

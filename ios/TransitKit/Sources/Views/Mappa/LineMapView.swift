@@ -37,7 +37,8 @@ struct LineMapView: View {
                             routeName: route.name,
                             color: lineColor,
                             textColor: textColor,
-                            bearing: vehicle.bearing
+                            bearing: vehicle.bearing,
+                            zoomTier: zoomTier
                         )
                     }
                 }
@@ -100,15 +101,86 @@ private struct VehiclePinView: View {
     let color: Color
     let textColor: Color
     let bearing: Float
+    let zoomTier: LineMapView.ZoomTier
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Direction arrow (points forward = "up" before rotation)
-            Triangle()
+        switch zoomTier {
+        case .far:
+            // Tiny dot — no label, no needle
+            Circle()
                 .fill(color)
-                .frame(width: 9, height: 7)
+                .frame(width: 8, height: 8)
+                .overlay(Circle().stroke(.white, lineWidth: 1))
 
-            // Route badge circle
+        case .medium:
+            // Compact badge, no needle — readable but not cluttered
+            ZStack {
+                Circle()
+                    .fill(color)
+                    .frame(width: 22, height: 22)
+                    .overlay(Circle().stroke(.white, lineWidth: 1.2))
+                Text(routeName)
+                    .font(.system(size: 7, weight: .black, design: .rounded))
+                    .foregroundStyle(textColor)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .padding(.horizontal, 2)
+            }
+            .shadow(color: .black.opacity(0.2), radius: 3, y: 1)
+            .drawingGroup()
+
+        case .close:
+            // Full badge + bearing needle that rotates independently
+            FullVehiclePin(
+                routeName: routeName,
+                color: color,
+                textColor: textColor,
+                bearing: bearing
+            )
+        }
+    }
+}
+
+// MARK: - Full Vehicle Pin (close zoom)
+
+/// Badge stays upright; only the directional needle rotates.
+/// Both elements share a 46×46 ZStack so `rotationEffect` on the needle
+/// anchors at the badge center.
+private struct FullVehiclePin: View {
+    let routeName: String
+    let color: Color
+    let textColor: Color
+    let bearing: Float
+
+    private static let size: CGFloat = 46
+
+    var body: some View {
+        ZStack {
+            // ── Bearing needle ──────────────────────────────────────────
+            // Canvas fills the full 46×46 frame.
+            // Triangle tip drawn at (cx, cy-20), base at (cx±5, cy-12).
+            // rotationEffect rotates the canvas around its center = badge center.
+            // Only shown when bearing is non-zero (bearing == 0 means "unknown").
+            if bearing != 0 {
+                Canvas { ctx, size in
+                    let cx = size.width / 2
+                    let cy = size.height / 2
+                    var path = Path()
+                    path.move(to: CGPoint(x: cx,   y: cy - 20))   // tip
+                    path.addLine(to: CGPoint(x: cx - 5, y: cy - 11)) // left base
+                    path.addLine(to: CGPoint(x: cx + 5, y: cy - 11)) // right base
+                    path.closeSubpath()
+                    // Filled with line color
+                    ctx.fill(path, with: .color(color))
+                    // White outline for contrast on similar-colored backgrounds
+                    ctx.stroke(path, with: .color(.white), lineWidth: 1.5)
+                }
+                .frame(width: Self.size, height: Self.size)
+                .rotationEffect(.degrees(Double(bearing)))
+            }
+
+            // ── Badge ────────────────────────────────────────────────────
+            // Centered in the ZStack. Never rotated.
             ZStack {
                 Circle()
                     .fill(color)
@@ -123,25 +195,13 @@ private struct VehiclePinView: View {
             }
             .shadow(color: .black.opacity(0.2), radius: 3, y: 1)
         }
-        .rotationEffect(.degrees(Double(bearing)))
+        .frame(width: Self.size, height: Self.size)
         .drawingGroup()
         .accessibilityLabel("\(routeName) in transito")
         .accessibilityIdentifier("vehicle_\(routeName)")
     }
 }
 
-// MARK: - Triangle shape
-
-private struct Triangle: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.move(to: CGPoint(x: rect.midX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
-        path.closeSubpath()
-        return path
-    }
-}
 
 // MARK: - Environment Key
 

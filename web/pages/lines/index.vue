@@ -10,7 +10,7 @@
         :style="{ color: config?.theme.textOnPrimary }"
         class="text-sm opacity-70 mr-2"
       >
-        ←
+        ← {{ config?.name ?? '' }}
       </NuxtLink>
       <span class="text-lg font-bold flex-1 text-center" :style="{ color: config?.theme.textOnPrimary }">
         Linee

@@ -80,7 +80,7 @@ struct HomeTab: View {
                     .foregroundStyle(AppTheme.textPrimary)
                     .lineLimit(1)
                 HStack(spacing: 6) {
-                    Image(systemName: "clock")
+                    LucideIcon.clock.image
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(AppTheme.textSecondary)
                     Text("\(store.stops.count) \(String(localized: "hero_stops"))")

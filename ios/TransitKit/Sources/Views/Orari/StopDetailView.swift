@@ -16,7 +16,6 @@ struct StopDetailView: View {
     @State private var selectedNearbyStop: ResolvedStop?
     @Environment(FavoritesManager.self) private var favoritesManager
 
-    @Namespace private var mapNamespace
     @State private var mapExpanded: Bool = false
 
     private let initialVisibleCount = 5
@@ -66,7 +65,14 @@ struct StopDetailView: View {
 
             if mapExpanded {
                 expandedMapOverlay
-                    .transition(.identity)
+                    .transition(
+                        .asymmetric(
+                            insertion: .scale(scale: 0.92, anchor: UnitPoint(x: 0.88, y: 0.22))
+                                .combined(with: .opacity),
+                            removal: .scale(scale: 0.92, anchor: UnitPoint(x: 0.88, y: 0.22))
+                                .combined(with: .opacity)
+                        )
+                    )
                     .zIndex(10)
             }
         }
@@ -174,7 +180,6 @@ struct StopDetailView: View {
                 }
             }
         }
-        .matchedGeometryEffect(id: "stopMap", in: mapNamespace)
         .mapStyle(.standard(elevation: .realistic, pointsOfInterest: .excludingAll))
         .frame(height: 190)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -205,66 +210,79 @@ struct StopDetailView: View {
 
     @ViewBuilder
     private var expandedMapOverlay: some View {
-        let expandedCamera = MapCameraPosition.camera(MapCamera(
-            centerCoordinate: stopCoordinate,
-            distance: 350,
-            heading: 0,
-            pitch: 65
-        ))
-
-        Map(initialPosition: expandedCamera) {
-            if stop.docks.isEmpty {
-                Annotation(stop.name, coordinate: stopCoordinate) {
-                    ZStack {
-                        Circle()
-                            .fill(AppTheme.accent)
-                            .frame(width: 32, height: 32)
-                        (stop.transitTypes.first ?? .bus).icon.image
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundStyle(.white)
-                    }
-                    .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
-                }
-            } else {
-                ForEach(stop.docks, id: \.letter) { dock in
-                    let coord = CLLocationCoordinate2D(latitude: dock.lat, longitude: dock.lng)
-                    Annotation(String(localized: "dock_label \(dock.letter)"), coordinate: coord) {
-                        DockPin(letter: dock.letter)
-                    }
-                }
-            }
-        }
-        .matchedGeometryEffect(id: "stopMap", in: mapNamespace)
-        .mapStyle(.standard(elevation: .realistic, pointsOfInterest: .excludingAll))
-        .ignoresSafeArea(.all)
-        .overlay(alignment: .topTrailing) {
-            Button {
-                withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
-                    mapExpanded = false
-                }
-            } label: {
-                LucideIcon.x.image
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.primary)
-                    .frame(width: 36, height: 36)
-                    .background(.regularMaterial, in: Capsule())
-            }
-            .buttonStyle(.plain)
-            .padding(.top, 60)
-            .padding(.trailing, 16)
-            .accessibilityLabel("Chiudi mappa")
-            .accessibilityIdentifier("btn_close_map")
-        }
-        .gesture(
-            DragGesture(minimumDistance: 20)
-                .onEnded { value in
-                    if value.translation.height > 80 {
-                        withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
-                            mapExpanded = false
+        GeometryReader { geo in
+            ZStack(alignment: .top) {
+                // Full-screen map (no gesture on it)
+                Map(initialPosition: .camera(MapCamera(
+                    centerCoordinate: stopCoordinate,
+                    distance: 350,
+                    heading: 0,
+                    pitch: 65
+                ))) {
+                    if stop.docks.isEmpty {
+                        Annotation(stop.name, coordinate: stopCoordinate) {
+                            ZStack {
+                                Circle()
+                                    .fill(AppTheme.accent)
+                                    .frame(width: 32, height: 32)
+                                (stop.transitTypes.first ?? .bus).icon.image
+                                    .font(.system(size: 15, weight: .bold))
+                                    .foregroundStyle(.white)
+                            }
+                            .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+                        }
+                    } else {
+                        ForEach(stop.docks, id: \.letter) { dock in
+                            let coord = CLLocationCoordinate2D(latitude: dock.lat, longitude: dock.lng)
+                            Annotation(String(localized: "dock_label \(dock.letter)"), coordinate: coord) {
+                                DockPin(letter: dock.letter)
+                            }
                         }
                     }
                 }
-        )
+                .mapStyle(.standard(elevation: .realistic, pointsOfInterest: .excludingAll))
+                .ignoresSafeArea(.all)
+
+                // Drag handle strip — sits above the map, captures swipe-down
+                Color.clear
+                    .frame(maxWidth: .infinity)
+                    .frame(height: geo.safeAreaInsets.top + 72)
+                    .contentShape(Rectangle())
+                    .gesture(
+                        DragGesture(minimumDistance: 20)
+                            .onEnded { value in
+                                if value.translation.height > 60 {
+                                    withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
+                                        mapExpanded = false
+                                    }
+                                }
+                            }
+                    )
+
+                // Close button — anchored to safe area top
+                HStack {
+                    Spacer()
+                    Button {
+                        withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
+                            mapExpanded = false
+                        }
+                    } label: {
+                        LucideIcon.x.image
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.primary)
+                            .frame(width: 44, height: 44)
+                            .background(.regularMaterial, in: Capsule())
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Chiudi mappa")
+                    .accessibilityIdentifier("btn_close_map")
+                }
+                .padding(.top, geo.safeAreaInsets.top + 8)
+                .padding(.trailing, 16)
+            }
+        }
+        .ignoresSafeArea(.all)
     }
 
     // MARK: - Inline Content (below map header)

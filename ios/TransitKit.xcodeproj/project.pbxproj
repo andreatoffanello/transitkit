@@ -23,6 +23,7 @@
 		295C0E21D8D347BCA84031DE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E3DD1D0873E34BB0B0595D79 /* Assets.xcassets */; };
 		379B6C3D2E804EEE3E5257C7 /* TimeDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3298ECC36B6DC09D4139EC06 /* TimeDisplay.swift */; };
 		444BA507DF5B29C9BE635812 /* Departure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EFD1147E3084F33E1731415 /* Departure.swift */; };
+		A97E40788F9B41ECBF709B23 /* GtfsRtDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF666B132F924819AC4A3250 /* GtfsRtDecoder.swift */; };
 		570955E4E445283DADAE8C0E /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 282C0DBEBC4A33831DC99EBA /* EmptyStateView.swift */; };
 		5785D9F624777AC708F5FC1E /* RouteOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF29A33249EEAAC16698F765 /* RouteOverlay.swift */; };
 		58E4307F0EF6473220F053E8 /* SkeletonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC6BBEB0DCFFFF27DB881B02 /* SkeletonView.swift */; };
@@ -35,6 +36,7 @@
 		7F5F190ECED7C0E360386483 /* TripDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57168F694B2F4ED9A806021B /* TripDetailView.swift */; };
 		84A2B8BDA416F613EFD73749 /* LineDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FC30DB536DCC2557E2B1AF6 /* LineDetailView.swift */; };
 		9348F246B0AD7805171D1AC0 /* ScheduleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF18EC8C137B8A6F37B3A79F /* ScheduleStore.swift */; };
+		E1F2A3B4C5D6E7F8A9B0C1D2 /* VehicleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E2D3C4B5A6978869504132 /* VehicleStore.swift */; };
 		970DD3E8ABA1AF549AAAC5B9 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 40C190F3ADD2E1B0E41BDFC6 /* Localizable.xcstrings */; };
 		98A9534E14CA4F1B1DF87822 /* schedules.json in Resources */ = {isa = PBXBuildFile; fileRef = EB0D2941E87A9FC1F213D9C7 /* schedules.json */; };
 		A187D445C8D1E57438EDC41F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F971BA014101FAA050D40F9 /* ContentView.swift */; };
@@ -100,6 +102,7 @@
 		40C190F3ADD2E1B0E41BDFC6 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		4A20EEA199B52A3A2B66325A /* FavoritesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesListView.swift; sourceTree = "<group>"; };
 		4EFD1147E3084F33E1731415 /* Departure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Departure.swift; sourceTree = "<group>"; };
+		EF666B132F924819AC4A3250 /* GtfsRtDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GtfsRtDecoder.swift; sourceTree = "<group>"; };
 		5481BF9847C559057368FA6B /* StopAnnotationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopAnnotationView.swift; sourceTree = "<group>"; };
 		56A72FCF47290855E84C160B /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		57168F694B2F4ED9A806021B /* TripDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripDetailView.swift; sourceTree = "<group>"; };
@@ -125,6 +128,7 @@
 		FA83972FA950E8F68E2FB2F0 /* Schedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Schedule.swift; sourceTree = "<group>"; };
 		FE1EBB88E53560FB389C43FA /* FareInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FareInfoView.swift; sourceTree = "<group>"; };
 		FF18EC8C137B8A6F37B3A79F /* ScheduleStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleStore.swift; sourceTree = "<group>"; };
+		F1E2D3C4B5A6978869504132 /* VehicleStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleStore.swift; sourceTree = "<group>"; };
 		AA11223344556677AABB0001 /* ColorUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorUtils.swift; sourceTree = "<group>"; };
 		FF99887766554433FF998875 /* HeadsignNormalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeadsignNormalizer.swift; sourceTree = "<group>"; };
 		EE88776655443322EE887764 /* SearchHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchHistoryStore.swift; sourceTree = "<group>"; };
@@ -199,6 +203,7 @@
 			isa = PBXGroup;
 			children = (
 				4EFD1147E3084F33E1731415 /* Departure.swift */,
+				EF666B132F924819AC4A3250 /* GtfsRtDecoder.swift */,
 				FA83972FA950E8F68E2FB2F0 /* Schedule.swift */,
 				DD44556677889900DDEE0004 /* StopCluster.swift */,
 			);
@@ -307,6 +312,7 @@
 			children = (
 				DA9BD090565D8838CFA04A8B /* FavoritesManager.swift */,
 				FF18EC8C137B8A6F37B3A79F /* ScheduleStore.swift */,
+				F1E2D3C4B5A6978869504132 /* VehicleStore.swift */,
 				EE88776655443322EE887764 /* SearchHistoryStore.swift */,
 			);
 			path = Stores;
@@ -457,6 +463,7 @@
 				CCEAFD601CAE70A4485CB7F4 /* AboutView.swift in Sources */,
 				A187D445C8D1E57438EDC41F /* ContentView.swift in Sources */,
 				444BA507DF5B29C9BE635812 /* Departure.swift in Sources */,
+				A97E40788F9B41ECBF709B23 /* GtfsRtDecoder.swift in Sources */,
 				CF82333AC918F9A07C2B1890 /* DepartureRow.swift in Sources */,
 				570955E4E445283DADAE8C0E /* EmptyStateView.swift in Sources */,
 				6E9E91E231876C379713E43E /* FareInfoView.swift in Sources */,
@@ -478,6 +485,7 @@
 				289F832C5077F291F197874C /* ScheduleLoader.swift in Sources */,
 				AA00BB11CC22DD33AA00BB11 /* LocationManager.swift in Sources */,
 				9348F246B0AD7805171D1AC0 /* ScheduleStore.swift in Sources */,
+				E1F2A3B4C5D6E7F8A9B0C1D2 /* VehicleStore.swift in Sources */,
 				B9D2D53997DA76D3C57489BA /* SettingsTab.swift in Sources */,
 				58E4307F0EF6473220F053E8 /* SkeletonView.swift in Sources */,
 				28924DA06A3B5D02B0C0DCB6 /* StopAnnotationView.swift in Sources */,

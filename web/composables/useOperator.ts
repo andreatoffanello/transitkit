@@ -15,5 +15,7 @@ export async function useOperator() {
     () => $fetch<ScheduleData>(`${CDN_BASE}/${id}/schedules.json`),
   )
 
-  return { operatorId, config, schedules }
+  const pending = computed(() => !config.value || !schedules.value)
+
+  return { operatorId, config, schedules, pending }
 }

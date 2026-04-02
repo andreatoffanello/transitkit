@@ -1065,6 +1065,27 @@
         "it" : { "stringUnit" : { "state" : "translated", "value" : "Fermate principali" } }
       }
     },
+    "nearby_you" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Near you" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Vicino a te" } }
+      }
+    },
+    "nearby_enable_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Stops near you" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Fermate vicino a te" } }
+      }
+    },
+    "nearby_enable_subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Enable location to find nearby stops" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Abilita la posizione per trovare fermate vicine" } }
+      }
+    },
     "no_departures_for_line %@" : {
       "extractionState" : "manual",
       "localizations" : {

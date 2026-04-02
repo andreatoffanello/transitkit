@@ -7,6 +7,7 @@ struct TransitKitApp: App {
     @State private var store: ScheduleStore?
     @State private var favoritesManager: FavoritesManager?
     @State private var searchHistoryStore: SearchHistoryStore?
+    @State private var locationManager = LocationManager()
     @State private var operatorConfig: OperatorConfig?
     @State private var loadingConfig: OperatorConfig?
     @State private var configError: String?
@@ -19,6 +20,7 @@ struct TransitKitApp: App {
                         .environment(store)
                         .environment(favoritesManager)
                         .environment(searchHistoryStore)
+                        .environment(locationManager)
                         .tint(AppTheme.accent)
                 } else if let configError {
                     errorView(message: configError)

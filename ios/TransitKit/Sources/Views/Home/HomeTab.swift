@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreLocation
 
 // MARK: - HomeTab
 
@@ -8,6 +9,7 @@ struct HomeTab: View {
     @Binding var selectedTab: Int
     @Environment(ScheduleStore.self) private var store
     @Environment(FavoritesManager.self) private var favoritesManager
+    @Environment(LocationManager.self) private var locationManager
 
     private var config: OperatorConfig? { try? ConfigLoader.load() }
     @State private var selectedMainStop: ResolvedStop?
@@ -37,7 +39,10 @@ struct HomeTab: View {
                     // Favorite stops
                     favoritesSection
 
-                    // Main stops (hub stops by line count)
+                    // Near you (GPS-based)
+                    nearbyStopsSection
+
+                    // Main stops (hub stops by line count, always visible)
                     if !store.stops.isEmpty {
                         mainStopsSection
                     }
@@ -47,6 +52,7 @@ struct HomeTab: View {
                 .padding(.bottom, 100)
             }
             .background(AppTheme.background.ignoresSafeArea())
+            .onAppear { locationManager.requestPermissionAndStart() }
             .navigationTitle(String(localized: "tab_home"))
             .navigationBarTitleDisplayMode(.large)
             .navigationDestination(item: $selectedMainStop) { stop in
@@ -298,6 +304,75 @@ struct HomeTab: View {
         .background(AppTheme.glassFill, in: RoundedRectangle(cornerRadius: 16))
         .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(AppTheme.glassBorder))
         .padding(.horizontal, 16)
+    }
+
+    // MARK: - Nearby Stops (GPS-based)
+
+    private var nearbyStops: [ResolvedStop] {
+        guard let location = locationManager.location else { return [] }
+        let userLat = location.coordinate.latitude
+        let userLng = location.coordinate.longitude
+
+        let radiusMeters: Double = 600
+        let latDeg = radiusMeters / 111_320
+        let lngDeg = radiusMeters / (111_320 * cos(userLat * .pi / 180))
+
+        return store.stops
+            .compactMap { stop -> (ResolvedStop, Double)? in
+                let dlat = stop.lat - userLat
+                let dlng = stop.lng - userLng
+                let dist = sqrt(dlat * dlat + dlng * dlng) * 111_320
+                guard dist <= radiusMeters else { return nil }
+                return (stop, dist)
+            }
+            .sorted { $0.1 < $1.1 }
+            .prefix(3)
+            .map(\.0)
+    }
+
+    @ViewBuilder
+    private var nearbyStopsSection: some View {
+        if locationManager.authorizationStatus == .notDetermined {
+            Button {
+                locationManager.requestPermissionAndStart()
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "location.circle")
+                        .font(.system(size: 20))
+                        .foregroundStyle(AppTheme.accent)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(String(localized: "nearby_enable_title"))
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(AppTheme.textPrimary)
+                        Text(String(localized: "nearby_enable_subtitle"))
+                            .font(.system(size: 12))
+                            .foregroundStyle(AppTheme.textSecondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12))
+                        .foregroundStyle(AppTheme.textTertiary)
+                }
+                .padding(14)
+                .adaptiveGlass(in: RoundedRectangle(cornerRadius: 12), withShadow: false)
+            }
+            .buttonStyle(.plain)
+        } else if !nearbyStops.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                sectionHeader(String(localized: "nearby_you"))
+                VStack(spacing: 8) {
+                    ForEach(nearbyStops) { stop in
+                        Button {
+                            selectedMainStop = stop
+                        } label: {
+                            mainStopCard(stop)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+        // If denied or no nearby stops: section hidden silently
     }
 
     // MARK: - Main Stops (hub stops by line count)

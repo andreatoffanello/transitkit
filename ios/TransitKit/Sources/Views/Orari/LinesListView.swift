@@ -161,7 +161,7 @@ struct LinesListView: View {
                 VStack(spacing: 8) {
                     ForEach(recentRoutes) { route in
                         NavigationLink(value: route) {
-                            LineRowContent(route: route, hasMultipleTypes: hasMultipleTransitTypes)
+                            LineRowContent(route: route, hasMultipleTypes: hasMultipleTransitTypes, store: store)
                         }
                         .buttonStyle(.plain)
                         .accessibilityIdentifier("recent_line_row_\(route.id)")
@@ -230,7 +230,7 @@ struct LinesListView: View {
                             VStack(spacing: 8) {
                                 ForEach(group.routes) { route in
                                     NavigationLink(value: route) {
-                                        LineRowContent(route: route, hasMultipleTypes: hasMultipleTransitTypes)
+                                        LineRowContent(route: route, hasMultipleTypes: hasMultipleTransitTypes, store: store)
                                     }
                                     .buttonStyle(.plain)
                                     .accessibilityIdentifier("line_row_\(route.id)")
@@ -254,6 +254,7 @@ struct LinesListView: View {
 private struct LineRowContent: View {
     let route: Route
     let hasMultipleTypes: Bool
+    let store: ScheduleStore
 
     private var lineColor: Color {
         // Use luminance to detect very light colors that would be invisible against the card background
@@ -281,6 +282,19 @@ private struct LineRowContent: View {
                     .foregroundStyle(AppTheme.textPrimary)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
+
+                // Stop sequence marquee
+                let stops = store.stopsForRoute(route.id, directionId: route.directions.first?.id ?? 0)
+                let sequence = stops.map(\.name).joined(separator: " → ")
+                if !sequence.isEmpty {
+                    MarqueeText(
+                        text: sequence,
+                        font: .system(size: 11),
+                        foregroundStyle: AppTheme.textTertiary,
+                        speed: 28
+                    )
+                    .frame(maxWidth: .infinity)
+                }
 
                 // Subtitle: transit type (only when multiple types) + direction count (only when >1)
                 let showTransitType = hasMultipleTypes

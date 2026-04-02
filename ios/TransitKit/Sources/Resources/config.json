@@ -14,8 +14,8 @@
   },
   "locale": ["en"],
   "theme": {
-    "primaryColor": "#06845C",
-    "accentColor": "#165F9C",
+    "primaryColor": "#165F9C",
+    "accentColor": "#06845C",
     "textOnPrimary": "#FFFFFF"
   },
   "store": {

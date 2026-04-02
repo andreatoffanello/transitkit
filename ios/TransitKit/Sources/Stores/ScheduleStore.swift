@@ -124,6 +124,9 @@ class ScheduleStore {
                 let patternIdx = compact.count > 4 ? compact[4].intValue : nil
                 let tripIdIdx = compact.count > 5 ? compact[5].intValue : nil
 
+                let resolvedTripId: String? = tripIdIdx.flatMap { idx in
+                    idx < data.tripIds.count ? data.tripIds[idx] : nil
+                }
                 let dep = Departure(
                     id: "\(time)_\(lineName)_\(headsign)_\(dock)",
                     time: time,
@@ -135,7 +138,8 @@ class ScheduleStore {
                     transitType: route?.transitType ?? .bus,
                     dock: dock,
                     patternIndex: patternIdx,
-                    tripIdIndex: tripIdIdx
+                    tripIdIndex: tripIdIdx,
+                    tripId: resolvedTripId
                 )
                 deps.append(dep)
             }

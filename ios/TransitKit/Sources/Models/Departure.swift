@@ -16,6 +16,7 @@ struct Departure: Identifiable, Hashable {
     let dock: String         // "" if none
     let patternIndex: Int?   // index into stopPatterns
     let tripIdIndex: Int?    // index into tripIds
+    let tripId: String?       // resolved from tripIds[tripIdIndex]; nil if no real-time data
 
     /// Minutes from midnight (for sorting; handles >24h for after-midnight)
     var minutesFromMidnight: Int {

@@ -122,7 +122,7 @@
     </template>
 
     <!-- Fermata non trovata -->
-    <div v-else class="text-center py-16 text-gray-400">
+    <div v-else role="alert" class="text-center py-16 text-gray-400">
       <p class="text-lg font-medium">Fermata non trovata</p>
       <p class="text-sm mt-1">ID: {{ stopId }}</p>
       <NuxtLink to="/" class="mt-4 inline-block text-accent text-sm underline">
@@ -141,8 +141,8 @@ const stopId = computed(() => String(route.params.stopId))
 
 const { config, schedules } = await useOperator()
 
-// pending: true finché entrambi i dati non sono caricati
-const pending = computed(() => !config.value && !schedules.value)
+// pending: true finché almeno uno dei dati non è ancora caricato
+const pending = computed(() => !config.value || !schedules.value)
 
 // Fermata corrente
 const stop = computed(() =>

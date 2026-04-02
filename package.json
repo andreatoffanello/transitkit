@@ -1,0 +1,23 @@
+{
+  "name": "transit-engine",
+  "version": "1.0.0",
+  "description": "White-label transit app engine. Single codebase, per-operator config → branded iOS app + Android app + web stop pages.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/qrcode": "^1.5.6",
+    "tsx": "^4.21.0"
+  }
+}

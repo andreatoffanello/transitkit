@@ -10,6 +10,7 @@ struct HomeTab: View {
     @Environment(FavoritesManager.self) private var favoritesManager
 
     private var config: OperatorConfig? { try? ConfigLoader.load() }
+    @State private var selectedMainStop: ResolvedStop?
 
     // MARK: - Greeting
 
@@ -35,6 +36,11 @@ struct HomeTab: View {
 
                     // Favorite stops
                     favoritesSection
+
+                    // Main stops (hub stops by line count)
+                    if !store.stops.isEmpty {
+                        mainStopsSection
+                    }
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 8)
@@ -43,6 +49,9 @@ struct HomeTab: View {
             .background(AppTheme.background.ignoresSafeArea())
             .navigationTitle(String(localized: "tab_home"))
             .navigationBarTitleDisplayMode(.large)
+            .navigationDestination(item: $selectedMainStop) { stop in
+                StopDetailView(stop: stop)
+            }
         }
     }
 
@@ -289,6 +298,62 @@ struct HomeTab: View {
         .background(AppTheme.glassFill, in: RoundedRectangle(cornerRadius: 16))
         .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(AppTheme.glassBorder))
         .padding(.horizontal, 16)
+    }
+
+    // MARK: - Main Stops (hub stops by line count)
+
+    private var mainStops: [ResolvedStop] {
+        store.stops
+            .sorted { $0.lineNames.count > $1.lineNames.count }
+            .prefix(3)
+            .map { $0 }
+    }
+
+    @ViewBuilder
+    private var mainStopsSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            sectionHeader(String(localized: "main_stops"))
+            VStack(spacing: 8) {
+                ForEach(mainStops) { stop in
+                    Button {
+                        selectedMainStop = stop
+                    } label: {
+                        mainStopCard(stop)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private func mainStopCard(_ stop: ResolvedStop) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Text(stop.name)
+                    .font(.subheadline.bold())
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .lineLimit(1)
+                Spacer()
+                (stop.transitTypes.first ?? .bus).icon.image
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(AppTheme.textSecondary)
+            }
+            FlowLayout(spacing: 4) {
+                ForEach(stop.lineNames.prefix(4), id: \.self) { lineName in
+                    let route = store.routes.first { $0.name == lineName }
+                    LineBadge(
+                        lineName: lineName,
+                        color: route?.color ?? "#666666",
+                        textColor: route?.textColor ?? "#FFFFFF",
+                        transitType: route?.transitType ?? .bus,
+                        size: .small
+                    )
+                }
+            }
+        }
+        .padding(12)
+        .adaptiveGlass(in: RoundedRectangle(cornerRadius: 12), withShadow: false)
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
     }
 
     private var emptyFavoritesCard: some View {

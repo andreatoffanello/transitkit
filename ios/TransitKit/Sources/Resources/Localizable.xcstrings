@@ -1043,6 +1043,20 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Nearby stops" } },
         "it" : { "stringUnit" : { "state" : "translated", "value" : "Fermate vicine" } }
       }
+    },
+    "main_stops" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Main stops" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Fermate principali" } }
+      }
+    },
+    "no_departures_for_line %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No departures for line %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessuna partenza per la linea %@" } }
+      }
     }
   },
   "version" : "1.0"

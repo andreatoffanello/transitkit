@@ -12,11 +12,11 @@ struct StopDetailView: View {
     @State private var filterLine: String?
     @State private var linesExpanded = false
     @State private var showNotificationsSheet = false
-    @State private var nearbyStopsData: [ResolvedStop] = []
-    @State private var selectedNearbyStop: ResolvedStop?
     @Environment(FavoritesManager.self) private var favoritesManager
 
     @State private var mapExpanded: Bool = false
+    @State private var expandedMapPosition: MapCameraPosition = .automatic
+    @State private var showMapAppPicker = false
 
     private let initialVisibleCount = 5
 
@@ -143,15 +143,7 @@ struct StopDetailView: View {
         .onAppear {
             centerOnStop()
         }
-        .task {
-            nearbyStopsData = store.nearbyStops(to: stop)
-        }
-        .onDisappear {
-            selectedNearbyStop = nil
-        }
-        .navigationDestination(item: $selectedNearbyStop) { nearbyStop in
-            StopDetailView(stop: nearbyStop)
-        }
+        .onDisappear { }
     }
 
     // MARK: - Map Header
@@ -212,13 +204,8 @@ struct StopDetailView: View {
     private var expandedMapOverlay: some View {
         GeometryReader { geo in
             ZStack(alignment: .top) {
-                // Full-screen map (no gesture on it)
-                Map(initialPosition: .camera(MapCamera(
-                    centerCoordinate: stopCoordinate,
-                    distance: 350,
-                    heading: 0,
-                    pitch: 65
-                ))) {
+                // Full-screen map
+                Map(position: $expandedMapPosition) {
                     if stop.docks.isEmpty {
                         Annotation(stop.name, coordinate: stopCoordinate) {
                             ZStack {
@@ -278,11 +265,88 @@ struct StopDetailView: View {
                     .accessibilityLabel("Chiudi mappa")
                     .accessibilityIdentifier("btn_close_map")
                 }
-                .padding(.top, geo.safeAreaInsets.top + 8)
+                .padding(.top, geo.safeAreaInsets.top + 16)
                 .padding(.trailing, 16)
+
+                // Bottom controls row
+                HStack(alignment: .bottom) {
+                    // "Apri in mappe" button — bottom leading
+                    Button("Apri in mappe") {
+                        showMapAppPicker = true
+                    }
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.primary)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(.regularMaterial, in: Capsule())
+                    .padding(.bottom, geo.safeAreaInsets.bottom + 16)
+                    .padding(.leading, 16)
+
+                    Spacer()
+
+                    // Map controls — bottom trailing
+                    VStack(spacing: 8) {
+                        // Reset north / bearing
+                        Button {
+                            withAnimation {
+                                expandedMapPosition = .camera(MapCamera(
+                                    centerCoordinate: stopCoordinate,
+                                    distance: 350,
+                                    heading: 0,
+                                    pitch: 65
+                                ))
+                            }
+                        } label: {
+                            Image(systemName: "location.north.fill")
+                                .font(.system(size: 14))
+                                .frame(width: 40, height: 40)
+                                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+                        }
+                        .accessibilityLabel(String(localized: "reset_map_view"))
+
+                        // Re-center on stop
+                        Button {
+                            withAnimation {
+                                expandedMapPosition = .camera(MapCamera(
+                                    centerCoordinate: stopCoordinate,
+                                    distance: 350,
+                                    heading: 0,
+                                    pitch: 65
+                                ))
+                            }
+                        } label: {
+                            Image(systemName: "scope")
+                                .font(.system(size: 14))
+                                .frame(width: 40, height: 40)
+                                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+                        }
+                        .accessibilityLabel(String(localized: "center_on_location"))
+                    }
+                    .padding(.bottom, geo.safeAreaInsets.bottom + 16)
+                    .padding(.trailing, 16)
+                }
+                .frame(maxHeight: .infinity, alignment: .bottom)
             }
         }
         .ignoresSafeArea(.all)
+        .confirmationDialog("Apri in...", isPresented: $showMapAppPicker) {
+            Button("Apple Maps") { openInAppleMaps() }
+            if UIApplication.shared.canOpenURL(URL(string: "comgooglemaps://")!) {
+                Button("Google Maps") { openInGoogleMaps() }
+            }
+            if UIApplication.shared.canOpenURL(URL(string: "waze://")!) {
+                Button("Waze") { openInWaze() }
+            }
+            Button("Annulla", role: .cancel) { }
+        }
+        .onAppear {
+            expandedMapPosition = .camera(MapCamera(
+                centerCoordinate: stopCoordinate,
+                distance: 350,
+                heading: 0,
+                pitch: 65
+            ))
+        }
     }
 
     // MARK: - Inline Content (below map header)
@@ -298,9 +362,6 @@ struct StopDetailView: View {
 
             // Lines section
             linesSection
-
-            // Nearby stops
-            nearbyStopsSection
 
             // Next departures
             if !visible.isEmpty {
@@ -467,81 +528,6 @@ struct StopDetailView: View {
         .padding(.bottom, 16)
     }
 
-    // MARK: - Nearby Stops
-
-    @ViewBuilder
-    private var nearbyStopsSection: some View {
-        if nearbyStopsData.isEmpty { EmptyView() } else {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(String(localized: "nearby_stops"))
-                    .font(.headline)
-                    .foregroundStyle(AppTheme.textPrimary)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 4)
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
-                        ForEach(nearbyStopsData) { nearbyStop in
-                            let distMeters = Int(haversineMeters(from: stop, to: nearbyStop))
-                            Button {
-                                selectedNearbyStop = nearbyStop
-                            } label: {
-                                nearbyStopCard(nearbyStop, distanceMeters: distMeters)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.trailing, 20)
-                }
-            }
-            .padding(.bottom, 8)
-        }
-    }
-
-    private func nearbyStopCard(_ nearbyStop: ResolvedStop, distanceMeters: Int) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 4) {
-                Text("\(distanceMeters) m")
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(AppTheme.accent.opacity(0.85), in: Capsule())
-                Spacer()
-            }
-            Text(nearbyStop.name)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(AppTheme.textPrimary)
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-            FlowLayout(spacing: 4) {
-                ForEach(nearbyStop.lineNames.prefix(3), id: \.self) { lineName in
-                    let route = store.routes.first { $0.name == lineName }
-                    LineBadge(
-                        lineName: lineName,
-                        color: route?.color ?? "#666666",
-                        textColor: route?.textColor ?? "#FFFFFF",
-                        transitType: route?.transitType ?? .bus,
-                        size: .tiny
-                    )
-                }
-            }
-        }
-        .frame(width: 140)
-        .padding(10)
-        .background(AppTheme.glassFill, in: RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(AppTheme.glassBorder, lineWidth: 1))
-    }
-
-    private func haversineMeters(from a: ResolvedStop, to b: ResolvedStop) -> Double {
-        let latPerMeter = 1.0 / 111_320.0
-        let lngPerMeter = 1.0 / (111_320.0 * cos(a.lat * .pi / 180.0))
-        let dlat = (b.lat - a.lat) / latPerMeter
-        let dlng = (b.lng - a.lng) / lngPerMeter
-        return sqrt(dlat * dlat + dlng * dlng)
-    }
-
     // MARK: - Next Departures
 
     private func nextDeparturesSection(_ departures: [Departure]) -> some View {
@@ -571,6 +557,7 @@ struct StopDetailView: View {
 
                         ForEach(availableLines, id: \.self) { line in
                             let route = store.routes.first { $0.name == line }
+                            let hasTodayDepartures = store.todayDepartures(forStopId: stop.id).contains { $0.lineName == line }
                             LineFilterChip(
                                 lineName: line,
                                 routeColor: route?.color ?? "#666666",
@@ -578,6 +565,8 @@ struct StopDetailView: View {
                             ) {
                                 withAnimation(.smooth(duration: 0.2)) { filterLine = line }
                             }
+                            .disabled(!hasTodayDepartures)
+                            .opacity(hasTodayDepartures ? 1.0 : 0.4)
                             .accessibilityIdentifier("btn_filter_line_\(line)")
                         }
                     }
@@ -638,11 +627,25 @@ struct StopDetailView: View {
     }
 
     private func openInMaps() {
+        showMapAppPicker = true
+    }
+
+    private func openInAppleMaps() {
         let mapItem = MKMapItem(placemark: MKPlacemark(coordinate: stopCoordinate))
         mapItem.name = stop.name
         mapItem.openInMaps(launchOptions: [
             MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeWalking
         ])
+    }
+
+    private func openInGoogleMaps() {
+        let url = URL(string: "comgooglemaps://?q=\(stopCoordinate.latitude),\(stopCoordinate.longitude)&zoom=17")!
+        UIApplication.shared.open(url)
+    }
+
+    private func openInWaze() {
+        let url = URL(string: "waze://?ll=\(stopCoordinate.latitude),\(stopCoordinate.longitude)&navigate=false")!
+        UIApplication.shared.open(url)
     }
 }
 

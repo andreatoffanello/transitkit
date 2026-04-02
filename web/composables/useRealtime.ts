@@ -29,7 +29,11 @@ function getFeedMessage(): Promise<import('protobufjs').Type> {
       protobuf.load('/proto/gtfs-realtime.proto').then(root =>
         root.lookupType('transit_realtime.FeedMessage'),
       ),
-    )
+    ).catch(err => {
+      // Reset on failure so the next poll can retry
+      feedMessagePromise = null
+      throw err
+    })
   }
   return feedMessagePromise
 }

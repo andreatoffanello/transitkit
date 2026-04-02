@@ -65,7 +65,7 @@
           Nessuna partenza nelle prossime 2 ore.
         </p>
 
-        <!-- Indicatore realtime — placeholder, attivato in T8 -->
+        <!-- Indicatore realtime — visibile solo quando il feed GTFS-RT è attivo -->
         <p
           v-if="isLive"
           class="text-xs text-green-500 mt-2 flex items-center gap-1.5"

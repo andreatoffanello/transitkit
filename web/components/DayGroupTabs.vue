@@ -10,7 +10,7 @@
         :key="dg.id"
         role="tab"
         :aria-selected="selected === dg.id"
-        :aria-controls="`tabpanel-${dg.id}`"
+        aria-controls="daytabs-panel"
         class="px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         :class="selected === dg.id
           ? 'bg-accent text-white'
@@ -22,7 +22,7 @@
     </div>
 
     <div
-      :id="`tabpanel-${selected}`"
+      id="daytabs-panel"
       role="tabpanel"
     >
       <slot :departures="currentDepartures" />

@@ -38,21 +38,13 @@ const props = defineProps<{
   now?: number
 }>()
 
-/** Calcola i minuti effettivi alla partenza, applicando realtimeDelay */
 function effectiveMinutes(nowMs: number): number {
   const parts = props.departure.time.split(':')
   const h = parseInt(parts[0] ?? '0', 10)
   const m = parseInt(parts[1] ?? '0', 10)
 
-  // Ancora la data base al now ricevuto, non a Date.now()
-  const baseDate = new Date(nowMs)
-  const depDate = new Date(baseDate)
+  const depDate = new Date(nowMs)
   depDate.setHours(h, m, 0, 0)
-
-  // Se depDate è nel passato rispetto alla stessa giornata, prova il giorno dopo (per servizi notturni)
-  if (depDate.getTime() < baseDate.setHours(0, 0, 0, 0) + h * 3_600_000 + m * 60_000) {
-    // mantieni come è — il calcolo è relativo a oggi
-  }
 
   let diffMin = Math.round((depDate.getTime() - nowMs) / 60_000)
 

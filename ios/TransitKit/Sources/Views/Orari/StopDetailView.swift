@@ -17,9 +17,13 @@ struct StopDetailView: View {
     @State private var selectedNearbyStop: ResolvedStop?
     @Environment(FavoritesManager.self) private var favoritesManager
 
-    private static let peekDetent = PresentationDetent.height(160)
-    @State private var sheetDetent: PresentationDetent = .medium
-    @State private var showSheet = false
+    // Inline card heights (replaces system sheet — keeps tab bar visible)
+    private static let peekHeight: CGFloat = 160
+    private static let mediumFraction: CGFloat = 0.50
+    // sheetDetent used only by notifications sheet
+    @State private var cardExpanded = false   // false = medium, true = large
+    @State private var cardHeightOverride: CGFloat? = nil
+    @GestureState private var dragState: CGFloat = 0
 
     private let initialVisibleCount = 5
 
@@ -57,18 +61,34 @@ struct StopDetailView: View {
     // MARK: - Body
 
     var body: some View {
-        ZStack {
-            Color(.systemBackground).ignoresSafeArea()
-            if showMap {
-                mapContent
-                    .transition(.opacity)
+        GeometryReader { geo in
+            let screenHeight = geo.size.height
+            let mediumHeight = screenHeight * Self.mediumFraction
+            let resolvedHeight: CGFloat = {
+                if cardExpanded { return screenHeight }
+                return cardHeightOverride ?? mediumHeight
+            }()
+            let clampedHeight = max(Self.peekHeight, min(screenHeight, resolvedHeight + dragState))
+
+            ZStack(alignment: .bottom) {
+                // Map background (or plain bg before map loads)
+                Color(.systemBackground)
+                    .ignoresSafeArea()
+
+                if showMap {
+                    mapContent
+                        .ignoresSafeArea(edges: .bottom)
+                        .transition(.opacity)
+                }
+
+                // Inline bottom card — does NOT cover the tab bar
+                bottomCard(height: clampedHeight, screenHeight: screenHeight)
             }
         }
-        .ignoresSafeArea(edges: .bottom)
         .navigationTitle(stop.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbarRole(.editor)
-        .toolbar(.hidden, for: .tabBar)
+        .toolbar(.visible, for: .tabBar)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 HStack(spacing: 4) {
@@ -130,9 +150,11 @@ struct StopDetailView: View {
             }
             .presentationDetents([.medium])
         }
+        .fullScreenCover(isPresented: $showFullSchedule) {
+            FullScheduleSheet(stop: stop)
+        }
         .onAppear {
             centerOnStop()
-            showSheet = true
             let delay: UInt64 = UIAccessibility.isReduceMotionEnabled ? 50_000_000 : 350_000_000
             Task {
                 try? await Task.sleep(nanoseconds: delay)
@@ -148,18 +170,52 @@ struct StopDetailView: View {
         .navigationDestination(item: $selectedNearbyStop) { nearbyStop in
             StopDetailView(stop: nearbyStop)
         }
-        .sheet(isPresented: $showSheet) {
-            stopSheetContent
-                .fullScreenCover(isPresented: $showFullSchedule) {
-                    FullScheduleSheet(stop: stop)
+    }
+
+    // MARK: - Inline Bottom Card
+
+    private func bottomCard(height: CGFloat, screenHeight: CGFloat) -> some View {
+        let mediumHeight = screenHeight * Self.mediumFraction
+        let drag = DragGesture(minimumDistance: 8)
+            .updating($dragState) { value, state, _ in
+                state = -value.translation.height
+            }
+            .onEnded { value in
+                let velocity = -value.predictedEndTranslation.height
+                let current = cardHeightOverride ?? mediumHeight
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.78)) {
+                    if velocity > 300 || current > mediumHeight * 1.3 {
+                        cardExpanded = true
+                        cardHeightOverride = screenHeight
+                    } else if velocity < -300 || current < Self.peekHeight * 1.5 {
+                        cardExpanded = false
+                        cardHeightOverride = Self.peekHeight
+                    } else {
+                        cardExpanded = false
+                        cardHeightOverride = mediumHeight
+                    }
                 }
-                .presentationDetents([Self.peekDetent, .medium, .large], selection: $sheetDetent)
-                .presentationDragIndicator(.visible)
-                .presentationBackgroundInteraction(.enabled(upThrough: .medium))
-                .presentationCornerRadius(20)
-                .presentationBackground(.regularMaterial)
-                .interactiveDismissDisabled()
+            }
+
+        return VStack(spacing: 0) {
+            // Drag handle
+            Capsule()
+                .fill(Color.secondary.opacity(0.4))
+                .frame(width: 36, height: 5)
+                .padding(.top, 8)
+                .padding(.bottom, 4)
+
+            // Scrollable content
+            ScrollView(showsIndicators: false) {
+                stopSheetContent
+            }
         }
+        .frame(height: height)
+        .frame(maxWidth: .infinity)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .shadow(color: .black.opacity(0.12), radius: 16, y: -4)
+        .gesture(drag)
+        .animation(.interactiveSpring(), value: height)
     }
 
     // MARK: - Map Content
@@ -190,7 +246,7 @@ struct StopDetailView: View {
         }
         .mapStyle(.standard(pointsOfInterest: .excludingAll))
         .safeAreaInset(edge: .bottom) {
-            Color.clear.frame(height: sheetDetent == .large ? 0 : sheetDetent == .medium ? UIScreen.main.bounds.height * 0.5 : 160)
+            Color.clear.frame(height: cardExpanded ? 0 : cardHeightOverride ?? UIScreen.main.bounds.height * Self.mediumFraction)
         }
     }
 
@@ -397,10 +453,7 @@ struct StopDetailView: View {
                         ForEach(nearbyStopsData) { nearbyStop in
                             let distMeters = Int(haversineMeters(from: stop, to: nearbyStop))
                             Button {
-                                showSheet = false
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                    selectedNearbyStop = nearbyStop
-                                }
+                                selectedNearbyStop = nearbyStop
                             } label: {
                                 nearbyStopCard(nearbyStop, distanceMeters: distMeters)
                             }

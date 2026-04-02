@@ -5,8 +5,35 @@ import SwiftUI
 struct LinesListView: View {
     let searchQuery: String
     let transitTypeFilter: TransitType?
+    let recentIds: [String]
     @Environment(ScheduleStore.self) private var store
     @State private var collapsedTypes: Set<TransitType> = []
+
+    init(searchQuery: String, transitTypeFilter: TransitType?, recentIds: [String] = []) {
+        self.searchQuery = searchQuery
+        self.transitTypeFilter = transitTypeFilter
+        self.recentIds = recentIds
+    }
+
+    // MARK: - Fuzzy scoring
+
+    /// Returns a score 0-100 for how well `text` matches `query` (subsequence match).
+    private func fuzzyScore(_ text: String, query: String) -> Int {
+        let t = text.lowercased()
+        let q = query.lowercased()
+        // Exact prefix = highest score
+        if t.hasPrefix(q) { return 100 }
+        // Contains = high score
+        if t.contains(q) { return 80 }
+        // Subsequence check
+        var qi = q.startIndex
+        for char in t {
+            if qi < q.endIndex && char == q[qi] {
+                qi = q.index(after: qi)
+            }
+        }
+        return qi == q.endIndex ? 50 : 0
+    }
 
     // MARK: - Filtering
 
@@ -18,18 +45,42 @@ struct LinesListView: View {
             result = result.filter { $0.transitType == type }
         }
 
-        // Filter by search query
+        // Filter and sort by search query
         if !searchQuery.isEmpty {
-            let query = searchQuery.lowercased()
-            result = result.filter { route in
-                route.name.lowercased().contains(query)
-                || route.longName.lowercased().contains(query)
+            if searchQuery.count >= 2 {
+                // Fuzzy-scored filter: compute best score across name, longName and id
+                let scored = result.compactMap { route -> (route: Route, score: Int)? in
+                    let score = max(
+                        fuzzyScore(route.name, query: searchQuery),
+                        max(
+                            fuzzyScore(route.longName, query: searchQuery),
+                            fuzzyScore(route.id, query: searchQuery)
+                        )
+                    )
+                    return score > 0 ? (route, score) : nil
+                }
+                return scored
+                    .sorted { $0.score != $1.score ? $0.score > $1.score : $0.route.name.localizedStandardCompare($1.route.name) == .orderedAscending }
+                    .map(\.route)
+            } else {
+                let query = searchQuery.lowercased()
+                result = result.filter { route in
+                    route.name.lowercased().contains(query)
+                    || route.longName.lowercased().contains(query)
+                }
+                return result.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
             }
         }
 
         return result.sorted {
             $0.name.localizedStandardCompare($1.name) == .orderedAscending
         }
+    }
+
+    /// Recent routes resolved from the store, preserving recency order.
+    private var recentRoutes: [Route] {
+        guard searchQuery.isEmpty else { return [] }
+        return recentIds.compactMap { id in store.routes.first { $0.id == id } }
     }
 
     /// Group routes by transit type for sectioned display.
@@ -51,7 +102,7 @@ struct LinesListView: View {
     var body: some View {
         if store.isLoading && store.routes.isEmpty {
             loadingState
-        } else if filteredRoutes.isEmpty {
+        } else if filteredRoutes.isEmpty && recentRoutes.isEmpty {
             emptyState
         } else {
             routesScrollView
@@ -96,9 +147,37 @@ struct LinesListView: View {
 
     // MARK: - Routes List
 
+    // MARK: - Recent Section
+
+    @ViewBuilder
+    private var recentSection: some View {
+        if !recentRoutes.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(String(localized: "recent_searches"))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(AppTheme.textTertiary)
+                    .padding(.horizontal, 4)
+
+                VStack(spacing: 8) {
+                    ForEach(recentRoutes) { route in
+                        NavigationLink(value: route) {
+                            LineRowContent(route: route, hasMultipleTypes: hasMultipleTransitTypes)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("recent_line_row_\(route.id)")
+                    }
+                }
+            }
+            .padding(.bottom, 4)
+        }
+    }
+
     private var routesScrollView: some View {
         ScrollView(showsIndicators: false) {
             LazyVStack(spacing: 16) {
+                // Recent section — only visible when not actively searching
+                recentSection
+
                 // Result count when searching
                 if !searchQuery.isEmpty {
                     Text(String(localized: "lines_result_count \(filteredRoutes.count)"))

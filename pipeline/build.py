@@ -33,6 +33,23 @@ REPO_ROOT = SCRIPT_DIR.parent
 
 DAY_NAMES = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
+# Headsign values that carry no destination meaning for riders.
+# When a trip's headsign matches one of these, the pipeline will
+# substitute the name of the trip's last stop instead.
+GENERIC_HEADSIGNS = {
+    "inbound", "outbound", "loop", "cw", "ccw",
+    "direction 1", "direction 2", "dir 1", "dir 2",
+    "north", "south", "east", "west",
+    "clockwise", "counterclockwise",
+    "route", "service",
+}
+
+
+def is_generic_headsign(headsign: str) -> bool:
+    """Return True if the headsign conveys no useful destination info."""
+    return headsign.strip().lower() in GENERIC_HEADSIGNS
+
+
 # GTFS route_type → transit type string
 ROUTE_TYPE_MAP = {
     "0": "tram",
@@ -161,6 +178,54 @@ def build_service_day_map(calendar: list[dict], calendar_dates: list[dict] | Non
                     pass
 
     return result
+
+
+# --- Headsign Resolution ---
+
+def build_trip_terminus_map(
+    stop_times_raw: list[dict],
+    stops_raw: list[dict],
+) -> dict[str, str]:
+    """Return a mapping of trip_id → name of that trip's last stop.
+
+    Used to replace generic headsigns (e.g. "Inbound") with the actual
+    destination stop name so riders know where the vehicle is heading.
+    """
+    # Build stop_id → stop_name lookup
+    stop_name_map: dict[str, str] = {
+        s["stop_id"].strip(): s.get("stop_name", "").strip()
+        for s in stops_raw
+    }
+
+    # Find the last stop_id per trip (highest stop_sequence)
+    trip_last: dict[str, tuple[int, str]] = {}  # trip_id → (max_seq, stop_id)
+    for st in stop_times_raw:
+        tid = st["trip_id"].strip()
+        try:
+            seq = int(st.get("stop_sequence", 0))
+        except (ValueError, TypeError):
+            continue
+        stop_id = st["stop_id"].strip()
+        if tid not in trip_last or seq > trip_last[tid][0]:
+            trip_last[tid] = (seq, stop_id)
+
+    return {
+        tid: stop_name_map.get(stop_id, "")
+        for tid, (_, stop_id) in trip_last.items()
+    }
+
+
+def resolve_headsign(trip_id: str, raw_headsign: str, terminus_map: dict[str, str]) -> str:
+    """Return a meaningful headsign for display to riders.
+
+    If *raw_headsign* is empty or a known generic term (e.g. "Inbound",
+    "Outbound", "Loop"), substitute the name of the trip's last stop from
+    *terminus_map*.  Otherwise return *raw_headsign* unchanged.
+    """
+    if not raw_headsign or is_generic_headsign(raw_headsign):
+        terminus = terminus_map.get(trip_id, "")
+        return terminus if terminus else raw_headsign
+    return raw_headsign
 
 
 # --- Stop Parsing & Grouping ---
@@ -296,8 +361,13 @@ def build_departures(
     valid_stop_ids: set[str],
     stop_to_station: dict[str, str],
     stations: dict[str, dict],
+    terminus_map: dict[str, str] | None = None,
 ) -> dict:
-    """Build departures per stop, grouped by day."""
+    """Build departures per stop, grouped by day.
+
+    When *terminus_map* is provided, generic headsigns (e.g. "Inbound",
+    "Outbound") are replaced with the name of the trip's last stop.
+    """
     trip_index = {t["trip_id"]: t for t in trips}
     route_index = {r["route_id"]: r for r in routes}
 
@@ -339,7 +409,12 @@ def build_departures(
         transit_type = ROUTE_TYPE_MAP.get(route_type_code, "bus")
 
         line_name = route.get("route_short_name", route_id).strip()
-        headsign = trip.get("trip_headsign", "").strip().strip('"')
+        raw_headsign = trip.get("trip_headsign", "").strip().strip('"')
+        headsign = (
+            resolve_headsign(trip_id, raw_headsign, terminus_map)
+            if terminus_map is not None
+            else raw_headsign
+        )
 
         color = route.get("route_color", "000000").strip()
         text_color = route.get("route_text_color", "FFFFFF").strip()
@@ -835,6 +910,13 @@ def main():
     print(f"  GTFS stops: {len(feed.get('stops', []))}")
     print(f"  Grouped stations: {len(stations)}")
 
+    # Build terminus map so generic headsigns can be replaced with the
+    # name of the trip's last stop (e.g. "Inbound" → "ASU Peacock Traffic Circle")
+    terminus_map = build_trip_terminus_map(
+        feed.get("stop_times", []),
+        feed.get("stops", []),
+    )
+
     departures = build_departures(
         feed.get("stop_times", []),
         feed.get("trips", []),
@@ -843,6 +925,7 @@ def main():
         valid_stop_ids,
         stop_to_station,
         stations,
+        terminus_map=terminus_map,
     )
 
     shapes = parse_shapes(feed.get("shapes", []))

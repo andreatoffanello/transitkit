@@ -23,6 +23,7 @@ struct OperatorConfig: Codable {
     let pointsOfSale: [PointOfSale]?
     let privacyUrl: String?
     let gtfsRt: GtfsRtConfig?
+    let headsignMap: [String: String]?
 
     struct ThemeConfig: Codable {
         let primaryColor: String

@@ -5,8 +5,35 @@ import SwiftUI
 struct StopsListView: View {
     let searchQuery: String
     let transitTypeFilter: TransitType?
+    let recentIds: [String]
     @Environment(ScheduleStore.self) private var store
     @State private var appeared = false
+
+    init(searchQuery: String, transitTypeFilter: TransitType?, recentIds: [String] = []) {
+        self.searchQuery = searchQuery
+        self.transitTypeFilter = transitTypeFilter
+        self.recentIds = recentIds
+    }
+
+    // MARK: - Fuzzy scoring
+
+    /// Returns a score 0-100 for how well `text` matches `query` (subsequence match).
+    private func fuzzyScore(_ text: String, query: String) -> Int {
+        let t = text.lowercased()
+        let q = query.lowercased()
+        // Exact prefix = highest score
+        if t.hasPrefix(q) { return 100 }
+        // Contains = high score
+        if t.contains(q) { return 80 }
+        // Subsequence check
+        var qi = q.startIndex
+        for char in t {
+            if qi < q.endIndex && char == q[qi] {
+                qi = q.index(after: qi)
+            }
+        }
+        return qi == q.endIndex ? 50 : 0
+    }
 
     // MARK: - Filtering
 
@@ -18,15 +45,34 @@ struct StopsListView: View {
             result = result.filter { $0.transitTypes.contains(type) }
         }
 
-        // Filter by search query (fuzzy name match)
+        // Filter and sort by search query
         if !searchQuery.isEmpty {
-            let query = searchQuery.lowercased()
-            result = result.filter { stop in
-                stop.name.lowercased().contains(query)
+            if searchQuery.count >= 2 {
+                // Fuzzy-scored filter: compute best score across name and id, drop zero-score items
+                let scored = result.compactMap { stop -> (stop: ResolvedStop, score: Int)? in
+                    let score = max(
+                        fuzzyScore(stop.name, query: searchQuery),
+                        fuzzyScore(stop.id, query: searchQuery)
+                    )
+                    return score > 0 ? (stop, score) : nil
+                }
+                return scored
+                    .sorted { $0.score != $1.score ? $0.score > $1.score : $0.stop.name.localizedStandardCompare($1.stop.name) == .orderedAscending }
+                    .map(\.stop)
+            } else {
+                let query = searchQuery.lowercased()
+                result = result.filter { $0.name.lowercased().contains(query) }
+                return result.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
             }
         }
 
         return result.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    /// Recent stops resolved from the store, preserving recency order.
+    private var recentStops: [ResolvedStop] {
+        guard searchQuery.isEmpty else { return [] }
+        return recentIds.compactMap { id in store.stops.first { $0.id == id } }
     }
 
     /// Group stops by their primary transit type for sectioned display.
@@ -56,7 +102,7 @@ struct StopsListView: View {
     var body: some View {
         if store.isLoading && store.stops.isEmpty {
             loadingState
-        } else if filteredStops.isEmpty {
+        } else if filteredStops.isEmpty && recentStops.isEmpty {
             emptyState
         } else {
             stopsScrollView
@@ -115,8 +161,36 @@ struct StopsListView: View {
         }
     }
 
+    // MARK: - Recent Section
+
+    @ViewBuilder
+    private var recentSection: some View {
+        if !recentStops.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(String(localized: "recent_searches"))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(AppTheme.textTertiary)
+                    .padding(.horizontal, 4)
+
+                ForEach(Array(recentStops.enumerated()), id: \.element.id) { index, stop in
+                    stopRow(stop: stop, index: index)
+                }
+            }
+            .padding(.bottom, 4)
+        }
+    }
+
     private var groupedContent: some View {
         LazyVStack(spacing: 16, pinnedViews: .sectionHeaders) {
+            // Recent section shown above grouped content when query is empty
+            if !recentStops.isEmpty {
+                Section {
+                    recentSection
+                } header: {
+                    EmptyView()
+                }
+            }
+
             ForEach(groupedStops, id: \.type) { group in
                 Section {
                     ForEach(Array(group.stops.enumerated()), id: \.element.id) { index, stop in
@@ -134,6 +208,9 @@ struct StopsListView: View {
 
     private var flatContent: some View {
         LazyVStack(spacing: 8) {
+            // Recent section — only visible when not actively searching
+            recentSection
+
             // Result count
             if !searchQuery.isEmpty {
                 Text(String(localized: "stops_result_count \(filteredStops.count)"))

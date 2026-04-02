@@ -6,16 +6,19 @@ import SwiftUI
 struct TransitKitApp: App {
     @State private var store: ScheduleStore?
     @State private var favoritesManager: FavoritesManager?
+    @State private var searchHistoryStore: SearchHistoryStore?
     @State private var operatorConfig: OperatorConfig?
+    @State private var loadingConfig: OperatorConfig?
     @State private var configError: String?
 
     var body: some Scene {
         WindowGroup {
             Group {
-                if let store, let favoritesManager, let operatorConfig {
+                if let store, let favoritesManager, let searchHistoryStore, let operatorConfig {
                     ContentView(config: operatorConfig)
                         .environment(store)
                         .environment(favoritesManager)
+                        .environment(searchHistoryStore)
                         .tint(AppTheme.accent)
                 } else if let configError {
                     errorView(message: configError)
@@ -33,11 +36,14 @@ struct TransitKitApp: App {
         do {
             let config = try ConfigLoader.load()
             AppTheme.configure(from: config)
-            operatorConfig = config
+            loadingConfig = config
             let scheduleStore = ScheduleStore(operatorId: config.id)
-            store = scheduleStore
+            scheduleStore.configure(with: config)
             favoritesManager = FavoritesManager(operatorId: config.id)
+            searchHistoryStore = SearchHistoryStore(operatorId: config.id)
             await scheduleStore.load()
+            store = scheduleStore
+            operatorConfig = config
         } catch {
             configError = error.localizedDescription
         }
@@ -45,14 +51,37 @@ struct TransitKitApp: App {
 
     // MARK: - Loading View
 
+    private var operatorInitials: String {
+        guard let name = loadingConfig?.name else { return "" }
+        let words = name.split(separator: " ").prefix(2)
+        return words.compactMap { $0.first }.map(String.init).joined()
+    }
+
     private var loadingView: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 20) {
+            if let config = loadingConfig {
+                // Avatar circle with operator initials
+                ZStack {
+                    Circle()
+                        .fill(AppTheme.accent)
+                        .frame(width: 64, height: 64)
+                    Text(operatorInitials)
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+                // Operator name
+                Text(config.name)
+                    .font(.title2.bold())
+                    .foregroundStyle(AppTheme.textPrimary)
+            }
+            // Subtle loading indicator
             ProgressView()
-                .controlSize(.large)
                 .tint(AppTheme.accent)
-            Text(String(localized: "powered_by_transitkit"))
-                .font(.system(.caption, weight: .medium))
-                .foregroundStyle(AppTheme.textTertiary)
+            if loadingConfig == nil {
+                Text(String(localized: "powered_by_transitkit"))
+                    .font(.system(.caption, weight: .medium))
+                    .foregroundStyle(AppTheme.textTertiary)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AppTheme.background.ignoresSafeArea())

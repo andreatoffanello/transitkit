@@ -29,6 +29,27 @@
         "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiungi una fermata ai preferiti dalla tab Orari." } }
       }
     },
+    "onboarding_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Find your stop" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Trova la tua fermata" } }
+      }
+    },
+    "onboarding_subtitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Browse stops and add them to favorites for quick access to schedules" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cerca tra le fermate e aggiungile ai preferiti per avere gli orari a portata di mano" } }
+      }
+    },
+    "onboarding_cta" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Explore stops and lines" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Esplora fermate e linee" } }
+      }
+    },
     "tab_schedules" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -118,6 +139,13 @@
       "localizations" : {
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Search lines..." } },
         "it" : { "stringUnit" : { "state" : "translated", "value" : "Cerca linee..." } }
+      }
+    },
+    "recent_searches" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Recent" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Recenti" } }
       }
     },
     "segment_stops" : {

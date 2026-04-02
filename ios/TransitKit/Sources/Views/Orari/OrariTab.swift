@@ -4,6 +4,7 @@ import SwiftUI
 /// Provides a segmented control (Stops / Lines), search bar, and transit type filter chips.
 struct OrariTab: View {
     @Environment(ScheduleStore.self) private var store
+    @Environment(SearchHistoryStore.self) private var searchHistoryStore
     @State private var segment: OrariSegment = .stops
     @State private var searchQuery = ""
     @State private var selectedTransitType: TransitType?
@@ -60,12 +61,14 @@ struct OrariTab: View {
                     case .stops:
                         StopsListView(
                             searchQuery: searchQuery,
-                            transitTypeFilter: selectedTransitType
+                            transitTypeFilter: selectedTransitType,
+                            recentIds: searchHistoryStore.recentStopIds
                         )
                     case .lines:
                         LinesListView(
                             searchQuery: searchQuery,
-                            transitTypeFilter: selectedTransitType
+                            transitTypeFilter: selectedTransitType,
+                            recentIds: searchHistoryStore.recentLineIds
                         )
                     }
                 }
@@ -75,9 +78,11 @@ struct OrariTab: View {
             .navigationTitle(String(localized: "tab_schedules"))
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: ResolvedStop.self) { stop in
+                let _ = searchHistoryStore.recordStop(stop.id)
                 StopDetailView(stop: stop)
             }
             .navigationDestination(for: Route.self) { route in
+                let _ = searchHistoryStore.recordLine(route.id)
                 LineDetailView(route: route)
             }
             .task {

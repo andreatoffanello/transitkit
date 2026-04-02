@@ -20,9 +20,16 @@ class ScheduleStore {
     private var routeById: [String: Route] = [:]
 
     private let loader: ScheduleLoader
+    private var operatorConfig: OperatorConfig? = nil
 
     init(operatorId: String, cdnBaseURL: String? = nil) {
         self.loader = ScheduleLoader(operatorId: operatorId, cdnBaseURL: cdnBaseURL)
+    }
+
+    /// Supplies the operator config so headsign normalization can use the operator's map.
+    /// Call this once from the app's bootstrap sequence, before or after `load()`.
+    func configure(with config: OperatorConfig) {
+        self.operatorConfig = config
     }
 
     // MARK: - Load
@@ -109,7 +116,8 @@ class ScheduleStore {
 
                 let lineName = data.lineNames[lineIdx]
                 let routeId = data.routeIds[lineIdx]
-                let headsign = data.headsigns[headsignIdx]
+                let rawHeadsign = data.headsigns[headsignIdx]
+                let headsign = HeadsignNormalizer.normalize(rawHeadsign, map: operatorConfig?.headsignMap)
                 let route = routeById[routeId]
 
                 let dock = compact.count > 3 ? compact[3].stringValue : ""

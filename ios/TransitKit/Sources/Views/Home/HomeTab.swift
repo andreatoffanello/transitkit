@@ -195,7 +195,7 @@ struct HomeTab: View {
             sectionHeader(String(localized: "favorites"))
 
             if favoriteStops.isEmpty {
-                emptyFavoritesCard
+                onboardingCard
             } else {
                 VStack(spacing: 8) {
                     ForEach(favoriteStops) { stop in
@@ -249,6 +249,46 @@ struct HomeTab: View {
         .padding(12)
         .adaptiveGlass(in: RoundedRectangle(cornerRadius: 12), withShadow: false)
         .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
+    }
+
+    private var onboardingCard: some View {
+        VStack(spacing: 16) {
+            // Icon
+            ZStack {
+                Circle()
+                    .fill(AppTheme.accent.opacity(0.12))
+                    .frame(width: 56, height: 56)
+                LucideIcon.mapPin.image
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundStyle(AppTheme.accent)
+            }
+
+            VStack(spacing: 6) {
+                Text(String(localized: "onboarding_title"))
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(AppTheme.textPrimary)
+                Text(String(localized: "onboarding_subtitle"))
+                    .font(.system(size: 14))
+                    .foregroundStyle(AppTheme.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button {
+                selectedTab = 1  // Navigate to Orari tab
+            } label: {
+                Text(String(localized: "onboarding_cta"))
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(AppTheme.accent, in: RoundedRectangle(cornerRadius: 12))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(20)
+        .background(AppTheme.glassFill, in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(AppTheme.glassBorder))
+        .padding(.horizontal, 16)
     }
 
     private var emptyFavoritesCard: some View {

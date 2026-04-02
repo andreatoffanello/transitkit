@@ -7,6 +7,7 @@
     >
       <NuxtLink
         to="/"
+        aria-label="Torna alla home"
         class="text-sm opacity-70 mr-2"
         :style="{ color: config?.theme.textOnPrimary }"
       >
@@ -205,7 +206,10 @@ const upcomingDepartures = computed<Departure[]>(() => {
   midnight.setHours(0, 0, 0, 0)
   const nowMin = Math.floor((now.value - midnight.getTime()) / 60_000)
   return deps
-    .filter(d => d.minutesFromMidnight >= nowMin && d.minutesFromMidnight <= nowMin + 120)
+    .filter(d => {
+      const effectiveMin = d.minutesFromMidnight + Math.round((d.realtimeDelay ?? 0) / 60)
+      return effectiveMin >= nowMin && effectiveMin <= nowMin + 120
+    })
     .slice(0, 6)
 })
 

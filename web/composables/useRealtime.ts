@@ -20,6 +20,20 @@ export function mergeRealtimeDelays(
   })
 }
 
+// Cache the FeedMessage type — loaded once, reused on every poll
+let feedMessagePromise: Promise<import('protobufjs').Type> | null = null
+
+function getFeedMessage(): Promise<import('protobufjs').Type> {
+  if (!feedMessagePromise) {
+    feedMessagePromise = import('protobufjs').then(protobuf =>
+      protobuf.load('/proto/gtfs-realtime.proto').then(root =>
+        root.lookupType('transit_realtime.FeedMessage'),
+      ),
+    )
+  }
+  return feedMessagePromise
+}
+
 /**
  * Client-side composable for GTFS-RT polling.
  * Polls every 30s; falls back silently on CORS/404/parse errors.
@@ -34,11 +48,14 @@ export function useRealtime(
   const isLive = ref(false)
   const merged = ref<Departure[]>([...departures.value])
 
-  // Keep merged in sync with static departures when realtime is not active
+  // Track the last known delay map so the watch can re-apply it
+  let lastDelays: Record<string, number> = {}
+
+  // Keep merged in sync with static departures; re-apply delays when live
   watch(departures, (deps) => {
-    if (!isLive.value) {
-      merged.value = deps
-    }
+    merged.value = isLive.value
+      ? mergeRealtimeDelays(deps, lastDelays)
+      : deps
   })
 
   if (!gtfsRtUrl || import.meta.server) {
@@ -51,27 +68,26 @@ export function useRealtime(
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const buffer = await res.arrayBuffer()
 
-      const protobuf = await import('protobufjs')
-      const root = await protobuf.load('/proto/gtfs-realtime.proto')
-      const FeedMessage = root.lookupType('transit_realtime.FeedMessage')
+      const FeedMessage = await getFeedMessage()
       const feed = FeedMessage.decode(new Uint8Array(buffer)) as unknown as GtfsRtFeed
 
       const delays: Record<string, number> = {}
       for (const entity of feed.entity ?? []) {
         const tu = entity.tripUpdate
         if (!tu?.trip?.tripId) continue
-        const delay =
-          tu.stopTimeUpdate?.[0]?.departure?.delay ??
-          tu.stopTimeUpdate?.[0]?.arrival?.delay ??
-          0
+        const updates = tu.stopTimeUpdate
+        const lastUpdate = updates?.[updates.length - 1]
+        const delay = lastUpdate?.departure?.delay ?? lastUpdate?.arrival?.delay ?? 0
         delays[tu.trip.tripId] = delay
       }
 
+      lastDelays = delays
       merged.value = mergeRealtimeDelays(departures.value, delays)
       isLive.value = true
     } catch {
       // CORS, 404, parse error — degrade silently
       isLive.value = false
+      lastDelays = {}
       merged.value = departures.value
     }
   }

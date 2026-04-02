@@ -58,4 +58,39 @@ describe('mergeRealtimeDelays', () => {
     expect(result[1]?.isRealtime).toBeUndefined()
     expect(result[1]?.realtimeDelay).toBeUndefined()
   })
+
+  it('sets isRealtime: true when delay is 0 (on-time, tracked)', () => {
+    const delays: Record<string, number> = { 'trip-001': 0 }
+    const result = mergeRealtimeDelays(baseDepartures, delays)
+    expect(result[0]?.realtimeDelay).toBe(0)
+    expect(result[0]?.isRealtime).toBe(true)
+  })
+
+  it('handles negative delay (early departure)', () => {
+    const delays: Record<string, number> = { 'trip-001': -120 }
+    const result = mergeRealtimeDelays(baseDepartures, delays)
+    expect(result[0]?.realtimeDelay).toBe(-120)
+    expect(result[0]?.isRealtime).toBe(true)
+  })
+
+  it('handles departure with no tripId — not marked realtime', () => {
+    const noTripDep: Departure[] = [
+      {
+        id: '09:00_1_Airport_',
+        time: '09:00',
+        lineName: '1',
+        routeId: 'route-1',
+        headsign: 'Airport',
+        color: '#000',
+        textColor: '#FFF',
+        transitType: 'bus',
+        dock: '',
+        minutesFromMidnight: 540,
+        // tripId intentionally absent
+      },
+    ]
+    const delays: Record<string, number> = { 'some-trip': 60 }
+    const result = mergeRealtimeDelays(noTripDep, delays)
+    expect(result[0]?.isRealtime).toBeUndefined()
+  })
 })

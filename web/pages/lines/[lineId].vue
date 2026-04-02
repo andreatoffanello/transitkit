@@ -32,6 +32,7 @@
           :key="dir.id"
           role="tab"
           :aria-selected="selectedDirectionId === dir.id"
+          aria-controls="direction-panel"
           class="flex-1 py-2 rounded-xl text-sm font-medium transition-colors"
           :class="selectedDirectionId === dir.id
             ? 'text-white'
@@ -44,12 +45,11 @@
       </div>
 
       <!-- Stop sequence -->
-      <div class="space-y-1" role="list" aria-label="Fermate della linea">
+      <div id="direction-panel" role="tabpanel" class="space-y-1">
         <NuxtLink
           v-for="stop in currentStops"
           :key="stop.id"
           :to="`/stop/${stop.id}`"
-          role="listitem"
           class="flex items-center gap-3 py-3 px-4 bg-white dark:bg-white/5 rounded-xl hover:bg-gray-50 dark:hover:bg-white/10 transition-colors"
         >
           <span class="w-2 h-2 rounded-full shrink-0" :style="{ backgroundColor: normalizeHex(route.color) }" aria-hidden="true" />
@@ -73,6 +73,8 @@
 </template>
 
 <script setup lang="ts">
+import { normalizeHex } from '~/utils/color'
+
 const nuxtRoute = useRoute()
 const lineId = computed(() => String(nuxtRoute.params.lineId))
 
@@ -81,11 +83,6 @@ const { config, schedules, pending } = await useOperator()
 const route = computed(() =>
   schedules.value?.routes.find(r => r.id === lineId.value) ?? null,
 )
-
-function normalizeHex(hex: string): string {
-  const clean = hex.replace(/^#/, '')
-  return `#${clean}`
-}
 
 const headerBg = computed(() => {
   if (route.value?.color) return normalizeHex(route.value.color)

@@ -8,16 +8,13 @@
 </template>
 
 <script setup lang="ts">
+import { normalizeHex } from '~/utils/color'
+
 const props = defineProps<{
   name: string
   color: string
   textColor: string
 }>()
-
-function normalizeHex(hex: string): string {
-  const clean = hex.replace(/^#/, '')
-  return `#${clean}`
-}
 
 const normalizedBg = computed(() => normalizeHex(props.color))
 const normalizedText = computed(() => normalizeHex(props.textColor))

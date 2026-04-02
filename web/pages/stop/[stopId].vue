@@ -186,11 +186,21 @@ onMounted(() => {
 })
 onUnmounted(() => clearInterval(interval))
 
-// Prossime 6 partenze nelle prossime 2 ore (oggi)
-const upcomingDepartures = computed<Departure[]>(() => {
+// Real-time — client-side con fallback silenzioso
+const todayDepartures = computed<Departure[]>(() => {
   const key = todayKey.value
   if (!key) return []
-  const deps = departuresByGroup.value[key] ?? []
+  return departuresByGroup.value[key] ?? []
+})
+
+const { departures: realtimeDepartures, isLive } = useRealtime(
+  todayDepartures,
+  config.value?.gtfsRt?.trip_updates,
+)
+
+// Prossime 6 partenze nelle prossime 2 ore (oggi)
+const upcomingDepartures = computed<Departure[]>(() => {
+  const deps = realtimeDepartures.value
   const midnight = new Date(now.value)
   midnight.setHours(0, 0, 0, 0)
   const nowMin = Math.floor((now.value - midnight.getTime()) / 60_000)
@@ -198,9 +208,6 @@ const upcomingDepartures = computed<Departure[]>(() => {
     .filter(d => d.minutesFromMidnight >= nowMin && d.minutesFromMidnight <= nowMin + 120)
     .slice(0, 6)
 })
-
-// Placeholder: isLive = false fino a T8 (useRealtime)
-const isLive = ref(false)
 
 // SEO
 useHead({

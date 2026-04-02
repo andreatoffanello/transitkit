@@ -180,6 +180,18 @@ def build_service_day_map(calendar: list[dict], calendar_dates: list[dict] | Non
     return result
 
 
+# --- Stop Name Cleanup ---
+
+def clean_stop_name(name: str) -> str:
+    """Remove common GTFS data artifacts from stop display names."""
+    # Strip parenthetical annotations at end: "(UPDATED)", "(TEMP)", etc.
+    # Also handles unclosed variants like "(UPDATED" (malformed GTFS data).
+    cleaned = re.sub(r'\s*\([A-Z]+\)?\s*$', '', name.strip())
+    # Strip trailing punctuation artifacts
+    cleaned = cleaned.strip(' ,;-')
+    return cleaned if cleaned else name
+
+
 # --- Headsign Resolution ---
 
 def build_trip_terminus_map(
@@ -193,7 +205,7 @@ def build_trip_terminus_map(
     """
     # Build stop_id → stop_name lookup
     stop_name_map: dict[str, str] = {
-        s["stop_id"].strip(): s.get("stop_name", "").strip()
+        s["stop_id"].strip(): clean_stop_name(s.get("stop_name", ""))
         for s in stops_raw
     }
 
@@ -282,7 +294,7 @@ def parse_stops(
     group_display_name: dict[str, str] = {}
 
     for s in stops_raw:
-        name = s.get("stop_name", "").strip().strip('"').strip()
+        name = clean_stop_name(s.get("stop_name", "").strip().strip('"'))
         if not name or is_excluded(name):
             continue
 

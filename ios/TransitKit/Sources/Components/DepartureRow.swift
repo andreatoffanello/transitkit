@@ -12,6 +12,8 @@ struct DepartureRow: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    /// Mirrors the threshold logic in TimeDisplay.init(departure:now:).
+    /// ≤ 60 min → .minutes countdown; > 60 min → .absolute clock time.
     private var timeState: DepartureTimeState {
         let calendar = Calendar.current
         let components = calendar.dateComponents([.hour, .minute], from: .now)

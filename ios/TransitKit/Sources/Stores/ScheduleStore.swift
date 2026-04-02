@@ -146,14 +146,14 @@ class ScheduleStore {
         return result
     }
 
-    /// Returns departures for the current day of week.
+    /// Returns departures for the current day of week, sorted ascending by time.
     func todayDepartures(forStopId stopId: String) -> [Departure] {
         let allDeps = departures(forStopId: stopId)
         let today = currentWeekday()
 
         for (dayGroup, deps) in allDeps {
             if dayGroup.days.contains(today) {
-                return deps
+                return deps.sorted { $0.minutesFromMidnight < $1.minutesFromMidnight }
             }
         }
 
@@ -162,7 +162,7 @@ class ScheduleStore {
 
     /// Returns upcoming departures from now (or the next ones if past last departure).
     func upcomingDepartures(forStopId stopId: String, limit: Int = 10) -> [Departure] {
-        let deps = todayDepartures(forStopId: stopId)
+        let deps = todayDepartures(forStopId: stopId) // already sorted ascending
         let nowMinutes = currentMinutesFromMidnight()
 
         // Find first departure at or after now

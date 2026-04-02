@@ -12,16 +12,14 @@
     "trip_updates": "https://s3.amazonaws.com/etatransit.gtfs/appalcart.etaspot.net/trip_updates.pb",
     "alerts": "https://s3.amazonaws.com/etatransit.gtfs/appalcart.etaspot.net/alerts.pb"
   },
-  "locale": [
-    "en"
-  ],
+  "locale": ["en"],
   "theme": {
     "primaryColor": "#1A3A6B",
     "accentColor": "#F5A623",
     "textOnPrimary": "#FFFFFF"
   },
   "store": {
-    "title": "Boone Bus \u2014 Community App",
+    "title": "Boone Bus — Community App",
     "subtitle": "AppalCART schedules & live departures for Boone and App State",
     "keywords": "appalachian transit,boone,bus,app state,appalachian state university,appalcart,nc"
   },

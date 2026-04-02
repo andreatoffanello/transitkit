@@ -4,7 +4,9 @@ import SwiftUI
 struct LineDetailView: View {
     let route: Route
     @Environment(ScheduleStore.self) private var store
+    @Environment(VehicleStore.self) private var vehicleStore
     @State private var selectedDirectionId: Int = 0
+    @State private var showLineMap = false
 
     private var lineColor: Color {
         Color(hex: route.color)
@@ -125,6 +127,14 @@ struct LineDetailView: View {
                         }
 
                         Spacer()
+                    }
+
+                    // Live vehicle chip — only shown when feed has active vehicles for this route
+                    if vehicleStore.liveCount(forRouteId: route.id) > 0 {
+                        Button { showLineMap = true } label: {
+                            LiveBadge(count: vehicleStore.liveCount(forRouteId: route.id))
+                        }
+                        .accessibilityIdentifier("btn_live_chip")
                     }
                 }
                 .padding(.horizontal, 20)

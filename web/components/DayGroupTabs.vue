@@ -1,9 +1,16 @@
 <template>
   <div>
-    <div class="flex gap-1 mb-4 overflow-x-auto pb-1">
+    <div
+      role="tablist"
+      aria-label="Gruppi orari"
+      class="flex gap-1 mb-4 overflow-x-auto pb-1"
+    >
       <button
         v-for="dg in dayGroups"
         :key="dg.id"
+        role="tab"
+        :aria-selected="selected === dg.id"
+        :aria-controls="`tabpanel-${dg.id}`"
         class="px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         :class="selected === dg.id
           ? 'bg-accent text-white'
@@ -14,7 +21,12 @@
       </button>
     </div>
 
-    <slot :departures="currentDepartures" />
+    <div
+      :id="`tabpanel-${selected}`"
+      role="tabpanel"
+    >
+      <slot :departures="currentDepartures" />
+    </div>
   </div>
 </template>
 

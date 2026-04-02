@@ -8,6 +8,7 @@ struct TransitKitApp: App {
     @State private var favoritesManager: FavoritesManager?
     @State private var searchHistoryStore: SearchHistoryStore?
     @State private var locationManager = LocationManager()
+    @State private var vehicleStore: VehicleStore = VehicleStore(vehiclePositionsUrl: nil)
     @State private var operatorConfig: OperatorConfig?
     @State private var loadingConfig: OperatorConfig?
     @State private var configError: String?
@@ -21,6 +22,7 @@ struct TransitKitApp: App {
                         .environment(favoritesManager)
                         .environment(searchHistoryStore)
                         .environment(locationManager)
+                        .environment(vehicleStore)
                         .tint(AppTheme.accent)
                 } else if let configError {
                     errorView(message: configError)
@@ -46,6 +48,8 @@ struct TransitKitApp: App {
             await scheduleStore.load()
             store = scheduleStore
             operatorConfig = config
+            vehicleStore = VehicleStore(vehiclePositionsUrl: config.gtfsRt?.vehiclePositionsUrl)
+            vehicleStore.startPolling()
         } catch {
             configError = error.localizedDescription
         }

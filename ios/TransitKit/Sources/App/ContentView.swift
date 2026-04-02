@@ -5,6 +5,7 @@ import SwiftUI
 struct ContentView: View {
     let config: OperatorConfig
     @Environment(ScheduleStore.self) private var store
+    @Environment(VehicleStore.self) private var vehicleStore
     @State private var selectedTab = 0
 
     var body: some View {

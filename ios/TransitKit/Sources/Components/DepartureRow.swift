@@ -11,6 +11,7 @@ struct DepartureRow: View {
     var isFirst: Bool = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(VehicleStore.self) private var vehicleStore
 
     /// Mirrors the threshold logic in TimeDisplay.init(departure:now:).
     /// ≤ 60 min → .minutes countdown; > 60 min → .absolute clock time.
@@ -59,6 +60,11 @@ struct DepartureRow: View {
             // Dock indicator (if present)
             if !departure.dock.isEmpty {
                 DockBadge(letter: departure.dock)
+            }
+
+            // Live indicator
+            if vehicleStore.isLive(tripId: departure.tripId) {
+                LiveBadge()
             }
 
             // Countdown

@@ -1,8 +1,6 @@
 <template>
   <div class="max-w-lg mx-auto px-4 pb-8">
     <PageHeader
-      :primary-color="config?.theme.primaryColor"
-      :text-color="config?.theme.textOnPrimary"
       back-to="/"
       :back-text="config?.name ?? ''"
       :back-label="s.backToHome"

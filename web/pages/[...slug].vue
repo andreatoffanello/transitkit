@@ -1,8 +1,6 @@
 <template>
   <div class="max-w-lg mx-auto px-4 pb-8">
     <PageHeader
-      :primary-color="config?.theme.primaryColor"
-      :text-color="config?.theme.textOnPrimary"
       back-to="/"
       :back-text="config?.name ?? ''"
       :back-label="s.backToHome"
@@ -18,7 +16,7 @@
       <NuxtLink
         to="/lines"
         class="inline-block px-5 py-2.5 rounded-xl text-sm font-medium"
-        :style="{ backgroundColor: config?.theme.primaryColor, color: config?.theme.textOnPrimary }"
+        style="background-color: var(--color-primary, #003366); color: var(--color-text-on-primary, #ffffff)"
       >
         {{ s.backToLines }}
       </NuxtLink>
@@ -33,4 +31,5 @@ const s = useStrings(config)
 useHead({
   title: computed(() => `${s.value.pageNotFound} — ${config.value?.name ?? ''}`),
 })
+useOperatorHead(config)
 </script>

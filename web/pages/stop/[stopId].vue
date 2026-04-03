@@ -2,8 +2,6 @@
   <div class="max-w-lg mx-auto px-4 pb-8">
     <!-- Header operatore -->
     <PageHeader
-      :primary-color="config?.theme.primaryColor"
-      :text-color="config?.theme.textOnPrimary"
       :back-to="fromLine ? `/lines/${fromLine.id}?stop=${stopId}` : '/'"
       :back-text="fromLine ? `${s.lineLabel} ${fromLine.name}` : s.backToHome"
       :back-label="fromLine ? `${s.lineLabel} ${fromLine.name}` : s.backToHome"

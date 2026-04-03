@@ -3,7 +3,7 @@
     <!-- Hero -->
     <div
       class="flex flex-col items-center justify-center text-center px-6 py-16 min-h-[40vh]"
-      :style="{ backgroundColor: config?.theme.primaryColor, color: config?.theme.textOnPrimary }"
+      style="background-color: var(--color-primary, #003366); color: var(--color-text-on-primary, #ffffff)"
     >
       <h1 class="text-3xl font-bold mb-2">{{ config?.fullName ?? config?.name }}</h1>
       <p v-if="config?.region" class="text-sm opacity-70 mb-8">{{ config.region }}</p>
@@ -12,10 +12,7 @@
         to="/lines"
         prefetch
         class="px-6 py-3 rounded-2xl font-semibold text-sm"
-        :style="{
-          backgroundColor: config?.theme.textOnPrimary,
-          color: config?.theme.primaryColor,
-        }"
+        style="background-color: var(--color-text-on-primary, #ffffff); color: var(--color-primary, #003366)"
       >
         {{ s.linesAndSchedules }}
       </NuxtLink>

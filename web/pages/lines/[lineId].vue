@@ -1,8 +1,6 @@
 <template>
   <div class="max-w-lg mx-auto px-4 pb-8">
     <PageHeader
-      :primary-color="headerBg"
-      :text-color="headerText"
       back-to="/lines"
       :back-text="s.backToLines"
       :back-label="s.backToLines"

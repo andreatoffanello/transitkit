@@ -53,7 +53,7 @@
         <input
           v-model="searchQuery"
           type="search"
-          :placeholder="s.searchLines ?? 'Cerca linea…'"
+          :placeholder="s.searchLines"
           class="w-full px-4 py-2 pr-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-0"
           :style="{ '--tw-ring-color': config?.theme.primaryColor }"
           aria-label="Cerca linea"

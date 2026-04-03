@@ -99,12 +99,33 @@ export function useRealtime(
   }
 
   let timer: ReturnType<typeof setInterval> | undefined
+
+  function restartPolling() {
+    if (timer !== undefined) clearInterval(timer)
+    timer = setInterval(poll, 30_000)
+  }
+
+  let handleVisibilityChange: (() => void) | undefined
+
   onMounted(async () => {
     await poll()
-    timer = setInterval(poll, 30_000)
+    restartPolling()
+
+    handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        poll()
+        restartPolling()
+      } else {
+        if (timer !== undefined) clearInterval(timer)
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
   })
   onUnmounted(() => {
     if (timer !== undefined) clearInterval(timer)
+    if (handleVisibilityChange) {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   })
 
   return { departures: merged, isLive }

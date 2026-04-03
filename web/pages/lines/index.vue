@@ -10,6 +10,8 @@
       margin-bottom="mb-6"
     />
 
+    <h1 class="sr-only">{{ s.linesPageTitle }}</h1>
+
     <div v-if="pending" aria-busy="true" :aria-label="s.ariaLoading">
       <!-- Search bar placeholder -->
       <div class="h-10 bg-gray-200 dark:bg-white/10 rounded-xl mb-4 animate-pulse" />

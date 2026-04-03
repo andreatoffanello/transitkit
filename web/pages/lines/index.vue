@@ -48,6 +48,23 @@
         </button>
       </div>
 
+      <!-- Search bar -->
+      <div class="relative mb-4">
+        <input
+          v-model="searchQuery"
+          type="search"
+          :placeholder="s.searchLines ?? 'Cerca linea…'"
+          class="w-full px-4 py-2 pr-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-0"
+          :style="{ '--tw-ring-color': config?.theme.primaryColor }"
+          aria-label="Cerca linea"
+        />
+        <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 111 11a6 6 0 0116 0z" />
+          </svg>
+        </span>
+      </div>
+
       <div
         v-for="[type, routes] in filteredRoutesByType"
         :key="type"
@@ -62,6 +79,7 @@
             :key="route.id"
             :to="`/lines/${route.id}`"
             role="listitem"
+            class="flex flex-col items-center gap-1"
           >
             <LineBadge
               :name="route.name"
@@ -70,6 +88,9 @@
               :locale="config?.locale[0]"
               class="text-base px-3 py-1"
             />
+            <span v-if="stopCountByRoute.get(route.id)" class="text-xs text-gray-400">
+              {{ stopCountByRoute.get(route.id) }} {{ s.stops }}
+            </span>
           </NuxtLink>
         </div>
       </div>
@@ -83,11 +104,13 @@
 
 <script setup lang="ts">
 import type { TransitType } from '~/types'
+import { filterRoutes } from '~/utils/routes'
 
 const { config, schedules, pending } = await useOperator()
 const s = useStrings(config)
 
 const selectedType = ref<string | null>(null)
+const searchQuery = ref('')
 
 function transitTypeLabel(type: string): string {
   return s.value.transitTypes[type as TransitType] ?? type
@@ -101,10 +124,26 @@ const availableTypes = computed(() => {
 })
 
 const filteredRoutes = computed(() =>
-  selectedType.value
-    ? allRoutes.value.filter(r => r.transitType === selectedType.value)
-    : allRoutes.value,
+  filterRoutes(allRoutes.value, selectedType.value, searchQuery.value),
 )
+
+// Count unique stop IDs per route across all directions
+const stopCountByRoute = computed((): Map<string, number> => {
+  const routes = schedules.value?.routes ?? []
+  const map = new Map<string, number>()
+  for (const route of routes) {
+    const uniqueStopIds = new Set<string>()
+    for (const dir of route.directions) {
+      for (const stopId of dir.stopIds) {
+        uniqueStopIds.add(stopId)
+      }
+    }
+    if (uniqueStopIds.size > 0) {
+      map.set(route.id, uniqueStopIds.size)
+    }
+  }
+  return map
+})
 
 const filteredRoutesByType = computed(() => {
   const map = new Map<string, typeof allRoutes.value>()

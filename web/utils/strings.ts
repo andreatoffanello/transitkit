@@ -82,6 +82,12 @@ export interface AppStrings {
 
   // LineBadge
   lineLabel: string
+
+  // Lines list — stop count
+  stops: string
+
+  // Lines list — search
+  searchLines: string
 }
 
 const IT: AppStrings = {
@@ -139,6 +145,8 @@ const IT: AppStrings = {
   ariaGoBack: 'Torna indietro',
   dockPrefix: 'Dock ',
   lineLabel: 'Linea',
+  stops: 'fermate',
+  searchLines: 'Cerca linea…',
 }
 
 const EN: AppStrings = {
@@ -196,6 +204,8 @@ const EN: AppStrings = {
   ariaGoBack: 'Go back',
   dockPrefix: 'Dock ',
   lineLabel: 'Line',
+  stops: 'stops',
+  searchLines: 'Search line…',
 }
 
 const STRINGS: Record<Locale, AppStrings> = { it: IT, en: EN }

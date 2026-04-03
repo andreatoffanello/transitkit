@@ -37,6 +37,18 @@
         </div>
         <div class="h-48 bg-gray-200 dark:bg-white/10 rounded-2xl" />
       </div>
+
+      <!-- Sezione "Questa fermata nella rete" -->
+      <div class="space-y-2">
+        <div class="h-3 w-40 bg-gray-200 dark:bg-white/10 rounded" />
+        <div class="bg-white dark:bg-white/5 rounded-2xl px-4 divide-y divide-gray-100 dark:divide-white/5">
+          <div v-for="i in 3" :key="i" class="flex items-center gap-3 py-3">
+            <div class="w-8 h-5 bg-gray-200 dark:bg-white/10 rounded shrink-0" />
+            <div class="flex-1 h-3 bg-gray-200 dark:bg-white/10 rounded" />
+            <div class="w-16 h-3 bg-gray-200 dark:bg-white/10 rounded shrink-0" />
+          </div>
+        </div>
+      </div>
     </div>
 
     <template v-else-if="stop">

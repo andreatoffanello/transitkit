@@ -24,11 +24,11 @@
 
       <div v-if="pending" aria-busy="true" :aria-label="s.ariaLoading">
         <!-- LineBadge placeholder -->
-        <div class="h-12 w-24 rounded-xl mb-6 animate-pulse" style="background-color: var(--bg-elevated)" />
+        <div class="h-12 w-24 rounded-xl mb-6 skeleton-shimmer" />
         <!-- Direction switcher skeleton -->
-        <div class="flex gap-1 p-1 rounded-xl mb-4 animate-pulse" style="background-color: var(--bg-elevated)">
-          <div class="h-9 flex-1 rounded-lg" style="background-color: var(--bg-secondary)" />
-          <div class="h-9 flex-1 rounded-lg" style="background-color: var(--bg-secondary)" />
+        <div class="flex gap-1 p-1 rounded-xl mb-4" style="background-color: var(--bg-elevated)">
+          <div class="h-9 flex-1 rounded-lg skeleton-shimmer" />
+          <div class="h-9 flex-1 rounded-lg skeleton-shimmer" />
         </div>
         <!-- Stop list skeleton — 6 rows -->
         <div class="space-y-1 px-2">
@@ -37,8 +37,8 @@
             :key="i"
             class="flex items-center gap-3 py-3"
           >
-            <div class="w-4 h-4 rounded-full shrink-0 animate-pulse" style="background-color: var(--bg-elevated)" />
-            <div class="h-3 rounded animate-pulse" :style="{ width: `${48 + (i * 13) % 40}%`, backgroundColor: 'var(--bg-elevated)' }" />
+            <div class="w-4 h-4 rounded-full shrink-0 skeleton-shimmer" />
+            <div class="h-3 rounded skeleton-shimmer" :style="{ width: `${48 + (i * 13) % 40}%` }" />
           </div>
         </div>
       </div>
@@ -161,6 +161,7 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ pageTransition: { name: 'page-slide-up', mode: 'out-in' } })
 import { onMounted } from 'vue'
 import { normalizeHex } from '~/utils/color'
 import type { Route, RouteDirection, ScheduleStop } from '~/types'

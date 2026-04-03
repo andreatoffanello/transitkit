@@ -44,42 +44,42 @@
       </PageHeader>
 
       <!-- Skeleton loading -->
-      <div v-if="pending" class="px-4 pb-8 space-y-6 animate-pulse" aria-busy="true" :aria-label="s.ariaLoading">
+      <div v-if="pending" class="px-4 pb-8 space-y-6" aria-busy="true" :aria-label="s.ariaLoading">
         <!-- Stop name -->
         <div class="space-y-2 pt-2">
-          <div class="h-7 rounded-lg w-3/4" style="background-color: var(--bg-elevated)" />
+          <div class="h-7 rounded-lg w-3/4 skeleton-shimmer" />
           <div class="flex gap-2">
-            <div class="h-5 w-8 rounded-md" style="background-color: var(--bg-elevated)" />
-            <div class="h-5 w-8 rounded-md" style="background-color: var(--bg-elevated)" />
-            <div class="h-5 w-8 rounded-md" style="background-color: var(--bg-elevated)" />
+            <div class="h-5 w-8 rounded-md skeleton-shimmer" />
+            <div class="h-5 w-8 rounded-md skeleton-shimmer" />
+            <div class="h-5 w-8 rounded-md skeleton-shimmer" />
           </div>
         </div>
 
         <!-- Sezione "Prossime partenze" -->
         <div class="space-y-2">
-          <div class="h-3 rounded w-28" style="background-color: var(--bg-elevated)" />
-          <div class="h-36 rounded-2xl" style="background-color: var(--bg-elevated)" />
+          <div class="h-3 rounded w-28 skeleton-shimmer" />
+          <div class="h-36 rounded-2xl skeleton-shimmer" />
         </div>
 
         <!-- Sezione "Orari" -->
         <div class="space-y-2">
-          <div class="h-3 rounded w-16" style="background-color: var(--bg-elevated)" />
+          <div class="h-3 rounded w-16 skeleton-shimmer" />
           <div class="flex gap-2">
-            <div class="h-7 w-20 rounded-full" style="background-color: var(--bg-elevated)" />
-            <div class="h-7 w-20 rounded-full" style="background-color: var(--bg-elevated)" />
-            <div class="h-7 w-20 rounded-full" style="background-color: var(--bg-elevated)" />
+            <div class="h-7 w-20 rounded-full skeleton-shimmer" />
+            <div class="h-7 w-20 rounded-full skeleton-shimmer" />
+            <div class="h-7 w-20 rounded-full skeleton-shimmer" />
           </div>
-          <div class="h-48 rounded-2xl" style="background-color: var(--bg-elevated)" />
+          <div class="h-48 rounded-2xl skeleton-shimmer" />
         </div>
 
         <!-- Sezione "Nella rete" -->
         <div class="space-y-2">
-          <div class="h-3 w-40 rounded" style="background-color: var(--bg-elevated)" />
+          <div class="h-3 w-40 rounded skeleton-shimmer" />
           <div class="rounded-2xl px-4 divide-app" style="background-color: var(--bg-elevated); border-color: var(--border)">
             <div v-for="i in 3" :key="i" class="flex items-center gap-3 py-3">
-              <div class="w-8 h-5 rounded shrink-0" style="background-color: var(--bg-secondary)" />
-              <div class="flex-1 h-3 rounded" style="background-color: var(--bg-secondary)" />
-              <div class="w-16 h-3 rounded shrink-0" style="background-color: var(--bg-secondary)" />
+              <div class="w-8 h-5 rounded shrink-0 skeleton-shimmer" />
+              <div class="flex-1 h-3 rounded skeleton-shimmer" />
+              <div class="w-16 h-3 rounded shrink-0 skeleton-shimmer" />
             </div>
           </div>
         </div>
@@ -125,11 +125,13 @@
             style="background-color: var(--bg-elevated); box-shadow: var(--shadow-md); border-color: var(--border)"
           >
             <DepartureRow
-              v-for="dep in upcomingDepartures"
+              v-for="(dep, index) in upcomingDepartures"
               :key="dep.id"
               :departure="dep"
               :now="now"
               :locale="config?.locale[0]"
+              :show-countdown="true"
+              :is-next="index === 0"
             />
           </div>
 
@@ -145,15 +147,24 @@
             >
               <Clock :size="22" :stroke-width="1.5" style="color: var(--text-tertiary)" />
             </div>
-            <p class="text-[15px] font-medium mb-1" style="color: var(--text-primary)">
-              {{ s.noDepartures }}
+            <p class="text-[15px] font-medium mb-2" style="color: var(--text-primary)">
+              {{ s.noDepartures ?? 'Nessuna partenza nelle prossime 2 ore' }}
             </p>
-            <p v-if="nextDepartureTodayHint" class="text-sm" style="color: var(--text-secondary)">
-              {{ s.nextDepartureToday }}: {{ nextDepartureTodayHint }}
-            </p>
-            <p v-else class="text-sm" style="color: var(--text-secondary)">
+            <!-- Prossima partenza oggi se disponibile -->
+            <div v-if="nextDepartureTodayHint" class="flex items-center justify-center gap-2 mb-3">
+              <span class="text-sm" style="color: var(--text-secondary)">{{ s.nextDepartureToday }}:</span>
+              <span class="text-sm font-semibold" style="color: var(--text-primary); font-variant-numeric: tabular-nums">
+                {{ nextDepartureTodayHint }}
+              </span>
+            </div>
+            <a
+              href="#section-orari"
+              class="inline-flex items-center gap-1.5 text-sm font-medium"
+              style="color: var(--color-primary)"
+            >
               {{ s.viewFullSchedule }}
-            </p>
+              <ChevronDown :size="14" :stroke-width="1.75" />
+            </a>
           </div>
 
           <!-- Indicatore realtime -->
@@ -321,8 +332,9 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ pageTransition: { name: 'page-slide-up', mode: 'out-in' } })
 import { onMounted, nextTick, ref } from 'vue'
-import { Star, Share2, RefreshCw, MapPin, Copy, Check, Clock } from 'lucide-vue-next'
+import { Star, Share2, RefreshCw, MapPin, Copy, Check, Clock, ChevronDown } from 'lucide-vue-next'
 import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getNextServiceDayGroupKey, getDayGroupLabel, computeNowMin, getNextDeparture } from '~/utils/schedule'
 import type { DayGroup, Departure, ScheduleStop, Route } from '~/types'
 

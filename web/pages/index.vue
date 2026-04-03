@@ -86,9 +86,9 @@
               style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border-color: var(--border)"
             >
               <div v-for="n in 3" :key="n" class="flex items-center gap-3 px-4 py-3.5">
-                <div class="w-4 h-4 rounded-full shrink-0 animate-pulse" style="background-color: var(--border)" />
-                <div class="flex-1 h-3.5 rounded animate-pulse" style="background-color: var(--border)" />
-                <div class="w-10 h-3 rounded animate-pulse" style="background-color: var(--border)" />
+                <div class="w-4 h-4 rounded-full shrink-0 skeleton-shimmer" />
+                <div class="flex-1 h-3.5 rounded skeleton-shimmer" />
+                <div class="w-10 h-3 rounded skeleton-shimmer" />
               </div>
             </div>
 

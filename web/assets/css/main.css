@@ -55,3 +55,53 @@ body {
 .divide-app > * + * {
   border-top: 1px solid var(--border);
 }
+
+/* Page transitions */
+@media (prefers-reduced-motion: no-preference) {
+  .page-fade-enter-active,
+  .page-fade-leave-active {
+    transition: opacity 180ms ease;
+  }
+  .page-fade-enter-from,
+  .page-fade-leave-to {
+    opacity: 0;
+  }
+
+  .page-slide-up-enter-active {
+    transition: opacity 200ms ease, transform 200ms ease;
+  }
+  .page-slide-up-leave-active {
+    transition: opacity 150ms ease, transform 150ms ease;
+  }
+  .page-slide-up-enter-from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  .page-slide-up-leave-to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--border) 25%,
+    color-mix(in srgb, var(--bg-elevated) 70%, var(--border)) 50%,
+    var(--border) 75%
+  );
+  background-size: 200% 100%;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .skeleton-shimmer {
+    animation: shimmer 1.5s infinite linear;
+  }
+}

@@ -19,15 +19,22 @@
           class="flex flex-col items-center justify-center gap-0.5 h-full w-full transition-colors duration-200 relative"
           :style="isActive(tab.path) ? 'color: var(--color-primary)' : 'color: var(--text-tertiary)'"
         >
-          <!-- Active dot indicator -->
+          <!-- Pill background indicator -->
           <span
             v-if="isActive(tab.path)"
-            class="absolute top-2 w-1 h-1 rounded-full"
-            style="background-color: var(--color-primary)"
+            class="absolute rounded-full transition-all duration-200"
+            style="
+              width: 52px;
+              height: 32px;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -60%);
+              background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+            "
             aria-hidden="true"
           />
-          <component :is="tab.icon" :size="24" :stroke-width="1.75" />
-          <span class="text-[11px] font-medium leading-none">{{ tab.label }}</span>
+          <component :is="tab.icon" :size="22" :stroke-width="1.75" class="relative z-10" />
+          <span class="text-[11px] font-medium leading-none relative z-10">{{ tab.label }}</span>
         </NuxtLink>
       </li>
     </ul>

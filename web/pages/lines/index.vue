@@ -7,18 +7,18 @@
 
       <div v-if="pending" aria-busy="true" :aria-label="s.ariaLoading">
         <!-- Search bar placeholder -->
-        <div class="h-11 rounded-2xl mb-4 animate-pulse" style="background-color: var(--bg-elevated)" />
+        <div class="h-11 rounded-2xl mb-4 skeleton-shimmer" />
         <!-- Filter chips placeholder -->
         <div class="flex gap-2 mb-4">
-          <div v-for="i in 4" :key="i" class="h-8 w-16 rounded-full animate-pulse" style="background-color: var(--bg-elevated)" />
+          <div v-for="i in 4" :key="i" class="h-8 w-16 rounded-full skeleton-shimmer" />
         </div>
         <!-- Route rows — 8 rows -->
-        <div class="rounded-2xl overflow-hidden" style="background-color: var(--bg-secondary)">
+        <div class="rounded-2xl overflow-hidden divide-app" style="border-color: var(--border)">
           <div
             v-for="i in 8"
             :key="i"
-            class="h-14 animate-pulse border-b last:border-b-0"
-            style="background-color: var(--bg-elevated); border-color: var(--border)"
+            class="h-14 skeleton-shimmer"
+            style="border-radius: 0"
           />
         </div>
       </div>

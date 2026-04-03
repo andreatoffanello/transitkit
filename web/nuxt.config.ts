@@ -4,6 +4,7 @@ export default defineNuxtConfig({
   modules: ['@nuxtjs/tailwindcss'],
 
   app: {
+    pageTransition: { name: 'page-fade', mode: 'out-in' },
     head: {
       link: [
         {

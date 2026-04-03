@@ -114,6 +114,7 @@ import type { Route, RouteDirection, ScheduleStop } from '~/types'
 
 const nuxtRoute = useRoute()
 const lineId = computed(() => String(nuxtRoute.params.lineId))
+const requestUrl = useRequestURL()
 
 const { config, schedules, pending } = await useOperator()
 const s = useStrings(config)
@@ -179,6 +180,7 @@ useHead({
     if (headsign) return `${lineName} → ${headsign} — ${op}`
     return `${lineName} — ${op}`
   }),
+  link: [{ rel: 'canonical', href: computed(() => `${requestUrl.origin}${nuxtRoute.path}`) }],
   meta: [
     {
       property: 'og:title',

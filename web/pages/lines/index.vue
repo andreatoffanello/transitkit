@@ -134,6 +134,7 @@ const { config, schedules, pending } = await useOperator()
 const s = useStrings(config)
 
 const route = useRoute()
+const requestUrl = useRequestURL()
 const router = useRouter()
 
 const searchQuery = computed({
@@ -214,6 +215,7 @@ const filteredRoutesByType = computed(() => {
 
 useHead({
   title: computed(() => `${s.value.linesPageTitle} — ${config.value?.name ?? ''}`),
+  link: [{ rel: 'canonical', href: computed(() => `${requestUrl.origin}${route.path}`) }],
   meta: [
     {
       name: 'description',

@@ -283,6 +283,7 @@ import type { DayGroup, Departure, ScheduleStop, Route } from '~/types'
 
 const route = useRoute()
 const stopId = computed(() => String(route.params.stopId))
+const requestUrl = useRequestURL()
 
 const { config, schedules } = await useOperator()
 const s = useStrings(config)
@@ -438,6 +439,7 @@ const nextDepartureTodayHint = computed<string | null>(() => {
 
 // SEO
 useHead({
+  link: [{ rel: 'canonical', href: computed(() => `${requestUrl.origin}${route.path}`) }],
   title: computed(() => {
     const opName = config.value?.fullName ?? config.value?.name ?? ''
 

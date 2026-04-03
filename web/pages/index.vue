@@ -143,6 +143,9 @@ import { computeNowMin, getNextDeparture } from '~/utils/schedule'
 const { config, schedules } = await useOperator()
 const s = useStrings(config)
 
+const requestUrl = useRequestURL()
+const currentRoute = useRoute()
+
 const { recentStops, load } = useRecentStops()
 const { favoriteStops, load: loadFavorites } = useFavoriteStops()
 
@@ -188,6 +191,7 @@ const recentNextDepartures = computed<Record<string, string>>(() => {
 
 useHead({
   title: computed(() => `${config.value?.fullName ?? config.value?.name ?? ''} — Orari e linee`),
+  link: [{ rel: 'canonical', href: computed(() => `${requestUrl.origin}${currentRoute.path}`) }],
   meta: [
     {
       name: 'description',

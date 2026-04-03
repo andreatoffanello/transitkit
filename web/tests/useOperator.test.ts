@@ -192,3 +192,39 @@ describe('useOperator', () => {
     expect(config.value?.locale).toBeUndefined()
   })
 })
+
+describe('color normalization', () => {
+  it('normalizes uppercase hex colors to lowercase', async () => {
+    const configWithUppercase = {
+      ...mockConfig,
+      theme: { primaryColor: '#FFFFFF', accentColor: '#0066CC', textOnPrimary: '#FFFFFF' },
+    }
+    fetchMock.mockImplementation((url: unknown) => {
+      const urlStr = String(url)
+      if (urlStr.includes('config.json')) return Promise.resolve(makeResponse(configWithUppercase))
+      if (urlStr.includes('schedules.json')) return Promise.resolve(makeResponse(mockSchedules))
+      return Promise.reject(new Error(`Unexpected URL: ${urlStr}`))
+    })
+    const { config } = await useOperator()
+    expect(config.value?.theme?.primaryColor).toBe('#ffffff')
+    expect(config.value?.theme?.accentColor).toBe('#0066cc')
+    expect(config.value?.theme?.textOnPrimary).toBe('#ffffff')
+  })
+
+  it('passes already-lowercase hex colors through unchanged', async () => {
+    const configWithLowercase = {
+      ...mockConfig,
+      theme: { primaryColor: '#003366', accentColor: '#003366', textOnPrimary: '#003366' },
+    }
+    fetchMock.mockImplementation((url: unknown) => {
+      const urlStr = String(url)
+      if (urlStr.includes('config.json')) return Promise.resolve(makeResponse(configWithLowercase))
+      if (urlStr.includes('schedules.json')) return Promise.resolve(makeResponse(mockSchedules))
+      return Promise.reject(new Error(`Unexpected URL: ${urlStr}`))
+    })
+    const { config } = await useOperator()
+    expect(config.value?.theme?.primaryColor).toBe('#003366')
+    expect(config.value?.theme?.accentColor).toBe('#003366')
+    expect(config.value?.theme?.textOnPrimary).toBe('#003366')
+  })
+})

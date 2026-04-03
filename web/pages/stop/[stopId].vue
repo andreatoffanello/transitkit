@@ -86,8 +86,31 @@
       </div>
 
       <template v-else-if="stop">
+        <!-- Tab switcher: Prossime / Orario -->
+        <div class="mx-4 mt-4 mb-4 flex p-1 rounded-xl gap-1" style="background-color: var(--bg-elevated); border: 1px solid var(--border)">
+          <button
+            class="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all"
+            :style="activeTab === 'prossime'
+              ? { backgroundColor: 'var(--color-primary)', color: 'var(--color-text-on-primary)' }
+              : { color: 'var(--text-secondary)' }"
+            @click="activeTab = 'prossime'"
+          >
+            Prossime
+          </button>
+          <button
+            class="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5"
+            :style="activeTab === 'orario'
+              ? { backgroundColor: 'var(--color-primary)', color: 'var(--color-text-on-primary)' }
+              : { color: 'var(--text-secondary)' }"
+            @click="activeTab = 'orario'"
+          >
+            Orario
+            <span v-if="isLive" class="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" aria-hidden="true" />
+          </button>
+        </div>
+
         <!-- Sezione "Prossime partenze" — above the fold, massima priorità -->
-        <section class="px-4 pt-4 mb-6" aria-labelledby="section-adesso">
+        <section v-show="activeTab === 'prossime'" class="px-4 mb-6" aria-labelledby="section-adesso">
           <div class="flex items-center justify-between mb-3">
             <h2
               id="section-adesso"
@@ -163,14 +186,15 @@
                 {{ nextDepartureTodayData.time }}
               </span>
             </div>
-            <a
-              href="#section-orari"
+            <button
+              type="button"
               class="inline-flex items-center gap-1.5 text-sm font-medium"
               style="color: var(--color-primary)"
+              @click="activeTab = 'orario'"
             >
               {{ s.viewFullSchedule }}
               <ChevronDown :size="14" :stroke-width="1.75" />
-            </a>
+            </button>
           </div>
 
           <!-- Indicatore realtime -->
@@ -191,7 +215,7 @@
         </section>
 
         <!-- Sezione "Orario" con DayGroupTabs -->
-        <section class="px-4 mb-6" aria-labelledby="section-orari">
+        <section v-show="activeTab === 'orario'" class="px-4 mb-6" aria-labelledby="section-orari">
           <div class="flex items-center justify-between mb-3">
             <h2
               id="section-orari"
@@ -339,6 +363,8 @@
 definePageMeta({ pageTransition: { name: 'page-slide-up', mode: 'out-in' } })
 import { onMounted, nextTick, ref } from 'vue'
 import { Star, Share2, RefreshCw, MapPin, Copy, Check, Clock, ChevronDown, ChevronRight } from 'lucide-vue-next'
+
+const activeTab = ref<'prossime' | 'orario'>('prossime')
 import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getNextServiceDayGroupKey, getDayGroupLabel, computeNowMin, getNextDeparture } from '~/utils/schedule'
 import type { DayGroup, Departure, ScheduleStop, Route } from '~/types'
 

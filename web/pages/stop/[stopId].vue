@@ -113,6 +113,10 @@
           </button>
         </h2>
 
+        <span v-if="isLive && realtimeLastUpdated" class="text-xs text-gray-400 tabular-nums">
+          {{ s.updatedAt }} {{ realtimeLastUpdated }}
+        </span>
+
         <div
           v-if="upcomingDepartures.length"
           class="bg-white dark:bg-white/5 rounded-2xl px-4 divide-y divide-gray-100 dark:divide-white/5"
@@ -405,7 +409,7 @@ const todayDepartures = computed<Departure[]>(() => {
 // SAFETY: config.value is guaranteed to be populated here because `await useOperator()`
 // above suspends the component setup (Nuxt 3 <Suspense>) until the operator config
 // resolves. The snapshot passed to useRealtime() is therefore stable and correct.
-const { departures: realtimeDepartures, isLive, isLoading: realtimeLoading, refresh: refreshRealtime } = useRealtime(
+const { departures: realtimeDepartures, isLive, isLoading: realtimeLoading, lastUpdated: realtimeLastUpdated, refresh: refreshRealtime } = useRealtime(
   todayDepartures,
   config.value?.gtfsRt?.trip_updates,
 )

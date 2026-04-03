@@ -10,6 +10,7 @@ export interface AppStrings {
   stopNotFound: string
   updatedRealtime: string
   openInGoogleMaps: string
+  shareStop: string
   backToHome: string
 
   // Lines list
@@ -113,6 +114,20 @@ export interface AppStrings {
 
   // Stop page — anchor to full schedule
   viewFullSchedule: string
+
+  // Stop page — next departure hint in empty upcoming state
+  nextDepartureToday: string
+
+  // Home page — schedule freshness
+  schedulesUpdated: string
+  schedulesValidUntil: string
+
+  // Line count words (singular/plural)
+  lineSingular: string
+  linePlural: string
+
+  // Realtime last-updated timestamp
+  updatedAt: string
 }
 
 const IT: AppStrings = {
@@ -122,6 +137,7 @@ const IT: AppStrings = {
   stopNotFound: 'Fermata non trovata',
   updatedRealtime: 'Aggiornato in tempo reale',
   openInGoogleMaps: 'Apri in Google Maps',
+  shareStop: 'Condividi fermata',
   backToHome: 'Torna alla home',
   all: 'Tutti',
   linesPageTitle: 'Linee',
@@ -183,6 +199,12 @@ const IT: AppStrings = {
   nextDepartureIn: 'in',
   minutesShort: 'min',
   viewFullSchedule: 'Vedi orari completi',
+  nextDepartureToday: 'Prossima oggi',
+  schedulesUpdated: 'Orari aggiornati al',
+  schedulesValidUntil: 'Validi fino al',
+  lineSingular: 'linea',
+  linePlural: 'linee',
+  updatedAt: 'Aggiornato alle',
 }
 
 const EN: AppStrings = {
@@ -192,6 +214,7 @@ const EN: AppStrings = {
   stopNotFound: 'Stop not found',
   updatedRealtime: 'Updated in real time',
   openInGoogleMaps: 'Open in Google Maps',
+  shareStop: 'Share stop',
   backToHome: 'Back to home',
   all: 'All',
   linesPageTitle: 'Lines',
@@ -253,6 +276,12 @@ const EN: AppStrings = {
   nextDepartureIn: 'in',
   minutesShort: 'min',
   viewFullSchedule: 'View full schedule',
+  nextDepartureToday: 'Next today',
+  schedulesUpdated: 'Schedules updated',
+  schedulesValidUntil: 'Valid until',
+  lineSingular: 'line',
+  linePlural: 'lines',
+  updatedAt: 'Updated at',
 }
 
 const STRINGS: Record<Locale, AppStrings> = { it: IT, en: EN }

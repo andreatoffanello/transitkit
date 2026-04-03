@@ -51,6 +51,7 @@ export function useRealtime(
 ) {
   const isLive = ref(false)
   const isLoading = ref(false)
+  const lastUpdated = ref<string | null>(null)
   const merged = ref<Departure[]>([...departures.value])
 
   // Track the last known delay map so the watch can re-apply it
@@ -64,7 +65,7 @@ export function useRealtime(
   })
 
   if (!gtfsRtUrl || import.meta.server) {
-    return { departures: merged, isLive, isLoading, refresh: async () => {} }
+    return { departures: merged, isLive, isLoading, lastUpdated, refresh: async () => {} }
   }
 
   const feedUrl: string = gtfsRtUrl
@@ -99,6 +100,8 @@ export function useRealtime(
       merged.value = departures.value
     } finally {
       isLoading.value = false
+      const now = new Date()
+      lastUpdated.value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
     }
   }
 
@@ -137,7 +140,7 @@ export function useRealtime(
     }
   })
 
-  return { departures: merged, isLive, isLoading, refresh }
+  return { departures: merged, isLive, isLoading, lastUpdated, refresh }
 }
 
 // Minimal GTFS-RT types

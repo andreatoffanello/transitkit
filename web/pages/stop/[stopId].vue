@@ -4,7 +4,7 @@
       <!-- Header navigazione con azioni -->
       <PageHeader
         :back-to="fromLine ? `/lines/${fromLine.id}?stop=${stopId}` : '/'"
-        :back-label="fromLine ? `${s.lineLabel} ${fromLine.name}` : s.backToHome"
+        :back-label="fromLine ? fromLine.name : 'Home'"
         :title="stop?.name ?? config?.name ?? '…'"
       >
         <template #action>
@@ -290,38 +290,40 @@
         </section>
 
         <!-- Footer azioni -->
-        <footer class="px-4 pb-8 flex flex-col gap-3 text-sm">
-          <a
-            :href="`https://maps.google.com/?q=${stop.lat},${stop.lng}&query=${encodeURIComponent(stop.name)}`"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-opacity active:opacity-70"
-            style="background-color: var(--bg-elevated); color: var(--text-primary); box-shadow: var(--shadow-sm)"
-          >
-            <MapPin :size="16" :stroke-width="1.75" />
-            {{ s.openInGoogleMaps }}
-          </a>
-          <button
-            v-if="canShare"
-            type="button"
-            class="flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-opacity active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
-            style="background-color: var(--bg-elevated); color: var(--text-primary); box-shadow: var(--shadow-sm)"
-            @click="shareStop"
-          >
-            <Share2 :size="16" :stroke-width="1.75" />
-            {{ s.shareStop }}
-          </button>
-          <button
-            v-else
-            type="button"
-            class="flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-opacity active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
-            style="background-color: var(--bg-elevated); color: var(--text-primary); box-shadow: var(--shadow-sm)"
-            :aria-label="s.copyLink"
-            @click="copyLink"
-          >
-            <Copy :size="16" :stroke-width="1.75" />
-            <span>{{ copied ? s.copiedFeedback : s.copyLink }}</span>
-          </button>
+        <footer class="px-4 pb-8">
+          <div class="flex gap-3 pt-2">
+            <a
+              v-if="stop?.lat && stop?.lng"
+              :href="`https://maps.google.com/?q=${stop.lat},${stop.lng}`"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-semibold transition-opacity duration-150 active:opacity-70"
+              style="background-color: var(--bg-elevated); color: var(--text-primary); box-shadow: var(--shadow-sm); border: 1px solid var(--border)"
+            >
+              <MapPin :size="16" :stroke-width="1.75" />
+              Google Maps
+            </a>
+            <button
+              v-if="canShare"
+              type="button"
+              class="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-semibold transition-opacity duration-150 active:opacity-70"
+              style="background-color: var(--bg-elevated); color: var(--text-primary); box-shadow: var(--shadow-sm); border: 1px solid var(--border)"
+              @click="shareStop"
+            >
+              <Share2 :size="16" :stroke-width="1.75" />
+              Condividi
+            </button>
+            <button
+              v-else
+              type="button"
+              class="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-semibold transition-opacity duration-150 active:opacity-70"
+              style="background-color: var(--bg-elevated); color: var(--text-primary); box-shadow: var(--shadow-sm); border: 1px solid var(--border)"
+              @click="copyLink"
+            >
+              <component :is="copied ? Check : Copy" :size="16" :stroke-width="1.75" />
+              {{ copied ? 'Copiato' : 'Copia link' }}
+            </button>
+          </div>
         </footer>
       </template>
 
@@ -339,7 +341,7 @@
 
 <script setup lang="ts">
 import { onMounted, nextTick, ref } from 'vue'
-import { Star, Share2, RefreshCw, MapPin, Copy } from 'lucide-vue-next'
+import { Star, Share2, RefreshCw, MapPin, Copy, Check } from 'lucide-vue-next'
 import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getNextServiceDayGroupKey, getDayGroupLabel, computeNowMin, getNextDeparture } from '~/utils/schedule'
 import type { DayGroup, Departure, ScheduleStop, Route } from '~/types'
 

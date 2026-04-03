@@ -101,7 +101,7 @@
 import { Sun, Moon, Bus, Shield, ExternalLink, Globe } from 'lucide-vue-next'
 
 const { isDark, toggleTheme } = useTheme()
-const { config } = useOperator()
+const { config } = await useOperator()
 
 useHead({ title: 'Impostazioni' })
 </script>

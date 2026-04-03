@@ -13,16 +13,6 @@
       :locale="locale"
     />
 
-    <!-- Transit type icon -->
-    <component
-      :is="transitIcon"
-      :size="16"
-      :stroke-width="1.75"
-      class="shrink-0"
-      style="color: var(--text-tertiary)"
-      aria-hidden="true"
-    />
-
     <!-- Headsign + dock -->
     <span
       class="flex-1 text-[15px] font-medium truncate"
@@ -76,23 +66,8 @@
 </template>
 
 <script setup lang="ts">
-import { Bus, TramFront, TrainFront, Ship, Cable } from 'lucide-vue-next'
-import type { Component } from 'vue'
 import type { Departure } from '~/types'
 import { getStrings } from '~/utils/strings'
-
-const TRANSIT_ICONS: Record<string, Component> = {
-  bus: Bus,
-  tram: TramFront,
-  rail: TrainFront,
-  ferry: Ship,
-  metro: Cable,
-  cable_tram: Cable,
-  gondola: Cable,
-  funicular: Cable,
-  trolleybus: Bus,
-  monorail: TrainFront,
-}
 
 const props = defineProps<{
   departure: Departure
@@ -103,11 +78,6 @@ const props = defineProps<{
 }>()
 
 const s = computed(() => getStrings(props.locale))
-
-const transitIcon = computed(() => {
-  const t = props.departure.transitType ?? 'bus'
-  return TRANSIT_ICONS[t] ?? Bus
-})
 
 // Delay in seconds — convert to minutes
 const delayMinutes = computed(() =>

@@ -5,6 +5,7 @@
       :text-color="config?.theme.textOnPrimary"
       back-to="/"
       :back-label="s.backToHome"
+      :back-text="s.backToHome"
       :title="config?.name ?? ''"
     />
 
@@ -16,7 +17,8 @@
       <p class="text-sm mb-6">{{ s.pageNotFoundHint }}</p>
       <NuxtLink
         to="/lines"
-        class="inline-block px-5 py-2.5 rounded-xl bg-accent text-white text-sm font-medium"
+        class="inline-block px-5 py-2.5 rounded-xl text-sm font-medium"
+        :style="{ backgroundColor: config?.theme.primaryColor, color: config?.theme.textOnPrimary }"
       >
         {{ s.backToLines }}
       </NuxtLink>

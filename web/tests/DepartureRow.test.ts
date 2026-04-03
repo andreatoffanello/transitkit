@@ -46,12 +46,15 @@ function displayTime(nowMs: number, departure: Departure): string {
 // Helpers
 // ---------------------------------------------------------------------------
 
+// Use a fixed base timestamp for all tests — avoids wall-clock dependency
+const BASE_DATE = new Date('2026-04-03T08:00:00Z').getTime()
+
 /** Build a nowMs that is `minutesBefore` minutes before `depMinutesFromMidnight`. */
-function nowFor(depMinutesFromMidnight: number, minutesBefore: number): number {
-  const date = new Date()
-  date.setHours(0, 0, 0, 0)
+function nowFor(depMinutesFromMidnight: number, minutesBefore: number, baseMs = BASE_DATE): number {
+  const midnight = new Date(baseMs)
+  midnight.setHours(0, 0, 0, 0)
   const nowMin = depMinutesFromMidnight - minutesBefore
-  return date.getTime() + nowMin * 60_000
+  return midnight.getTime() + nowMin * 60_000
 }
 
 function makeDeparture(overrides: Partial<Departure> = {}): Departure {

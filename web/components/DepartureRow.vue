@@ -54,7 +54,7 @@ const TRANSIT_ICONS: Record<string, string> = {
   tram: '🚃',
   rail: '🚆',
   ferry: '⛴️',
-  subway: '🚇',
+  metro: '🚇',
 }
 
 const transitTypeIcon = computed(() =>

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getDayGroupLabel, getNextServiceDayGroupKey } from '~/utils/schedule'
+import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getDayGroupLabel, getNextServiceDayGroupKey, computeNowMin } from '~/utils/schedule'
 import { getStrings } from '~/utils/strings'
 import type { ScheduleData } from '~/types'
 
@@ -228,5 +228,23 @@ describe('getNextServiceDayGroupKey', () => {
     const deps = { 'mon': [['08:00', 0, 0]] }
     const key = getNextServiceDayGroupKey(deps)
     expect(key).toBe('mon')
+  })
+})
+
+describe('computeNowMin', () => {
+  it('returns 0 at midnight', () => {
+    const ms = new Date('2026-04-03T08:00:00').getTime() // 8:00 AM local
+    const result = computeNowMin(ms)
+    expect(result).toBe(480) // 8 * 60 = 480
+  })
+
+  it('returns 90 for 1:30 AM', () => {
+    const ms = new Date('2026-04-03T01:30:00').getTime()
+    expect(computeNowMin(ms)).toBe(90)
+  })
+
+  it('returns 1439 for 23:59', () => {
+    const ms = new Date('2026-04-03T23:59:00').getTime()
+    expect(computeNowMin(ms)).toBe(1439)
   })
 })

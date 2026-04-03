@@ -169,3 +169,13 @@ export function decodeDepartures(
 
   return result
 }
+
+/**
+ * Given a timestamp in milliseconds, returns the number of whole minutes
+ * elapsed since the start of that calendar day (midnight = 0).
+ */
+export function computeNowMin(nowMs: number): number {
+  const midnight = new Date(nowMs)
+  midnight.setHours(0, 0, 0, 0)
+  return Math.floor((nowMs - midnight.getTime()) / 60_000)
+}

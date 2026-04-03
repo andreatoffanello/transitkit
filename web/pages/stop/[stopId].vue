@@ -229,7 +229,7 @@
 
 <script setup lang="ts">
 import { onMounted, nextTick } from 'vue'
-import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getNextServiceDayGroupKey, getDayGroupLabel } from '~/utils/schedule'
+import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getNextServiceDayGroupKey, getDayGroupLabel, computeNowMin } from '~/utils/schedule'
 import type { DayGroup, Departure, ScheduleStop, Route } from '~/types'
 
 const route = useRoute()
@@ -326,11 +326,7 @@ onMounted(async () => {
 onUnmounted(() => clearInterval(interval))
 
 // Minutes since midnight — used to mark the first upcoming departure in the schedule
-const nowMin = computed(() => {
-  const midnight = new Date()
-  midnight.setHours(0, 0, 0, 0)
-  return Math.floor((Date.now() - midnight.getTime()) / 60_000)
-})
+const nowMin = computed(() => computeNowMin(now.value))
 
 // Real-time — client-side con fallback silenzioso
 const todayDepartures = computed<Departure[]>(() => {
@@ -371,10 +367,8 @@ useHead({
     if (!upcomingDepartures.value.length) return base
 
     const next = upcomingDepartures.value[0]!
-    const midnight = new Date(now.value)
-    midnight.setHours(0, 0, 0, 0)
-    const nowMin = Math.floor((now.value - midnight.getTime()) / 60_000)
-    let diffMin = next.minutesFromMidnight - nowMin
+    const titleNowMin = computeNowMin(now.value)
+    let diffMin = next.minutesFromMidnight - titleNowMin
     if (next.realtimeDelay !== undefined) diffMin += Math.round(next.realtimeDelay / 60)
 
     if (diffMin < 0 || diffMin >= 60) return base

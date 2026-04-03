@@ -24,6 +24,10 @@ export interface AppStrings {
   backToLines: string
   noStops: string
 
+  // 404 catch-all
+  pageNotFound: string
+  pageNotFoundHint: string
+
   // Home page
   linesAndSchedules: string
   officialApp: string
@@ -79,6 +83,8 @@ const IT: AppStrings = {
   lineNotFound: 'Linea non trovata',
   backToLines: 'Linee',
   noStops: 'Nessuna fermata disponibile per questa direzione.',
+  pageNotFound: 'Pagina non trovata',
+  pageNotFoundHint: 'La pagina che cerchi non esiste. Prova a cercare una linea.',
   linesAndSchedules: 'Orari e linee',
   officialApp: 'App ufficiale',
   contacts: 'Contatti',
@@ -125,6 +131,8 @@ const EN: AppStrings = {
   lineNotFound: 'Line not found',
   backToLines: 'Lines',
   noStops: 'No stops available for this direction.',
+  pageNotFound: 'Page not found',
+  pageNotFoundHint: 'The page you\'re looking for doesn\'t exist. Try browsing the lines.',
   linesAndSchedules: 'Schedules & Lines',
   officialApp: 'Official App',
   contacts: 'Contact',

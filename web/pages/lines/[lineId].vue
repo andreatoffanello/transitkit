@@ -86,14 +86,28 @@
         <p class="text-sm">{{ s.noStopsFoundHint }}</p>
       </div>
       <!-- Share footer -->
-      <footer v-if="canShare" class="mt-8">
+      <footer class="mt-8">
         <button
+          v-if="canShare"
           type="button"
           class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition-colors active:scale-95 duration-100"
           :aria-label="s.shareStop"
           @click="shareLine"
         >
           📤 {{ s.shareStop }}
+        </button>
+        <button
+          v-else
+          type="button"
+          class="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 active:scale-95 transition-transform duration-100"
+          :aria-label="s.copyLink"
+          @click="copyLink"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          <span>{{ copied ? s.copiedFeedback : s.copyLink }}</span>
         </button>
       </footer>
     </template>
@@ -124,6 +138,15 @@ const canShare = ref(false)
 onMounted(() => {
   canShare.value = typeof navigator !== 'undefined' && 'share' in navigator
 })
+
+const copied = ref(false)
+async function copyLink() {
+  try {
+    await navigator.clipboard.writeText(window.location.href)
+    copied.value = true
+    setTimeout(() => { copied.value = false }, 2000)
+  } catch { /* clipboard not available */ }
+}
 
 async function shareLine() {
   if (!route.value || !canShare.value) return

@@ -70,13 +70,21 @@ struct HomeTab: View {
 
     private func heroCard(config: OperatorConfig) -> some View {
         HStack(spacing: 14) {
-            // Avatar circle with operator initials
+            // Avatar circle with operator logo (falls back to initials)
             ZStack {
                 Circle()
                     .fill(AppTheme.accent)
-                Text(initials(from: config.name))
-                    .font(.title3.weight(.bold))
-                    .foregroundStyle(.white)
+                if UIImage(named: "OperatorLogo") != nil {
+                    Image("OperatorLogo")
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 56, height: 56)
+                        .clipShape(Circle())
+                } else {
+                    Text(initials(from: config.name))
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(.white)
+                }
             }
             .frame(width: 56, height: 56)
             .shadow(color: AppTheme.accent.opacity(0.35), radius: 8, y: 3)

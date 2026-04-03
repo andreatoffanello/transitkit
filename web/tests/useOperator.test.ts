@@ -14,8 +14,17 @@ vi.stubGlobal('useAsyncData', async (_key: string, fn: () => Promise<unknown>) =
   return { data: { value: data }, error: { value: null }, pending: { value: false } }
 })
 
+// Mock native fetch (useOperator now uses fetchWithRetry → fetch)
 const fetchMock = vi.fn()
-vi.stubGlobal('$fetch', fetchMock)
+vi.stubGlobal('fetch', fetchMock)
+
+function makeResponse(body: unknown, status = 200): Response {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    json: () => Promise.resolve(body),
+  } as unknown as Response
+}
 
 // Import DOPO i mock
 const { useOperator } = await import('~/composables/useOperator')
@@ -52,8 +61,8 @@ beforeEach(() => {
   stateMap.set('operatorId', { value: 'appalcart' })
   fetchMock.mockImplementation((url: unknown) => {
     const urlStr = String(url)
-    if (urlStr.includes('config.json')) return Promise.resolve(mockConfig)
-    if (urlStr.includes('schedules.json')) return Promise.resolve(mockSchedules)
+    if (urlStr.includes('config.json')) return Promise.resolve(makeResponse(mockConfig))
+    if (urlStr.includes('schedules.json')) return Promise.resolve(makeResponse(mockSchedules))
     return Promise.reject(new Error(`Unexpected URL: ${urlStr}`))
   })
 })

@@ -1,5 +1,14 @@
 import { CDN_BASE } from '~/utils/operators'
+import { fetchWithRetry } from '~/utils/fetchWithRetry'
 import type { OperatorConfig, ScheduleData } from '~/types'
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const res = await fetchWithRetry(url)
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status} fetching ${url}`)
+  }
+  return res.json() as Promise<T>
+}
 
 export async function useOperator() {
   const operatorId = useState<string>('operatorId')
@@ -7,12 +16,12 @@ export async function useOperator() {
 
   const { data: config, error: configError } = await useAsyncData<OperatorConfig>(
     `config-${id}`,
-    () => $fetch(`${CDN_BASE}/${id}/config.json`),
+    () => fetchJson<OperatorConfig>(`${CDN_BASE}/${id}/config.json`),
   )
 
   const { data: schedules, error: schedulesError } = await useAsyncData<ScheduleData>(
     `schedules-${id}`,
-    () => $fetch(`${CDN_BASE}/${id}/schedules.json`),
+    () => fetchJson<ScheduleData>(`${CDN_BASE}/${id}/schedules.json`),
   )
 
   // If either critical fetch failed, surface a proper error page

@@ -61,6 +61,9 @@ export interface AppStrings {
   noDeparturesToday: string
   noDeparturesHint: string
 
+  // Realtime status
+  schedulesNotLive: string
+
   // Aria labels
   ariaLoading: string
   ariaLinesAtStop: string
@@ -119,6 +122,7 @@ const IT: AppStrings = {
   },
   noDeparturesToday: 'Nessuna partenza oggi',
   noDeparturesHint: 'Non ci sono corse programmate per oggi su questa fermata.',
+  schedulesNotLive: 'Orari non in tempo reale',
   ariaLoading: 'Caricamento',
   ariaLinesAtStop: 'Linee che fermano qui',
   ariaDayGroupTabs: 'Gruppi orari',
@@ -172,6 +176,7 @@ const EN: AppStrings = {
   },
   noDeparturesToday: 'No departures today',
   noDeparturesHint: 'There are no scheduled trips for today at this stop.',
+  schedulesNotLive: 'Schedules may not be live',
   ariaLoading: 'Loading',
   ariaLinesAtStop: 'Lines stopping here',
   ariaDayGroupTabs: 'Schedule groups',

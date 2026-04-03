@@ -106,6 +106,14 @@
           {{ s.sectionSchedule }}
         </h2>
 
+        <div
+          v-if="config?.gtfsRt && !isLive"
+          class="text-xs text-center text-amber-600 dark:text-amber-400 py-1 bg-amber-50 dark:bg-amber-900/20"
+          role="status"
+        >
+          {{ s.schedulesNotLive }}
+        </div>
+
         <DayGroupTabs
           :day-groups="dayGroups"
           :departures-by-day-group="departuresByGroup"

@@ -138,6 +138,9 @@ export interface AppStrings {
 
   // Accessibility
   skipToContent: string
+
+  // Realtime delay aria-label
+  minutesDelay: string
 }
 
 const IT: AppStrings = {
@@ -219,6 +222,7 @@ const IT: AppStrings = {
   copyLink: 'Copia link',
   copiedFeedback: 'Copiato!',
   skipToContent: 'Vai al contenuto principale',
+  minutesDelay: 'minuti di ritardo',
 }
 
 const EN: AppStrings = {
@@ -300,6 +304,7 @@ const EN: AppStrings = {
   copyLink: 'Copy link',
   copiedFeedback: 'Copied!',
   skipToContent: 'Skip to main content',
+  minutesDelay: 'minutes late',
 }
 
 const STRINGS: Record<Locale, AppStrings> = { it: IT, en: EN }

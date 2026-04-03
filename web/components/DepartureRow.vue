@@ -30,6 +30,7 @@
       <span
         class="text-sm font-semibold tabular-nums"
         :class="timeClass"
+        :aria-label="delayAriaLabel ?? undefined"
       >
         {{ displayTime }}
       </span>
@@ -94,6 +95,12 @@ const displayTime = computed(() => {
   if (diffMin === 0) return s.value.now
   if (diffMin < 60) return `${diffMin} ${s.value.minutes}`
   return props.departure.time
+})
+
+const delayAriaLabel = computed(() => {
+  if (props.departure.realtimeDelay === undefined || props.departure.realtimeDelay === 0) return null
+  const delayMin = Math.abs(Math.round(props.departure.realtimeDelay / 60))
+  return `${delayMin} ${s.value.minutesDelay}`
 })
 
 const timeClass = computed(() => {

@@ -2,17 +2,10 @@ import { CDN_BASE } from '~/utils/operators'
 import { fetchWithRetry } from '~/utils/fetchWithRetry'
 import type { OperatorConfig, ScheduleData } from '~/types'
 
-class HttpError extends Error {
-  constructor(public readonly status: number, message: string) {
-    super(message)
-    this.name = 'HttpError'
-  }
-}
-
 async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetchWithRetry(url)
   if (!res.ok) {
-    throw new HttpError(res.status, `HTTP ${res.status} fetching ${url}`)
+    throw Object.assign(new Error(`HTTP ${res.status} fetching ${url}`), { status: res.status })
   }
   return res.json() as Promise<T>
 }
@@ -34,7 +27,8 @@ export async function useOperator() {
   // If either critical fetch failed, surface a proper error page
   if (configError.value || schedulesError.value) {
     const err = configError.value || schedulesError.value
-    const statusCode = err instanceof HttpError && err.status === 404 ? 404 : 502
+    const status = (err as { status?: number }).status
+    const statusCode = status === 404 ? 404 : 502
     const statusMessage = statusCode === 404
       ? 'Operator not found'
       : 'Impossibile caricare i dati. Riprova tra qualche minuto.'

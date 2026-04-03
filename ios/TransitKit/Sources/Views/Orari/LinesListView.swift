@@ -314,7 +314,7 @@ private struct LineRowContent: View {
                     MarqueeText(
                         text: sequence,
                         font: .system(size: 11),
-                        foregroundStyle: AppTheme.textTertiary,
+                        foregroundStyle: AppTheme.textSecondary,
                         speed: 28
                     )
                     .frame(maxWidth: .infinity)

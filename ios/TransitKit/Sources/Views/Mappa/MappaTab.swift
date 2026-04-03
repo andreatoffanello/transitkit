@@ -248,7 +248,8 @@ struct MappaTab: View {
                         .frame(width: 44, height: 44)
                         .background(.regularMaterial)
                         .clipShape(Circle())
-                        .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+                        .overlay(Circle().stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
+                        .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
                 }
                 .accessibilityLabel(String(localized: "center_on_location"))
                 .accessibilityIdentifier("btn_map_recenter")
@@ -270,7 +271,8 @@ struct MappaTab: View {
                     .frame(width: 44, height: 44)
                     .background(.regularMaterial)
                     .clipShape(Circle())
-                    .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+                    .overlay(Circle().stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
+                    .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
             }
             .accessibilityLabel(String(localized: "reset_map_view"))
             .accessibilityIdentifier("btn_map_reset")
@@ -286,7 +288,8 @@ struct MappaTab: View {
                     .frame(width: 44, height: 44)
                     .background(.regularMaterial)
                     .clipShape(Circle())
-                    .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+                    .overlay(Circle().stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
+                    .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
             }
             .accessibilityLabel("Espandi mappa")
             .accessibilityIdentifier("btn_map_expand")
@@ -321,7 +324,8 @@ struct MappaTab: View {
                                     .frame(width: 44, height: 44)
                                     .background(.regularMaterial)
                                     .clipShape(Circle())
-                                    .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+                                    .overlay(Circle().stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
+                                    .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
                             }
                             .accessibilityLabel(String(localized: "center_on_location"))
                         }
@@ -341,7 +345,8 @@ struct MappaTab: View {
                                 .frame(width: 44, height: 44)
                                 .background(.regularMaterial)
                                 .clipShape(Circle())
-                                .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+                                .overlay(Circle().stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
+                                .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
                         }
                         .accessibilityLabel(String(localized: "reset_map_view"))
                     }

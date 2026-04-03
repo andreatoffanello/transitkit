@@ -15,6 +15,7 @@
 
 import { describe, it, expect } from 'vitest'
 import type { Departure } from '~/types'
+import { getStrings } from '~/utils/strings'
 
 // ---------------------------------------------------------------------------
 // Pure helpers — mirrors the logic in DepartureRow.vue
@@ -193,6 +194,63 @@ describe('scheduled time display', () => {
     const dep = makeDeparture({ time: '14:32', minutesFromMidnight: 872, realtimeDelay: 300 })
     // The component renders departure.time as the scheduled time label
     expect(dep.time).toBe('14:32')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// delayAriaLabel — mirrors the logic in DepartureRow.vue
+// ---------------------------------------------------------------------------
+
+function delayAriaLabel(departure: Departure, locale?: string): string | null {
+  const s = getStrings(locale)
+  if (departure.realtimeDelay === undefined || departure.realtimeDelay === 0) return null
+  const delayMin = Math.abs(Math.round(departure.realtimeDelay / 60))
+  return `${delayMin} ${s.minutesDelay}`
+}
+
+describe('DepartureRow — delayAriaLabel', () => {
+  it('returns null when realtimeDelay is undefined', () => {
+    const dep = makeDeparture()
+    expect(delayAriaLabel(dep)).toBeNull()
+  })
+
+  it('returns null when realtimeDelay is 0', () => {
+    const dep = makeDeparture({ realtimeDelay: 0 })
+    expect(delayAriaLabel(dep)).toBeNull()
+  })
+
+  it('returns label with "5" and delay word when realtimeDelay is 300s (+5 min)', () => {
+    const dep = makeDeparture({ realtimeDelay: 300 })
+    const label = delayAriaLabel(dep)
+    expect(label).not.toBeNull()
+    expect(label).toContain('5')
+    expect(label).toContain('minuti di ritardo') // IT default
+  })
+
+  it('returns label with "2" when realtimeDelay is -120s (2 min early)', () => {
+    const dep = makeDeparture({ realtimeDelay: -120 })
+    const label = delayAriaLabel(dep)
+    expect(label).not.toBeNull()
+    expect(label).toContain('2')
+  })
+
+  it('rounds realtimeDelay to nearest minute (90s → 2 min)', () => {
+    const dep = makeDeparture({ realtimeDelay: 90 })
+    const label = delayAriaLabel(dep)
+    expect(label).toContain('2')
+  })
+
+  it('uses English strings when locale is "en"', () => {
+    const dep = makeDeparture({ realtimeDelay: 300 })
+    const label = delayAriaLabel(dep, 'en')
+    expect(label).toContain('5')
+    expect(label).toContain('minutes late')
+  })
+
+  it('uses Italian strings by default (no locale)', () => {
+    const dep = makeDeparture({ realtimeDelay: 180 })
+    const label = delayAriaLabel(dep)
+    expect(label).toBe('3 minuti di ritardo')
   })
 })
 

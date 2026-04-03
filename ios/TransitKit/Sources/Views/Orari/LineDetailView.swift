@@ -41,7 +41,6 @@ struct LineDetailView: View {
                         directionPicker
                     }
 
-                    // Section title
                     if !stopsInDirection.isEmpty {
                         stopsListHeader
                     }
@@ -104,8 +103,8 @@ struct LineDetailView: View {
             }
             if router.autoOpenMap {
                 router.autoOpenMap = false
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                    showLineMap = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    self.showLineMap = true
                 }
             }
         }

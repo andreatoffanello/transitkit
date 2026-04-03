@@ -168,6 +168,7 @@ struct OrariTab: View {
             path = NavigationPath()
             segment = .lines
             path.append(route)
+            // router.autoOpenMap is left as-is; LineDetailView.onAppear handles it
         } else if let stop = router.pendingStop {
             router.pendingStop = nil
             path = NavigationPath()

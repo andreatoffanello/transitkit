@@ -1,205 +1,313 @@
 <template>
-  <div>
-    <!-- Hero -->
-    <div
-      class="flex flex-col items-center justify-center text-center px-6 py-16 min-h-[40vh]"
-      style="background-color: var(--color-primary, #003366); color: var(--color-text-on-primary, #ffffff)"
-    >
-      <h1 class="text-3xl font-bold mb-2">{{ config?.fullName ?? config?.name }}</h1>
-      <p v-if="config?.region" class="text-sm opacity-70 mb-8">{{ config.region }}</p>
+  <AppLayout>
+    <div class="max-w-lg mx-auto lg:max-w-2xl">
 
-      <NuxtLink
-        to="/lines"
-        prefetch
-        class="px-6 py-3 rounded-2xl font-semibold text-sm"
-        style="background-color: var(--color-text-on-primary, #ffffff); color: var(--color-primary, #003366)"
-      >
-        {{ s.linesAndSchedules }}
-      </NuxtLink>
-    </div>
+      <!-- Hero -->
+      <section class="px-5 pt-8 pb-6">
+        <div
+          class="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
+          style="background-color: var(--color-primary)"
+        >
+          <Bus :size="24" :stroke-width="1.75" style="color: var(--color-text-on-primary)" />
+        </div>
+        <h1 class="text-2xl font-bold leading-tight mb-1" style="color: var(--text-primary)">
+          {{ config?.fullName ?? config?.name }}
+        </h1>
+        <p class="text-sm" style="color: var(--text-secondary)">
+          {{ config?.store?.subtitle ?? 'Orari e partenze in tempo reale' }}
+        </p>
+      </section>
 
-    <!-- Body -->
-    <div class="max-w-lg mx-auto px-4 py-8 space-y-4">
-      <!-- Ricerca fermata -->
-      <div v-if="schedules" class="bg-white dark:bg-white/5 rounded-2xl px-4 pt-4 pb-2">
-        <input
-          v-model="searchStopQuery"
-          type="search"
-          :placeholder="s.searchStops"
-          class="w-full bg-gray-100 dark:bg-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary,#003366)] placeholder:text-gray-400"
-        />
-        <div v-if="stopResults.length" class="mt-2 space-y-0.5">
+      <!-- Search bar -->
+      <section v-if="schedules" class="px-5 mb-6">
+        <div
+          class="flex items-center gap-2 rounded-2xl px-4 py-3"
+          style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm)"
+        >
+          <Search :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+          <input
+            v-model="searchStopQuery"
+            type="search"
+            :placeholder="s.searchStops"
+            class="flex-1 bg-transparent text-sm outline-none"
+            style="color: var(--text-primary)"
+          />
+          <button
+            v-if="searchStopQuery"
+            type="button"
+            class="shrink-0"
+            @click="searchStopQuery = ''"
+            aria-label="Cancella ricerca"
+          >
+            <X :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" />
+          </button>
+        </div>
+
+        <!-- Search results -->
+        <div
+          v-if="stopResults.length"
+          class="mt-2 rounded-2xl overflow-hidden divide-y"
+          style="background-color: var(--bg-elevated); box-shadow: var(--shadow-md); border-color: var(--border)"
+        >
           <NuxtLink
             v-for="stop in stopResults"
             :key="stop.id"
             :to="`/stop/${stop.id}`"
-            class="flex items-center justify-between py-2 text-sm text-gray-800 dark:text-gray-100"
+            class="flex items-center gap-3 px-4 py-3.5 transition-opacity duration-150 active:opacity-70"
           >
-            <span v-html="highlightMatch(stop.name, searchStopQuery)" />
-            <span class="text-gray-400" aria-hidden="true">›</span>
+            <MapPin :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+            <span
+              class="flex-1 text-[15px] font-medium truncate"
+              style="color: var(--text-primary)"
+              v-html="highlightMatch(stop.name, searchStopQuery)"
+            />
+            <ChevronRight :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
           </NuxtLink>
         </div>
-      </div>
+      </section>
 
-      <!-- Store info (app link) -->
-      <div v-if="config?.store" class="bg-white dark:bg-white/5 rounded-2xl p-4">
-        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">{{ s.officialApp }}</p>
-        <p class="font-semibold">{{ config.store.title }}</p>
-        <p class="text-sm text-gray-400">{{ config.store.subtitle }}</p>
-      </div>
+      <!-- Main content area -->
+      <div class="px-5 pb-10 space-y-6">
 
-      <!-- Contacts -->
-      <div v-if="config?.contact?.phone || config?.contact?.email" class="bg-white dark:bg-white/5 rounded-2xl p-4 space-y-3">
-        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">{{ s.contacts }}</p>
-        <a
-          v-if="config.contact.phone"
-          :href="`tel:${config.contact.phone}`"
-          class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200"
-        >
-          📞 {{ config.contact.phone }}
-        </a>
-        <a
-          v-if="config.contact.email"
-          :href="`mailto:${config.contact.email}`"
-          class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200"
-        >
-          ✉️ {{ config.contact.email }}
-        </a>
-      </div>
+        <!-- Fermate nelle vicinanze -->
+        <ClientOnly>
+          <section v-if="nearbyState !== 'denied' && (nearbyState === 'locating' || nearbyStops.length)">
+            <h2 class="text-xs font-semibold uppercase tracking-wider mb-3" style="color: var(--text-tertiary)">
+              {{ s.nearbyStops }}
+            </h2>
 
-      <!-- Official website -->
-      <a
-        v-if="config?.url"
-        :href="config.url"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-100 dark:bg-white/10 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
-      >
-        🌐 {{ s.officialWebsite }}
-      </a>
-
-      <!-- Preferiti / Recenti / Onboarding — client-only: depend on localStorage -->
-      <ClientOnly>
-        <!-- Preferiti -->
-        <div v-if="favoriteStops.length" class="bg-white dark:bg-white/5 rounded-2xl p-4">
-          <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">{{ s.favoriteStops }}</p>
-          <div class="space-y-2">
-            <NuxtLink
-              v-for="stop in sortedFavoriteStops"
-              :key="stop.stopId"
-              :to="`/stop/${stop.stopId}`"
-              :prefetch="false"
-              class="flex items-center justify-between py-1.5"
+            <!-- Skeleton / locating -->
+            <div
+              v-if="nearbyState === 'locating'"
+              class="rounded-2xl overflow-hidden divide-y"
+              style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border-color: var(--border)"
             >
-              <span class="flex flex-col">
-                <span class="flex items-center gap-1.5">
-                  <span class="text-sm text-gray-900 dark:text-gray-100">{{ stop.name }}</span>
-                  <span
-                    v-if="hasRealtime"
-                    class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse flex-shrink-0"
-                    aria-hidden="true"
-                  />
-                </span>
-                <span v-if="favoriteNextDepartures[stop.stopId]" class="text-xs text-gray-400 tabular-nums">
-                  {{ favoriteNextDepartures[stop.stopId] }}
-                </span>
-              </span>
-              <span class="text-gray-400 text-sm" aria-hidden="true">›</span>
-            </NuxtLink>
-          </div>
-        </div>
+              <div v-for="n in 3" :key="n" class="flex items-center gap-3 px-4 py-3.5">
+                <div class="w-4 h-4 rounded-full shrink-0 animate-pulse" style="background-color: var(--border)" />
+                <div class="flex-1 h-3.5 rounded animate-pulse" style="background-color: var(--border)" />
+                <div class="w-10 h-3 rounded animate-pulse" style="background-color: var(--border)" />
+              </div>
+            </div>
 
-        <!-- Fermate recenti -->
-        <div v-if="recentStops.length" class="bg-white dark:bg-white/5 rounded-2xl p-4">
-          <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">{{ s.recentStops }}</p>
-          <div class="space-y-2">
-            <NuxtLink
-              v-for="stop in sortedRecentStops"
-              :key="stop.stopId"
-              :to="`/stop/${stop.stopId}`"
-              :prefetch="false"
-              class="flex items-center justify-between py-1.5"
+            <!-- Nearby stops list -->
+            <div
+              v-else-if="nearbyStops.length"
+              class="rounded-2xl overflow-hidden divide-y"
+              style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border-color: var(--border)"
             >
-              <span class="flex flex-col">
-                <span class="flex items-center gap-1.5">
-                  <span class="text-sm text-gray-900 dark:text-gray-100">{{ stop.name }}</span>
-                  <span
-                    v-if="hasRealtime"
-                    class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse flex-shrink-0"
-                    aria-hidden="true"
-                  />
+              <NuxtLink
+                v-for="item in nearbyStops"
+                :key="item.stop.id"
+                :to="`/stop/${item.stop.id}`"
+                :prefetch="false"
+                class="flex items-center gap-3 px-4 py-3.5 transition-opacity duration-150 active:opacity-70"
+              >
+                <Navigation :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+                <span class="flex-1 text-[15px] font-medium truncate" style="color: var(--text-primary)">
+                  {{ item.stop.name }}
                 </span>
-                <span v-if="recentNextDepartures[stop.stopId]" class="text-xs text-gray-400 tabular-nums">
-                  {{ recentNextDepartures[stop.stopId] }}
+                <span class="text-xs tabular-nums mr-1" style="color: var(--text-tertiary)">
+                  {{ formatDistance(item.distance) }}
                 </span>
-              </span>
-              <span class="text-gray-400 text-sm" aria-hidden="true">›</span>
-            </NuxtLink>
-          </div>
-        </div>
+                <ChevronRight :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+              </NuxtLink>
+            </div>
+          </section>
+        </ClientOnly>
 
-        <!-- Onboarding empty state -->
-        <div
-          v-if="!favoriteStops.length && !recentStops.length"
-          class="flex flex-col items-center gap-3 py-8 text-center text-gray-400"
-        >
-          <span class="text-4xl" aria-hidden="true">🚏</span>
-          <p class="text-sm max-w-[240px]">{{ s.onboardingHint }}</p>
-          <NuxtLink
-            to="/lines"
-            prefetch
-            class="text-sm font-semibold underline"
-            :style="{ color: config?.theme.primaryColor }"
+        <!-- Preferiti / Recenti / Empty state — depend on localStorage -->
+        <ClientOnly>
+          <!-- Preferiti -->
+          <section v-if="favoriteStops.length">
+            <h2 class="text-xs font-semibold uppercase tracking-wider mb-3" style="color: var(--text-tertiary)">
+              {{ s.favoriteStops }}
+            </h2>
+            <div
+              class="rounded-2xl overflow-hidden divide-y"
+              style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border-color: var(--border)"
+            >
+              <NuxtLink
+                v-for="stop in sortedFavoriteStops"
+                :key="stop.stopId"
+                :to="`/stop/${stop.stopId}`"
+                :prefetch="false"
+                class="flex items-center gap-3 px-4 py-3.5 transition-opacity duration-150 active:opacity-70"
+              >
+                <Star :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+                <span class="flex-1 min-w-0">
+                  <span class="flex items-center gap-1.5">
+                    <span class="text-[15px] font-medium truncate" style="color: var(--text-primary)">{{ stop.name }}</span>
+                    <span
+                      v-if="hasRealtime"
+                      class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse flex-shrink-0"
+                      aria-hidden="true"
+                    />
+                  </span>
+                  <span
+                    v-if="favoriteNextDepartures[stop.stopId]"
+                    class="block text-xs tabular-nums truncate"
+                    style="color: var(--text-tertiary)"
+                  >
+                    {{ favoriteNextDepartures[stop.stopId] }}
+                  </span>
+                </span>
+                <ChevronRight :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+              </NuxtLink>
+            </div>
+          </section>
+
+          <!-- Recenti -->
+          <section v-if="recentStops.length">
+            <h2 class="text-xs font-semibold uppercase tracking-wider mb-3" style="color: var(--text-tertiary)">
+              {{ s.recentStops }}
+            </h2>
+            <div
+              class="rounded-2xl overflow-hidden divide-y"
+              style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border-color: var(--border)"
+            >
+              <NuxtLink
+                v-for="stop in sortedRecentStops"
+                :key="stop.stopId"
+                :to="`/stop/${stop.stopId}`"
+                :prefetch="false"
+                class="flex items-center gap-3 px-4 py-3.5 transition-opacity duration-150 active:opacity-70"
+              >
+                <Clock :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+                <span class="flex-1 min-w-0">
+                  <span class="flex items-center gap-1.5">
+                    <span class="text-[15px] font-medium truncate" style="color: var(--text-primary)">{{ stop.name }}</span>
+                    <span
+                      v-if="hasRealtime"
+                      class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse flex-shrink-0"
+                      aria-hidden="true"
+                    />
+                  </span>
+                  <span
+                    v-if="recentNextDepartures[stop.stopId]"
+                    class="block text-xs tabular-nums truncate"
+                    style="color: var(--text-tertiary)"
+                  >
+                    {{ recentNextDepartures[stop.stopId] }}
+                  </span>
+                </span>
+                <ChevronRight :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+              </NuxtLink>
+            </div>
+          </section>
+
+          <!-- Empty state onboarding -->
+          <section
+            v-if="!favoriteStops.length && !recentStops.length"
+            class="flex flex-col items-center gap-3 py-10 text-center"
           >
-            {{ s.linesAndSchedules }}
-          </NuxtLink>
-        </div>
-      </ClientOnly>
-
-      <!-- Fermate vicine -->
-      <ClientOnly>
-        <div v-if="nearbyState !== 'denied'" class="bg-white dark:bg-white/5 rounded-2xl p-4">
-          <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">{{ s.nearbyStops }}</p>
-          <p v-if="nearbyState === 'locating'" class="text-sm text-gray-400">{{ s.locating }}</p>
-          <div v-else-if="nearbyStops.length" class="space-y-2">
-            <NuxtLink
-              v-for="item in nearbyStops"
-              :key="item.stop.id"
-              :to="`/stop/${item.stop.id}`"
-              :prefetch="false"
-              class="flex items-center justify-between py-1.5"
+            <div
+              class="w-12 h-12 rounded-2xl flex items-center justify-center"
+              style="background-color: var(--bg-elevated)"
             >
-              <span class="text-sm text-gray-900 dark:text-gray-100">{{ item.stop.name }}</span>
-              <span class="text-xs text-gray-400 tabular-nums">{{ formatDistance(item.distance) }}</span>
+              <MapPin :size="22" :stroke-width="1.5" style="color: var(--text-tertiary)" />
+            </div>
+            <p class="text-sm max-w-[240px]" style="color: var(--text-secondary)">{{ s.onboardingHint }}</p>
+            <NuxtLink
+              to="/lines"
+              prefetch
+              class="text-sm font-semibold"
+              style="color: var(--color-primary)"
+            >
+              {{ s.linesAndSchedules }}
+            </NuxtLink>
+          </section>
+        </ClientOnly>
+
+        <!-- Contatti -->
+        <section v-if="config?.contact?.phone || config?.contact?.email">
+          <h2 class="text-xs font-semibold uppercase tracking-wider mb-3" style="color: var(--text-tertiary)">
+            {{ s.contacts }}
+          </h2>
+          <div
+            class="rounded-2xl overflow-hidden divide-y"
+            style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border-color: var(--border)"
+          >
+            <a
+              v-if="config.contact.phone"
+              :href="`tel:${config.contact.phone}`"
+              class="flex items-center gap-3 px-4 py-3.5 transition-opacity duration-150 active:opacity-70"
+            >
+              <Phone :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+              <span class="flex-1 text-[15px] font-medium" style="color: var(--text-primary)">{{ config.contact.phone }}</span>
+              <ChevronRight :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+            </a>
+            <a
+              v-if="config.contact.email"
+              :href="`mailto:${config.contact.email}`"
+              class="flex items-center gap-3 px-4 py-3.5 transition-opacity duration-150 active:opacity-70"
+            >
+              <Mail :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+              <span class="flex-1 text-[15px] font-medium" style="color: var(--text-primary)">{{ config.contact.email }}</span>
+              <ChevronRight :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+            </a>
+          </div>
+        </section>
+
+        <!-- Sito ufficiale -->
+        <section v-if="config?.url || config?.store">
+          <div
+            class="rounded-2xl overflow-hidden divide-y"
+            style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border-color: var(--border)"
+          >
+            <a
+              v-if="config?.url"
+              :href="config.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center gap-3 px-4 py-3.5 transition-opacity duration-150 active:opacity-70"
+            >
+              <Globe :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+              <span class="flex-1 text-[15px] font-medium" style="color: var(--text-primary)">{{ s.officialWebsite }}</span>
+              <ChevronRight :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+            </a>
+            <NuxtLink
+              v-if="config?.store"
+              to="/lines"
+              prefetch
+              class="flex items-center gap-3 px-4 py-3.5 transition-opacity duration-150 active:opacity-70"
+            >
+              <Smartphone :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+              <span class="flex-1 min-w-0">
+                <span class="block text-[15px] font-medium truncate" style="color: var(--text-primary)">{{ config.store.title }}</span>
+                <span v-if="config.store.subtitle" class="block text-xs truncate" style="color: var(--text-tertiary)">{{ config.store.subtitle }}</span>
+              </span>
+              <ChevronRight :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
             </NuxtLink>
           </div>
+        </section>
+
+        <!-- Schedule freshness -->
+        <div v-if="schedules?.lastUpdated" class="text-center text-xs space-y-0.5" style="color: var(--text-tertiary)">
+          <p>{{ s.schedulesUpdated }}: {{ schedules.lastUpdated }}</p>
+          <p v-if="schedules.validUntil">{{ s.schedulesValidUntil }}: {{ schedules.validUntil }}</p>
         </div>
-      </ClientOnly>
 
-      <!-- Schedule freshness -->
-      <div v-if="schedules?.lastUpdated" class="text-center text-xs text-gray-400 space-y-0.5">
-        <p>{{ s.schedulesUpdated }}: {{ schedules.lastUpdated }}</p>
-        <p v-if="schedules.validUntil">{{ s.schedulesValidUntil }}: {{ schedules.validUntil }}</p>
+        <!-- Privacy link -->
+        <a
+          v-if="config?.privacyUrl"
+          :href="config.privacyUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="block text-center text-xs underline"
+          style="color: var(--text-tertiary)"
+        >
+          {{ s.privacy }}
+        </a>
       </div>
-
-      <!-- Privacy link -->
-      <a
-        v-if="config?.privacyUrl"
-        :href="config.privacyUrl"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="block text-center text-xs text-gray-400 underline"
-      >
-        {{ s.privacy }}
-      </a>
     </div>
-  </div>
+  </AppLayout>
 </template>
 
 <script setup lang="ts">
 import { computeNowMin, getNextDeparture, sortStopsByNextDeparture } from '~/utils/schedule'
 import { highlightMatch } from '~/utils/highlight'
 import type { ScheduleStop } from '~/types'
+import { Bus, Search, X, MapPin, Navigation, Star, Clock, ChevronRight, Phone, Mail, Globe, Smartphone } from 'lucide-vue-next'
 
 const { config, schedules } = await useOperator()
 const s = useStrings(config)

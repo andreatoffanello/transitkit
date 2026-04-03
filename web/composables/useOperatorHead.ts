@@ -9,6 +9,7 @@ export function useOperatorHead(config: Ref<OperatorConfig | null>) {
   })
 
   useHead({
+    htmlAttrs: { lang: computed(() => config.value?.locale[0] ?? 'it') },
     meta: [
       { name: 'theme-color', content: computed(() => config.value?.theme.primaryColor ?? '#003366') },
       { name: 'apple-mobile-web-app-title', content: computed(() => config.value?.name ?? 'Transit') },

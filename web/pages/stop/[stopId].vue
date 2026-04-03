@@ -50,6 +50,7 @@
             :name="r.name"
             :color="r.color"
             :text-color="r.textColor"
+            :locale="config?.locale[0]"
             role="listitem"
           />
         </div>

@@ -34,6 +34,7 @@
               :name="route.name"
               :color="route.color"
               :text-color="route.textColor"
+              :locale="config?.locale[0]"
               class="text-base px-3 py-1"
             />
           </NuxtLink>

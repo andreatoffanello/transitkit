@@ -71,6 +71,9 @@ export interface AppStrings {
 
   // Component prefixes
   dockPrefix: string
+
+  // LineBadge
+  lineLabel: string
 }
 
 const IT: AppStrings = {
@@ -123,6 +126,7 @@ const IT: AppStrings = {
   ariaRealtimeData: 'Dati in tempo reale',
   ariaGoBack: 'Torna indietro',
   dockPrefix: 'Dock ',
+  lineLabel: 'Linea',
 }
 
 const EN: AppStrings = {
@@ -175,6 +179,7 @@ const EN: AppStrings = {
   ariaRealtimeData: 'Real-time data',
   ariaGoBack: 'Go back',
   dockPrefix: 'Dock ',
+  lineLabel: 'Line',
 }
 
 const STRINGS: Record<Locale, AppStrings> = { it: IT, en: EN }

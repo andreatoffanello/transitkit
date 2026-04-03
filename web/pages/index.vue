@@ -5,8 +5,19 @@
       <!-- Hero -->
       <section
         class="px-5 pt-8 pb-6 relative overflow-hidden"
-        style="background: linear-gradient(160deg, color-mix(in srgb, var(--color-primary) 6%, transparent) 0%, transparent 60%)"
+        style="background: linear-gradient(
+          160deg,
+          color-mix(in srgb, var(--color-primary) 12%, transparent) 0%,
+          color-mix(in srgb, var(--color-primary) 4%, transparent) 45%,
+          transparent 70%
+        )"
       >
+        <!-- Cerchio decorativo sfondo -->
+        <div
+          class="absolute -top-12 -right-12 w-40 h-40 rounded-full pointer-events-none"
+          style="background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 15%, transparent) 0%, transparent 70%)"
+          aria-hidden="true"
+        />
         <div
           class="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
           style="background-color: var(--color-primary)"

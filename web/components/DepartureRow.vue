@@ -1,7 +1,8 @@
 <template>
   <div
-    class="flex items-center gap-3 py-3.5 px-4"
+    class="flex items-center gap-3 py-3.5 px-4 relative transition-colors duration-150"
     :class="{ 'opacity-40': isPast }"
+    :style="isNext ? `border-left: 2.5px solid var(--color-primary); padding-left: 14px; background-color: color-mix(in srgb, var(--color-primary) 5%, transparent);` : ''"
   >
     <span class="sr-only">{{ rowAriaLabel }}</span>
 
@@ -77,6 +78,7 @@ const props = defineProps<{
   locale?: string
   showCountdown?: boolean
   isPast?: boolean
+  isNext?: boolean
 }>()
 
 const s = computed(() => getStrings(props.locale))

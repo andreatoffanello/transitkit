@@ -113,7 +113,7 @@
           </button>
         </h2>
 
-        <span v-if="isLive && realtimeLastUpdated" class="text-xs text-gray-400 tabular-nums">
+        <span v-if="isLive && realtimeLastUpdated" role="status" aria-live="polite" class="text-xs text-gray-400 tabular-nums">
           {{ s.updatedAt }} {{ realtimeLastUpdated }}
         </span>
 

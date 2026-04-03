@@ -156,6 +156,26 @@
         </div>
       </ClientOnly>
 
+      <!-- Fermate vicine -->
+      <ClientOnly>
+        <div v-if="nearbyState !== 'denied'" class="bg-white dark:bg-white/5 rounded-2xl p-4">
+          <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">{{ s.nearbyStops }}</p>
+          <p v-if="nearbyState === 'locating'" class="text-sm text-gray-400">{{ s.locating }}</p>
+          <div v-else-if="nearbyStops.length" class="space-y-2">
+            <NuxtLink
+              v-for="item in nearbyStops"
+              :key="item.stop.id"
+              :to="`/stop/${item.stop.id}`"
+              :prefetch="false"
+              class="flex items-center justify-between py-1.5"
+            >
+              <span class="text-sm text-gray-900 dark:text-gray-100">{{ item.stop.name }}</span>
+              <span class="text-xs text-gray-400 tabular-nums">{{ formatDistance(item.distance) }}</span>
+            </NuxtLink>
+          </div>
+        </div>
+      </ClientOnly>
+
       <!-- Schedule freshness -->
       <div v-if="schedules?.lastUpdated" class="text-center text-xs text-gray-400 space-y-0.5">
         <p>{{ s.schedulesUpdated }}: {{ schedules.lastUpdated }}</p>
@@ -179,6 +199,7 @@
 <script setup lang="ts">
 import { computeNowMin, getNextDeparture, sortStopsByNextDeparture } from '~/utils/schedule'
 import { highlightMatch } from '~/utils/highlight'
+import type { ScheduleStop } from '~/types'
 
 const { config, schedules } = await useOperator()
 const s = useStrings(config)
@@ -200,12 +221,46 @@ const currentRoute = useRoute()
 const { recentStops, load } = useRecentStops()
 const { favoriteStops, load: loadFavorites } = useFavoriteStops()
 
+type NearbyState = 'idle' | 'locating' | 'ready' | 'denied'
+const nearbyState = ref<NearbyState>('idle')
+const nearbyStops = ref<{ stop: ScheduleStop; distance: number }[]>([])
+
+function haversineM(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371000
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLon = (lon2 - lon1) * Math.PI / 180
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+function formatDistance(m: number): string {
+  if (m < 1000) return `${Math.round(m)} ${s.value.distanceM}`
+  return `${(m / 1000).toFixed(1)} ${s.value.distanceKm}`
+}
+
 const now = ref(Date.now())
 onMounted(() => {
   load()
   loadFavorites()
   now.value = Date.now()
   setInterval(() => { now.value = Date.now() }, 30_000)
+
+  if (!schedules.value || !('geolocation' in navigator)) return
+  const stopsWithCoords = schedules.value.stops.filter(s => s.lat != null && s.lng != null)
+  if (!stopsWithCoords.length) return
+  nearbyState.value = 'locating'
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const { latitude, longitude } = pos.coords
+      nearbyStops.value = stopsWithCoords
+        .map(stop => ({ stop, distance: haversineM(latitude, longitude, stop.lat!, stop.lng!) }))
+        .sort((a, b) => a.distance - b.distance)
+        .slice(0, 3)
+      nearbyState.value = 'ready'
+    },
+    () => { nearbyState.value = 'denied' },
+    { timeout: 10000, maximumAge: 60000 },
+  )
 })
 
 const hasRealtime = computed(() => !!config.value?.gtfsRt)

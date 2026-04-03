@@ -144,6 +144,12 @@ export interface AppStrings {
 
   // Realtime delay aria-label
   minutesDelay: string
+
+  // Home page — nearby stops
+  nearbyStops: string
+  locating: string
+  distanceM: string
+  distanceKm: string
 }
 
 const IT: AppStrings = {
@@ -227,6 +233,10 @@ const IT: AppStrings = {
   copiedFeedback: 'Copiato!',
   skipToContent: 'Vai al contenuto principale',
   minutesDelay: 'minuti di ritardo',
+  nearbyStops: 'Fermate vicine',
+  locating: 'Localizzazione in corso...',
+  distanceM: 'm',
+  distanceKm: 'km',
 }
 
 const EN: AppStrings = {
@@ -310,6 +320,10 @@ const EN: AppStrings = {
   copiedFeedback: 'Copied!',
   skipToContent: 'Skip to main content',
   minutesDelay: 'minutes late',
+  nearbyStops: 'Nearby stops',
+  locating: 'Locating...',
+  distanceM: 'm',
+  distanceKm: 'km',
 }
 
 const STRINGS: Record<Locale, AppStrings> = { it: IT, en: EN }

@@ -72,7 +72,14 @@
             class="flex items-center justify-between py-1.5"
           >
             <span class="flex flex-col">
-              <span class="text-sm text-gray-900 dark:text-gray-100">{{ stop.name }}</span>
+              <span class="flex items-center gap-1.5">
+                <span class="text-sm text-gray-900 dark:text-gray-100">{{ stop.name }}</span>
+                <span
+                  v-if="hasRealtime"
+                  class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse flex-shrink-0"
+                  aria-hidden="true"
+                />
+              </span>
               <span v-if="favoriteNextDepartures[stop.stopId]" class="text-xs text-gray-400 tabular-nums">
                 {{ favoriteNextDepartures[stop.stopId] }}
               </span>
@@ -94,7 +101,14 @@
             class="flex items-center justify-between py-1.5"
           >
             <span class="flex flex-col">
-              <span class="text-sm text-gray-900 dark:text-gray-100">{{ stop.name }}</span>
+              <span class="flex items-center gap-1.5">
+                <span class="text-sm text-gray-900 dark:text-gray-100">{{ stop.name }}</span>
+                <span
+                  v-if="hasRealtime"
+                  class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse flex-shrink-0"
+                  aria-hidden="true"
+                />
+              </span>
               <span v-if="recentNextDepartures[stop.stopId]" class="text-xs text-gray-400 tabular-nums">
                 {{ recentNextDepartures[stop.stopId] }}
               </span>
@@ -160,6 +174,8 @@ onMounted(() => {
   now.value = Date.now()
   setInterval(() => { now.value = Date.now() }, 30_000)
 })
+
+const hasRealtime = computed(() => !!config.value?.gtfsRt)
 
 const sortedFavoriteStops = computed(() => {
   if (!schedules.value) return favoriteStops.value

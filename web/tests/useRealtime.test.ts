@@ -225,6 +225,24 @@ describe('useRealtime — visibilitychange behavior', () => {
     // Listener should have been removed
     expect(listeners.get('visibilitychange')?.length).toBe(0)
   })
+
+  it('poll() skips fetch when document.hidden is true', async () => {
+    const { useRealtime } = await import('~/composables/useRealtime')
+
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+
+    // Set the tab as hidden before mount so poll() sees document.hidden === true
+    visibilityState = 'hidden'
+
+    const deps = { value: [] as Departure[] }
+    useRealtime(deps as any, 'https://example.com/gtfs-rt')
+
+    // Simulate the onMounted lifecycle — poll() should exit early due to document.hidden
+    await mountedCallback!()
+
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
 })
 
 describe('useRealtime — isLoading and refresh()', () => {

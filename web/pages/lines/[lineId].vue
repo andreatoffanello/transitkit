@@ -92,11 +92,16 @@ watch(route, (r) => {
   selectedDirectionId.value = r?.directions[0]?.id ?? 0
 }, { immediate: true })
 
+const stopMap = computed<Map<string, ScheduleStop>>(() => {
+  const stops = schedules.value?.stops ?? []
+  return new Map(stops.map(s => [s.id, s]))
+})
+
 const currentStops = computed(() => {
   const dir = route.value?.directions.find((d: RouteDirection) => d.id === selectedDirectionId.value)
   if (!dir) return []
   return dir.stopIds
-    .map((id: string) => schedules.value?.stops.find((s: ScheduleStop) => s.id === id))
+    .map((id: string) => stopMap.value.get(id))
     .filter((s: ScheduleStop | undefined): s is ScheduleStop => s !== undefined)
 })
 

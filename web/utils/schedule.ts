@@ -73,6 +73,8 @@ export function decodeDepartures(
   headsignMap?: Record<string, string>,
 ): Departure[] {
   const result: Departure[] = []
+  const routeMap = new Map<string, Route>(data.routes.map(r => [r.id, r]))
+  let depIdx = 0
 
   for (const compact of compactDeps) {
     if (compact.length < 3) continue
@@ -101,14 +103,14 @@ export function decodeDepartures(
         ? data.tripIds[tripIdIdx]
         : undefined
 
-    const route = data.routes.find((r: Route) => r.id === routeId)
+    const route = routeMap.get(routeId)
 
     const [hStr, mStr] = time.split(':')
     const h = parseInt(hStr ?? '0', 10)
     const m = parseInt(mStr ?? '0', 10)
 
     result.push({
-      id: `${time}_${lineName}_${headsign}_${dock}`,
+      id: `${depIdx}_${time}_${lineName}_${headsign}`,
       time,
       lineName,
       routeId,
@@ -120,6 +122,7 @@ export function decodeDepartures(
       tripId,
       minutesFromMidnight: h * 60 + m,
     })
+    depIdx++
   }
 
   return result

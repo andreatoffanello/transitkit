@@ -31,6 +31,7 @@
           class="px-3 py-1 rounded-full text-sm font-medium transition-colors active:scale-95 transition-transform duration-100"
           :class="selectedType === null ? 'text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'"
           :style="selectedType === null ? { backgroundColor: config?.theme.primaryColor } : {}"
+          :aria-pressed="selectedType === null"
           @click="selectedType = null"
         >
           {{ s.all }}

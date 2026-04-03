@@ -87,7 +87,7 @@
         <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">{{ s.recentStops }}</p>
         <div class="space-y-2">
           <NuxtLink
-            v-for="stop in recentStops"
+            v-for="stop in sortedRecentStops"
             :key="stop.stopId"
             :to="`/stop/${stop.stopId}`"
             :prefetch="false"
@@ -165,6 +165,18 @@ const sortedFavoriteStops = computed(() => {
   if (!schedules.value) return favoriteStops.value
   const nowMs = now.value
   return [...favoriteStops.value].sort((a, b) => {
+    const depA = getNextDeparture(a.stopId, schedules.value!, nowMs, config.value?.timezone, config.value?.headsignMap)
+    const depB = getNextDeparture(b.stopId, schedules.value!, nowMs, config.value?.timezone, config.value?.headsignMap)
+    const minA = depA?.minutesFromMidnight ?? Infinity
+    const minB = depB?.minutesFromMidnight ?? Infinity
+    return minA - minB
+  })
+})
+
+const sortedRecentStops = computed(() => {
+  if (!schedules.value) return recentStops.value
+  const nowMs = now.value
+  return [...recentStops.value].sort((a, b) => {
     const depA = getNextDeparture(a.stopId, schedules.value!, nowMs, config.value?.timezone, config.value?.headsignMap)
     const depB = getNextDeparture(b.stopId, schedules.value!, nowMs, config.value?.timezone, config.value?.headsignMap)
     const minA = depA?.minutesFromMidnight ?? Infinity

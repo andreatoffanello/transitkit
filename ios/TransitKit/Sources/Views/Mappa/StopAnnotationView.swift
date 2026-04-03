@@ -45,11 +45,16 @@ struct StopAnnotationView: View {
     var body: some View {
         VStack(spacing: 3) {
             if zoomLevel == .far {
-                // Compact dot — no shadow (invisible at this size, saves GPU compositing)
-                Circle()
-                    .fill(pinColor)
-                    .frame(width: 8, height: 8)
-                    .overlay(Circle().stroke(.white, lineWidth: 1))
+                // Compact dot — visually 8×8 but tap target expanded to 44×44 (Apple HIG)
+                ZStack {
+                    Color.clear
+                    Circle()
+                        .fill(pinColor)
+                        .frame(width: 8, height: 8)
+                        .overlay(Circle().stroke(.white, lineWidth: 1))
+                }
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
             } else {
                 // Circle with transit icon
                 ZStack {

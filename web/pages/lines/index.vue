@@ -28,7 +28,7 @@
       <div v-if="availableTypes.length > 1" class="flex gap-2 flex-wrap mb-4">
         <!-- "All" chip -->
         <button
-          class="px-3 py-1 rounded-full text-sm font-medium transition-colors"
+          class="px-3 py-1 rounded-full text-sm font-medium transition-colors active:scale-95 transition-transform duration-100"
           :class="selectedType === null ? 'text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'"
           :style="selectedType === null ? { backgroundColor: config?.theme.primaryColor } : {}"
           @click="selectedType = null"
@@ -39,11 +39,12 @@
         <button
           v-for="type in availableTypes"
           :key="type"
-          class="px-3 py-1 rounded-full text-sm font-medium transition-colors"
+          class="px-3 py-1 rounded-full text-sm font-medium transition-colors active:scale-95 transition-transform duration-100"
           :class="selectedType === type ? 'text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'"
           :style="selectedType === type ? { backgroundColor: config?.theme.primaryColor } : {}"
           @click="selectedType = type"
         >
+          <span v-if="TRANSIT_ICONS[type]" aria-hidden="true">{{ TRANSIT_ICONS[type] }}</span>
           {{ s.transitTypes[type as keyof typeof s.transitTypes] ?? type }}
         </button>
       </div>
@@ -86,14 +87,22 @@
             :key="route.id"
             :to="`/lines/${route.id}`"
             role="listitem"
-            class="flex flex-col items-center gap-1"
+            class="flex flex-col items-center gap-1 active:scale-95 transition-transform duration-100"
           >
+            <span v-if="TRANSIT_ICONS[route.transitType]" aria-hidden="true" class="text-base">
+              {{ TRANSIT_ICONS[route.transitType] }}
+            </span>
             <LineBadge
               :name="route.name"
               :color="route.color"
               :text-color="route.textColor"
               :locale="config?.locale[0]"
               class="text-base px-3 py-1"
+            />
+            <span
+              v-if="searchQuery && route.longName"
+              class="text-xs text-gray-500 dark:text-gray-400 max-w-[96px] text-center leading-tight"
+              v-html="highlightMatch(route.longName, searchQuery)"
             />
             <span v-if="stopCountByRoute.get(route.id)" class="text-xs text-gray-400">
               {{ stopCountByRoute.get(route.id) }} {{ s.stops }}
@@ -119,6 +128,31 @@
 <script setup lang="ts">
 import type { TransitType } from '~/types'
 import { filterRoutes, sortRoutes } from '~/utils/routes'
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+function normalizeForSearch(s: string): string {
+  return s.normalize('NFD').replace(/\p{Mn}/gu, '').toLowerCase()
+}
+
+function highlightMatch(text: string, query: string): string {
+  if (!query) return escapeHtml(text)
+  const normalizedText = normalizeForSearch(text)
+  const normalizedQuery = normalizeForSearch(query.trim())
+  if (!normalizedQuery) return escapeHtml(text)
+  const start = normalizedText.indexOf(normalizedQuery)
+  if (start === -1) return escapeHtml(text)
+  const end = start + normalizedQuery.length
+  return (
+    escapeHtml(text.slice(0, start)) +
+    '<span class="font-semibold text-gray-900 dark:text-white">' +
+    escapeHtml(text.slice(start, end)) +
+    '</span>' +
+    escapeHtml(text.slice(end))
+  )
+}
 
 const { config, schedules, pending } = await useOperator()
 const s = useStrings(config)
@@ -146,6 +180,14 @@ function transitTypeLabel(type: string): string {
 
 function clearFilters() {
   router.replace({ query: {} })
+}
+
+const TRANSIT_ICONS: Record<string, string> = {
+  bus: '🚌',
+  tram: '🚃',
+  rail: '🚆',
+  ferry: '⛴️',
+  metro: '🚇',
 }
 
 const allRoutes = computed(() => schedules.value?.routes ?? [])

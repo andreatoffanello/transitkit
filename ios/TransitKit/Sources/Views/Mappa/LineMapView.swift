@@ -69,6 +69,10 @@ struct LineMapView: View {
             .onAppear {
                 zoomToStops()
             }
+            .onChange(of: routeStops.count) { _, count in
+                guard count > 0 else { return }
+                zoomToStops()
+            }
 
             // Close button
             Button { dismiss() } label: {
@@ -121,13 +125,15 @@ struct LineMapView: View {
 
         let lats = coords.map(\.latitude)
         let lngs = coords.map(\.longitude)
+        guard let minLat = lats.min(), let maxLat = lats.max(),
+              let minLng = lngs.min(), let maxLng = lngs.max() else { return }
         let center = CLLocationCoordinate2D(
-            latitude: (lats.min()! + lats.max()!) / 2,
-            longitude: (lngs.min()! + lngs.max()!) / 2
+            latitude: (minLat + maxLat) / 2,
+            longitude: (minLng + maxLng) / 2
         )
         let span = MKCoordinateSpan(
-            latitudeDelta: max((lats.max()! - lats.min()!) * 1.4, 0.01),
-            longitudeDelta: max((lngs.max()! - lngs.min()!) * 1.4, 0.01)
+            latitudeDelta: max((maxLat - minLat) * 1.4, 0.01),
+            longitudeDelta: max((maxLng - minLng) * 1.4, 0.01)
         )
         cameraPosition = .region(MKCoordinateRegion(center: center, span: span))
     }

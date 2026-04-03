@@ -71,6 +71,8 @@ struct StopAnnotationView: View {
                 .scaleEffect(isSelected ? 1.2 : 1.0)
                 .animation(.spring(response: 0.3), value: isSelected)
                 .drawingGroup() // GPU compositing only for the icon branch
+                .frame(minWidth: 44, minHeight: 44)
+                .contentShape(Rectangle())
             }
 
             // Stop name label — flat background instead of .regularMaterial

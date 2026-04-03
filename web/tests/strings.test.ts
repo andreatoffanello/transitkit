@@ -155,6 +155,26 @@ describe('getStrings', () => {
     expect(getStrings('it').minutesDelay).toBe('minuti di ritardo')
     expect(getStrings('en').minutesDelay).toBe('minutes late')
   })
+
+  it('nearbyStops: IT and EN', () => {
+    expect(getStrings('it').nearbyStops).toBe('Fermate vicine')
+    expect(getStrings('en').nearbyStops).toBe('Nearby stops')
+  })
+
+  it('locating: IT and EN', () => {
+    expect(getStrings('it').locating).toBe('Localizzazione in corso...')
+    expect(getStrings('en').locating).toBe('Locating...')
+  })
+
+  it('distanceM: IT and EN', () => {
+    expect(getStrings('it').distanceM).toBe('m')
+    expect(getStrings('en').distanceM).toBe('m')
+  })
+
+  it('distanceKm: IT and EN', () => {
+    expect(getStrings('it').distanceKm).toBe('km')
+    expect(getStrings('en').distanceKm).toBe('km')
+  })
 })
 
 describe('IT/EN key parity', () => {

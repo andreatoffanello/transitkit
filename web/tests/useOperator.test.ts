@@ -165,4 +165,23 @@ describe('useOperator', () => {
     const calls = fetchMock.mock.calls.map(c => String(c[0]))
     expect(calls.some(u => u.startsWith('https://'))).toBe(true)
   })
+
+  it('legge correttamente locale da config.json', async () => {
+    const { config } = await useOperator()
+    expect(config.value?.locale).toEqual(['en'])
+  })
+
+  it('non crasha se config.json non ha locale', async () => {
+    const configWithoutLocale = { ...mockConfig }
+    delete (configWithoutLocale as Partial<typeof mockConfig>).locale
+    fetchMock.mockImplementation((url: unknown) => {
+      const urlStr = String(url)
+      if (urlStr.includes('config.json')) return Promise.resolve(makeResponse(configWithoutLocale))
+      if (urlStr.includes('schedules.json')) return Promise.resolve(makeResponse(mockSchedules))
+      return Promise.reject(new Error(`Unexpected URL: ${urlStr}`))
+    })
+    const { config } = await useOperator()
+    expect(config.value).toBeDefined()
+    expect(config.value?.locale).toBeUndefined()
+  })
 })

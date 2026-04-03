@@ -11,8 +11,9 @@ const OPERATOR_HOSTS: Record<string, string> = {
 
 /**
  * URL base del CDN dati (GitHub Pages transitkit-data repo).
+ * In development, set CDN_BASE env var to override (e.g. http://localhost:3010/mock).
  */
-export const CDN_BASE = 'https://andreatoffanello.github.io/transitkit-data'
+export const CDN_BASE = process.env.CDN_BASE ?? 'https://andreatoffanello.github.io/transitkit-data'
 
 export function resolveOperatorId(host: string): string | null {
   if (OPERATOR_HOSTS[host]) return OPERATOR_HOSTS[host] ?? null

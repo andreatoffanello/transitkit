@@ -70,6 +70,7 @@ struct StopAnnotationView: View {
                 .shadow(color: .black.opacity(0.2), radius: 2.5, y: 1)
                 .scaleEffect(isSelected ? 1.2 : 1.0)
                 .animation(.spring(response: 0.3), value: isSelected)
+                .drawingGroup() // GPU compositing only for the icon branch
             }
 
             // Stop name label — flat background instead of .regularMaterial
@@ -85,7 +86,6 @@ struct StopAnnotationView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 4))
             }
         }
-        .drawingGroup() // flatten entire annotation to a single GPU pass
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(stop.name), \(dominantType.displayName)")
         .accessibilityIdentifier("map_stop_\(stop.id)")

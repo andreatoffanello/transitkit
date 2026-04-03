@@ -34,7 +34,12 @@
       </div>
 
       <!-- Stop sequence -->
-      <div id="direction-panel" role="tabpanel" class="space-y-1">
+      <div
+        v-if="currentStops.length"
+        id="direction-panel"
+        role="tabpanel"
+        class="space-y-1"
+      >
         <NuxtLink
           v-for="stop in currentStops"
           :key="stop.id"
@@ -46,10 +51,15 @@
           <span class="ml-auto text-gray-400 text-xs" aria-hidden="true">→</span>
         </NuxtLink>
       </div>
-
-      <p v-if="currentStops.length === 0" class="text-center py-8 text-gray-400 text-sm">
-        {{ s.noStops }}
-      </p>
+      <div
+        v-else
+        id="direction-panel"
+        role="tabpanel"
+        class="text-center py-12 text-gray-400"
+      >
+        <p class="font-semibold text-gray-600 dark:text-gray-300 mb-1">{{ s.noStopsFound }}</p>
+        <p class="text-sm">{{ s.noStopsFoundHint }}</p>
+      </div>
     </template>
 
     <div v-else role="alert" class="text-center py-16 text-gray-400">

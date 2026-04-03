@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
-import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getDayGroupLabel, getNextServiceDayGroupKey, computeNowMin, getNextDeparture } from '~/utils/schedule'
+import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getDayGroupLabel, getNextServiceDayGroupKey, computeNowMin, getNextDeparture, sortStopsByNextDeparture } from '~/utils/schedule'
 import { getStrings } from '~/utils/strings'
 import type { ScheduleData } from '~/types'
 
@@ -453,5 +453,68 @@ describe('getNextDeparture', () => {
     expect(result).not.toBeNull()
     expect(result!.minutesFromMidnight).toBe(480) // 08:00 = 8 * 60, Tuesday departure
     expect(result!.time).toBe('08:00')
+  })
+})
+
+describe('sortStopsByNextDeparture', () => {
+  // 2026-04-03 is a Friday — matches 'mon,tue,wed,thu,fri'
+  // nowMs at 07:00 (420 min) so all test departures at 08:00, 11:00, 14:00 are upcoming
+  const nowMs = new Date('2026-04-03T07:00:00').getTime()
+
+  const makeData = (stops: { id: string; departures: Record<string, (string | number)[][]> }[]): ScheduleData => ({
+    ...mockScheduleData,
+    stops: stops.map(s => ({
+      id: s.id,
+      name: s.id,
+      lat: 45.0,
+      lng: 11.0,
+      lines: [],
+      departures: s.departures,
+    })),
+  })
+
+  it('sorts 3 stops with departures at 14:00, 08:00, 11:00 → ascending order', () => {
+    const scheduleData = makeData([
+      { id: 'stop-a', departures: { 'mon,tue,wed,thu,fri': [['14:00', 0, 0]] } },
+      { id: 'stop-b', departures: { 'mon,tue,wed,thu,fri': [['08:00', 0, 0]] } },
+      { id: 'stop-c', departures: { 'mon,tue,wed,thu,fri': [['11:00', 0, 0]] } },
+    ])
+    const stops = [
+      { stopId: 'stop-a', name: 'Stop A' },
+      { stopId: 'stop-b', name: 'Stop B' },
+      { stopId: 'stop-c', name: 'Stop C' },
+    ]
+    const sorted = sortStopsByNextDeparture(stops, scheduleData, nowMs)
+    expect(sorted.map(s => s.stopId)).toEqual(['stop-b', 'stop-c', 'stop-a'])
+  })
+
+  it('stop with no departure goes to end (Infinity)', () => {
+    const scheduleData = makeData([
+      { id: 'stop-a', departures: { 'mon,tue,wed,thu,fri': [['10:00', 0, 0]] } },
+      { id: 'stop-no-dep', departures: {} }, // no matching day group
+    ])
+    const stops = [
+      { stopId: 'stop-no-dep', name: 'No Dep' },
+      { stopId: 'stop-a', name: 'Stop A' },
+    ]
+    const sorted = sortStopsByNextDeparture(stops, scheduleData, nowMs)
+    expect(sorted[0]!.stopId).toBe('stop-a')
+    expect(sorted[1]!.stopId).toBe('stop-no-dep')
+  })
+
+  it('empty stops array returns empty array', () => {
+    const scheduleData = makeData([])
+    const sorted = sortStopsByNextDeparture([], scheduleData, nowMs)
+    expect(sorted).toEqual([])
+  })
+
+  it('single stop returns unchanged', () => {
+    const scheduleData = makeData([
+      { id: 'stop-only', departures: { 'mon,tue,wed,thu,fri': [['09:00', 0, 0]] } },
+    ])
+    const stops = [{ stopId: 'stop-only', name: 'Only Stop' }]
+    const sorted = sortStopsByNextDeparture(stops, scheduleData, nowMs)
+    expect(sorted).toHaveLength(1)
+    expect(sorted[0]!.stopId).toBe('stop-only')
   })
 })

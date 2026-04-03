@@ -179,3 +179,44 @@ export function computeNowMin(nowMs: number): number {
   midnight.setHours(0, 0, 0, 0)
   return Math.floor((nowMs - midnight.getTime()) / 60_000)
 }
+
+/**
+ * Sorts an array of stops by their next departure time today (ascending).
+ * Stops with no upcoming departure are placed at the end.
+ */
+export function sortStopsByNextDeparture<T extends { stopId: string; name: string }>(
+  stops: T[],
+  scheduleData: ScheduleData,
+  nowMs: number,
+  timezone?: string,
+  headsignMap?: Record<string, string>,
+): T[] {
+  return [...stops].sort((a, b) => {
+    const aMin = getNextDeparture(a.stopId, scheduleData, nowMs, timezone, headsignMap)?.minutesFromMidnight ?? Infinity
+    const bMin = getNextDeparture(b.stopId, scheduleData, nowMs, timezone, headsignMap)?.minutesFromMidnight ?? Infinity
+    return aMin - bMin
+  })
+}
+
+/**
+ * Returns the first upcoming departure for a given stop today, or null.
+ */
+export function getNextDeparture(
+  stopId: string,
+  scheduleData: ScheduleData,
+  nowMs: number,
+  timezone?: string,
+  headsignMap?: Record<string, string>,
+): Departure | null {
+  const stop = scheduleData.stops.find(s => s.id === stopId)
+  if (!stop) return null
+  const todayKey = getTodayDayGroupKey(stop.departures, timezone)
+  if (!todayKey) return null
+  const compact = stop.departures[todayKey]
+  if (!compact) return null
+  const deps = decodeDepartures(compact, scheduleData, headsignMap)
+  const nowMin = computeNowMin(nowMs)
+  return deps
+    .sort((a, b) => a.minutesFromMidnight - b.minutesFromMidnight)
+    .find(d => d.minutesFromMidnight >= nowMin) ?? null
+}

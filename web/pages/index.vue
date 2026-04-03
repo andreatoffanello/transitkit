@@ -142,7 +142,7 @@
 </template>
 
 <script setup lang="ts">
-import { computeNowMin, getNextDeparture } from '~/utils/schedule'
+import { computeNowMin, getNextDeparture, sortStopsByNextDeparture } from '~/utils/schedule'
 
 const { config, schedules } = await useOperator()
 const s = useStrings(config)
@@ -163,26 +163,12 @@ onMounted(() => {
 
 const sortedFavoriteStops = computed(() => {
   if (!schedules.value) return favoriteStops.value
-  const nowMs = now.value
-  return [...favoriteStops.value].sort((a, b) => {
-    const depA = getNextDeparture(a.stopId, schedules.value!, nowMs, config.value?.timezone, config.value?.headsignMap)
-    const depB = getNextDeparture(b.stopId, schedules.value!, nowMs, config.value?.timezone, config.value?.headsignMap)
-    const minA = depA?.minutesFromMidnight ?? Infinity
-    const minB = depB?.minutesFromMidnight ?? Infinity
-    return minA - minB
-  })
+  return sortStopsByNextDeparture(favoriteStops.value, schedules.value, now.value, config.value?.timezone, config.value?.headsignMap)
 })
 
 const sortedRecentStops = computed(() => {
   if (!schedules.value) return recentStops.value
-  const nowMs = now.value
-  return [...recentStops.value].sort((a, b) => {
-    const depA = getNextDeparture(a.stopId, schedules.value!, nowMs, config.value?.timezone, config.value?.headsignMap)
-    const depB = getNextDeparture(b.stopId, schedules.value!, nowMs, config.value?.timezone, config.value?.headsignMap)
-    const minA = depA?.minutesFromMidnight ?? Infinity
-    const minB = depB?.minutesFromMidnight ?? Infinity
-    return minA - minB
-  })
+  return sortStopsByNextDeparture(recentStops.value, schedules.value, now.value, config.value?.timezone, config.value?.headsignMap)
 })
 
 const favoriteNextDepartures = computed<Record<string, string>>(() => {

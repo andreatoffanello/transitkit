@@ -62,4 +62,71 @@ describe('useFavoriteStops', () => {
     }
     expect(favoriteStops.value).toHaveLength(10)
   })
+
+  it('exactly 10 favorites are all saved at MAX_FAVORITES boundary', () => {
+    const { favoriteStops, toggleFavorite } = useFavoriteStops()
+    for (let i = 0; i < 10; i++) {
+      toggleFavorite({ stopId: `s${i}`, name: `Stop ${i}` })
+    }
+    expect(favoriteStops.value).toHaveLength(10)
+    expect(favoriteStops.value.map(s => s.stopId)).toEqual([
+      's0', 's1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9'
+    ])
+  })
+
+  it('11th favorite toggle is ignored when already at MAX_FAVORITES', () => {
+    const { favoriteStops, toggleFavorite } = useFavoriteStops()
+    for (let i = 0; i < 10; i++) {
+      toggleFavorite({ stopId: `s${i}`, name: `Stop ${i}` })
+    }
+    // Attempt to add 11th favorite
+    toggleFavorite({ stopId: 's10', name: 'Stop 10' })
+    expect(favoriteStops.value).toHaveLength(10)
+    expect(favoriteStops.value.map(s => s.stopId)).toEqual([
+      's0', 's1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9'
+    ])
+  })
+
+  it('isFavorite() returns true for item at position 10 (last before cap)', () => {
+    const { toggleFavorite, isFavorite } = useFavoriteStops()
+    for (let i = 0; i < 10; i++) {
+      toggleFavorite({ stopId: `s${i}`, name: `Stop ${i}` })
+    }
+    // 10th item (index 9, stopId 's9') should be favorite
+    expect(isFavorite('s9')).toBe(true)
+    // 11th item that would exceed cap should not be favorite
+    expect(isFavorite('s10')).toBe(false)
+  })
+
+  it('load() falls back to [] when localStorage contains invalid JSON', () => {
+    const { favoriteStops, load } = useFavoriteStops()
+    localStorageMock.setItem('favoriteStops', '{"broken":')
+    load()
+    expect(favoriteStops.value).toEqual([])
+  })
+
+  it('toggleFavorite() persists add to localStorage', () => {
+    const { toggleFavorite } = useFavoriteStops()
+    toggleFavorite({ stopId: 'b', name: 'Stop B' })
+    const raw = localStorageMock.getItem('favoriteStops')
+    expect(raw).not.toBeNull()
+    const parsed = JSON.parse(raw!)
+    expect(parsed).toEqual([{ stopId: 'b', name: 'Stop B' }])
+  })
+
+  it('load() restores favorites from localStorage (cold-start)', () => {
+    const { toggleFavorite } = useFavoriteStops()
+    toggleFavorite({ stopId: 'c', name: 'Stop C' })
+    const saved = localStorageMock.getItem('favoriteStops')!
+    // Simulate cold start: wipe storage → reset singleton to []
+    localStorageMock.clear()
+    const { load, favoriteStops } = useFavoriteStops()
+    load()
+    expect(favoriteStops.value).toHaveLength(0)
+    // Restore persisted data (as if app re-opened with previous session)
+    localStorageMock.setItem('favoriteStops', saved)
+    load()
+    expect(favoriteStops.value).toHaveLength(1)
+    expect(favoriteStops.value[0]!.stopId).toBe('c')
+  })
 })

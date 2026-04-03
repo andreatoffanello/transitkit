@@ -1,5 +1,6 @@
 <template>
   <div class="flex items-center gap-3 py-3 border-b border-gray-100 dark:border-white/5 last:border-0">
+    <span class="sr-only">{{ rowAriaLabel }}</span>
     <LineBadge
       :name="departure.lineName"
       :color="departure.color"
@@ -103,6 +104,20 @@ const delayAriaLabel = computed(() => {
   if (props.departure.realtimeDelay === undefined || props.departure.realtimeDelay === 0) return null
   const delayMin = Math.abs(Math.round(props.departure.realtimeDelay / 60))
   return `${delayMin} ${s.value.minutesDelay}`
+})
+
+const rowAriaLabel = computed(() => {
+  const nowMs = props.now ?? Date.now()
+  const diffMin = effectiveMinutes(nowMs)
+  let timeDescription: string
+  if (diffMin === 0) {
+    timeDescription = s.value.now
+  } else if (diffMin > 0 && diffMin < 60) {
+    timeDescription = `${diffMin} ${s.value.minutes}`
+  } else {
+    timeDescription = props.departure.time
+  }
+  return `${s.value.lineLabel} ${props.departure.lineName}, ${props.departure.headsign}, ${timeDescription}`
 })
 
 const timeClass = computed(() => {

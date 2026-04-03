@@ -121,6 +121,39 @@ describe('fetchWithRetry', () => {
     expect(fetchMock).toHaveBeenCalledTimes(3)
   })
 
+  it('AbortError is re-thrown immediately without retry', async () => {
+    const fetchMock = vi.mocked(globalThis.fetch)
+    const abortError = new DOMException('The operation was aborted.', 'AbortError')
+    fetchMock.mockRejectedValueOnce(abortError)
+
+    let caughtError: unknown
+    const resultPromise = fetchWithRetry('https://example.com/data.json', 3, 1000).catch(
+      err => { caughtError = err },
+    )
+    await vi.runAllTimersAsync()
+    await resultPromise
+
+    expect(caughtError).toBe(abortError)
+    // Only one attempt — AbortError is not retried
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('passes signal to fetch', async () => {
+    const fetchMock = vi.mocked(globalThis.fetch)
+    fetchMock.mockResolvedValueOnce(makeResponse(200))
+
+    const controller = new AbortController()
+    const resultPromise = fetchWithRetry('https://example.com/data.json', 3, 1000, controller.signal)
+    await vi.runAllTimersAsync()
+    await resultPromise
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://example.com/data.json',
+      { signal: controller.signal },
+    )
+  })
+
   it('uses exponential backoff delays: 1000ms then 2000ms', async () => {
     const fetchMock = vi.mocked(globalThis.fetch)
     const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout')

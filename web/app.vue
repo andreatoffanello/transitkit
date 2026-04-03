@@ -14,7 +14,7 @@
       <template #error="{ error, clearError }">
         <div class="min-h-screen flex flex-col items-center justify-center px-6 text-center bg-gray-50 dark:bg-gray-950">
           <div class="max-w-sm w-full">
-            <div class="text-4xl mb-4" aria-hidden="true">🚌</div>
+            <div class="text-4xl mb-4" aria-hidden="true"></div>
             <h1 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">
               {{ errorStatusCode(error) === 404 ? 'Pagina non trovata' : 'Servizio temporaneamente non disponibile' }}
             </h1>
@@ -37,6 +37,9 @@
 </template>
 
 <script setup lang="ts">
+const { initTheme } = useTheme()
+onMounted(() => { initTheme() })
+
 type NuxtBoundaryError = Error & { statusCode?: number }
 
 function errorStatusCode(error: Error): number | undefined {

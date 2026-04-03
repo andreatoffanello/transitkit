@@ -57,30 +57,28 @@ export function getDayGroupLabel(dayGroup: DayGroup, strings: AppStrings): strin
   return `${first}–${last}`
 }
 
-export function getTodayDayGroupKey(
-  departures: Record<string, (string | number)[][]>,
-  timezone?: string,
-): string | null {
-  let dayIndex: number
+function resolveTodayIndex(timezone?: string): number {
   if (timezone) {
     try {
-      // Use Intl to get the weekday in the operator's timezone.
-      // 'long' gives full English words ('Sunday', 'Monday', …) in en-US — stable and
-      // unambiguous. slice(0,3) extracts the 3-char abbreviation ('sun', 'mon', …).
       const formatter = new Intl.DateTimeFormat('en-US', {
         timeZone: timezone,
         weekday: 'long',
       })
       const dayStr = formatter.format(new Date()).toLowerCase().slice(0, 3)
-      dayIndex = WEEKDAY_ABBR.indexOf(dayStr as typeof WEEKDAY_ABBR[number])
-      if (dayIndex === -1) dayIndex = new Date().getDay() // fallback
+      const idx = WEEKDAY_ABBR.indexOf(dayStr as typeof WEEKDAY_ABBR[number])
+      return idx !== -1 ? idx : new Date().getDay()
     } catch {
-      // Invalid timezone; fallback to browser's local timezone
-      dayIndex = new Date().getDay()
+      return new Date().getDay()
     }
-  } else {
-    dayIndex = new Date().getDay()
   }
+  return new Date().getDay()
+}
+
+export function getTodayDayGroupKey(
+  departures: Record<string, (string | number)[][]>,
+  timezone?: string,
+): string | null {
+  const dayIndex = resolveTodayIndex(timezone)
   const todayAbbr = WEEKDAY_ABBR[dayIndex]
   for (const key of Object.keys(departures)) {
     if (key.split(',').includes(todayAbbr ?? '')) return key
@@ -98,19 +96,7 @@ export function getNextServiceDayGroupKey(
   timezone?: string,
 ): string | null {
   // Find today's index
-  let todayIndex: number
-  if (timezone) {
-    try {
-      const formatter = new Intl.DateTimeFormat('en-US', { timeZone: timezone, weekday: 'long' })
-      const dayStr = formatter.format(new Date()).toLowerCase().slice(0, 3)
-      todayIndex = WEEKDAY_ABBR.indexOf(dayStr as typeof WEEKDAY_ABBR[number])
-      if (todayIndex === -1) todayIndex = new Date().getDay()
-    } catch {
-      todayIndex = new Date().getDay()
-    }
-  } else {
-    todayIndex = new Date().getDay()
-  }
+  const todayIndex = resolveTodayIndex(timezone)
 
   // Search the next 7 days (skip today)
   for (let offset = 1; offset <= 7; offset++) {

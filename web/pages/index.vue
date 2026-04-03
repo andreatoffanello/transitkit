@@ -222,6 +222,22 @@ const recentNextDepartures = computed<Record<string, string>>(() => {
 useHead({
   title: computed(() => `${config.value?.fullName ?? config.value?.name ?? ''} — Orari e linee`),
   link: [{ rel: 'canonical', href: computed(() => `${requestUrl.origin}${currentRoute.path}`) }],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: computed(() => {
+        const data: Record<string, string> = {
+          '@context': 'https://schema.org',
+          '@type': 'TransitAgency',
+          name: config.value?.fullName ?? config.value?.name ?? '',
+        }
+        if (config.value?.url) data.url = config.value.url
+        if (config.value?.region) data.areaServed = config.value.region
+        if (config.value?.contact?.phone) data.telephone = config.value.contact.phone
+        return JSON.stringify(data)
+      }),
+    },
+  ],
   meta: [
     {
       name: 'description',

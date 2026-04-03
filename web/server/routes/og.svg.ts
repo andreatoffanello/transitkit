@@ -18,18 +18,18 @@ function escapeXml(str: string): string {
 }
 
 function buildSvg(primaryColor: string, name: string): string {
-  const safeColor = /^#[0-9A-Fa-f]{3,8}$/.test(primaryColor) ? primaryColor : '#003366'
+  const safeColor = /^#(?:[0-9A-Fa-f]{3,4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/.test(primaryColor) ? primaryColor : '#003366'
   const safeName = escapeXml(name.slice(0, 80))
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <rect width="1200" height="630" fill="${safeColor}"/>
-  <rect x="0" y="0" width="1200" height="630" fill="url(#grad)" opacity="0.25"/>
   <defs>
     <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#000000"/>
       <stop offset="100%" stop-color="#ffffff"/>
     </linearGradient>
   </defs>
+  <rect width="1200" height="630" fill="${safeColor}"/>
+  <rect x="0" y="0" width="1200" height="630" fill="url(#grad)" opacity="0.25"/>
   <text
     x="600"
     y="280"

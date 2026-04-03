@@ -49,18 +49,24 @@
         </template>
         <!-- Countdown o orario normale -->
         <template v-else>
+          <!-- Imminent: green pill badge "Ora" -->
           <span
-            v-if="showCountdown && typeof effectiveMinutes === 'number' && effectiveMinutes >= 0 && effectiveMinutes <= 30"
-            class="text-[15px] font-semibold"
-            style="color: var(--color-primary); font-variant-numeric: tabular-nums; letter-spacing: -0.02em"
-          >{{ effectiveMinutes <= 1 ? s.now : `${effectiveMinutes} ${s.minutes}` }}</span>
+            v-if="showCountdown && typeof effectiveMinutes === 'number' && effectiveMinutes >= 0 && effectiveMinutes <= 1"
+            class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold"
+            style="background-color: #16a34a; color: #ffffff; letter-spacing: 0"
+          >{{ s.now }}</span>
+          <!-- Short countdown: large primary number -->
+          <span
+            v-else-if="showCountdown && typeof effectiveMinutes === 'number' && effectiveMinutes >= 0 && effectiveMinutes <= 30"
+            class="text-[17px] font-bold"
+            style="color: var(--color-primary); font-variant-numeric: tabular-nums; letter-spacing: -0.03em"
+          >{{ effectiveMinutes }}<span class="text-[11px] font-medium ml-0.5">min</span></span>
+          <!-- Fixed time: full-weight when in schedule context, secondary when in countdown context -->
           <span
             v-else
-            class="text-[15px] font-semibold"
-            :style="[
-              'font-variant-numeric: tabular-nums; letter-spacing: -0.02em',
-              timeColorStyle,
-            ]"
+            class="text-[15px]"
+            :class="showCountdown ? 'font-medium' : 'font-semibold'"
+            :style="`font-variant-numeric: tabular-nums; letter-spacing: -0.02em; color: ${showCountdown ? 'var(--text-secondary)' : 'var(--text-primary)'}`"
           >{{ departure.time }}</span>
         </template>
       </div>

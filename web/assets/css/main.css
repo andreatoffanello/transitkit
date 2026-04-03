@@ -26,7 +26,7 @@ html.dark {
   --bg-elevated: #1C1C24;
   --text-primary: #F2F2F7;
   --text-secondary: #8E8E9A;
-  --text-tertiary: #48484E;
+  --text-tertiary: #6E6E78;
   --border: rgba(255, 255, 255, 0.07);
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.12);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.3), 0 1px 4px rgba(0,0,0,0.15);
@@ -59,6 +59,11 @@ body {
   .app-main {
     padding-bottom: 2rem;
   }
+}
+
+/* Suppress browser native clear button on search inputs — we use a custom one */
+input[type="search"]::-webkit-search-cancel-button {
+  display: none;
 }
 
 /* Hero section gradient — light mode subtle, dark mode more visible */

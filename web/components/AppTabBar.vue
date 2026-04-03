@@ -33,7 +33,7 @@
             "
             aria-hidden="true"
           />
-          <component :is="tab.icon" :size="22" :stroke-width="1.75" class="relative z-10" />
+          <component :is="tab.icon" :size="22" :stroke-width="isActive(tab.path) ? 2.25 : 1.75" class="relative z-10" />
           <span class="text-[11px] font-medium leading-none relative z-10">{{ tab.label }}</span>
         </NuxtLink>
       </li>

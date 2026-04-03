@@ -49,9 +49,27 @@
           </button>
         </div>
 
+        <!-- Search empty state -->
+        <div
+          v-if="searchStopQuery.trim() && !stopResults.length"
+          class="mt-2 rounded-2xl px-4 py-5 text-center"
+          style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm)"
+        >
+          <p class="text-sm font-medium mb-1" style="color: var(--text-primary)">Nessuna fermata trovata</p>
+          <p class="text-xs mb-3" style="color: var(--text-secondary)">per "{{ searchStopQuery }}"</p>
+          <NuxtLink
+            :to="`/lines?q=${encodeURIComponent(searchStopQuery)}`"
+            class="inline-flex items-center gap-1.5 text-xs font-semibold"
+            style="color: var(--color-primary)"
+          >
+            <Route :size="13" :stroke-width="1.75" />
+            Cerca nelle linee
+          </NuxtLink>
+        </div>
+
         <!-- Search results -->
         <div
-          v-if="stopResults.length"
+          v-else-if="stopResults.length"
           class="mt-2 rounded-2xl overflow-hidden divide-app"
           style="background-color: var(--bg-elevated); box-shadow: var(--shadow-md); border-color: var(--border)"
         >
@@ -228,25 +246,47 @@
           </section>
 
           <!-- Empty state onboarding -->
-          <section
-            v-if="!favoriteStops.length && !recentStops.length"
-            class="flex flex-col items-center gap-3 py-10 text-center"
-          >
-            <div
-              class="w-12 h-12 rounded-2xl flex items-center justify-center"
-              style="background-color: var(--bg-elevated)"
-            >
-              <MapPin :size="22" :stroke-width="1.5" style="color: var(--text-tertiary)" />
+          <section v-if="!favoriteStops.length && !recentStops.length">
+            <div class="flex flex-col items-center gap-2 py-8 text-center">
+              <div
+                class="w-12 h-12 rounded-2xl flex items-center justify-center"
+                style="background-color: var(--bg-elevated)"
+              >
+                <MapPin :size="22" :stroke-width="1.5" style="color: var(--text-tertiary)" />
+              </div>
+              <p class="text-sm max-w-[240px]" style="color: var(--text-secondary)">{{ s.onboardingHint }}</p>
             </div>
-            <p class="text-sm max-w-[240px]" style="color: var(--text-secondary)">{{ s.onboardingHint }}</p>
-            <NuxtLink
-              to="/lines"
-              prefetch
-              class="text-sm font-semibold"
-              style="color: var(--color-primary)"
-            >
-              {{ s.linesAndSchedules }}
-            </NuxtLink>
+
+            <!-- Featured lines — prime 3 linee come punto di partenza -->
+            <div v-if="schedules?.routes?.length" class="mt-1">
+              <h2 class="text-xs font-semibold uppercase tracking-wider mb-3" style="color: var(--text-tertiary)">
+                Linee disponibili
+              </h2>
+              <div
+                class="rounded-2xl overflow-hidden divide-app"
+                style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border-color: var(--border)"
+              >
+                <NuxtLink
+                  v-for="r in schedules.routes.slice(0, 4)"
+                  :key="r.id"
+                  :to="`/lines/${r.id}`"
+                  class="flex items-center gap-3 px-4 py-3.5 transition-opacity duration-150 active:opacity-70"
+                >
+                  <LineBadge :name="r.name" :color="r.color" :text-color="r.textColor" :locale="config?.locale[0]" />
+                  <span class="flex-1 text-[15px] font-medium truncate" style="color: var(--text-primary)">{{ r.longName }}</span>
+                  <ChevronRight :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+                </NuxtLink>
+                <NuxtLink
+                  v-if="(schedules?.routes?.length ?? 0) > 4"
+                  to="/lines"
+                  class="flex items-center justify-center gap-1.5 px-4 py-3 text-sm font-semibold transition-opacity duration-150 active:opacity-70"
+                  style="color: var(--color-primary)"
+                >
+                  Tutte le linee
+                  <ChevronRight :size="14" :stroke-width="2" />
+                </NuxtLink>
+              </div>
+            </div>
           </section>
         </ClientOnly>
 
@@ -341,7 +381,7 @@
 import { computeNowMin, getNextDeparture, sortStopsByNextDeparture } from '~/utils/schedule'
 import { highlightMatch } from '~/utils/highlight'
 import type { ScheduleStop } from '~/types'
-import { Bus, Search, X, MapPin, Navigation, Star, Clock, ChevronRight, Phone, Mail, Globe, Smartphone } from 'lucide-vue-next'
+import { Bus, Search, X, MapPin, Navigation, Star, Clock, ChevronRight, Phone, Mail, Globe, Smartphone, Route } from 'lucide-vue-next'
 
 const { config, schedules } = await useOperator()
 const s = useStrings(config)

@@ -125,4 +125,9 @@ describe('getStrings', () => {
     expect(getStrings('it').shareStop).toBe('Condividi fermata')
     expect(getStrings('en').shareStop).toBe('Share stop')
   })
+
+  it('updatedAt: IT and EN', () => {
+    expect(getStrings('it').updatedAt).toBe('Aggiornato alle')
+    expect(getStrings('en').updatedAt).toBe('Updated at')
+  })
 })

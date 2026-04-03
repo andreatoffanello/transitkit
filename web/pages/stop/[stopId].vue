@@ -4,8 +4,9 @@
     <PageHeader
       :primary-color="config?.theme.primaryColor"
       :text-color="config?.theme.textOnPrimary"
-      back-to="/"
-      :back-label="s.backToHome"
+      :back-to="fromLine ? `/lines/${fromLine.id}` : '/'"
+      :back-text="fromLine ? `${s.lineLabel} ${fromLine.name}` : s.backToHome"
+      :back-label="fromLine ? `${s.lineLabel} ${fromLine.name}` : s.backToHome"
       :title="config?.name ?? '…'"
     />
 
@@ -299,6 +300,16 @@ const requestUrl = useRequestURL()
 
 const { config, schedules } = await useOperator()
 const s = useStrings(config)
+
+const fromLineId = computed(() => {
+  const from = route.query.from
+  return typeof from === 'string' ? from : null
+})
+
+const fromLine = computed(() => {
+  if (!fromLineId.value || !schedules.value) return null
+  return schedules.value.routes.find(r => r.id === fromLineId.value) ?? null
+})
 
 // Web Share API
 const canShare = ref(false)

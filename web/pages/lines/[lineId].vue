@@ -65,7 +65,7 @@
         <NuxtLink
           v-for="(stop, index) in currentStops"
           :key="stop.id"
-          :to="`/stop/${stop.id}`"
+          :to="{ path: `/stop/${stop.id}`, query: { from: nuxtRoute.params.lineId } }"
           :prefetch="false"
           class="flex items-center gap-3 py-3 px-4 bg-white dark:bg-white/5 rounded-xl hover:bg-gray-50 dark:hover:bg-white/10 transition-colors"
         >

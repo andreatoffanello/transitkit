@@ -55,9 +55,34 @@ describe('escapeHtml', () => {
     expect(escapeHtml('a & b')).toBe('a &amp; b')
   })
 
+  it('escapes > as &gt;', () => {
+    expect(escapeHtml('a > b')).toBe('a &gt; b')
+  })
+
   it('XSS: text with < outside match is escaped in highlightMatch output', () => {
     const result = highlightMatch('<script>alert(1)</script> Centro', 'centro')
     expect(result).not.toContain('<script>')
     expect(result).toContain('&lt;script&gt;')
+  })
+})
+
+describe('highlightMatch — HTML entity safety', () => {
+  it('text with & outside match is escaped', () => {
+    const result = highlightMatch('AT&T Centro', 'centro')
+    expect(result).not.toContain('&T ')  // raw & must not appear
+    expect(result).toContain('&amp;')     // must be escaped
+    expect(result).toContain('<span')     // match still highlighted
+  })
+
+  it('text with > outside match is escaped', () => {
+    const result = highlightMatch('A > B Centro', 'centro')
+    expect(result).not.toContain('> B')  // raw > must not appear
+    expect(result).toContain('&gt;')
+  })
+
+  it('text where match contains & is escaped inside span', () => {
+    const result = highlightMatch('AT&T', 'at&t')
+    // Should match (NFD normalized) and wrap in span with escaped &
+    expect(result).toContain('&amp;')
   })
 })

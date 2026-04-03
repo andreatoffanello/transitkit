@@ -262,6 +262,18 @@
         >
           📤 {{ s.shareStop }}
         </button>
+        <button
+          v-else
+          @click="copyLink"
+          class="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 active:scale-95 transition-transform duration-100"
+          :aria-label="s.copyLink"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+          <span>{{ copied ? s.copiedFeedback : s.copyLink }}</span>
+        </button>
       </footer>
     </template>
 
@@ -302,6 +314,15 @@ async function shareStop() {
       url: window.location.href,
     })
   } catch { /* user cancelled or not supported */ }
+}
+
+const copied = ref(false)
+async function copyLink() {
+  try {
+    await navigator.clipboard.writeText(window.location.href)
+    copied.value = true
+    setTimeout(() => { copied.value = false }, 2000)
+  } catch { /* clipboard not available */ }
 }
 
 // pending: true finché almeno uno dei dati non è ancora caricato

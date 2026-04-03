@@ -131,6 +131,10 @@ export interface AppStrings {
 
   // Realtime last-updated timestamp
   updatedAt: string
+
+  // Stop page — copy link fallback (desktop)
+  copyLink: string
+  copiedFeedback: string
 }
 
 const IT: AppStrings = {
@@ -209,6 +213,8 @@ const IT: AppStrings = {
   lineSingular: 'linea',
   linePlural: 'linee',
   updatedAt: 'Aggiornato alle',
+  copyLink: 'Copia link',
+  copiedFeedback: 'Copiato!',
 }
 
 const EN: AppStrings = {
@@ -287,6 +293,8 @@ const EN: AppStrings = {
   lineSingular: 'line',
   linePlural: 'lines',
   updatedAt: 'Updated at',
+  copyLink: 'Copy link',
+  copiedFeedback: 'Copied!',
 }
 
 const STRINGS: Record<Locale, AppStrings> = { it: IT, en: EN }

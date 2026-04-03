@@ -27,20 +27,22 @@
         :aria-label="s.ariaRealtimeData"
         class="w-2 h-2 rounded-full bg-green-500 animate-pulse"
       />
-      <span
+      <time
+        :datetime="departure.time"
         class="text-sm font-semibold tabular-nums"
         :class="timeClass"
         :aria-label="delayAriaLabel ?? undefined"
       >
         {{ displayTime }}
-      </span>
-      <span
+      </time>
+      <time
         v-if="showScheduledTime"
+        :datetime="departure.time"
         class="text-xs text-gray-400 dark:text-gray-500 tabular-nums"
         :aria-label="`${s.scheduledTime} ${departure.time}`"
       >
         {{ departure.time }}
-      </span>
+      </time>
     </div>
   </div>
 </template>

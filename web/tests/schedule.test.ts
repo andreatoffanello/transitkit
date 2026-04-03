@@ -429,13 +429,13 @@ describe('getNextDeparture', () => {
     expect(result!.minutesFromMidnight).toBe(840) // 14:00 = 14 * 60
   })
 
-  it('headsignMap with empty string value: headsign is "" (nullish coalescing keeps empty string)', () => {
-    // ?? only falls back on null/undefined — "" is neither, so it is preserved as-is
+  it('headsignMap with empty string value: falls back to original headsign (|| ignores empty string)', () => {
+    // || falls back on any falsy value including "" — empty string in map is ignored, rawHeadsign used
     // 2026-04-03 is a Friday → matches 'mon,tue,wed,thu,fri'
     const nowMs = new Date('2026-04-03T10:00:00').getTime() // 600 min; 08:00 is past, 12:00 is next
     const result = getNextDeparture('stop-1', stopWithDepartures, nowMs, undefined, { Centro: '' })
     expect(result).not.toBeNull()
-    expect(result!.headsign).toBe('') // empty string from map is kept, not replaced by rawHeadsign
+    expect(result!.headsign).toBe('Centro') // empty string from map is ignored, rawHeadsign used as fallback
   })
 
   it('with timezone Europe/Rome at midnight boundary returns Tuesday departure, not Monday', () => {

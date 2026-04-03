@@ -136,7 +136,7 @@ export function decodeDepartures(
     const lineName = data.lineNames[lineIdx]!
     const routeId = data.routeIds[lineIdx]!
     const rawHeadsign = data.headsigns[headsignIdx]!
-    const headsign = headsignMap?.[rawHeadsign] ?? rawHeadsign
+    const headsign = headsignMap?.[rawHeadsign] || rawHeadsign
 
     const dock = compact.length > 3 && typeof compact[3] === 'string' ? String(compact[3]) : ''
     const tripIdIdx = compact.length > 5 ? Number(compact[5]) : undefined

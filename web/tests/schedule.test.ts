@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getDayGroupLabel, getNextServiceDayGroupKey, computeNowMin } from '~/utils/schedule'
+import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getDayGroupLabel, getNextServiceDayGroupKey, computeNowMin, getNextDeparture } from '~/utils/schedule'
 import { getStrings } from '~/utils/strings'
 import type { ScheduleData } from '~/types'
 
@@ -78,6 +78,28 @@ describe('decodeDepartures', () => {
     const compact: (string | number)[][] = [['07:35', 0, 0]]
     const result = decodeDepartures(compact, mockScheduleData, { Centro: 'Center' })
     expect(result[0]!.headsign).toBe('Center')
+  })
+
+  it('headsignMap: headsign not in map is returned unchanged', () => {
+    const compact: (string | number)[][] = [['07:35', 0, 0]]
+    // headsignMap only maps 'Stazione' → 'Bahnhof', not 'Centro'
+    const result = decodeDepartures(compact, mockScheduleData, { Stazione: 'Bahnhof' })
+    expect(result[0]!.headsign).toBe('Centro') // 'Centro' is not in map, pass-through
+  })
+
+  it('decodes 4-field compact format [time, lineIdx, headsignIdx, dock]', () => {
+    const compact: (string | number)[][] = [['07:35', 0, 0, 'B']]
+    const result = decodeDepartures(compact, mockScheduleData)
+    expect(result).toHaveLength(1)
+    expect(result[0]!.dock).toBe('B')
+    expect(result[0]!.tripId).toBeUndefined()
+  })
+
+  it('decodes 5-field compact [time, line, headsign, dock, routeIdx] — tripId undefined', () => {
+    const compact: (string | number)[][] = [['09:00', 0, 0, 'C', 0]]
+    const result = decodeDepartures(compact, mockScheduleData)
+    expect(result[0]!.dock).toBe('C')
+    expect(result[0]!.tripId).toBeUndefined()
   })
 })
 
@@ -246,5 +268,98 @@ describe('computeNowMin', () => {
   it('returns 1439 for 23:59', () => {
     const ms = new Date('2026-04-03T23:59:00').getTime()
     expect(computeNowMin(ms)).toBe(1439)
+  })
+})
+
+describe('getNextDeparture', () => {
+  afterEach(() => vi.restoreAllMocks())
+
+  const stopWithDepartures = {
+    ...mockScheduleData,
+    stops: [{
+      id: 'stop-1',
+      name: 'Fermata Test',
+      lat: 45.0,
+      lng: 11.0,
+      lines: [],
+      departures: {
+        'mon,tue,wed,thu,fri': [
+          ['08:00', 0, 0],
+          ['12:00', 0, 0],
+          ['18:00', 0, 0],
+        ],
+      },
+    }],
+  }
+
+  it('returns next departure after nowMs', () => {
+    // 2026-04-03 is a Friday (getDay() = 5), matches 'mon,tue,wed,thu,fri'
+    const nowMs = new Date('2026-04-03T10:00:00').getTime() // 600 min
+    const result = getNextDeparture('stop-1', stopWithDepartures, nowMs)
+    expect(result).not.toBeNull()
+    expect(result!.time).toBe('12:00')
+  })
+
+  it('returns null when stop is not found', () => {
+    const nowMs = new Date('2026-04-03T10:00:00').getTime()
+    const result = getNextDeparture('nonexistent', stopWithDepartures, nowMs)
+    expect(result).toBeNull()
+  })
+
+  it('returns null when no departures today (no matching day group)', () => {
+    // Stop only has 'sat' departures but today is Monday (getDay() = 1)
+    vi.spyOn(Date.prototype, 'getDay').mockReturnValue(1)
+    const satOnlyData = {
+      ...mockScheduleData,
+      stops: [{
+        id: 'stop-1',
+        name: 'Fermata Test',
+        lat: 45.0,
+        lng: 11.0,
+        lines: [],
+        departures: {
+          'sat': [
+            ['08:00', 0, 0],
+            ['12:00', 0, 0],
+          ],
+        },
+      }],
+    }
+    const nowMs = new Date('2026-04-03T10:00:00').getTime()
+    const result = getNextDeparture('stop-1', satOnlyData, nowMs)
+    expect(result).toBeNull()
+  })
+
+  it('returns null when all departures have passed', () => {
+    // 2026-04-03 is a Friday, nowMs = 19:00 (1140 min) → all deps (08:00, 12:00, 18:00) passed
+    const nowMs = new Date('2026-04-03T19:00:00').getTime() // 1140 min
+    const result = getNextDeparture('stop-1', stopWithDepartures, nowMs)
+    expect(result).toBeNull()
+  })
+
+  it('returns only future departure when some are in the past', () => {
+    // Stop has departures at 08:00 and 14:00; nowMs = 10:00 (600 min)
+    // 08:00 (480 min) is past, 14:00 (840 min) is future
+    const partialData = {
+      ...mockScheduleData,
+      stops: [{
+        id: 'stop-2',
+        name: 'Fermata Parziale',
+        lat: 45.0,
+        lng: 11.0,
+        lines: [],
+        departures: {
+          'mon,tue,wed,thu,fri': [
+            ['08:00', 0, 0],
+            ['14:00', 0, 0],
+          ],
+        },
+      }],
+    }
+    // 2026-04-03 is a Friday → matches 'mon,tue,wed,thu,fri'
+    const nowMs = new Date('2026-04-03T10:00:00').getTime() // 600 min
+    const result = getNextDeparture('stop-2', partialData, nowMs)
+    expect(result).not.toBeNull()
+    expect(result!.minutesFromMidnight).toBe(840) // 14:00 = 14 * 60
   })
 })

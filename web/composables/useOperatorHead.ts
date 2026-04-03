@@ -12,6 +12,7 @@ export function useOperatorHead(config: Ref<OperatorConfig | null>) {
     htmlAttrs: { lang: computed(() => config.value?.locale[0] ?? 'it') },
     meta: [
       { name: 'theme-color', content: computed(() => config.value?.theme.primaryColor ?? '#003366') },
+      { name: 'theme-color', content: '#111827', media: '(prefers-color-scheme: dark)' },
       { name: 'apple-mobile-web-app-title', content: computed(() => config.value?.name ?? 'Transit') },
       { property: 'og:image', content: ogImageUrl },
       { property: 'og:image:type', content: 'image/svg+xml' },

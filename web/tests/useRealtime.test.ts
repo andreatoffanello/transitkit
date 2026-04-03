@@ -225,3 +225,144 @@ describe('useRealtime — visibilitychange behavior', () => {
     expect(listeners.get('visibilitychange')?.length).toBe(0)
   })
 })
+
+describe('useRealtime — isLoading and refresh()', () => {
+  let mountedCallback: (() => Promise<void>) | undefined
+
+  beforeEach(async () => {
+    vi.resetModules()
+    mountedCallback = undefined
+
+    // Re-stub Nuxt auto-imports
+    vi.stubGlobal('ref', vi.fn((v: unknown) => ({ value: v })))
+    vi.stubGlobal('watch', vi.fn())
+    vi.stubGlobal('computed', vi.fn((fn: () => unknown) => ({ value: fn() })))
+    vi.stubGlobal('onMounted', vi.fn((cb: () => Promise<void>) => { mountedCallback = cb }))
+    vi.stubGlobal('onUnmounted', vi.fn())
+
+    // Provide a minimal mock document for the composable
+    vi.stubGlobal('document', {
+      visibilityState: 'visible',
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('isLoading is false initially (before any fetch)', async () => {
+    const { useRealtime } = await import('~/composables/useRealtime')
+    const deps = { value: [] as Departure[] }
+
+    const { isLoading } = useRealtime(deps as any, 'https://example.com/gtfs-rt')
+
+    expect(isLoading.value).toBe(false)
+  })
+
+  it('isLoading is false initially when no gtfsRtUrl is provided', async () => {
+    const { useRealtime } = await import('~/composables/useRealtime')
+    const deps = { value: [] as Departure[] }
+
+    const { isLoading } = useRealtime(deps as any, undefined)
+
+    expect(isLoading.value).toBe(false)
+  })
+
+  it('isLoading becomes true during fetch, then false after (fetch fails)', async () => {
+    const { useRealtime } = await import('~/composables/useRealtime')
+
+    // Track isLoading.value while fetch is in-flight
+    let isLoadingDuringFetch: boolean | undefined
+
+    const mockFetch = vi.fn().mockImplementation(async () => {
+      // At this point poll() has already set isLoading.value = true
+      isLoadingDuringFetch = result.isLoading.value
+      return { ok: false, status: 503 } as Response
+    })
+    vi.stubGlobal('fetch', mockFetch)
+
+    const deps = { value: [] as Departure[] }
+    const result = useRealtime(deps as any, 'https://example.com/gtfs-rt')
+
+    // Before mount: isLoading should be false
+    expect(result.isLoading.value).toBe(false)
+
+    // Simulate mount (triggers poll())
+    await mountedCallback!()
+
+    // During fetch, isLoading was true
+    expect(isLoadingDuringFetch).toBe(true)
+
+    // After fetch completes (failed), isLoading is reset to false
+    expect(result.isLoading.value).toBe(false)
+  })
+
+  it('isLoading is false after a successful fetch (arrayBuffer parse fails gracefully)', async () => {
+    const { useRealtime } = await import('~/composables/useRealtime')
+
+    // Return a valid ok response but with arrayBuffer that returns empty buffer;
+    // protobufjs will fail to load in node env, so the catch block runs — isLoading ends false
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+    } as unknown as Response)
+    vi.stubGlobal('fetch', mockFetch)
+
+    const deps = { value: [] as Departure[] }
+    const result = useRealtime(deps as any, 'https://example.com/gtfs-rt')
+
+    await mountedCallback!()
+
+    expect(result.isLoading.value).toBe(false)
+  })
+
+  it('refresh() does not throw when no gtfsRtUrl is configured', async () => {
+    const { useRealtime } = await import('~/composables/useRealtime')
+    const deps = { value: [] as Departure[] }
+
+    const { refresh } = useRealtime(deps as any, undefined)
+
+    // Should resolve without throwing
+    await expect(refresh()).resolves.toBeUndefined()
+  })
+
+  it('refresh() triggers a fetch call', async () => {
+    const { useRealtime } = await import('~/composables/useRealtime')
+
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+    } as Response)
+    vi.stubGlobal('fetch', mockFetch)
+
+    const deps = { value: [] as Departure[] }
+    const { refresh } = useRealtime(deps as any, 'https://example.com/gtfs-rt')
+
+    // fetch should not have been called yet (onMounted not triggered)
+    expect(mockFetch).not.toHaveBeenCalled()
+
+    await refresh()
+
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+    expect(mockFetch).toHaveBeenCalledWith(
+      'https://example.com/gtfs-rt',
+      { mode: 'cors' },
+    )
+  })
+
+  it('refresh() resets isLoading to false after completion even on fetch error', async () => {
+    const { useRealtime } = await import('~/composables/useRealtime')
+
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network error')))
+
+    const deps = { value: [] as Departure[] }
+    const { refresh, isLoading } = useRealtime(deps as any, 'https://example.com/gtfs-rt')
+
+    await refresh()
+
+    expect(isLoading.value).toBe(false)
+  })
+})

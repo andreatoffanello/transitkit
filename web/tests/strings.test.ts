@@ -145,4 +145,9 @@ describe('getStrings', () => {
     expect(getStrings('it').copiedFeedback).toBe('Copiato!')
     expect(getStrings('en').copiedFeedback).toBe('Copied!')
   })
+
+  it('skipToContent: IT and EN', () => {
+    expect(getStrings('it').skipToContent).toBe('Vai al contenuto principale')
+    expect(getStrings('en').skipToContent).toBe('Skip to main content')
+  })
 })

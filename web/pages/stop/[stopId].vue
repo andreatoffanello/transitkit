@@ -1,22 +1,13 @@
 <template>
   <div class="max-w-lg mx-auto px-4 pb-8">
     <!-- Header operatore -->
-    <header
-      class="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 -mx-4 mb-4"
-      :style="{ backgroundColor: config?.theme.primaryColor }"
-    >
-      <NuxtLink
-        to="/"
-        :aria-label="s.backToHome"
-        class="text-sm opacity-70 mr-2"
-        :style="{ color: config?.theme.textOnPrimary }"
-      >
-        ←
-      </NuxtLink>
-      <span class="text-lg font-bold" :style="{ color: config?.theme.textOnPrimary }">
-        {{ config?.name ?? '…' }}
-      </span>
-    </header>
+    <PageHeader
+      :primary-color="config?.theme.primaryColor"
+      :text-color="config?.theme.textOnPrimary"
+      back-to="/"
+      :back-text="config?.name ?? ''"
+      :back-label="s.backToHome"
+    />
 
     <!-- Skeleton loading -->
     <div v-if="pending" class="space-y-4 animate-pulse" aria-busy="true" aria-label="Caricamento">

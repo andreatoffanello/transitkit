@@ -1,24 +1,13 @@
 <template>
   <div class="max-w-lg mx-auto px-4 pb-8">
-    <header
-      class="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 -mx-4 mb-4"
-      :style="{ backgroundColor: headerBg }"
-    >
-      <NuxtLink
-        to="/lines"
-        :aria-label="s.backToLines"
-        class="text-sm opacity-70 mr-2"
-        :style="{ color: headerText }"
-      >
-        ← {{ s.backToLines }}
-      </NuxtLink>
-      <span
-        class="text-lg font-bold flex-1 text-center"
-        :style="{ color: headerText }"
-      >
-        {{ route?.name }} <span v-if="route?.longName" class="font-normal opacity-80">— {{ route.longName }}</span>
-      </span>
-    </header>
+    <PageHeader
+      :primary-color="headerBg"
+      :text-color="headerText"
+      back-to="/lines"
+      :back-text="s.backToLines"
+      :back-label="s.backToLines"
+      :title="route ? `${route.name}${route.longName ? ' — ' + route.longName : ''}` : ''"
+    />
 
     <div v-if="pending" class="space-y-3 animate-pulse" aria-busy="true" aria-label="Caricamento">
       <div v-for="i in 8" :key="i" class="h-10 bg-gray-200 dark:bg-white/10 rounded-xl" />

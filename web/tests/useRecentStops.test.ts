@@ -60,11 +60,22 @@ describe('useRecentStops', () => {
     expect(recentStops.value[0]?.stopId).toBe('d')
   })
 
-  it('load() restores persisted stops from localStorage', () => {
+  it('load() restores stops from localStorage after cold start', () => {
     const { addStop, load, recentStops } = useRecentStops()
+    // Step 1: Populate storage
     addStop({ stopId: 'x', name: 'Stop X' })
-    // Simulate fresh load (singleton already updated, just verify persistence)
+    expect(recentStops.value).toHaveLength(1)
+
+    // Step 2: Simulate cold start — clear in-memory state by loading from empty store
+    const savedData = localStorageMock.getItem('recentStops')
+    localStorageMock.clear()
+    load() // now recentStops.value === []
+    expect(recentStops.value).toHaveLength(0)
+
+    // Step 3: Restore storage and reload — proves load() reads from storage
+    if (savedData) localStorageMock.setItem('recentStops', savedData)
     load()
+    expect(recentStops.value).toHaveLength(1)
     expect(recentStops.value[0]?.stopId).toBe('x')
   })
 })

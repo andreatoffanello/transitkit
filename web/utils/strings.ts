@@ -34,6 +34,9 @@ export interface AppStrings {
   officialWebsite: string
   privacy: string
   recentStops: string
+  favoriteStops: string
+  addToFavorites: string
+  removeFromFavorites: string
 
   // Day groups
   weekdayLabels: {
@@ -135,6 +138,9 @@ const IT: AppStrings = {
   officialWebsite: 'Sito ufficiale',
   privacy: 'Privacy policy',
   recentStops: 'Fermate recenti',
+  favoriteStops: 'Preferiti',
+  addToFavorites: 'Aggiungi ai preferiti',
+  removeFromFavorites: 'Rimuovi dai preferiti',
   weekdayLabels: {
     mon: 'Lun', tue: 'Mar', wed: 'Mer', thu: 'Gio',
     fri: 'Ven', sat: 'Sab', sun: 'Dom',
@@ -202,6 +208,9 @@ const EN: AppStrings = {
   officialWebsite: 'Official Website',
   privacy: 'Privacy policy',
   recentStops: 'Recent stops',
+  favoriteStops: 'Favorites',
+  addToFavorites: 'Add to favorites',
+  removeFromFavorites: 'Remove from favorites',
   weekdayLabels: {
     mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu',
     fri: 'Fri', sat: 'Sat', sun: 'Sun',

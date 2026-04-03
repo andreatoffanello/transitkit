@@ -53,8 +53,18 @@
 
     <template v-else-if="stop">
       <!-- Nome fermata + badge linee -->
-      <div class="mb-5">
-        <h1 class="text-2xl font-bold leading-tight">{{ stop.name }}</h1>
+      <div>
+        <div class="flex items-start justify-between gap-2 mb-5">
+          <h1 class="text-2xl font-bold leading-tight">{{ stop.name }}</h1>
+          <button
+            v-if="stop"
+            :aria-label="isFavorite(stopId) ? s.removeFromFavorites : s.addToFavorites"
+            class="text-2xl shrink-0 mt-1"
+            @click="stop && toggleFavorite({ stopId: stopId, name: stop.name })"
+          >
+            {{ isFavorite(stopId) ? '★' : '☆' }}
+          </button>
+        </div>
         <div
           v-if="servingRoutes.length"
           class="flex flex-wrap gap-1.5 mt-2"
@@ -325,9 +335,11 @@ const servingRoutes = computed((): Route[] => {
 const now = ref(Date.now())
 let interval: ReturnType<typeof setInterval>
 const { addStop } = useRecentStops()
+const { load: loadFavorites, toggleFavorite, isFavorite } = useFavoriteStops()
 onMounted(async () => {
   now.value = Date.now()
   interval = setInterval(() => { now.value = Date.now() }, 30_000)
+  loadFavorites()
   await nextTick()
   const el = document.querySelector<HTMLElement>('[data-departure-future="true"]')
   el?.scrollIntoView({ behavior: 'smooth', block: 'center' })

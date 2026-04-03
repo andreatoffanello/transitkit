@@ -189,7 +189,7 @@ const dayGroups = computed<DayGroup[]>(() =>
 )
 
 const todayKey = computed(() =>
-  stop.value ? getTodayDayGroupKey(stop.value.departures) : null,
+  stop.value ? getTodayDayGroupKey(stop.value.departures, config.value?.timezone) : null,
 )
 
 // Badge linee risolte dalle route
@@ -251,6 +251,14 @@ useHead({
       ),
     },
     { property: 'og:title', content: computed(() => stop.value?.name ?? 'Fermata') },
+    {
+      name: 'theme-color',
+      content: computed(() => config.value?.theme.primaryColor ?? '#003366'),
+    },
+    {
+      name: 'apple-mobile-web-app-title',
+      content: computed(() => config.value?.name ?? 'Transit'),
+    },
   ],
 })
 </script>

@@ -56,7 +56,12 @@
       <!-- Nome fermata + badge linee -->
       <div>
         <div class="flex items-start justify-between gap-2 mb-5">
-          <h1 class="text-2xl font-bold leading-tight">{{ stop.name }}</h1>
+          <div class="flex items-center gap-2">
+            <h1 class="text-2xl font-bold leading-tight">{{ stop.name }}</h1>
+            <span v-if="firstStopPosition" class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+              • {{ s.stopPosition }} {{ firstStopPosition.position }} {{ s.stopPositionOf }} {{ firstStopPosition.total }}
+            </span>
+          </div>
           <button
             type="button"
             :aria-label="isFavorite(stopId) ? s.removeFromFavorites : s.addToFavorites"
@@ -394,6 +399,9 @@ const stopPositions = computed(() => {
       .filter((x): x is NonNullable<typeof x> => x !== null)
   )
 })
+
+// First stop position (for badge near heading)
+const firstStopPosition = computed(() => stopPositions.value[0] ?? null)
 
 // Linee che servono effettivamente questa fermata, derivate dai dati di partenza
 const servingRoutes = computed((): Route[] => {

@@ -50,7 +50,7 @@
       </div>
 
       <!-- Search bar -->
-      <div class="relative mb-4">
+      <div class="relative mb-4" role="search" :aria-label="s.searchLines">
         <input
           v-model="searchQuery"
           type="search"

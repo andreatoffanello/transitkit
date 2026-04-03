@@ -99,6 +99,10 @@ struct OrariTab: View {
             .onChange(of: router.pendingRoute) { _, _ in consumePending() }
             .onChange(of: router.pendingStop) { _, _ in consumePending() }
             .onChange(of: router.pendingTrip) { _, _ in consumePending() }
+            .onChange(of: segment) { _, _ in
+                searchQuery = ""
+                selectedTransitType = nil
+            }
         }
     }
 
@@ -157,8 +161,6 @@ struct OrariTab: View {
         .padding(.horizontal, 16)
         .padding(.bottom, 8)
     }
-
-    // MARK: - Filter Chips
 
     // MARK: - Deep Link
 

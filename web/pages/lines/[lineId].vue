@@ -49,6 +49,11 @@
         </button>
       </div>
 
+      <!-- Stop count -->
+      <p v-if="currentStops.length" class="text-xs text-gray-400 mt-0.5 mb-3">
+        {{ currentStops.length }} {{ s.stops }}
+      </p>
+
       <!-- Stop sequence -->
       <div
         v-if="currentStops.length"

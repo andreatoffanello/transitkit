@@ -10,8 +10,17 @@
       margin-bottom="mb-6"
     />
 
-    <div v-if="pending" class="space-y-4 animate-pulse" aria-busy="true" :aria-label="s.ariaLoading">
-      <div v-for="i in 3" :key="i" class="h-6 bg-gray-200 dark:bg-white/10 rounded" />
+    <div v-if="pending" aria-busy="true" :aria-label="s.ariaLoading">
+      <!-- Search bar placeholder -->
+      <div class="h-10 bg-gray-200 dark:bg-white/10 rounded-xl mb-4 animate-pulse" />
+      <!-- Route rows — 8 rows -->
+      <div class="space-y-2">
+        <div
+          v-for="i in 8"
+          :key="i"
+          class="h-14 bg-gray-200 dark:bg-white/10 rounded-xl animate-pulse"
+        />
+      </div>
     </div>
 
     <template v-else>

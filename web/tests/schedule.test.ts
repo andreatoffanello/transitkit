@@ -517,4 +517,39 @@ describe('sortStopsByNextDeparture', () => {
     expect(sorted).toHaveLength(1)
     expect(sorted[0]!.stopId).toBe('stop-only')
   })
+
+  it('headsignMap passes through without crash and sorting is correct', () => {
+    // stop-x has departure with headsign 'Centro' (in map), stop-y has 'Stazione' (not in map)
+    // stop-x departs at 11:00 (660min), stop-y at 08:00 (480min) → stop-y should come first
+    const scheduleData = makeData([
+      { id: 'stop-x', departures: { 'mon,tue,wed,thu,fri': [['11:00', 0, 0]] } }, // headsign idx 0 = 'Centro'
+      { id: 'stop-y', departures: { 'mon,tue,wed,thu,fri': [['08:00', 0, 1]] } }, // headsign idx 1 = 'Stazione'
+    ])
+    const stops = [
+      { stopId: 'stop-x', name: 'Stop X' },
+      { stopId: 'stop-y', name: 'Stop Y' },
+    ]
+    const sorted = sortStopsByNextDeparture(stops, scheduleData, nowMs, undefined, { 'Centro': 'Downtown' })
+    // stop-y (08:00, 480min) < stop-x (11:00, 660min)
+    expect(sorted.map(s => s.stopId)).toEqual(['stop-y', 'stop-x'])
+  })
+
+  it('timezone=Europe/Rome sorts by minutesFromMidnight correctly', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2024-01-09T08:00:00Z')) // 09:00 Rome (Tuesday Jan 9)
+    // stopA departs at 10:00 (600min), stopB at 09:30 (570min) → stopB should come first
+    const scheduleData = makeData([
+      { id: 'stop-a', departures: { 'mon,tue,wed,thu,fri': [['10:00', 0, 0]] } },
+      { id: 'stop-b', departures: { 'mon,tue,wed,thu,fri': [['09:30', 0, 0]] } },
+    ])
+    const stops = [
+      { stopId: 'stop-a', name: 'Stop A' },
+      { stopId: 'stop-b', name: 'Stop B' },
+    ]
+    const sorted = sortStopsByNextDeparture([stops[0]!, stops[1]!], scheduleData, Date.now(), 'Europe/Rome')
+    vi.useRealTimers()
+    // stopB (570min) < stopA (600min)
+    expect(sorted[0]!.stopId).toBe('stop-b')
+    expect(sorted[1]!.stopId).toBe('stop-a')
+  })
 })

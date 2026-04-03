@@ -52,11 +52,9 @@ describe('getStrings', () => {
   it('returns all required AppStrings keys for "it"', () => {
     const s = getStrings('it')
     expect(s.noDepartures).toBeDefined()
-    expect(s.noSchedule).toBeDefined()
     expect(s.stopNotFound).toBeDefined()
     expect(s.updatedRealtime).toBeDefined()
     expect(s.openInGoogleMaps).toBeDefined()
-    expect(s.noLines).toBeDefined()
     expect(s.linesPageTitle).toBeDefined()
     expect(s.lineNotFound).toBeDefined()
     expect(s.pageNotFound).toBeDefined()
@@ -67,11 +65,9 @@ describe('getStrings', () => {
   it('returns all required AppStrings keys for "en"', () => {
     const s = getStrings('en')
     expect(s.noDepartures).toBeDefined()
-    expect(s.noSchedule).toBeDefined()
     expect(s.stopNotFound).toBeDefined()
     expect(s.updatedRealtime).toBeDefined()
     expect(s.openInGoogleMaps).toBeDefined()
-    expect(s.noLines).toBeDefined()
     expect(s.linesPageTitle).toBeDefined()
     expect(s.lineNotFound).toBeDefined()
     expect(s.pageNotFound).toBeDefined()

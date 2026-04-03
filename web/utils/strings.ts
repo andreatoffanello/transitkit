@@ -6,10 +6,7 @@ export interface AppStrings {
   minutes: string
 
   // Stop page
-  sectionNow: string
-  sectionSchedule: string
   noDepartures: string
-  noSchedule: string
   stopNotFound: string
   updatedRealtime: string
   openInGoogleMaps: string
@@ -17,13 +14,11 @@ export interface AppStrings {
 
   // Lines list
   all: string
-  noLines: string
   linesPageTitle: string
 
   // Line detail
   lineNotFound: string
   backToLines: string
-  noStops: string
   noStopsFound: string
   noStopsFoundHint: string
 
@@ -75,7 +70,6 @@ export interface AppStrings {
   ariaDayGroupTabs: string
   ariaDirections: string
   ariaRealtimeData: string
-  ariaGoBack: string
 
   // Component prefixes
   dockPrefix: string
@@ -101,20 +95,15 @@ export interface AppStrings {
 const IT: AppStrings = {
   now: 'Ora',
   minutes: 'min',
-  sectionNow: 'Adesso',
-  sectionSchedule: 'Orari',
   noDepartures: 'Nessuna partenza nelle prossime 2 ore.',
-  noSchedule: 'Nessun orario disponibile.',
   stopNotFound: 'Fermata non trovata',
   updatedRealtime: 'Aggiornato in tempo reale',
   openInGoogleMaps: 'Apri in Google Maps',
   backToHome: 'Torna alla home',
   all: 'Tutti',
-  noLines: 'Nessuna linea disponibile.',
   linesPageTitle: 'Linee',
   lineNotFound: 'Linea non trovata',
   backToLines: 'Linee',
-  noStops: 'Nessuna fermata disponibile per questa direzione.',
   noStopsFound: 'Nessuna fermata trovata',
   noStopsFoundHint: 'Non ci sono fermate disponibili per questa direzione.',
   pageNotFound: 'Pagina non trovata',
@@ -150,7 +139,6 @@ const IT: AppStrings = {
   ariaDayGroupTabs: 'Gruppi orari',
   ariaDirections: 'Direzioni',
   ariaRealtimeData: 'Dati in tempo reale',
-  ariaGoBack: 'Torna indietro',
   dockPrefix: 'Dock ',
   lineLabel: 'Linea',
   stops: 'fermate',
@@ -164,20 +152,15 @@ const IT: AppStrings = {
 const EN: AppStrings = {
   now: 'Now',
   minutes: 'min',
-  sectionNow: 'Now',
-  sectionSchedule: 'Schedule',
   noDepartures: 'No departures in the next 2 hours.',
-  noSchedule: 'No schedule available.',
   stopNotFound: 'Stop not found',
   updatedRealtime: 'Updated in real time',
   openInGoogleMaps: 'Open in Google Maps',
   backToHome: 'Back to home',
   all: 'All',
-  noLines: 'No lines available.',
   linesPageTitle: 'Lines',
   lineNotFound: 'Line not found',
   backToLines: 'Lines',
-  noStops: 'No stops available for this direction.',
   noStopsFound: 'No stops found',
   noStopsFoundHint: 'There are no stops available for this direction.',
   pageNotFound: 'Page not found',
@@ -213,7 +196,6 @@ const EN: AppStrings = {
   ariaDayGroupTabs: 'Schedule groups',
   ariaDirections: 'Directions',
   ariaRealtimeData: 'Real-time data',
-  ariaGoBack: 'Go back',
   dockPrefix: 'Dock ',
   lineLabel: 'Line',
   stops: 'stops',

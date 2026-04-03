@@ -10,6 +10,7 @@
 
       <NuxtLink
         to="/lines"
+        prefetch
         class="px-6 py-3 rounded-2xl font-semibold text-sm"
         :style="{
           backgroundColor: config?.theme.textOnPrimary,
@@ -67,6 +68,7 @@
             v-for="stop in favoriteStops"
             :key="stop.stopId"
             :to="`/stop/${stop.stopId}`"
+            :prefetch="false"
             class="flex items-center justify-between py-1.5"
           >
             <span class="flex flex-col">
@@ -88,6 +90,7 @@
             v-for="stop in recentStops"
             :key="stop.stopId"
             :to="`/stop/${stop.stopId}`"
+            :prefetch="false"
             class="flex items-center justify-between py-1.5"
           >
             <span class="flex flex-col">
@@ -116,6 +119,7 @@
         <p class="text-sm max-w-[240px]">{{ s.onboardingHint }}</p>
         <NuxtLink
           to="/lines"
+          prefetch
           class="text-sm font-semibold underline"
           :style="{ color: config?.theme.primaryColor }"
         >

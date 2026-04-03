@@ -268,7 +268,7 @@ const nextServiceLabel = computed(() => {
 // Posizione della fermata nelle direzioni di ogni linea che la serve
 const stopPositions = computed(() => {
   if (!schedules.value || !stop.value) return []
-  const sid = route.params.stopId as string
+  const sid = stopId.value
   return servingRoutes.value.flatMap(r =>
     r.directions
       .map((dir, dirIdx) => {

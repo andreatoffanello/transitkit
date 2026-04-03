@@ -20,7 +20,6 @@ export async function useOperator() {
     throw createError({
       statusCode: 502,
       statusMessage: 'Impossibile caricare i dati. Riprova tra qualche minuto.',
-      fatal: true,
     })
   }
 

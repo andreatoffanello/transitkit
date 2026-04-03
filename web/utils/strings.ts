@@ -33,6 +33,7 @@ export interface AppStrings {
   contacts: string
   officialWebsite: string
   privacy: string
+  recentStops: string
 
   // Day groups
   weekdayLabels: {
@@ -133,6 +134,7 @@ const IT: AppStrings = {
   contacts: 'Contatti',
   officialWebsite: 'Sito ufficiale',
   privacy: 'Privacy policy',
+  recentStops: 'Fermate recenti',
   weekdayLabels: {
     mon: 'Lun', tue: 'Mar', wed: 'Mer', thu: 'Gio',
     fri: 'Ven', sat: 'Sab', sun: 'Dom',
@@ -199,6 +201,7 @@ const EN: AppStrings = {
   contacts: 'Contact',
   officialWebsite: 'Official Website',
   privacy: 'Privacy policy',
+  recentStops: 'Recent stops',
   weekdayLabels: {
     mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu',
     fri: 'Fri', sat: 'Sat', sun: 'Sun',

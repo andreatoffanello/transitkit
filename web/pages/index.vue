@@ -59,6 +59,22 @@
         🌐 {{ s.officialWebsite }}
       </a>
 
+      <!-- Fermate recenti -->
+      <div v-if="recentStops.length" class="bg-white dark:bg-white/5 rounded-2xl p-4">
+        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">{{ s.recentStops }}</p>
+        <div class="space-y-2">
+          <NuxtLink
+            v-for="stop in recentStops"
+            :key="stop.stopId"
+            :to="`/stop/${stop.stopId}`"
+            class="flex items-center justify-between py-1.5"
+          >
+            <span class="text-sm text-gray-900 dark:text-gray-100">{{ stop.name }}</span>
+            <span class="text-gray-400 text-sm" aria-hidden="true">›</span>
+          </NuxtLink>
+        </div>
+      </div>
+
       <!-- Privacy link -->
       <a
         v-if="config?.privacyUrl"
@@ -76,6 +92,9 @@
 <script setup lang="ts">
 const { config } = await useOperator()
 const s = useStrings(config)
+
+const { recentStops, load } = useRecentStops()
+onMounted(() => { load() })
 
 useHead({
   title: computed(() => `${config.value?.fullName ?? config.value?.name ?? ''} — Orari e linee`),

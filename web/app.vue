@@ -32,7 +32,7 @@ useHead({
   htmlAttrs: { lang: 'it' },
   link: [
     { rel: 'manifest', href: '/manifest.json' },
-    { rel: 'apple-touch-icon', href: '/icons/icon.svg' },
+    { rel: 'apple-touch-icon', href: '/icons/icon-180.png' },
   ],
   meta: [
     { name: 'viewport', content: 'width=device-width, initial-scale=1' },

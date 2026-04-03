@@ -2,11 +2,13 @@
  * Fetch with exponential backoff retry.
  * Retries on network errors and 5xx responses.
  * Does NOT retry on 4xx (e.g., 404 = operator not found = permanent).
+ * Pass an AbortSignal to cancel all attempts mid-flight.
  */
 export async function fetchWithRetry(
   url: string,
   maxAttempts = 3,
   baseDelayMs = 1000,
+  signal?: AbortSignal,
 ): Promise<Response> {
   let lastError: unknown
 
@@ -14,8 +16,10 @@ export async function fetchWithRetry(
     let response: Response | undefined
 
     try {
-      response = await fetch(url)
+      response = await fetch(url, signal ? { signal } : undefined)
     } catch (err) {
+      // Propagate AbortError immediately — no retry
+      if (err instanceof Error && err.name === 'AbortError') throw err
       // Network error (fetch threw)
       lastError = err
       if (attempt < maxAttempts) {

@@ -67,6 +67,80 @@ beforeEach(() => {
   })
 })
 
+// useAsyncData stub that propagates fetcher errors into error.value (mirrors Nuxt behaviour)
+function makeErrorPropagatingAsyncData() {
+  return async (_key: string, fn: () => Promise<unknown>) => {
+    try {
+      const data = await fn()
+      return { data: { value: data }, error: { value: null }, pending: { value: false } }
+    }
+    catch (err) {
+      return { data: { value: null }, error: { value: err }, pending: { value: false } }
+    }
+  }
+}
+
+function makeCreateErrorMock() {
+  return vi.fn((opts: { statusCode: number; statusMessage: string }) => {
+    const e = new Error(opts.statusMessage) as Error & { statusCode: number }
+    e.statusCode = opts.statusCode
+    return e
+  })
+}
+
+describe('useOperator — error paths', () => {
+  it('lancia createError 404 quando il CDN risponde con 404', async () => {
+    fetchMock.mockImplementation((url: unknown) => {
+      const urlStr = String(url)
+      if (urlStr.includes('config.json')) return Promise.resolve(makeResponse({}, 404))
+      if (urlStr.includes('schedules.json')) return Promise.resolve(makeResponse(mockSchedules))
+      return Promise.reject(new Error(`Unexpected URL: ${urlStr}`))
+    })
+    vi.stubGlobal('useAsyncData', makeErrorPropagatingAsyncData())
+    const createErrorMock = makeCreateErrorMock()
+    vi.stubGlobal('createError', createErrorMock)
+
+    await expect(useOperator()).rejects.toThrow('Operator not found')
+    expect(createErrorMock).toHaveBeenCalledWith(
+      expect.objectContaining({ statusCode: 404 }),
+    )
+  })
+
+  it('lancia createError 502 quando il CDN risponde con 503', async () => {
+    fetchMock.mockImplementation((url: unknown) => {
+      const urlStr = String(url)
+      if (urlStr.includes('config.json')) return Promise.resolve(makeResponse({}, 503))
+      if (urlStr.includes('schedules.json')) return Promise.resolve(makeResponse(mockSchedules))
+      return Promise.reject(new Error(`Unexpected URL: ${urlStr}`))
+    })
+    vi.stubGlobal('useAsyncData', makeErrorPropagatingAsyncData())
+    const createErrorMock = makeCreateErrorMock()
+    vi.stubGlobal('createError', createErrorMock)
+
+    await expect(useOperator()).rejects.toThrow()
+    expect(createErrorMock).toHaveBeenCalledWith(
+      expect.objectContaining({ statusCode: 502 }),
+    )
+  })
+
+  it('lancia createError 502 quando schedules fallisce (config OK)', async () => {
+    fetchMock.mockImplementation((url: unknown) => {
+      const urlStr = String(url)
+      if (urlStr.includes('config.json')) return Promise.resolve(makeResponse(mockConfig))
+      if (urlStr.includes('schedules.json')) return Promise.resolve(makeResponse({}, 503))
+      return Promise.reject(new Error(`Unexpected URL: ${urlStr}`))
+    })
+    vi.stubGlobal('useAsyncData', makeErrorPropagatingAsyncData())
+    const createErrorMock = makeCreateErrorMock()
+    vi.stubGlobal('createError', createErrorMock)
+
+    await expect(useOperator()).rejects.toThrow()
+    expect(createErrorMock).toHaveBeenCalledWith(
+      expect.objectContaining({ statusCode: 502 }),
+    )
+  })
+})
+
 describe('useOperator', () => {
   it('carica config dal CDN', async () => {
     const { config } = await useOperator()
@@ -81,12 +155,9 @@ describe('useOperator', () => {
 
   it('usa operatorId per costruire URL CDN corretto', async () => {
     await useOperator()
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining('appalcart/config.json'),
-    )
-    expect(fetchMock).toHaveBeenCalledWith(
-      expect.stringContaining('appalcart/schedules.json'),
-    )
+    const urls = fetchMock.mock.calls.map((c: unknown[]) => String(c[0]))
+    expect(urls.some((u: string) => u.includes('appalcart/config.json'))).toBe(true)
+    expect(urls.some((u: string) => u.includes('appalcart/schedules.json'))).toBe(true)
   })
 
   it('usa CDN_BASE nell\'URL', async () => {

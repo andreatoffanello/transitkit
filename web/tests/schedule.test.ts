@@ -87,6 +87,12 @@ describe('decodeDepartures', () => {
     expect(result[0]!.headsign).toBe('Centro') // 'Centro' is not in map, pass-through
   })
 
+  it('headsignMap undefined: no crash, original headsign returned', () => {
+    const compact: (string | number)[][] = [['07:35', 0, 0]]
+    const result = decodeDepartures(compact, mockScheduleData, undefined)
+    expect(result[0]!.headsign).toBe('Centro') // undefined map → pass through to original
+  })
+
   it('decodes 4-field compact format [time, lineIdx, headsignIdx, dock]', () => {
     const compact: (string | number)[][] = [['07:35', 0, 0, 'B']]
     const result = decodeDepartures(compact, mockScheduleData)

@@ -123,7 +123,7 @@
           class="block text-center text-sm font-medium mt-3 py-2"
           :style="{ color: config?.theme.primaryColor }"
         >
-          {{ s.viewFullSchedule }} →
+          {{ s.viewFullSchedule }} <span aria-hidden="true">→</span>
         </a>
       </section>
 

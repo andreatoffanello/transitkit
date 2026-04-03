@@ -16,6 +16,7 @@ export interface AppStrings {
   backToHome: string
 
   // Lines list
+  all: string
   noLines: string
   linesPageTitle: string
 
@@ -90,6 +91,7 @@ const IT: AppStrings = {
   updatedRealtime: 'Aggiornato in tempo reale',
   openInGoogleMaps: 'Apri in Google Maps',
   backToHome: 'Torna alla home',
+  all: 'Tutti',
   noLines: 'Nessuna linea disponibile.',
   linesPageTitle: 'Linee',
   lineNotFound: 'Linea non trovata',
@@ -144,6 +146,7 @@ const EN: AppStrings = {
   updatedRealtime: 'Updated in real time',
   openInGoogleMaps: 'Open in Google Maps',
   backToHome: 'Back to home',
+  all: 'All',
   noLines: 'No lines available.',
   linesPageTitle: 'Lines',
   lineNotFound: 'Line not found',

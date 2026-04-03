@@ -24,8 +24,32 @@
     </div>
 
     <template v-else>
+      <!-- Transit type filter chips -->
+      <div v-if="availableTypes.length > 1" class="flex gap-2 flex-wrap mb-4">
+        <!-- "All" chip -->
+        <button
+          class="px-3 py-1 rounded-full text-sm font-medium transition-colors"
+          :class="selectedType === null ? 'text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'"
+          :style="selectedType === null ? { backgroundColor: config?.theme.primaryColor } : {}"
+          @click="selectedType = null"
+        >
+          {{ s.all }}
+        </button>
+        <!-- Type chips -->
+        <button
+          v-for="type in availableTypes"
+          :key="type"
+          class="px-3 py-1 rounded-full text-sm font-medium transition-colors"
+          :class="selectedType === type ? 'text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'"
+          :style="selectedType === type ? { backgroundColor: config?.theme.primaryColor } : {}"
+          @click="selectedType = type"
+        >
+          {{ s.transitTypes[type as keyof typeof s.transitTypes] ?? type }}
+        </button>
+      </div>
+
       <div
-        v-for="[type, routes] in routesByType"
+        v-for="[type, routes] in filteredRoutesByType"
         :key="type"
         class="mb-6"
       >
@@ -50,7 +74,7 @@
         </div>
       </div>
 
-      <div v-if="routesByType.length === 0" class="text-center py-16 text-gray-400">
+      <div v-if="filteredRoutesByType.length === 0" class="text-center py-16 text-gray-400">
         {{ s.noLines }}
       </div>
     </template>
@@ -63,14 +87,28 @@ import type { TransitType } from '~/types'
 const { config, schedules, pending } = await useOperator()
 const s = useStrings(config)
 
+const selectedType = ref<string | null>(null)
+
 function transitTypeLabel(type: string): string {
   return s.value.transitTypes[type as TransitType] ?? type
 }
 
-const routesByType = computed(() => {
-  const routes = schedules.value?.routes ?? []
-  const map = new Map<string, typeof routes>()
-  for (const route of routes) {
+const allRoutes = computed(() => schedules.value?.routes ?? [])
+
+const availableTypes = computed(() => {
+  const types = new Set(allRoutes.value.map(r => r.transitType).filter(Boolean))
+  return [...types] as string[]
+})
+
+const filteredRoutes = computed(() =>
+  selectedType.value
+    ? allRoutes.value.filter(r => r.transitType === selectedType.value)
+    : allRoutes.value,
+)
+
+const filteredRoutesByType = computed(() => {
+  const map = new Map<string, typeof allRoutes.value>()
+  for (const route of filteredRoutes.value) {
     const list = map.get(route.transitType) ?? []
     list.push(route)
     map.set(route.transitType, list)

@@ -12,10 +12,10 @@
             <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
               {{ error.statusCode === 502 || error.statusCode === 503
                 ? 'Impossibile caricare gli orari. Riprova tra qualche minuto.'
-                : error.message }}
+                : 'Si è verificato un errore imprevisto.' }}
             </p>
             <button
-              class="px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors"
+              class="px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-950 outline-none transition-colors"
               @click="clearError({ redirect: '/' })"
             >
               Riprova

@@ -65,7 +65,7 @@
         <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">{{ s.favoriteStops }}</p>
         <div class="space-y-2">
           <NuxtLink
-            v-for="stop in favoriteStops"
+            v-for="stop in sortedFavoriteStops"
             :key="stop.stopId"
             :to="`/stop/${stop.stopId}`"
             :prefetch="false"
@@ -159,6 +159,18 @@ onMounted(() => {
   loadFavorites()
   now.value = Date.now()
   setInterval(() => { now.value = Date.now() }, 30_000)
+})
+
+const sortedFavoriteStops = computed(() => {
+  if (!schedules.value) return favoriteStops.value
+  const nowMs = now.value
+  return [...favoriteStops.value].sort((a, b) => {
+    const depA = getNextDeparture(a.stopId, schedules.value!, nowMs, config.value?.timezone, config.value?.headsignMap)
+    const depB = getNextDeparture(b.stopId, schedules.value!, nowMs, config.value?.timezone, config.value?.headsignMap)
+    const minA = depA?.minutesFromMidnight ?? Infinity
+    const minB = depB?.minutesFromMidnight ?? Infinity
+    return minA - minB
+  })
 })
 
 const favoriteNextDepartures = computed<Record<string, string>>(() => {

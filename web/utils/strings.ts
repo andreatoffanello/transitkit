@@ -101,6 +101,10 @@ export interface AppStrings {
   stopInNetwork: string
   stopPosition: string
   stopPositionOf: string
+
+  // Live document.title fragments
+  nextDepartureIn: string
+  minutesShort: string
 }
 
 const IT: AppStrings = {
@@ -165,6 +169,8 @@ const IT: AppStrings = {
   stopInNetwork: 'Questa fermata nella rete',
   stopPosition: 'fermata',
   stopPositionOf: 'di',
+  nextDepartureIn: 'in',
+  minutesShort: 'min',
 }
 
 const EN: AppStrings = {
@@ -229,6 +235,8 @@ const EN: AppStrings = {
   stopInNetwork: 'This stop in the network',
   stopPosition: 'stop',
   stopPositionOf: 'of',
+  nextDepartureIn: 'in',
+  minutesShort: 'min',
 }
 
 const STRINGS: Record<Locale, AppStrings> = { it: IT, en: EN }

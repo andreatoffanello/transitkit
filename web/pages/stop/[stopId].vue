@@ -364,9 +364,22 @@ const upcomingDepartures = computed<Departure[]>(() => {
 // SEO
 useHead({
   title: computed(() => {
-    const stopName = stop.value?.name
-    const op = config.value?.fullName ?? config.value?.name ?? ''
-    return stopName ? `${stopName} — ${op}` : op
+    const stopName = stop.value?.name ?? ''
+    const opName = config.value?.fullName ?? config.value?.name ?? ''
+    const base = stopName ? `${stopName} — ${opName}` : opName
+
+    if (!upcomingDepartures.value.length) return base
+
+    const next = upcomingDepartures.value[0]!
+    const midnight = new Date(now.value)
+    midnight.setHours(0, 0, 0, 0)
+    const nowMin = Math.floor((now.value - midnight.getTime()) / 60_000)
+    let diffMin = next.minutesFromMidnight - nowMin
+    if (next.realtimeDelay !== undefined) diffMin += Math.round(next.realtimeDelay / 60)
+
+    if (diffMin < 0 || diffMin >= 60) return base
+    if (diffMin === 0) return `${stopName} · ${next.lineName} ${s.value.now} — ${opName}`
+    return `${stopName} · ${next.lineName} ${s.value.nextDepartureIn} ${diffMin} ${s.value.minutesShort} — ${opName}`
   }),
   meta: [
     {

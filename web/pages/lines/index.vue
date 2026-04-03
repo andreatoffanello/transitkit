@@ -171,11 +171,14 @@ const filteredRoutesByType = computed(() => {
 })
 
 useHead({
-  title: computed(() => `Linee — ${config.value?.name ?? ''}`),
+  title: computed(() => `${s.value.linesPageTitle} — ${config.value?.name ?? ''}`),
   meta: [
     {
       name: 'description',
-      content: computed(() => `Tutte le linee di ${config.value?.fullName ?? config.value?.name ?? ''}.`),
+      content: computed(() => {
+        const name = config.value?.fullName ?? config.value?.name ?? ''
+        return `${s.value.linesPageDescription} ${name}.`
+      }),
     },
   ],
 })

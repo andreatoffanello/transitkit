@@ -15,6 +15,7 @@ export interface AppStrings {
   // Lines list
   all: string
   linesPageTitle: string
+  linesPageDescription: string
 
   // Line detail
   lineNotFound: string
@@ -107,6 +108,7 @@ const IT: AppStrings = {
   backToHome: 'Torna alla home',
   all: 'Tutti',
   linesPageTitle: 'Linee',
+  linesPageDescription: 'Tutte le linee di',
   lineNotFound: 'Linea non trovata',
   backToLines: 'Linee',
   noStopsFound: 'Nessuna fermata trovata',
@@ -167,6 +169,7 @@ const EN: AppStrings = {
   backToHome: 'Back to home',
   all: 'All',
   linesPageTitle: 'Lines',
+  linesPageDescription: 'All lines of',
   lineNotFound: 'Line not found',
   backToLines: 'Lines',
   noStopsFound: 'No stops found',

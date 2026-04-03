@@ -110,7 +110,7 @@
 
           <div
             class="rounded-2xl overflow-hidden divide-y"
-            :style="{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border)' }"
+            :style="{ backgroundColor: 'var(--bg-elevated)', boxShadow: 'var(--shadow-sm)', borderColor: 'var(--border)' }"
             role="list"
             :aria-label="`${s.ariaLinesOfTypePrefix} ${transitTypeLabel(type)}`"
           >

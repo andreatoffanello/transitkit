@@ -167,11 +167,22 @@
           <div
             v-else
             class="rounded-2xl px-5 py-8 text-center"
-            style="background-color: var(--bg-elevated)"
+            style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm)"
           >
-            <p class="text-sm font-medium" style="color: var(--text-secondary)">{{ s.noDepartures }}</p>
-            <p v-if="nextDepartureTodayHint" class="text-xs mt-1" style="color: var(--text-tertiary)">
+            <div
+              class="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
+              style="background-color: var(--bg-secondary)"
+            >
+              <Clock :size="22" :stroke-width="1.5" style="color: var(--text-tertiary)" />
+            </div>
+            <p class="text-[15px] font-medium mb-1" style="color: var(--text-primary)">
+              {{ s.noDepartures }}
+            </p>
+            <p v-if="nextDepartureTodayHint" class="text-sm" style="color: var(--text-secondary)">
               {{ s.nextDepartureToday }}: {{ nextDepartureTodayHint }}
+            </p>
+            <p v-else class="text-sm" style="color: var(--text-secondary)">
+              {{ s.viewFullSchedule }}
             </p>
           </div>
 
@@ -341,7 +352,7 @@
 
 <script setup lang="ts">
 import { onMounted, nextTick, ref } from 'vue'
-import { Star, Share2, RefreshCw, MapPin, Copy, Check } from 'lucide-vue-next'
+import { Star, Share2, RefreshCw, MapPin, Copy, Check, Clock } from 'lucide-vue-next'
 import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getNextServiceDayGroupKey, getDayGroupLabel, computeNowMin, getNextDeparture } from '~/utils/schedule'
 import type { DayGroup, Departure, ScheduleStop, Route } from '~/types'
 

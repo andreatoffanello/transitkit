@@ -77,7 +77,6 @@
             @click="selectedDirectionId = dir.id"
           >
             {{ dir.headsign ?? `${s.ariaDirections} ${dirIdx + 1}` }}
-            <span v-if="dir.stopIds?.length" class="text-xs opacity-60 ml-1">({{ dir.stopIds.length }})</span>
           </button>
         </div>
 

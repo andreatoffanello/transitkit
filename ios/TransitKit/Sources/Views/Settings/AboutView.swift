@@ -39,7 +39,7 @@ struct AboutView: View {
                                 .multilineTextAlignment(.center)
                         }
 
-                        Text(String(localized: "about_version \(appVersion)"))
+                        Text(String(format: NSLocalizedString("about_version", comment: ""), appVersion))
                             .font(.caption.weight(.medium))
                             .foregroundStyle(AppTheme.textTertiary)
                             .padding(.horizontal, 12)

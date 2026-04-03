@@ -140,6 +140,6 @@ struct LineBadge: View {
         .padding(.vertical, size.vPadding)
         .background(bgColor, in: RoundedRectangle(cornerRadius: 4))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(String(localized: "line_badge_a11y \(lineName)"))
+        .accessibilityLabel(String(format: NSLocalizedString("line_badge_a11y", comment: ""), lineName))
     }
 }

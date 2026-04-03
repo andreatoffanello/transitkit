@@ -147,7 +147,7 @@ struct StopDetailView: View {
             } else {
                 ForEach(stop.docks, id: \.letter) { dock in
                     let coord = CLLocationCoordinate2D(latitude: dock.lat, longitude: dock.lng)
-                    Annotation(String(localized: "dock_label \(dock.letter)"), coordinate: coord) {
+                    Annotation(String(format: NSLocalizedString("dock_label", comment: ""), dock.letter), coordinate: coord) {
                         DockPin(letter: dock.letter)
                     }
                 }
@@ -200,7 +200,7 @@ struct StopDetailView: View {
                     } else {
                         ForEach(stop.docks, id: \.letter) { dock in
                             let coord = CLLocationCoordinate2D(latitude: dock.lat, longitude: dock.lng)
-                            Annotation(String(localized: "dock_label \(dock.letter)"), coordinate: coord) {
+                            Annotation(String(format: NSLocalizedString("dock_label", comment: ""), dock.letter), coordinate: coord) {
                                 DockPin(letter: dock.letter)
                             }
                         }
@@ -353,7 +353,7 @@ struct StopDetailView: View {
                     } label: {
                         HStack(spacing: 4) {
                             LucideIcon.chevronDown.sized(11)
-                            Text(String(localized: "show_more \(extraCount)"))
+                            Text(String(format: NSLocalizedString("show_more", comment: ""), extraCount))
                                 .font(.system(size: 13, weight: .medium))
                         }
                         .foregroundStyle(AppTheme.accent)
@@ -367,7 +367,7 @@ struct StopDetailView: View {
                 }
             } else if filterLine != nil && upcomingDepartures.isEmpty {
                 VStack(spacing: 12) {
-                    Text(String(localized: "no_departures_for_line \(filterLine ?? "")"))
+                    Text(String(format: NSLocalizedString("no_departures_for_line", comment: ""), filterLine ?? ""))
                         .font(.subheadline)
                         .foregroundStyle(AppTheme.textSecondary)
                         .multilineTextAlignment(.center)
@@ -696,7 +696,7 @@ struct DockBadgeView: View {
             .foregroundStyle(.black)
             .frame(width: 18, height: 18)
             .background(Color(red: 1.0, green: 0.82, blue: 0.0), in: Circle())
-            .accessibilityLabel(String(localized: "dock_label \(letter)"))
+            .accessibilityLabel(String(format: NSLocalizedString("dock_label", comment: ""), letter))
     }
 }
 

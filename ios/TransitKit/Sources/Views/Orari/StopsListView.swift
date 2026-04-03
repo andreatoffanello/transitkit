@@ -212,7 +212,7 @@ struct StopsListView: View {
 
             // Result count
             if !searchQuery.isEmpty {
-                Text(String(localized: "stops_result_count \(filteredStops.count)"))
+                Text(String(format: NSLocalizedString("stops_result_count", comment: ""), filteredStops.count))
                     .font(.caption)
                     .foregroundStyle(AppTheme.textTertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)

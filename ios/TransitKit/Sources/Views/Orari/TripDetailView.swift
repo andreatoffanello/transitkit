@@ -48,7 +48,7 @@ struct TripDetailView: View {
             }
         }
         .background(AppTheme.background)
-        .navigationTitle(String(localized: "trip_line_title \(departure.lineName)"))
+        .navigationTitle(String(format: NSLocalizedString("trip_line_title", comment: ""), departure.lineName))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarRole(.editor)
         .toolbar(.hidden, for: .tabBar)
@@ -75,7 +75,7 @@ struct TripDetailView: View {
 
                 HStack(spacing: 6) {
                     if let stops = tripStops {
-                        Text(String(localized: "stops_count \(stops.count)"))
+                        Text(String(format: NSLocalizedString("stops_count", comment: ""), stops.count))
                             .font(.system(size: 12))
                             .foregroundStyle(AppTheme.textSecondary)
                     }

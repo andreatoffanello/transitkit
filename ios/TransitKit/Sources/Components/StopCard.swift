@@ -96,9 +96,9 @@ struct StopCard: View {
         let typeNames = transitTypes.map(\.displayName).joined(separator: ", ")
         if !typeNames.isEmpty { parts.append(typeNames) }
         let lineNames = lines.map(\.name).joined(separator: ", ")
-        if !lineNames.isEmpty { parts.append(String(localized: "stop_lines_a11y \(lineNames)")) }
+        if !lineNames.isEmpty { parts.append(String(format: NSLocalizedString("stop_lines_a11y", comment: ""), lineNames)) }
         if let dep = nextDeparture {
-            parts.append(String(localized: "stop_next_a11y \(dep.lineName) \(dep.time)"))
+            parts.append(String(format: NSLocalizedString("stop_next_a11y", comment: ""), dep.lineName, dep.time))
         }
         return parts.joined(separator: ", ")
     }

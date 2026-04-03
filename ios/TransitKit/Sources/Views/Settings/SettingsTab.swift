@@ -36,7 +36,7 @@ struct SettingsTab: View {
                                     title: String(localized: "settings_favorites"),
                                     detail: favoritesManager.favoriteStopIds.isEmpty
                                         ? String(localized: "settings_favorites_none")
-                                        : String(localized: "settings_favorites_count \(favoritesManager.favoriteStopIds.count)")
+                                        : String(format: NSLocalizedString("settings_favorites_count", comment: ""), favoritesManager.favoriteStopIds.count)
                                 )
                             }
                         } header: {

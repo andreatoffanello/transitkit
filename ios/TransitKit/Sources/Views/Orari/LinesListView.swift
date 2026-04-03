@@ -179,7 +179,7 @@ struct LinesListView: View {
 
                 // Result count when searching
                 if !searchQuery.isEmpty {
-                    Text(String(localized: "lines_result_count \(filteredRoutes.count)"))
+                    Text(String(format: NSLocalizedString("lines_result_count", comment: ""), filteredRoutes.count))
                         .font(.caption)
                         .foregroundStyle(AppTheme.textTertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -335,7 +335,7 @@ private struct LineRowContent: View {
         )
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(String(localized: "line_badge_a11y \(route.name)"))
+        .accessibilityLabel(String(format: NSLocalizedString("line_badge_a11y", comment: ""), route.name))
         .accessibilityHint(String(localized: "a11y_hint_show_line_stops"))
         .accessibilityAddTraits(.isButton)
     }

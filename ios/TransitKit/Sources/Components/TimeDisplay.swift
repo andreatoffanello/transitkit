@@ -83,11 +83,11 @@ struct TimeDisplay: View {
         case .departing:
             String(localized: "time_departing_a11y")
         case .minutes(let mins):
-            String(localized: "time_minutes_a11y \(mins)")
+            String(format: NSLocalizedString("time_minutes_a11y", comment: ""), mins)
         case .absolute(let time):
-            String(localized: "time_at_a11y \(time)")
+            String(format: NSLocalizedString("time_at_a11y", comment: ""), time)
         case .passed(let time):
-            String(localized: "time_passed_a11y \(time)")
+            String(format: NSLocalizedString("time_passed_a11y", comment: ""), time)
         }
     }
 }

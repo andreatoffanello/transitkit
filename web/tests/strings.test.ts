@@ -98,4 +98,31 @@ describe('getStrings', () => {
     expect(transitTypes.trolleybus).toBe('Trolleybus')
     expect(transitTypes.monorail).toBe('Monorail')
   })
+
+  it('nextDepartureToday: IT and EN', () => {
+    expect(getStrings('it').nextDepartureToday).toBe('Prossima oggi')
+    expect(getStrings('en').nextDepartureToday).toBe('Next today')
+  })
+
+  it('schedulesUpdated: IT and EN', () => {
+    expect(getStrings('it').schedulesUpdated).toBe('Orari aggiornati al')
+    expect(getStrings('en').schedulesUpdated).toBe('Schedules updated')
+  })
+
+  it('schedulesValidUntil: IT and EN', () => {
+    expect(getStrings('it').schedulesValidUntil).toBe('Validi fino al')
+    expect(getStrings('en').schedulesValidUntil).toBe('Valid until')
+  })
+
+  it('lineSingular and linePlural: IT and EN', () => {
+    expect(getStrings('it').lineSingular).toBe('linea')
+    expect(getStrings('it').linePlural).toBe('linee')
+    expect(getStrings('en').lineSingular).toBe('line')
+    expect(getStrings('en').linePlural).toBe('lines')
+  })
+
+  it('shareStop: IT and EN', () => {
+    expect(getStrings('it').shareStop).toBe('Condividi fermata')
+    expect(getStrings('en').shareStop).toBe('Share stop')
+  })
 })

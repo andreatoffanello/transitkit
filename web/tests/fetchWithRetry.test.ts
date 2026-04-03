@@ -139,7 +139,7 @@ describe('fetchWithRetry', () => {
     const delayArgs = setTimeoutSpy.mock.calls
       .map(call => call[1])
       .filter(ms => ms !== undefined && ms > 0)
-    expect(delayArgs).toContain(1000)
-    expect(delayArgs).toContain(2000)
+      .sort((a, b) => (a as number) - (b as number))
+    expect(delayArgs).toEqual([1000, 2000])
   })
 })

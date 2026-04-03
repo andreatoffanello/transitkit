@@ -117,6 +117,14 @@
           <span class="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" aria-hidden="true" />
           {{ s.updatedRealtime }}
         </p>
+
+        <a
+          href="#section-orari"
+          class="block text-center text-sm font-medium mt-3 py-2"
+          :style="{ color: config?.theme.primaryColor }"
+        >
+          {{ s.viewFullSchedule }} →
+        </a>
       </section>
 
       <!-- Sezione "Orari" con tab day group -->

@@ -108,6 +108,9 @@ export interface AppStrings {
   // Live document.title fragments
   nextDepartureIn: string
   minutesShort: string
+
+  // Stop page — anchor to full schedule
+  viewFullSchedule: string
 }
 
 const IT: AppStrings = {
@@ -175,6 +178,7 @@ const IT: AppStrings = {
   stopPositionOf: 'di',
   nextDepartureIn: 'in',
   minutesShort: 'min',
+  viewFullSchedule: 'Vedi orari completi',
 }
 
 const EN: AppStrings = {
@@ -242,6 +246,7 @@ const EN: AppStrings = {
   stopPositionOf: 'of',
   nextDepartureIn: 'in',
   minutesShort: 'min',
+  viewFullSchedule: 'View full schedule',
 }
 
 const STRINGS: Record<Locale, AppStrings> = { it: IT, en: EN }

@@ -86,36 +86,6 @@
       </div>
 
       <template v-else-if="stop">
-        <!-- Stop info: nome + badge linee -->
-        <div class="px-5 pt-2 pb-4">
-          <h2 class="text-xl font-bold leading-tight" style="color: var(--text-primary)">{{ stop.name }}</h2>
-          <p v-if="firstStopPosition" class="text-sm mt-0.5" style="color: var(--text-secondary)">
-            {{ s.stopPosition }} {{ firstStopPosition.position }} {{ s.stopPositionOf }} {{ firstStopPosition.total }}
-          </p>
-          <div
-            v-if="servingRoutes.length"
-            class="flex flex-wrap gap-1.5 mt-3"
-            role="list"
-            :aria-label="s.ariaLinesAtStop"
-          >
-            <NuxtLink
-              v-for="r in servingRoutes"
-              :key="r.id"
-              :to="`/lines/${r.id}`"
-              role="listitem"
-              class="inline-flex active:scale-95 transition-transform duration-100"
-              :aria-label="`${s.lineLabel} ${r.name}`"
-            >
-              <LineBadge
-                :name="r.name"
-                :color="r.color"
-                :text-color="r.textColor"
-                :locale="config?.locale[0]"
-              />
-            </NuxtLink>
-          </div>
-        </div>
-
         <!-- Sezione "Prossime partenze" — above the fold, massima priorità -->
         <section class="px-4 mb-6" aria-labelledby="section-adesso">
           <div class="flex items-center justify-between mb-3">

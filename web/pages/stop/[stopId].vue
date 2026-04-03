@@ -1,306 +1,345 @@
 <template>
-  <div class="max-w-lg mx-auto px-4 pb-8">
-    <!-- Header operatore -->
-    <PageHeader
-      :back-to="fromLine ? `/lines/${fromLine.id}?stop=${stopId}` : '/'"
-      :back-text="fromLine ? `${s.lineLabel} ${fromLine.name}` : s.backToHome"
-      :back-label="fromLine ? `${s.lineLabel} ${fromLine.name}` : s.backToHome"
-      :title="config?.name ?? '…'"
-    />
+  <AppLayout>
+    <div class="max-w-lg mx-auto lg:max-w-2xl">
+      <!-- Header navigazione con azioni -->
+      <PageHeader
+        :back-to="fromLine ? `/lines/${fromLine.id}?stop=${stopId}` : '/'"
+        :back-label="fromLine ? `${s.lineLabel} ${fromLine.name}` : s.backToHome"
+        :title="stop?.name ?? config?.name ?? '…'"
+      >
+        <template #action>
+          <div class="flex items-center gap-1">
+            <button
+              v-if="config?.features?.enableFavorites"
+              type="button"
+              :aria-label="isFavorite(stopId) ? s.removeFromFavorites : s.addToFavorites"
+              class="p-2 rounded-lg transition-opacity active:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
+              :style="{ color: isFavorite(stopId) ? 'var(--color-primary)' : 'var(--text-secondary)' }"
+              @click="toggleFavorite({ stopId: stopId, name: stop?.name ?? '' })"
+            >
+              <Star :size="20" :stroke-width="1.75" :fill="isFavorite(stopId) ? 'currentColor' : 'none'" />
+            </button>
+            <button
+              v-if="canShare"
+              type="button"
+              :aria-label="s.shareStop"
+              class="p-2 rounded-lg transition-opacity active:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
+              style="color: var(--text-secondary)"
+              @click="shareStop"
+            >
+              <Share2 :size="20" :stroke-width="1.75" />
+            </button>
+            <button
+              v-else
+              type="button"
+              :aria-label="s.copyLink"
+              class="p-2 rounded-lg transition-opacity active:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
+              style="color: var(--text-secondary)"
+              @click="copyLink"
+            >
+              <Copy :size="20" :stroke-width="1.75" />
+            </button>
+          </div>
+        </template>
+      </PageHeader>
 
-    <!-- Skeleton loading -->
-    <div v-if="pending" class="space-y-6 animate-pulse" aria-busy="true" :aria-label="s.ariaLoading">
-      <!-- Stop name + line badges -->
-      <div class="space-y-2 mb-5">
-        <div class="h-7 bg-gray-200 dark:bg-white/10 rounded-lg w-3/4" />
-        <div class="flex gap-2">
-          <div class="h-5 w-8 bg-gray-200 dark:bg-white/10 rounded-md" />
-          <div class="h-5 w-8 bg-gray-200 dark:bg-white/10 rounded-md" />
-          <div class="h-5 w-8 bg-gray-200 dark:bg-white/10 rounded-md" />
+      <!-- Skeleton loading -->
+      <div v-if="pending" class="px-4 pb-8 space-y-6 animate-pulse" aria-busy="true" :aria-label="s.ariaLoading">
+        <!-- Stop name -->
+        <div class="space-y-2 pt-2">
+          <div class="h-7 rounded-lg w-3/4" style="background-color: var(--bg-elevated)" />
+          <div class="flex gap-2">
+            <div class="h-5 w-8 rounded-md" style="background-color: var(--bg-elevated)" />
+            <div class="h-5 w-8 rounded-md" style="background-color: var(--bg-elevated)" />
+            <div class="h-5 w-8 rounded-md" style="background-color: var(--bg-elevated)" />
+          </div>
         </div>
-      </div>
 
-      <!-- Sezione "Adesso" -->
-      <div class="space-y-2">
-        <div class="h-3 bg-gray-200 dark:bg-white/10 rounded w-16" />
-        <div class="h-36 bg-gray-200 dark:bg-white/10 rounded-2xl" />
-      </div>
-
-      <!-- Sezione "Orari" -->
-      <div class="space-y-2">
-        <div class="h-3 bg-gray-200 dark:bg-white/10 rounded w-12" />
-        <div class="flex gap-2">
-          <div class="h-7 w-20 bg-gray-200 dark:bg-white/10 rounded-full" />
-          <div class="h-7 w-20 bg-gray-200 dark:bg-white/10 rounded-full" />
-          <div class="h-7 w-20 bg-gray-200 dark:bg-white/10 rounded-full" />
+        <!-- Sezione "Prossime partenze" -->
+        <div class="space-y-2">
+          <div class="h-3 rounded w-28" style="background-color: var(--bg-elevated)" />
+          <div class="h-36 rounded-2xl" style="background-color: var(--bg-elevated)" />
         </div>
-        <div class="h-48 bg-gray-200 dark:bg-white/10 rounded-2xl" />
-      </div>
 
-      <!-- Sezione "Questa fermata nella rete" -->
-      <div class="space-y-2">
-        <div class="h-3 w-40 bg-gray-200 dark:bg-white/10 rounded" />
-        <div class="bg-white dark:bg-white/5 rounded-2xl px-4 divide-y divide-gray-100 dark:divide-white/5">
-          <div v-for="i in 3" :key="i" class="flex items-center gap-3 py-3">
-            <div class="w-8 h-5 bg-gray-200 dark:bg-white/10 rounded shrink-0" />
-            <div class="flex-1 h-3 bg-gray-200 dark:bg-white/10 rounded" />
-            <div class="w-16 h-3 bg-gray-200 dark:bg-white/10 rounded shrink-0" />
+        <!-- Sezione "Orari" -->
+        <div class="space-y-2">
+          <div class="h-3 rounded w-16" style="background-color: var(--bg-elevated)" />
+          <div class="flex gap-2">
+            <div class="h-7 w-20 rounded-full" style="background-color: var(--bg-elevated)" />
+            <div class="h-7 w-20 rounded-full" style="background-color: var(--bg-elevated)" />
+            <div class="h-7 w-20 rounded-full" style="background-color: var(--bg-elevated)" />
+          </div>
+          <div class="h-48 rounded-2xl" style="background-color: var(--bg-elevated)" />
+        </div>
+
+        <!-- Sezione "Nella rete" -->
+        <div class="space-y-2">
+          <div class="h-3 w-40 rounded" style="background-color: var(--bg-elevated)" />
+          <div class="rounded-2xl px-4 divide-y" style="background-color: var(--bg-elevated); border-color: var(--border)">
+            <div v-for="i in 3" :key="i" class="flex items-center gap-3 py-3">
+              <div class="w-8 h-5 rounded shrink-0" style="background-color: var(--bg-secondary)" />
+              <div class="flex-1 h-3 rounded" style="background-color: var(--bg-secondary)" />
+              <div class="w-16 h-3 rounded shrink-0" style="background-color: var(--bg-secondary)" />
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <template v-else-if="stop">
-      <!-- Nome fermata + badge linee -->
-      <div>
-        <div class="flex items-start justify-between gap-2 mb-5">
-          <div class="flex items-center gap-2">
-            <h1 class="text-2xl font-bold leading-tight">{{ stop.name }}</h1>
-            <span v-if="firstStopPosition" class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
-              • {{ s.stopPosition }} {{ firstStopPosition.position }} {{ s.stopPositionOf }} {{ firstStopPosition.total }}
-            </span>
+      <template v-else-if="stop">
+        <!-- Stop info: nome + badge linee -->
+        <div class="px-5 pt-2 pb-4">
+          <h2 class="text-xl font-bold leading-tight" style="color: var(--text-primary)">{{ stop.name }}</h2>
+          <p v-if="firstStopPosition" class="text-sm mt-0.5" style="color: var(--text-secondary)">
+            {{ s.stopPosition }} {{ firstStopPosition.position }} {{ s.stopPositionOf }} {{ firstStopPosition.total }}
+          </p>
+          <div
+            v-if="servingRoutes.length"
+            class="flex flex-wrap gap-1.5 mt-3"
+            role="list"
+            :aria-label="s.ariaLinesAtStop"
+          >
+            <NuxtLink
+              v-for="r in servingRoutes"
+              :key="r.id"
+              :to="`/lines/${r.id}`"
+              role="listitem"
+              class="inline-flex active:scale-95 transition-transform duration-100"
+              :aria-label="`${s.lineLabel} ${r.name}`"
+            >
+              <LineBadge
+                :name="r.name"
+                :color="r.color"
+                :text-color="r.textColor"
+                :locale="config?.locale[0]"
+              />
+            </NuxtLink>
           </div>
-          <button
-            type="button"
-            :aria-label="isFavorite(stopId) ? s.removeFromFavorites : s.addToFavorites"
-            class="text-2xl shrink-0 mt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
-            @click="toggleFavorite({ stopId: stopId, name: stop.name })"
-          >
-            {{ isFavorite(stopId) ? '★' : '☆' }}
-          </button>
         </div>
-        <div
-          v-if="servingRoutes.length"
-          class="flex flex-wrap gap-1.5 mt-2"
-          role="list"
-          :aria-label="s.ariaLinesAtStop"
-        >
-          <NuxtLink
-            v-for="r in servingRoutes"
-            :key="r.id"
-            :to="`/lines/${r.id}`"
-            role="listitem"
-            class="inline-flex active:scale-95 transition-transform duration-100"
-            :aria-label="`${s.lineLabel} ${r.name}`"
-          >
-            <LineBadge
-              :name="r.name"
-              :color="r.color"
-              :text-color="r.textColor"
-              :locale="config?.locale[0]"
-            />
-          </NuxtLink>
-        </div>
-      </div>
 
-      <!-- Sezione "Adesso" -->
-      <section class="mb-6" aria-labelledby="section-adesso">
-        <h2
-          id="section-adesso"
-          class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-2"
-        >
-          {{ s.upcomingDepartures }}
-          <span
-            v-if="isLive"
-            class="w-2 h-2 rounded-full bg-green-500 animate-pulse"
-            aria-hidden="true"
-          />
-          <button
-            v-if="isLive"
-            type="button"
-            aria-label="Aggiorna"
-            class="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 active:scale-95 transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
-            :class="{ 'animate-spin': realtimeLoading }"
-            @click="refreshRealtime"
-          >
-            ↺
-          </button>
-        </h2>
+        <!-- Sezione "Prossime partenze" — above the fold, massima priorità -->
+        <section class="px-4 mb-6" aria-labelledby="section-adesso">
+          <div class="flex items-center justify-between mb-3">
+            <h2
+              id="section-adesso"
+              class="text-xs font-semibold uppercase tracking-wider flex items-center gap-2"
+              style="color: var(--text-tertiary)"
+            >
+              {{ s.upcomingDepartures }}
+              <span
+                v-if="isLive"
+                class="w-2 h-2 rounded-full bg-green-500 animate-pulse"
+                aria-hidden="true"
+              />
+            </h2>
+            <button
+              type="button"
+              aria-label="Aggiorna"
+              class="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-opacity active:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
+              style="color: var(--color-primary)"
+              @click="refreshRealtime"
+            >
+              <RefreshCw :size="14" :stroke-width="1.75" :class="{ 'animate-spin': realtimeLoading }" />
+              Aggiorna
+            </button>
+          </div>
 
-        <span v-if="isLive && realtimeLastUpdated" role="status" aria-live="polite" class="text-xs text-gray-400 tabular-nums">
-          {{ s.updatedAt }} {{ realtimeLastUpdated }}
-        </span>
+          <!-- Last updated -->
+          <span v-if="isLive && realtimeLastUpdated" role="status" aria-live="polite" class="block text-xs tabular-nums mb-2" style="color: var(--text-tertiary)">
+            {{ s.updatedAt }} {{ realtimeLastUpdated }}
+          </span>
 
-        <ul
-          v-if="upcomingDepartures.length"
-          role="list"
-          class="bg-white dark:bg-white/5 rounded-2xl px-4 divide-y divide-gray-100 dark:divide-white/5 list-none p-0 m-0"
-        >
-          <li
-            v-for="dep in upcomingDepartures"
-            :key="dep.id"
-            class="list-none"
+          <!-- Lista partenze -->
+          <div
+            v-if="upcomingDepartures.length"
+            class="rounded-2xl overflow-hidden divide-y"
+            style="background-color: var(--bg-elevated); box-shadow: var(--shadow-md); border-color: var(--border)"
           >
             <DepartureRow
+              v-for="dep in upcomingDepartures"
+              :key="dep.id"
               :departure="dep"
               :now="now"
               :locale="config?.locale[0]"
             />
-          </li>
-        </ul>
-        <div v-else class="text-sm text-gray-400 py-4">
-          <p>{{ s.noDepartures }}</p>
-          <p v-if="nextDepartureTodayHint" class="text-xs text-gray-400 mt-1">
-            {{ s.nextDepartureToday }}: {{ nextDepartureTodayHint }}
+          </div>
+
+          <!-- Empty state -->
+          <div
+            v-else
+            class="rounded-2xl px-5 py-8 text-center"
+            style="background-color: var(--bg-elevated)"
+          >
+            <p class="text-sm font-medium" style="color: var(--text-secondary)">{{ s.noDepartures }}</p>
+            <p v-if="nextDepartureTodayHint" class="text-xs mt-1" style="color: var(--text-tertiary)">
+              {{ s.nextDepartureToday }}: {{ nextDepartureTodayHint }}
+            </p>
+          </div>
+
+          <!-- Indicatore realtime -->
+          <p
+            v-if="isLive"
+            class="text-xs text-green-500 mt-2 flex items-center gap-1.5"
+            role="status"
+          >
+            <span class="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" aria-hidden="true" />
+            {{ s.updatedRealtime }}
           </p>
-        </div>
 
-        <!-- Annuncio realtime per screen reader -->
-        <div aria-live="polite" class="sr-only">
-          {{ isLive ? s.updatedRealtime : '' }}
-        </div>
+          <!-- Annuncio realtime per screen reader -->
+          <div aria-live="polite" class="sr-only">
+            {{ isLive ? s.updatedRealtime : '' }}
+          </div>
 
-        <!-- Indicatore realtime — visibile solo quando il feed GTFS-RT è attivo -->
-        <p
-          v-if="isLive"
-          class="text-xs text-green-500 mt-2 flex items-center gap-1.5"
-          role="status"
-        >
-          <span class="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" aria-hidden="true" />
-          {{ s.updatedRealtime }}
-        </p>
+          <a
+            href="#section-orari"
+            class="block text-center text-sm font-medium mt-3 py-2"
+            :style="{ color: config?.theme.primaryColor }"
+          >
+            {{ s.viewFullSchedule }} <span aria-hidden="true">&#8594;</span>
+          </a>
+        </section>
 
-        <a
-          href="#section-orari"
-          class="block text-center text-sm font-medium mt-3 py-2"
-          :style="{ color: config?.theme.primaryColor }"
-        >
-          {{ s.viewFullSchedule }} <span aria-hidden="true">→</span>
-        </a>
-      </section>
-
-      <!-- Sezione "Orari" con tab day group -->
-      <section aria-labelledby="section-orari">
-        <h2
-          id="section-orari"
-          class="text-xs font-semibold uppercase tracking-wider text-gray-400 mt-6 mb-2"
-        >
-          {{ s.todaySchedule }}
-        </h2>
-
-        <div
-          v-if="config?.gtfsRt && !isLive"
-          class="text-xs text-center text-amber-600 dark:text-amber-400 py-1 bg-amber-50 dark:bg-amber-900/20"
-          role="alert"
-        >
-          {{ s.schedulesNotLive }}
-        </div>
-
-        <DayGroupTabs
-          :day-groups="dayGroups"
-          :departures-by-day-group="departuresByGroup"
-          :initial-key="todayKey ?? undefined"
-          :strings="s"
-        >
-          <template #default="{ departures }">
-            <ul
-              v-if="departures.length"
-              role="list"
-              class="bg-white dark:bg-white/5 rounded-2xl px-4 list-none p-0 m-0"
+        <!-- Sezione "Orario" con DayGroupTabs -->
+        <section class="px-4 mb-6" aria-labelledby="section-orari">
+          <div class="flex items-center justify-between mb-3">
+            <h2
+              id="section-orari"
+              class="text-xs font-semibold uppercase tracking-wider"
+              style="color: var(--text-tertiary)"
             >
-              <li
-                v-for="(dep, index) in departures"
-                :key="dep.id"
-                class="list-none"
-                :data-departure-future="dep.minutesFromMidnight >= nowMin && departures.findIndex((d: Departure) => d.minutesFromMidnight >= nowMin) === index ? 'true' : undefined"
+              {{ s.todaySchedule }}
+            </h2>
+          </div>
+
+          <div
+            v-if="config?.gtfsRt && !isLive"
+            class="text-xs text-center text-amber-600 dark:text-amber-400 py-1.5 px-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 mb-3"
+            role="alert"
+          >
+            {{ s.schedulesNotLive }}
+          </div>
+
+          <DayGroupTabs
+            :day-groups="dayGroups"
+            :departures-by-day-group="departuresByGroup"
+            :initial-key="todayKey ?? undefined"
+            :strings="s"
+          >
+            <template #default="{ departures }">
+              <div
+                v-if="departures.length"
+                class="rounded-2xl overflow-hidden divide-y"
+                style="background-color: var(--bg-elevated); box-shadow: var(--shadow-md); border-color: var(--border)"
               >
                 <DepartureRow
+                  v-for="(dep, index) in departures"
+                  :key="dep.id"
                   :departure="dep"
                   :now="now"
                   :locale="config?.locale[0]"
+                  :data-departure-future="dep.minutesFromMidnight >= nowMin && departures.findIndex((d: Departure) => d.minutesFromMidnight >= nowMin) === index ? 'true' : undefined"
                 />
-              </li>
-            </ul>
-            <div
-              v-else
-              class="text-center py-12 text-gray-400"
-            >
-              <p class="font-semibold text-gray-600 dark:text-gray-300 mb-1">{{ s.noDeparturesToday }}</p>
-              <p class="text-sm">{{ s.noDeparturesHint }}</p>
-              <p v-if="nextServiceLabel" class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {{ s.nextServiceDay }}: {{ nextServiceLabel }}
-              </p>
-            </div>
-          </template>
-        </DayGroupTabs>
-      </section>
+              </div>
+              <div
+                v-else
+                class="rounded-2xl px-5 py-12 text-center"
+                style="background-color: var(--bg-elevated)"
+              >
+                <p class="font-semibold mb-1" style="color: var(--text-primary)">{{ s.noDeparturesToday }}</p>
+                <p class="text-sm" style="color: var(--text-secondary)">{{ s.noDeparturesHint }}</p>
+                <p v-if="nextServiceLabel" class="text-sm mt-1" style="color: var(--text-tertiary)">
+                  {{ s.nextServiceDay }}: {{ nextServiceLabel }}
+                </p>
+              </div>
+            </template>
+          </DayGroupTabs>
+        </section>
 
-      <!-- Posizione nella rete -->
-      <section v-if="stopPositions.length" class="mt-6" aria-labelledby="section-network">
-        <h2
-          id="section-network"
-          class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2"
-        >
-          {{ s.stopInNetwork }}
-        </h2>
-        <div class="bg-white dark:bg-white/5 rounded-2xl px-4 divide-y divide-gray-100 dark:divide-white/5">
-          <div
-            v-for="(pos, idx) in stopPositions"
-            :key="idx"
-            class="flex items-center gap-3 py-3"
+        <!-- Posizione nella rete -->
+        <section v-if="stopPositions.length" class="px-4 mb-6" aria-labelledby="section-network">
+          <h2
+            id="section-network"
+            class="text-xs font-semibold uppercase tracking-wider mb-3"
+            style="color: var(--text-tertiary)"
           >
-            <LineBadge
-              :name="pos.route.name"
-              :color="pos.route.color"
-              :text-color="pos.route.textColor"
-              :locale="config?.locale[0]"
-            />
-            <span class="flex-1 text-sm text-gray-600 dark:text-gray-400 truncate">
-              {{ pos.directionName }}
-            </span>
-            <span class="text-sm font-semibold text-gray-900 dark:text-gray-100 shrink-0 tabular-nums">
-              {{ s.stopPosition }} {{ pos.position }} {{ s.stopPositionOf }} {{ pos.total }}
-            </span>
+            {{ s.stopInNetwork }}
+          </h2>
+          <div
+            class="rounded-2xl divide-y overflow-hidden"
+            style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border-color: var(--border)"
+          >
+            <div
+              v-for="(pos, idx) in stopPositions"
+              :key="idx"
+              class="flex items-center gap-3 px-4 py-3"
+            >
+              <LineBadge
+                :name="pos.route.name"
+                :color="pos.route.color"
+                :text-color="pos.route.textColor"
+                :locale="config?.locale[0]"
+              />
+              <span class="flex-1 text-sm truncate" style="color: var(--text-secondary)">
+                {{ pos.directionName }}
+              </span>
+              <span class="text-sm font-semibold shrink-0 tabular-nums" style="color: var(--text-primary)">
+                {{ s.stopPosition }} {{ pos.position }} {{ s.stopPositionOf }} {{ pos.total }}
+              </span>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <!-- Footer -->
-      <footer class="mt-8 flex flex-col gap-3 text-sm">
-        <a
-          :href="`https://maps.google.com/?q=${stop.lat},${stop.lng}&query=${encodeURIComponent(stop.name)}`"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
-        >
-          📍 {{ s.openInGoogleMaps }}
-        </a>
-        <button
-          v-if="canShare"
-          type="button"
-          class="flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition-colors active:scale-95 transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
-          @click="shareStop"
-        >
-          📤 {{ s.shareStop }}
-        </button>
-        <button
-          v-else
-          @click="copyLink"
-          class="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 active:scale-95 transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
-          :aria-label="s.copyLink"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-          </svg>
-          <span>{{ copied ? s.copiedFeedback : s.copyLink }}</span>
-        </button>
-      </footer>
-    </template>
+        <!-- Footer azioni -->
+        <footer class="px-4 pb-8 flex flex-col gap-3 text-sm">
+          <a
+            :href="`https://maps.google.com/?q=${stop.lat},${stop.lng}&query=${encodeURIComponent(stop.name)}`"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-opacity active:opacity-70"
+            style="background-color: var(--bg-elevated); color: var(--text-primary); box-shadow: var(--shadow-sm)"
+          >
+            <MapPin :size="16" :stroke-width="1.75" />
+            {{ s.openInGoogleMaps }}
+          </a>
+          <button
+            v-if="canShare"
+            type="button"
+            class="flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-opacity active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
+            style="background-color: var(--bg-elevated); color: var(--text-primary); box-shadow: var(--shadow-sm)"
+            @click="shareStop"
+          >
+            <Share2 :size="16" :stroke-width="1.75" />
+            {{ s.shareStop }}
+          </button>
+          <button
+            v-else
+            type="button"
+            class="flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-opacity active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
+            style="background-color: var(--bg-elevated); color: var(--text-primary); box-shadow: var(--shadow-sm)"
+            :aria-label="s.copyLink"
+            @click="copyLink"
+          >
+            <Copy :size="16" :stroke-width="1.75" />
+            <span>{{ copied ? s.copiedFeedback : s.copyLink }}</span>
+          </button>
+        </footer>
+      </template>
 
-    <!-- Fermata non trovata -->
-    <div v-else role="alert" class="text-center py-16 text-gray-400">
-      <p class="text-lg font-medium">{{ s.stopNotFound }}</p>
-      <p class="text-sm mt-1">ID: {{ stopId }}</p>
-      <NuxtLink to="/" class="mt-4 inline-block text-accent text-sm underline">
-        {{ s.backToHome }}
-      </NuxtLink>
+      <!-- Fermata non trovata -->
+      <div v-else role="alert" class="text-center py-16 px-4" style="color: var(--text-tertiary)">
+        <p class="text-lg font-medium" style="color: var(--text-primary)">{{ s.stopNotFound }}</p>
+        <p class="text-sm mt-1">ID: {{ stopId }}</p>
+        <NuxtLink to="/" class="mt-4 inline-block text-sm underline" style="color: var(--color-primary)">
+          {{ s.backToHome }}
+        </NuxtLink>
+      </div>
     </div>
-  </div>
+  </AppLayout>
 </template>
 
 <script setup lang="ts">
 import { onMounted, nextTick, ref } from 'vue'
+import { Star, Share2, RefreshCw, MapPin, Copy } from 'lucide-vue-next'
 import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getNextServiceDayGroupKey, getDayGroupLabel, computeNowMin, getNextDeparture } from '~/utils/schedule'
 import type { DayGroup, Departure, ScheduleStop, Route } from '~/types'
 

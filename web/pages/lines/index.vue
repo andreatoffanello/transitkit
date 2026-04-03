@@ -86,6 +86,7 @@
             v-for="route in routes"
             :key="route.id"
             :to="`/lines/${route.id}`"
+            :prefetch="false"
             role="listitem"
             class="flex flex-col items-center gap-1 active:scale-95 transition-transform duration-100"
           >

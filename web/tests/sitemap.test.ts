@@ -24,8 +24,8 @@ function buildXml(urls: ReturnType<typeof buildSitemapUrls>): string {
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    ...urls.map(({ loc, changefreq, priority }) =>
-      `  <url>\n    <loc>${loc}</loc>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`,
+    ...urls.map(({ loc, changefreq, priority, lastmod }) =>
+      `  <url>\n    <loc>${loc}</loc>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>${lastmod ? `\n    <lastmod>${lastmod}</lastmod>` : ''}\n  </url>`,
     ),
     '</urlset>',
   ].join('\n')
@@ -109,6 +109,40 @@ describe('buildSitemapUrls', () => {
     expect(lines!.changefreq).toBe('weekly')
     expect(lines!.priority).toBe(0.7)
   })
+
+  it('home URL has lastmod set to today (YYYY-MM-DD)', () => {
+    const today = new Date().toISOString().split('T')[0]
+    const urls = buildSitemapUrls('example.com', mockSchedules)
+    const home = urls.find(u => u.loc === 'https://example.com/')
+    expect(home).toBeDefined()
+    expect(home!.lastmod).toBe(today)
+  })
+
+  it('/lines URL has lastmod set to today (YYYY-MM-DD)', () => {
+    const today = new Date().toISOString().split('T')[0]
+    const urls = buildSitemapUrls('example.com', mockSchedules)
+    const lines = urls.find(u => u.loc === 'https://example.com/lines')
+    expect(lines).toBeDefined()
+    expect(lines!.lastmod).toBe(today)
+  })
+
+  it('/lines/:id URLs do NOT have lastmod', () => {
+    const urls = buildSitemapUrls('example.com', mockSchedules)
+    const routeUrls = urls.filter(u => u.loc.includes('/lines/'))
+    expect(routeUrls.length).toBeGreaterThan(0)
+    for (const u of routeUrls) {
+      expect(u.lastmod).toBeUndefined()
+    }
+  })
+
+  it('/stop/:id URLs do NOT have lastmod', () => {
+    const urls = buildSitemapUrls('example.com', mockSchedules)
+    const stopUrls = urls.filter(u => u.loc.includes('/stop/'))
+    expect(stopUrls.length).toBeGreaterThan(0)
+    for (const u of stopUrls) {
+      expect(u.lastmod).toBeUndefined()
+    }
+  })
 })
 
 describe('XML output structure', () => {
@@ -152,5 +186,43 @@ describe('XML output structure', () => {
     const urls = buildSitemapUrls('example.com', mockSchedules)
     const xml = buildXml(urls)
     expect(xml).toContain('<priority>0.8</priority>')
+  })
+
+  it('home URL emits <lastmod> with today\'s date in XML', () => {
+    const today = new Date().toISOString().split('T')[0]
+    const urls = buildSitemapUrls('example.com', mockSchedules)
+    const xml = buildXml(urls)
+    const homeBlock = xml.split('</url>').find(block => block.includes('<loc>https://example.com/</loc>'))
+    expect(homeBlock).toBeDefined()
+    expect(homeBlock).toContain(`<lastmod>${today}</lastmod>`)
+  })
+
+  it('/lines URL emits <lastmod> with today\'s date in XML', () => {
+    const today = new Date().toISOString().split('T')[0]
+    const urls = buildSitemapUrls('example.com', mockSchedules)
+    const xml = buildXml(urls)
+    const linesBlock = xml.split('</url>').find(block => block.includes('<loc>https://example.com/lines</loc>'))
+    expect(linesBlock).toBeDefined()
+    expect(linesBlock).toContain(`<lastmod>${today}</lastmod>`)
+  })
+
+  it('route (lines/:id) URLs do NOT emit <lastmod> in XML', () => {
+    const urls = buildSitemapUrls('example.com', mockSchedules)
+    const xml = buildXml(urls)
+    const routeBlocks = xml.split('</url>').filter(block => block.includes('/lines/r'))
+    expect(routeBlocks.length).toBeGreaterThan(0)
+    for (const block of routeBlocks) {
+      expect(block).not.toContain('<lastmod>')
+    }
+  })
+
+  it('stop URLs do NOT emit <lastmod> in XML', () => {
+    const urls = buildSitemapUrls('example.com', mockSchedules)
+    const xml = buildXml(urls)
+    const stopBlocks = xml.split('</url>').filter(block => block.includes('/stop/'))
+    expect(stopBlocks.length).toBeGreaterThan(0)
+    for (const block of stopBlocks) {
+      expect(block).not.toContain('<lastmod>')
+    }
   })
 })

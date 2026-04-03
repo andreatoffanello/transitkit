@@ -64,13 +64,14 @@ export function getTodayDayGroupKey(
   let dayIndex: number
   if (timezone) {
     try {
-      // Use Intl to get the weekday in the operator's timezone
+      // Use Intl to get the weekday in the operator's timezone.
+      // 'long' gives full English words ('Sunday', 'Monday', …) in en-US — stable and
+      // unambiguous. slice(0,3) extracts the 3-char abbreviation ('sun', 'mon', …).
       const formatter = new Intl.DateTimeFormat('en-US', {
         timeZone: timezone,
-        weekday: 'short',
+        weekday: 'long',
       })
-      const dayStr = formatter.format(new Date()).toLowerCase()
-      // Intl weekday 'short' in en-US gives 'Sun', 'Mon', etc. → lowercased = 'sun', 'mon'
+      const dayStr = formatter.format(new Date()).toLowerCase().slice(0, 3)
       dayIndex = WEEKDAY_ABBR.indexOf(dayStr as typeof WEEKDAY_ABBR[number])
       if (dayIndex === -1) dayIndex = new Date().getDay() // fallback
     } catch {

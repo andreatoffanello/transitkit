@@ -161,16 +161,20 @@ describe('getTodayDayGroupKey', () => {
   })
 
   it('usa il timezone fornito se passato', () => {
+    // Force Intl to return Wednesday via the 'long' format path
+    const origIntl = global.Intl
+    const mockFormat = vi.fn().mockReturnValue('Wednesday')
+    global.Intl = {
+      ...origIntl,
+      DateTimeFormat: vi.fn().mockReturnValue({ format: mockFormat }) as any,
+    }
     const departures: Record<string, (string | number)[][]> = {
-      'mon,tue,wed,thu,fri': [['07:00', 0, 0]],
-      'sat,sun': [['09:00', 0, 0]],
+      'mon,tue,wed,thu,fri': [['08:00', 0, 0]],
+      'sat,sun': [['10:00', 0, 0]],
     }
-    // Con un timezone, la funzione non lancia errori e restituisce un valore valido
-    const key = getTodayDayGroupKey(departures, 'America/New_York')
-    expect(key === null || typeof key === 'string').toBe(true)
-    if (key !== null) {
-      expect(Object.keys(departures)).toContain(key)
-    }
+    const key = getTodayDayGroupKey(departures as any, 'America/New_York')
+    expect(key).toBe('mon,tue,wed,thu,fri')
+    global.Intl = origIntl
   })
 
   it('rimane backward compatible senza timezone', () => {
@@ -184,12 +188,14 @@ describe('getTodayDayGroupKey', () => {
   })
 
   it('non lancia errori con timezone invalido', () => {
-    const departures: Record<string, (string | number)[][]> = {
-      'mon,tue,wed,thu,fri': [['07:00', 0, 0]],
-    }
     vi.spyOn(Date.prototype, 'getDay').mockReturnValue(1) // Monday
-    // Anche con timezone invalido, fa fallback a getDay()
-    const key = getTodayDayGroupKey(departures, 'Invalid/Timezone')
-    expect(key === null || typeof key === 'string').toBe(true)
+    const departures: Record<string, (string | number)[][]> = {
+      'mon,tue,wed,thu,fri': [['08:00', 0, 0]],
+      'sat,sun': [['10:00', 0, 0]],
+    }
+    // Invalid timezone triggers the catch block; fallback uses getDay() → Monday
+    const key = getTodayDayGroupKey(departures as any, 'Invalid/Timezone')
+    expect(key).toBe('mon,tue,wed,thu,fri')
+    vi.restoreAllMocks()
   })
 })

@@ -485,6 +485,28 @@ const nextDepartureTodayHint = computed<string | null>(() => {
 // SEO
 useHead({
   link: [{ rel: 'canonical', href: computed(() => `${requestUrl.origin}${route.path}`) }],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: computed(() => {
+        if (!stop.value) return '{}'
+        const data: Record<string, unknown> = {
+          '@context': 'https://schema.org',
+          '@type': 'BusStop',
+          name: stop.value.name,
+          identifier: stop.value.id,
+        }
+        if (stop.value.lat != null && stop.value.lng != null) {
+          data.geo = {
+            '@type': 'GeoCoordinates',
+            latitude: stop.value.lat,
+            longitude: stop.value.lng,
+          }
+        }
+        return JSON.stringify(data)
+      }),
+    },
+  ],
   title: computed(() => {
     const opName = config.value?.fullName ?? config.value?.name ?? ''
 

@@ -1,133 +1,171 @@
 <template>
-  <div class="max-w-lg mx-auto px-4 pb-8">
+  <AppLayout>
     <PageHeader
-      back-to="/lines"
-      :back-text="s.backToLines"
-      :back-label="s.backToLines"
       :title="route ? `${route.name}${route.longName ? ' — ' + route.longName : ''}` : ''"
-    />
-
-    <h1 class="sr-only">{{ route?.longName ?? route?.name ?? '' }}</h1>
-
-    <div v-if="pending" aria-busy="true" :aria-label="s.ariaLoading">
-      <!-- Direction tabs skeleton -->
-      <div class="flex gap-2 mb-4">
-        <div class="h-9 flex-1 bg-gray-200 dark:bg-white/10 rounded-xl animate-pulse" />
-        <div class="h-9 flex-1 bg-gray-200 dark:bg-white/10 rounded-xl animate-pulse" />
-      </div>
-
-      <!-- Stop list skeleton — 6 rows -->
-      <div class="space-y-1">
-        <div
-          v-for="i in 6"
-          :key="i"
-          class="flex items-center gap-3 py-3 px-4 bg-gray-200 dark:bg-white/10 rounded-xl animate-pulse"
+      back-to="/lines"
+      back-label="Linee"
+    >
+      <template #action>
+        <button
+          type="button"
+          :aria-label="s.shareStop"
+          class="w-9 h-9 rounded-xl flex items-center justify-center transition-opacity active:opacity-70"
+          style="color: var(--text-secondary)"
+          @click="canShare ? shareLine() : copyLink()"
         >
-          <div class="w-2 h-2 rounded-full bg-gray-300 dark:bg-white/20 shrink-0" />
-          <div class="h-3 rounded bg-gray-300 dark:bg-white/20" :style="{ width: `${48 + (i * 13) % 40}%` }" />
+          <Share2 v-if="canShare" :size="20" :stroke-width="1.75" />
+          <Copy v-else :size="20" :stroke-width="1.75" />
+        </button>
+      </template>
+    </PageHeader>
+
+    <div class="max-w-lg mx-auto px-4 pb-8">
+      <h1 class="sr-only">{{ route?.longName ?? route?.name ?? '' }}</h1>
+
+      <div v-if="pending" aria-busy="true" :aria-label="s.ariaLoading">
+        <!-- LineBadge placeholder -->
+        <div class="h-12 w-24 rounded-xl mb-6 animate-pulse" style="background-color: var(--bg-elevated)" />
+        <!-- Direction switcher skeleton -->
+        <div class="flex gap-1 p-1 rounded-xl mb-4 animate-pulse" style="background-color: var(--bg-elevated)">
+          <div class="h-9 flex-1 rounded-lg" style="background-color: var(--bg-secondary)" />
+          <div class="h-9 flex-1 rounded-lg" style="background-color: var(--bg-secondary)" />
+        </div>
+        <!-- Stop list skeleton — 6 rows -->
+        <div class="space-y-1 px-2">
+          <div
+            v-for="i in 6"
+            :key="i"
+            class="flex items-center gap-3 py-3"
+          >
+            <div class="w-4 h-4 rounded-full shrink-0 animate-pulse" style="background-color: var(--bg-elevated)" />
+            <div class="h-3 rounded animate-pulse" :style="{ width: `${48 + (i * 13) % 40}%`, backgroundColor: 'var(--bg-elevated)' }" />
+          </div>
         </div>
       </div>
-    </div>
 
-    <template v-else-if="route">
-      <!-- Direction switcher -->
-      <div v-if="route.directions.length > 1" class="flex gap-2 mb-4" role="tablist" :aria-label="s.ariaDirections">
-        <button
-          v-for="(dir, dirIdx) in route.directions"
-          :key="dir.id"
-          role="tab"
-          :aria-selected="selectedDirectionId === dir.id"
-          aria-controls="direction-panel"
-          :aria-label="dir.headsign ?? `${s.ariaDirections} ${dirIdx + 1}`"
-          class="flex-1 py-2 rounded-xl text-sm font-medium transition-colors"
-          :class="selectedDirectionId === dir.id
-            ? 'text-white'
-            : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'"
-          :style="selectedDirectionId === dir.id ? { backgroundColor: normalizeHex(route.color) } : {}"
-          @click="selectedDirectionId = dir.id"
+      <template v-else-if="route">
+        <!-- LineBadge in evidenza -->
+        <div class="mb-6">
+          <LineBadge
+            :name="route.name"
+            :color="route.color"
+            :text-color="route.textColor"
+            :locale="config?.locale[0]"
+            class="text-xl px-4 py-2"
+          />
+        </div>
+
+        <!-- Direction switcher — pill toggle -->
+        <div
+          v-if="route.directions.length > 1"
+          class="flex p-1 rounded-xl gap-1 mb-4"
+          style="background-color: var(--bg-elevated); border: 1px solid var(--border)"
+          role="tablist"
+          :aria-label="s.ariaDirections"
         >
-          → {{ dir.headsign ?? `${s.ariaDirections} ${dirIdx + 1}` }}
-          <span v-if="dir.stopIds?.length" class="text-xs opacity-60 ml-1">({{ dir.stopIds.length }})</span>
-        </button>
-      </div>
+          <button
+            v-for="(dir, dirIdx) in route.directions"
+            :key="dir.id"
+            role="tab"
+            :aria-selected="selectedDirectionId === dir.id"
+            aria-controls="direction-panel"
+            :aria-label="dir.headsign ?? `${s.ariaDirections} ${dirIdx + 1}`"
+            class="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all truncate"
+            :style="selectedDirectionId === dir.id
+              ? { backgroundColor: 'var(--color-primary)', color: 'var(--color-text-on-primary)' }
+              : { color: 'var(--text-secondary)' }"
+            @click="selectedDirectionId = dir.id"
+          >
+            {{ dir.headsign ?? `${s.ariaDirections} ${dirIdx + 1}` }}
+            <span v-if="dir.stopIds?.length" class="text-xs opacity-60 ml-1">({{ dir.stopIds.length }})</span>
+          </button>
+        </div>
 
-      <!-- Stop count -->
-      <p v-if="currentStops.length" class="text-xs text-gray-400 mt-0.5 mb-3">
-        {{ currentStops.length }} {{ s.stops }}
-      </p>
+        <!-- Stop count -->
+        <p v-if="currentStops.length" class="text-xs mb-3" style="color: var(--text-tertiary)">
+          {{ currentStops.length }} {{ s.stops }}
+        </p>
 
-      <!-- Stop sequence -->
-      <div
-        v-if="currentStops.length"
-        id="direction-panel"
-        role="tabpanel"
-        class="space-y-1"
-      >
-        <NuxtLink
-          v-for="(stop, index) in currentStops"
-          :key="stop.id"
-          :to="{ path: `/stop/${stop.id}`, query: { from: nuxtRoute.params.lineId } }"
-          :prefetch="false"
-          :aria-current="nuxtRoute.query.stop === stop.id ? 'location' : undefined"
-          class="flex items-center gap-3 py-3 px-4 bg-white dark:bg-white/5 rounded-xl hover:bg-gray-50 dark:hover:bg-white/10 transition-colors"
+        <!-- Timeline stop sequence -->
+        <div
+          v-if="currentStops.length"
+          id="direction-panel"
+          role="tabpanel"
+          class="relative px-2"
         >
-          <span class="text-xs font-mono text-gray-400 dark:text-gray-500 w-6 shrink-0 text-right tabular-nums">
-            {{ index + 1 }}
-          </span>
-          <span class="w-2 h-2 rounded-full shrink-0" :style="{ backgroundColor: normalizeHex(route.color) }" aria-hidden="true" />
-          <span class="text-sm">{{ stop.name }}</span>
-          <span class="ml-auto text-gray-400 text-xs" aria-hidden="true">→</span>
+          <!-- Linea verticale -->
+          <div
+            class="absolute left-[19px] top-5 bottom-5 w-[1.5px]"
+            style="background-color: var(--border)"
+            aria-hidden="true"
+          />
+          <div class="space-y-0">
+            <NuxtLink
+              v-for="(stop, index) in currentStops"
+              :key="stop.id"
+              :to="{ path: `/stop/${stop.id}`, query: { from: nuxtRoute.params.lineId } }"
+              :prefetch="false"
+              :aria-current="nuxtRoute.query.stop === stop.id ? 'location' : undefined"
+              class="flex items-center gap-3 py-3 px-2 rounded-xl relative transition-opacity duration-150 active:opacity-70"
+            >
+              <div
+                class="w-4 h-4 rounded-full border-2 shrink-0 z-10"
+                :style="index === 0 || index === currentStops.length - 1
+                  ? 'border-color: var(--color-primary); background-color: var(--bg-primary)'
+                  : 'border-color: var(--border); background-color: var(--bg-secondary)'"
+                aria-hidden="true"
+              />
+              <span
+                class="flex-1 text-[15px] truncate"
+                :class="index === 0 || index === currentStops.length - 1 ? 'font-semibold' : 'font-medium'"
+                style="color: var(--text-primary)"
+              >
+                {{ stop.name }}
+              </span>
+              <ChevronRight :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+            </NuxtLink>
+          </div>
+        </div>
+
+        <!-- Empty direction state -->
+        <div
+          v-else
+          id="direction-panel"
+          role="tabpanel"
+          class="text-center py-12"
+          style="color: var(--text-tertiary)"
+        >
+          <p class="font-semibold mb-1" style="color: var(--text-primary)">{{ s.noStopsFound }}</p>
+          <p class="text-sm">{{ s.noStopsFoundHint }}</p>
+        </div>
+
+        <!-- Copy link feedback (fallback share) -->
+        <p
+          v-if="copied"
+          class="text-center text-sm mt-6"
+          style="color: var(--color-primary)"
+          aria-live="polite"
+        >
+          {{ s.copiedFeedback }}
+        </p>
+      </template>
+
+      <!-- Line not found -->
+      <div v-else role="alert" class="text-center py-16" style="color: var(--text-tertiary)">
+        <p class="text-lg font-medium" style="color: var(--text-primary)">{{ s.lineNotFound }}</p>
+        <NuxtLink to="/lines" class="mt-4 inline-block text-sm underline" style="color: var(--color-primary)">
+          {{ s.backToLines }}
         </NuxtLink>
       </div>
-      <div
-        v-else
-        id="direction-panel"
-        role="tabpanel"
-        class="text-center py-12 text-gray-400"
-      >
-        <p class="font-semibold text-gray-600 dark:text-gray-300 mb-1">{{ s.noStopsFound }}</p>
-        <p class="text-sm">{{ s.noStopsFoundHint }}</p>
-      </div>
-      <!-- Share footer -->
-      <footer class="mt-8">
-        <button
-          v-if="canShare"
-          type="button"
-          class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition-colors active:scale-95 duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
-          :aria-label="s.shareStop"
-          @click="shareLine"
-        >
-          📤 {{ s.shareStop }}
-        </button>
-        <button
-          v-else
-          type="button"
-          class="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 active:scale-95 transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
-          :aria-label="s.copyLink"
-          @click="copyLink"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-          </svg>
-          <span>{{ copied ? s.copiedFeedback : s.copyLink }}</span>
-        </button>
-      </footer>
-    </template>
-
-    <div v-else role="alert" class="text-center py-16 text-gray-400">
-      <p class="text-lg font-medium">{{ s.lineNotFound }}</p>
-      <NuxtLink to="/lines" class="mt-4 inline-block text-sm underline text-accent">
-        {{ s.backToLines }}
-      </NuxtLink>
     </div>
-  </div>
+  </AppLayout>
 </template>
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { normalizeHex } from '~/utils/color'
 import type { Route, RouteDirection, ScheduleStop } from '~/types'
+import { Share2, Copy, ChevronRight } from 'lucide-vue-next'
 
 const nuxtRoute = useRoute()
 const lineId = computed(() => String(nuxtRoute.params.lineId))

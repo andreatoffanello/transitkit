@@ -87,6 +87,42 @@ describe('highlightMatch — HTML entity safety', () => {
   })
 })
 
+describe('regex-special characters in query', () => {
+  it('query with + does not throw and matches correctly', () => {
+    expect(() => highlightMatch('C++ language', 'C++')).not.toThrow()
+    const result = highlightMatch('C++ language', 'C++')
+    expect(result).toContain('<span')
+    expect(result).toContain('C++')
+  })
+
+  it('query with ( and ) does not throw and matches correctly', () => {
+    expect(() => highlightMatch('take the (bus) home', '(bus)')).not.toThrow()
+    const result = highlightMatch('take the (bus) home', '(bus)')
+    expect(result).toContain('<span')
+    expect(result).toContain('(bus)')
+  })
+
+  it('query with . does not throw and does not wildcard-match', () => {
+    expect(() => highlightMatch('price is 1x5 EUR', '1.5')).not.toThrow()
+    // '1x5' should NOT match the literal query '1.5'
+    const noMatch = highlightMatch('price is 1x5 EUR', '1.5')
+    expect(noMatch).not.toContain('<span')
+    // '1.5' should match literally
+    const match = highlightMatch('price is 1.5 EUR', '1.5')
+    expect(match).toContain('<span')
+  })
+
+  it('query with * does not throw', () => {
+    expect(() => highlightMatch('bus stop', 'bus*')).not.toThrow()
+  })
+
+  it('query with [ does not throw', () => {
+    expect(() => highlightMatch('line [A]', '[A]')).not.toThrow()
+    const result = highlightMatch('line [A]', '[A]')
+    expect(result).toContain('<span')
+  })
+})
+
 describe('escapeHtml — edge cases', () => {
   it('empty string returns empty string', () => {
     expect(escapeHtml('')).toBe('')

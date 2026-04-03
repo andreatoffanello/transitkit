@@ -428,4 +428,30 @@ describe('getNextDeparture', () => {
     expect(result).not.toBeNull()
     expect(result!.minutesFromMidnight).toBe(840) // 14:00 = 14 * 60
   })
+
+  it('with timezone Europe/Rome at midnight boundary returns Tuesday departure, not Monday', () => {
+    // 2024-01-08T23:00:00Z = Monday Jan 8 in UTC, but 00:00 Tuesday Jan 9 in Rome (UTC+1)
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2024-01-08T23:00:00Z'))
+    const boundaryData = {
+      ...mockScheduleData,
+      stops: [{
+        id: 'stop-tz',
+        name: 'Fermata Fuso',
+        lat: 45.0,
+        lng: 11.0,
+        lines: [],
+        departures: {
+          'mon': [['07:00', 0, 0]],
+          'tue': [['08:00', 0, 0]],
+        },
+      }],
+    }
+    const result = getNextDeparture('stop-tz', boundaryData, Date.now(), 'Europe/Rome')
+    vi.useRealTimers()
+    // In Rome it's already Tuesday Jan 9, so only the 'tue' group should match
+    expect(result).not.toBeNull()
+    expect(result!.minutesFromMidnight).toBe(480) // 08:00 = 8 * 60, Tuesday departure
+    expect(result!.time).toBe('08:00')
+  })
 })

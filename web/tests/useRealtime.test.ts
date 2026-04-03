@@ -107,6 +107,7 @@ describe('useRealtime — visibilitychange behavior', () => {
   let visibilityState = 'visible'
 
   const mockDocument = {
+    get hidden() { return visibilityState === 'hidden' },
     get visibilityState() { return visibilityState },
     addEventListener(type: string, fn: Listener) {
       if (!listeners.has(type)) listeners.set(type, [])
@@ -242,6 +243,7 @@ describe('useRealtime — isLoading and refresh()', () => {
 
     // Provide a minimal mock document for the composable
     vi.stubGlobal('document', {
+      hidden: false,
       visibilityState: 'visible',
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),

@@ -71,6 +71,7 @@ export function useRealtime(
   const feedUrl: string = gtfsRtUrl
 
   async function poll() {
+    if (typeof document !== 'undefined' && document.hidden) return
     isLoading.value = true
     try {
       const res = await fetch(feedUrl, { mode: 'cors' })

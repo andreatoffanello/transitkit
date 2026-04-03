@@ -9,6 +9,8 @@
       :title="route ? `${route.name}${route.longName ? ' — ' + route.longName : ''}` : ''"
     />
 
+    <h1 class="sr-only">{{ route?.longName ?? route?.name ?? '' }}</h1>
+
     <div v-if="pending" aria-busy="true" :aria-label="s.ariaLoading">
       <!-- Direction tabs skeleton -->
       <div class="flex gap-2 mb-4">

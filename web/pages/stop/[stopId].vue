@@ -57,10 +57,10 @@
         <div class="flex items-start justify-between gap-2 mb-5">
           <h1 class="text-2xl font-bold leading-tight">{{ stop.name }}</h1>
           <button
-            v-if="stop"
+            type="button"
             :aria-label="isFavorite(stopId) ? s.removeFromFavorites : s.addToFavorites"
             class="text-2xl shrink-0 mt-1"
-            @click="stop && toggleFavorite({ stopId: stopId, name: stop.name })"
+            @click="toggleFavorite({ stopId: stopId, name: stop.name })"
           >
             {{ isFavorite(stopId) ? '★' : '☆' }}
           </button>

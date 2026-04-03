@@ -439,9 +439,11 @@ describe('getNextDeparture', () => {
   })
 
   it('with timezone Europe/Rome at midnight boundary returns Tuesday departure, not Monday', () => {
-    // 2024-01-08T23:00:00Z = Monday Jan 8 in UTC, but 00:00 Tuesday Jan 9 in Rome (UTC+1)
+    // 2024-01-09T06:00:00Z = Tuesday Jan 9 07:00 in Rome (UTC+1), early enough that 08:00 departure is upcoming.
+    // Using 06:00 UTC (not 23:00 UTC) makes computeNowMin return 360 min which is < 480 (08:00),
+    // so the test is timezone-independent and works on CI (UTC) and locally.
     vi.useFakeTimers()
-    vi.setSystemTime(new Date('2024-01-08T23:00:00Z'))
+    vi.setSystemTime(new Date('2024-01-09T06:00:00Z'))
     const boundaryData = {
       ...mockScheduleData,
       stops: [{

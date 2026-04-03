@@ -33,6 +33,13 @@
       >
         {{ displayTime }}
       </span>
+      <span
+        v-if="showScheduledTime"
+        class="text-xs text-gray-400 tabular-nums"
+        :aria-label="`${s.scheduledTime} ${departure.time}`"
+      >
+        {{ departure.time }}
+      </span>
     </div>
   </div>
 </template>
@@ -59,6 +66,11 @@ const TRANSIT_ICONS: Record<string, string> = {
 
 const transitTypeIcon = computed(() =>
   props.departure.transitType ? TRANSIT_ICONS[props.departure.transitType] ?? null : null
+)
+
+const showScheduledTime = computed(() =>
+  props.departure.realtimeDelay !== undefined &&
+  props.departure.realtimeDelay !== 0
 )
 
 function effectiveMinutes(nowMs: number): number {

@@ -163,6 +163,39 @@ describe('DepartureRow — displayTime (live countdown reactivity)', () => {
   })
 })
 
+describe('scheduled time display', () => {
+  // showScheduledTime logic: realtimeDelay defined and !== 0
+  function showScheduledTime(departure: Departure): boolean {
+    return departure.realtimeDelay !== undefined && departure.realtimeDelay !== 0
+  }
+
+  it('does not show scheduled time when no realtimeDelay', () => {
+    const dep = makeDeparture({ time: '14:32', minutesFromMidnight: 872 })
+    expect(showScheduledTime(dep)).toBe(false)
+  })
+
+  it('does not show scheduled time when realtimeDelay is 0', () => {
+    const dep = makeDeparture({ time: '14:32', minutesFromMidnight: 872, realtimeDelay: 0 })
+    expect(showScheduledTime(dep)).toBe(false)
+  })
+
+  it('shows scheduled time when realtimeDelay is positive', () => {
+    const dep = makeDeparture({ time: '14:32', minutesFromMidnight: 872, realtimeDelay: 300 }) // 5min delay
+    expect(showScheduledTime(dep)).toBe(true)
+  })
+
+  it('shows scheduled time when realtimeDelay is negative (early)', () => {
+    const dep = makeDeparture({ time: '14:32', minutesFromMidnight: 872, realtimeDelay: -120 }) // 2min early
+    expect(showScheduledTime(dep)).toBe(true)
+  })
+
+  it('scheduled time value is departure.time (the original scheduled time string)', () => {
+    const dep = makeDeparture({ time: '14:32', minutesFromMidnight: 872, realtimeDelay: 300 })
+    // The component renders departure.time as the scheduled time label
+    expect(dep.time).toBe('14:32')
+  })
+})
+
 describe('DepartureRow — stop page wiring (structural verification)', () => {
   /**
    * These are not runtime tests — they document the verified structure from

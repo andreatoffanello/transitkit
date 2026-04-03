@@ -71,6 +71,10 @@ export interface AppStrings {
   ariaDayGroupTabs: string
   ariaDirections: string
   ariaRealtimeData: string
+  ariaLinesOfTypePrefix: string
+
+  // Scheduled time label (shown when realtime delay exists)
+  scheduledTime: string
 
   // Component prefixes
   dockPrefix: string
@@ -141,6 +145,8 @@ const IT: AppStrings = {
   ariaDayGroupTabs: 'Gruppi orari',
   ariaDirections: 'Direzioni',
   ariaRealtimeData: 'Dati in tempo reale',
+  ariaLinesOfTypePrefix: 'Linee',
+  scheduledTime: 'orario prev.',
   dockPrefix: 'Dock ',
   lineLabel: 'Linea',
   stops: 'fermate',
@@ -199,6 +205,8 @@ const EN: AppStrings = {
   ariaDayGroupTabs: 'Schedule groups',
   ariaDirections: 'Directions',
   ariaRealtimeData: 'Real-time data',
+  ariaLinesOfTypePrefix: 'Lines',
+  scheduledTime: 'sched.',
   dockPrefix: 'Dock ',
   lineLabel: 'Line',
   stops: 'stops',

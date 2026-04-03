@@ -22,6 +22,5 @@ export default defineNuxtConfig({
 
   experimental: {
     payloadExtraction: false,
-    inlineSSRStyles: false,
   },
 })

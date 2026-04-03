@@ -56,7 +56,7 @@
           :placeholder="s.searchLines"
           class="w-full px-4 py-2 pr-10 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-0"
           :style="{ '--tw-ring-color': config?.theme.primaryColor }"
-          aria-label="Cerca linea"
+          :aria-label="s.searchLines"
         />
         <span class="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">

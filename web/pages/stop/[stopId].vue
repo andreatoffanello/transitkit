@@ -43,9 +43,14 @@
       <!-- Nome fermata + badge linee -->
       <div class="mb-5">
         <h1 class="text-2xl font-bold leading-tight">{{ stop.name }}</h1>
-        <div class="flex flex-wrap gap-1.5 mt-2" role="list" :aria-label="s.ariaLinesAtStop">
+        <div
+          v-if="servingRoutes.length"
+          class="flex flex-wrap gap-1.5 mt-2"
+          role="list"
+          :aria-label="s.ariaLinesAtStop"
+        >
           <LineBadge
-            v-for="r in stopRoutes"
+            v-for="r in servingRoutes"
             :key="r.id"
             :name="r.name"
             :color="r.color"
@@ -54,17 +59,6 @@
             role="listitem"
           />
         </div>
-      </div>
-
-      <div v-if="servingRoutes.length > 1" class="flex flex-wrap gap-2 mb-4">
-        <LineBadge
-          v-for="route in servingRoutes"
-          :key="route.id"
-          :name="route.name"
-          :color="route.color"
-          :text-color="route.textColor"
-          :locale="config?.locale[0]"
-        />
       </div>
 
       <!-- Sezione "Adesso" -->
@@ -232,22 +226,14 @@ const servingRoutes = computed((): Route[] => {
   const routeIds = new Set<string>()
   for (const deps of Object.values(stop.value.departures)) {
     for (const dep of deps) {
+      if (dep.length < 2) continue
       const lineIdx = Number(dep[1])
-      const routeId = schedules.value!.routeIds[lineIdx]
+      const routeId = schedules.value.routeIds[lineIdx]
       if (routeId) routeIds.add(routeId)
     }
   }
   const routeMap = new Map(schedules.value.routes.map(r => [r.id, r]))
   return [...routeIds].map(id => routeMap.get(id)).filter((r): r is Route => r !== undefined)
-})
-
-// Badge linee risolte dalle route
-const stopRoutes = computed(() => {
-  if (!stop.value || !schedules.value) return []
-  return stop.value.lines
-    .map((lineName: string) => schedules.value!.routes.find((r: Route) => r.name === lineName))
-    .filter((r: Route | undefined): r is Route => r !== undefined)
-    .map((r: Route) => ({ id: r.id, name: r.name, color: r.color, textColor: r.textColor }))
 })
 
 // Tick ogni 30s per aggiornare countdown

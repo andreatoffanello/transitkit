@@ -71,6 +71,8 @@
       <p
         v-if="hasActiveFilter && !pending"
         class="text-xs text-gray-400 text-right mb-2"
+        aria-live="polite"
+        aria-atomic="true"
       >
         {{ filteredRoutes.length }} {{ s.linesFound }}
       </p>

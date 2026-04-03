@@ -68,6 +68,7 @@
           :key="stop.id"
           :to="{ path: `/stop/${stop.id}`, query: { from: nuxtRoute.params.lineId } }"
           :prefetch="false"
+          :aria-current="nuxtRoute.query.stop === stop.id ? 'location' : undefined"
           class="flex items-center gap-3 py-3 px-4 bg-white dark:bg-white/5 rounded-xl hover:bg-gray-50 dark:hover:bg-white/10 transition-colors"
         >
           <span class="text-xs font-mono text-gray-400 dark:text-gray-500 w-6 shrink-0 text-right tabular-nums">

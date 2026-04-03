@@ -4,7 +4,7 @@
     <PageHeader
       :primary-color="config?.theme.primaryColor"
       :text-color="config?.theme.textOnPrimary"
-      :back-to="fromLine ? `/lines/${fromLine.id}` : '/'"
+      :back-to="fromLine ? `/lines/${fromLine.id}?stop=${stopId}` : '/'"
       :back-text="fromLine ? `${s.lineLabel} ${fromLine.name}` : s.backToHome"
       :back-label="fromLine ? `${s.lineLabel} ${fromLine.name}` : s.backToHome"
       :title="config?.name ?? '…'"

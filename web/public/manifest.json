@@ -1,0 +1,17 @@
+{
+  "name": "TransitKit",
+  "short_name": "Transit",
+  "description": "Orari e fermate in tempo reale",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080C18",
+  "theme_color": "#003366",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

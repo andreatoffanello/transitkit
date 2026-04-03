@@ -73,6 +73,32 @@ describe('mergeRealtimeDelays', () => {
     expect(result[0]?.isRealtime).toBe(true)
   })
 
+  it('delay = -60 (1 min early) — realtimeDelay is -60, minutesFromMidnight unchanged', () => {
+    const delays: Record<string, number> = { 'trip-001': -60 }
+    const result = mergeRealtimeDelays(baseDepartures, delays)
+    expect(result[0]?.realtimeDelay).toBe(-60)
+    expect(result[0]?.isRealtime).toBe(true)
+    // minutesFromMidnight is NOT adjusted by mergeRealtimeDelays — it remains 455 (07:35)
+    expect(result[0]?.minutesFromMidnight).toBe(455)
+  })
+
+  it('delay = 0 (on time, tracked) — realtimeDelay is 0, minutesFromMidnight unchanged', () => {
+    const delays: Record<string, number> = { 'trip-001': 0 }
+    const result = mergeRealtimeDelays(baseDepartures, delays)
+    expect(result[0]?.realtimeDelay).toBe(0)
+    expect(result[0]?.isRealtime).toBe(true)
+    expect(result[0]?.minutesFromMidnight).toBe(455)
+  })
+
+  it('delay = -600 (10 min early) — realtimeDelay is -600, minutesFromMidnight unchanged', () => {
+    const delays: Record<string, number> = { 'trip-001': -600 }
+    const result = mergeRealtimeDelays(baseDepartures, delays)
+    expect(result[0]?.realtimeDelay).toBe(-600)
+    expect(result[0]?.isRealtime).toBe(true)
+    // minutesFromMidnight is NOT adjusted — static schedule value (07:35 = 455) is preserved
+    expect(result[0]?.minutesFromMidnight).toBe(455)
+  })
+
   it('handles departure with no tripId — not marked realtime', () => {
     const noTripDep: Departure[] = [
       {

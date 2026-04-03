@@ -71,15 +71,21 @@
           role="list"
           :aria-label="s.ariaLinesAtStop"
         >
-          <LineBadge
+          <NuxtLink
             v-for="r in servingRoutes"
             :key="r.id"
-            :name="r.name"
-            :color="r.color"
-            :text-color="r.textColor"
-            :locale="config?.locale[0]"
+            :to="`/lines/${r.id}`"
             role="listitem"
-          />
+            class="inline-flex active:scale-95 transition-transform duration-100"
+            :aria-label="`${s.lineLabel} ${r.name}`"
+          >
+            <LineBadge
+              :name="r.name"
+              :color="r.color"
+              :text-color="r.textColor"
+              :locale="config?.locale[0]"
+            />
+          </NuxtLink>
         </div>
       </div>
 
@@ -109,9 +115,12 @@
             :locale="config?.locale[0]"
           />
         </div>
-        <p v-else class="text-sm text-gray-400 py-4">
-          {{ s.noDepartures }}
-        </p>
+        <div v-else class="text-sm text-gray-400 py-4">
+          <p>{{ s.noDepartures }}</p>
+          <p v-if="nextDepartureTodayHint" class="text-xs text-gray-400 mt-1">
+            {{ s.nextDepartureToday }}: {{ nextDepartureTodayHint }}
+          </p>
+        </div>
 
         <!-- Annuncio realtime per screen reader -->
         <div aria-live="polite" class="sr-only">
@@ -224,13 +233,21 @@
       <!-- Footer -->
       <footer class="mt-8 flex flex-col gap-3 text-sm">
         <a
-          :href="`https://maps.google.com/?q=${stop.lat},${stop.lng}`"
+          :href="`https://maps.google.com/?q=${stop.lat},${stop.lng}&query=${encodeURIComponent(stop.name)}`"
           target="_blank"
           rel="noopener noreferrer"
           class="flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
         >
           📍 {{ s.openInGoogleMaps }}
         </a>
+        <button
+          v-if="canShare"
+          type="button"
+          class="flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition-colors active:scale-95 transition-transform duration-100"
+          @click="shareStop"
+        >
+          📤 {{ s.shareStop }}
+        </button>
       </footer>
     </template>
 
@@ -246,8 +263,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, nextTick } from 'vue'
-import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getNextServiceDayGroupKey, getDayGroupLabel, computeNowMin } from '~/utils/schedule'
+import { onMounted, nextTick, ref } from 'vue'
+import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getNextServiceDayGroupKey, getDayGroupLabel, computeNowMin, getNextDeparture } from '~/utils/schedule'
 import type { DayGroup, Departure, ScheduleStop, Route } from '~/types'
 
 const route = useRoute()
@@ -255,6 +272,22 @@ const stopId = computed(() => String(route.params.stopId))
 
 const { config, schedules } = await useOperator()
 const s = useStrings(config)
+
+// Web Share API
+const canShare = ref(false)
+onMounted(() => {
+  canShare.value = typeof navigator !== 'undefined' && 'share' in navigator
+})
+
+async function shareStop() {
+  if (!stop.value || !canShare.value) return
+  try {
+    await navigator.share({
+      title: stop.value.name,
+      url: window.location.href,
+    })
+  } catch { /* user cancelled or not supported */ }
+}
 
 // pending: true finché almeno uno dei dati non è ancora caricato
 const pending = computed(() => !config.value || !schedules.value)
@@ -379,11 +412,27 @@ const upcomingDepartures = computed<Departure[]>(() => {
     .slice(0, 6)
 })
 
+// First departure beyond the 2h window — shown when upcoming list is empty
+const nextDepartureTodayHint = computed<string | null>(() => {
+  if (!stop.value || !schedules.value) return null
+  const result = getNextDeparture(stop.value.id, schedules.value, now.value, config.value?.timezone, config.value?.headsignMap)
+  if (!result) return null
+  const curNowMin = computeNowMin(now.value)
+  if (result.minutesFromMidnight <= curNowMin + 120) return null
+  return `${result.time} (${result.lineName})`
+})
+
 // SEO
 useHead({
   title: computed(() => {
-    const stopName = stop.value?.name ?? ''
     const opName = config.value?.fullName ?? config.value?.name ?? ''
+
+    // Not-found check: show "Stop not found — OpName" when stop is null and not loading
+    if (!pending.value && !stop.value) {
+      return `${s.value.stopNotFound} — ${opName}`
+    }
+
+    const stopName = stop.value?.name ?? ''
     const base = stopName ? `${stopName} — ${opName}` : opName
 
     if (!upcomingDepartures.value.length) return base
@@ -407,8 +456,21 @@ useHead({
       content: computed(() => {
         const stopName = stop.value?.name ?? ''
         const op = config.value?.fullName ?? config.value?.name ?? ''
-        return `${stopName} — ${s.value.schedulesAndDepartures}${op ? ` — ${op}` : ''}`
+        const count = servingRoutes.value.length
+
+        // Build line count part if there are serving routes
+        let lineCountPart = ''
+        if (count > 0) {
+          const lineWord = count === 1 ? s.value.lineSingular : s.value.linePlural
+          lineCountPart = ` · ${count} ${lineWord}`
+        }
+
+        return `${stopName}${lineCountPart} · ${s.value.schedulesAndDepartures}${op ? ` — ${op}` : ''}`
       }),
+    },
+    {
+      name: 'robots',
+      content: computed(() => (!pending.value && !stop.value) ? 'noindex, nofollow' : 'index, follow'),
     },
   ],
 })

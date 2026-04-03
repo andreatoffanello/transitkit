@@ -50,6 +50,7 @@ export function useRealtime(
   gtfsRtUrl: string | undefined,
 ) {
   const isLive = ref(false)
+  const isLoading = ref(false)
   const merged = ref<Departure[]>([...departures.value])
 
   // Track the last known delay map so the watch can re-apply it
@@ -63,12 +64,13 @@ export function useRealtime(
   })
 
   if (!gtfsRtUrl || import.meta.server) {
-    return { departures: merged, isLive }
+    return { departures: merged, isLive, isLoading, refresh: async () => {} }
   }
 
   const feedUrl: string = gtfsRtUrl
 
   async function poll() {
+    isLoading.value = true
     try {
       const res = await fetch(feedUrl, { mode: 'cors' })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -95,7 +97,14 @@ export function useRealtime(
       isLive.value = false
       lastDelays = {}
       merged.value = departures.value
+    } finally {
+      isLoading.value = false
     }
+  }
+
+  async function refresh() {
+    await poll()
+    restartPolling()
   }
 
   let timer: ReturnType<typeof setInterval> | undefined
@@ -128,7 +137,7 @@ export function useRealtime(
     }
   })
 
-  return { departures: merged, isLive }
+  return { departures: merged, isLive, isLoading, refresh }
 }
 
 // Minimal GTFS-RT types

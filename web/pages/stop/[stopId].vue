@@ -101,6 +101,16 @@
             class="w-2 h-2 rounded-full bg-green-500 animate-pulse"
             aria-hidden="true"
           />
+          <button
+            v-if="isLive"
+            type="button"
+            aria-label="Aggiorna"
+            class="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 active:scale-95 transition-transform duration-100"
+            :class="{ 'animate-spin': realtimeLoading }"
+            @click="refreshRealtime"
+          >
+            ↺
+          </button>
         </h2>
 
         <div
@@ -395,7 +405,7 @@ const todayDepartures = computed<Departure[]>(() => {
 // SAFETY: config.value is guaranteed to be populated here because `await useOperator()`
 // above suspends the component setup (Nuxt 3 <Suspense>) until the operator config
 // resolves. The snapshot passed to useRealtime() is therefore stable and correct.
-const { departures: realtimeDepartures, isLive } = useRealtime(
+const { departures: realtimeDepartures, isLive, isLoading: realtimeLoading, refresh: refreshRealtime } = useRealtime(
   todayDepartures,
   config.value?.gtfsRt?.trip_updates,
 )

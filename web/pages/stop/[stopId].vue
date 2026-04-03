@@ -5,8 +5,8 @@
       :primary-color="config?.theme.primaryColor"
       :text-color="config?.theme.textOnPrimary"
       back-to="/"
-      :back-text="config?.name ?? ''"
       :back-label="s.backToHome"
+      :title="config?.name ?? '…'"
     />
 
     <!-- Skeleton loading -->

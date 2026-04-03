@@ -1,6 +1,7 @@
 <template>
   <header
-    class="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 -mx-4 mb-4"
+    class="sticky top-0 z-10 flex items-center gap-3 px-4 py-3 -mx-4"
+    :class="marginBottom"
     :style="{ backgroundColor: primaryColor }"
   >
     <NuxtLink
@@ -29,11 +30,13 @@ withDefaults(defineProps<{
   backText?: string
   backLabel?: string
   title?: string
+  marginBottom?: string
 }>(), {
   primaryColor: '#003366',
   textColor: '#FFFFFF',
   backText: '',
   backLabel: 'Torna indietro',
   title: undefined,
+  marginBottom: 'mb-4',
 })
 </script>

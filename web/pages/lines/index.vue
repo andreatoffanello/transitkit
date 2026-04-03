@@ -7,6 +7,7 @@
       :back-text="config?.name ?? ''"
       :back-label="s.backToHome"
       :title="s.linesPageTitle"
+      margin-bottom="mb-6"
     />
 
     <div v-if="pending" class="space-y-4 animate-pulse" aria-busy="true" aria-label="Caricamento">

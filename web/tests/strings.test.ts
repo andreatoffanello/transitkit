@@ -150,4 +150,9 @@ describe('getStrings', () => {
     expect(getStrings('it').skipToContent).toBe('Vai al contenuto principale')
     expect(getStrings('en').skipToContent).toBe('Skip to main content')
   })
+
+  it('minutesDelay: IT and EN', () => {
+    expect(getStrings('it').minutesDelay).toBe('minuti di ritardo')
+    expect(getStrings('en').minutesDelay).toBe('minutes late')
+  })
 })

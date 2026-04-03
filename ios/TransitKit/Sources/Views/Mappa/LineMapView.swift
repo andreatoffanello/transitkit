@@ -11,12 +11,17 @@ struct LineMapView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(VehicleStore.self) private var vehicleStore
+    @Environment(ScheduleStore.self) private var store
 
     private var lineColor: Color { Color(hex: route.color) }
     private var textColor: Color { Color(hex: contrastingTextColor(for: route.color)) }
 
     private var vehicles: [GtfsRtVehicle] {
         vehicleStore.vehicles(forRouteId: route.id)
+    }
+
+    private var routeStops: [ResolvedStop] {
+        store.stopsForRoute(route.id, directionId: directionId)
     }
 
     // MARK: - Zoom tracking
@@ -27,6 +32,19 @@ struct LineMapView: View {
         ZStack(alignment: .topLeading) {
             Map(position: $cameraPosition) {
                 RouteOverlay(route: route, directionId: directionId)
+
+                // Stop annotations — always shown (fallback when no shape data)
+                ForEach(routeStops) { stop in
+                    Annotation("", coordinate: CLLocationCoordinate2D(latitude: stop.lat, longitude: stop.lng), anchor: .center) {
+                        ZStack {
+                            Circle()
+                                .fill(Color(hex: route.color))
+                                .frame(width: 10, height: 10)
+                                .overlay(Circle().stroke(.white, lineWidth: 1.5))
+                        }
+                        .shadow(color: .black.opacity(0.2), radius: 2, y: 1)
+                    }
+                }
 
                 ForEach(vehicles) { vehicle in
                     Annotation("", coordinate: CLLocationCoordinate2D(
@@ -48,13 +66,16 @@ struct LineMapView: View {
             .onMapCameraChange { context in
                 latitudeDelta = context.region.span.latitudeDelta
             }
+            .onAppear {
+                zoomToStops()
+            }
 
             // Close button
             Button { dismiss() } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(.primary)
-                    .frame(width: 36, height: 36)
+                    .frame(width: 44, height: 44)
                     .background(.regularMaterial, in: Circle())
                     .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
             }
@@ -77,6 +98,38 @@ struct LineMapView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Zoom helpers
+
+    private func zoomToStops() {
+        // Prefer shape data if available
+        let direction = route.directions.first { $0.id == directionId } ?? route.directions.first
+        let shapeCoords = direction?.shape.compactMap { pair -> CLLocationCoordinate2D? in
+            guard pair.count >= 2 else { return nil }
+            return CLLocationCoordinate2D(latitude: pair[0], longitude: pair[1])
+        } ?? []
+
+        let coords: [CLLocationCoordinate2D]
+        if shapeCoords.count >= 2 {
+            coords = shapeCoords
+        } else {
+            coords = routeStops.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lng) }
+        }
+
+        guard !coords.isEmpty else { return }
+
+        let lats = coords.map(\.latitude)
+        let lngs = coords.map(\.longitude)
+        let center = CLLocationCoordinate2D(
+            latitude: (lats.min()! + lats.max()!) / 2,
+            longitude: (lngs.min()! + lngs.max()!) / 2
+        )
+        let span = MKCoordinateSpan(
+            latitudeDelta: max((lats.max()! - lats.min()!) * 1.4, 0.01),
+            longitudeDelta: max((lngs.max()! - lngs.min()!) * 1.4, 0.01)
+        )
+        cameraPosition = .region(MKCoordinateRegion(center: center, span: span))
     }
 
     // MARK: - Zoom tier

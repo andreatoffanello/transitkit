@@ -232,7 +232,7 @@ describe('getNextServiceDayGroupKey', () => {
 })
 
 describe('computeNowMin', () => {
-  it('returns 0 at midnight', () => {
+  it('returns 480 for 8:00 AM local', () => {
     const ms = new Date('2026-04-03T08:00:00').getTime() // 8:00 AM local
     const result = computeNowMin(ms)
     expect(result).toBe(480) // 8 * 60 = 480

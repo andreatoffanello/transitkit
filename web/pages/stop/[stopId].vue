@@ -346,9 +346,7 @@ const { departures: realtimeDepartures, isLive } = useRealtime(
 // Prossime 6 partenze nelle prossime 2 ore (oggi)
 const upcomingDepartures = computed<Departure[]>(() => {
   const deps = realtimeDepartures.value
-  const midnight = new Date(now.value)
-  midnight.setHours(0, 0, 0, 0)
-  const nowMin = Math.floor((now.value - midnight.getTime()) / 60_000)
+  const nowMin = computeNowMin(now.value)
   return deps
     .filter((d: Departure) => {
       const effectiveMin = d.minutesFromMidnight + Math.round((d.realtimeDelay ?? 0) / 60)

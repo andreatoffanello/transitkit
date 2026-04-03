@@ -102,14 +102,7 @@ useHead({
         return `${name}${location}. Orari, linee e fermate. Bus schedule and timetables.`
       }),
     },
-    {
-      name: 'theme-color',
-      content: computed(() => config.value?.theme.primaryColor ?? '#003366'),
-    },
-    {
-      name: 'apple-mobile-web-app-title',
-      content: computed(() => config.value?.name ?? 'Transit'),
-    },
   ],
 })
+useOperatorHead(config)
 </script>

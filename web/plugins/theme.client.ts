@@ -33,8 +33,7 @@ function applyTheme(cfg: OperatorConfig | null | undefined): void {
 export default defineNuxtPlugin((nuxtApp) => {
   nuxtApp.hook('page:finish', () => {
     const payload = nuxtApp.payload.data as Record<string, unknown> | undefined
-    const configKey = Object.keys(payload ?? {}).find(k => k.startsWith('config-'))
-    const cfg = configKey ? (payload?.[configKey] as OperatorConfig | null) : null
+    const cfg = (payload?.['operator-config'] as OperatorConfig | null) ?? null
     applyTheme(cfg)
   })
 })

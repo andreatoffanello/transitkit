@@ -1,4 +1,3 @@
-import { CDN_BASE } from '~/utils/operators'
 import { fetchWithRetry } from '~/utils/fetchWithRetry'
 import type { OperatorConfig, ScheduleData } from '~/types'
 
@@ -16,21 +15,27 @@ async function fetchJson<T>(url: string, signal: AbortSignal): Promise<T> {
 export async function useOperator() {
   const operatorId = useState<string>('operatorId')
   const id = operatorId.value
+  const { public: { cdnBase } } = useRuntimeConfig()
 
   // Cancel any in-flight fetch session from a previous navigation
   currentAbortController?.abort()
   currentAbortController = new AbortController()
   const { signal } = currentAbortController
 
-  const { data: config, error: configError } = await useAsyncData<OperatorConfig>(
-    `config-${id}`,
-    () => fetchJson<OperatorConfig>(`${CDN_BASE}/${id}/config.json`, signal),
+  // Use stable keys that don't depend on hostname or dynamic state.
+  // The operator ID is scoped per-request via the CDN URL inside the fetcher;
+  // using a fixed key ensures the SSR payload key always matches the client
+  // hydration key, preventing hydration style mismatches on theme :style bindings.
+  const configAsync = useAsyncData<OperatorConfig>(
+    'operator-config',
+    () => fetchJson<OperatorConfig>(`${cdnBase}/${id}/config.json`, signal),
   )
-
-  const { data: schedules, error: schedulesError } = await useAsyncData<ScheduleData>(
-    `schedules-${id}`,
-    () => fetchJson<ScheduleData>(`${CDN_BASE}/${id}/schedules.json`, signal),
+  const schedulesAsync = useAsyncData<ScheduleData>(
+    'operator-schedules',
+    () => fetchJson<ScheduleData>(`${cdnBase}/${id}/schedules.json`, signal),
   )
+  const { data: config, error: configError } = await configAsync
+  const { data: schedules, error: schedulesError } = await schedulesAsync
 
   // If either critical fetch failed, surface a proper error page.
   // AbortError means navigation moved on — silently ignore, no error page.

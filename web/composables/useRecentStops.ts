@@ -5,9 +5,9 @@ export interface RecentStop {
 
 const STORAGE_KEY = 'recentStops'
 const MAX_STOPS = 3
+const recentStops = ref<RecentStop[]>([])
 
 export function useRecentStops() {
-  const recentStops = ref<RecentStop[]>([])
 
   function load() {
     if (typeof window === 'undefined') return

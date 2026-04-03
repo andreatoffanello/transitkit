@@ -88,6 +88,36 @@ struct LineMapView: View {
             .accessibilityLabel("Chiudi mappa")
             .accessibilityIdentifier("btn_linemap_close")
 
+            // Line identity badge (top right)
+            VStack {
+                HStack {
+                    Spacer()
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(lineColor)
+                            .frame(width: 10, height: 10)
+                            .overlay(Circle().stroke(.white.opacity(0.4), lineWidth: 1))
+                        Text(route.name)
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .foregroundStyle(.primary)
+                        Text(route.longName)
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .frame(maxWidth: 150)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background(.regularMaterial)
+                    .clipShape(Capsule())
+                    .shadow(color: .black.opacity(0.1), radius: 3, y: 1)
+                    .padding(.top, 58)
+                    .padding(.trailing, 16)
+                }
+                Spacer()
+            }
+
             // Live vehicle count badge (top right)
             if !vehicles.isEmpty {
                 VStack {

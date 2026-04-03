@@ -1,6 +1,11 @@
 <template>
-  <div class="flex items-center gap-3 py-3 border-b border-gray-100 dark:border-white/5 last:border-0">
+  <div
+    class="flex items-center gap-3 py-3.5 px-4"
+    :class="{ 'opacity-40': isPast }"
+  >
     <span class="sr-only">{{ rowAriaLabel }}</span>
+
+    <!-- Line badge -->
     <LineBadge
       :name="departure.lineName"
       :color="departure.color"
@@ -8,107 +13,142 @@
       :locale="locale"
     />
 
-    <span
-      v-if="transitTypeIcon"
+    <!-- Transit type icon -->
+    <component
+      :is="transitIcon"
+      :size="16"
+      :stroke-width="1.75"
+      class="shrink-0"
+      style="color: var(--text-tertiary)"
       aria-hidden="true"
-      class="text-base shrink-0"
-    >{{ transitTypeIcon }}</span>
+    />
 
-    <span class="flex-1 text-sm text-gray-900 dark:text-gray-100 truncate">
+    <!-- Headsign + dock -->
+    <span
+      class="flex-1 text-[15px] font-medium truncate"
+      style="color: var(--text-primary)"
+    >
       {{ departure.headsign }}
-      <span v-if="departure.dock" class="text-gray-400 text-xs ml-1">
-        {{ s.dockPrefix }}{{ departure.dock }}
-      </span>
+      <span
+        v-if="departure.dock"
+        class="text-xs ml-1"
+        style="color: var(--text-tertiary)"
+      >{{ s.dockPrefix }}{{ departure.dock }}</span>
     </span>
 
-    <div class="flex items-center gap-1.5 shrink-0">
+    <!-- Time + realtime -->
+    <div class="flex items-center gap-2 shrink-0">
       <span
         v-if="departure.isRealtime"
-        role="img"
+        class="w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0"
         :aria-label="s.ariaRealtimeData"
-        class="w-2 h-2 rounded-full bg-green-500 animate-pulse"
+        role="img"
       />
-      <time
-        :datetime="departure.time"
-        class="text-sm font-semibold tabular-nums"
-        :class="timeClass"
-        :aria-label="delayAriaLabel ?? undefined"
-      >
-        {{ displayTime }}
-      </time>
-      <time
-        v-if="showScheduledTime"
-        :datetime="departure.time"
-        class="text-xs text-gray-400 dark:text-gray-500 tabular-nums"
-        :aria-label="`${s.scheduledTime} ${departure.time}`"
-      >
-        {{ departure.time }}
-      </time>
+      <div class="text-right">
+        <!-- Con ritardo -->
+        <template v-if="hasDelay">
+          <span
+            class="block text-[13px] line-through"
+            style="color: var(--text-tertiary); font-variant-numeric: tabular-nums; letter-spacing: -0.02em"
+          >{{ departure.time }}</span>
+          <span
+            class="block text-[15px] font-semibold text-orange-500"
+            style="font-variant-numeric: tabular-nums; letter-spacing: -0.02em"
+          >{{ realtimeTime }}</span>
+        </template>
+        <!-- Countdown o orario normale -->
+        <template v-else>
+          <span
+            v-if="showCountdown && typeof effectiveMinutes === 'number' && effectiveMinutes >= 0 && effectiveMinutes <= 30"
+            class="text-[15px] font-semibold"
+            style="color: var(--color-primary); font-variant-numeric: tabular-nums; letter-spacing: -0.02em"
+          >{{ effectiveMinutes <= 1 ? s.now : `${effectiveMinutes} ${s.minutes}` }}</span>
+          <span
+            v-else
+            class="text-[15px] font-semibold"
+            :class="timeClass"
+            style="font-variant-numeric: tabular-nums; letter-spacing: -0.02em"
+          >{{ departure.time }}</span>
+        </template>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { Bus, TramFront, TrainFront, Ship, Cable } from 'lucide-vue-next'
+import type { Component } from 'vue'
 import type { Departure } from '~/types'
 import { getStrings } from '~/utils/strings'
+
+const TRANSIT_ICONS: Record<string, Component> = {
+  bus: Bus,
+  tram: TramFront,
+  rail: TrainFront,
+  ferry: Ship,
+  metro: Cable,
+  cable_tram: Cable,
+  gondola: Cable,
+  funicular: Cable,
+  trolleybus: Bus,
+  monorail: TrainFront,
+}
 
 const props = defineProps<{
   departure: Departure
   now?: number
   locale?: string
+  showCountdown?: boolean
+  isPast?: boolean
 }>()
 
 const s = computed(() => getStrings(props.locale))
 
-const TRANSIT_ICONS: Record<string, string> = {
-  bus: '🚌',
-  tram: '🚃',
-  rail: '🚆',
-  ferry: '⛴️',
-  metro: '🚇',
-}
+const transitIcon = computed(() => {
+  const t = props.departure.transitType ?? 'bus'
+  return TRANSIT_ICONS[t] ?? Bus
+})
 
-const transitTypeIcon = computed(() =>
-  props.departure.transitType ? TRANSIT_ICONS[props.departure.transitType] ?? null : null
+// Delay in seconds — convert to minutes
+const delayMinutes = computed(() =>
+  props.departure.realtimeDelay !== undefined
+    ? Math.round(props.departure.realtimeDelay / 60)
+    : 0
 )
 
-const showScheduledTime = computed(() =>
-  props.departure.realtimeDelay !== undefined &&
-  props.departure.realtimeDelay !== 0
-)
+const hasDelay = computed(() => delayMinutes.value > 0)
 
-function effectiveMinutes(nowMs: number): number {
-  // Use pre-computed minutesFromMidnight instead of re-parsing the time string
-  // This correctly handles post-midnight times (e.g., 25:30 = 1530 min)
+// Compute realtime display time by adding delay to scheduled time string (HH:MM)
+const realtimeTime = computed(() => {
+  if (!hasDelay.value) return props.departure.time
+  const [h, m] = props.departure.time.split(':').map(Number)
+  const totalMin = h * 60 + m + delayMinutes.value
+  const rh = Math.floor(totalMin / 60) % 24
+  const rm = totalMin % 60
+  return `${String(rh).padStart(2, '0')}:${String(rm).padStart(2, '0')}`
+})
+
+function computeEffectiveMinutes(nowMs: number): number {
   const midnight = new Date(nowMs)
   midnight.setHours(0, 0, 0, 0)
   const nowMin = Math.floor((nowMs - midnight.getTime()) / 60_000)
   let diffMin = props.departure.minutesFromMidnight - nowMin
   if (props.departure.realtimeDelay !== undefined) {
-    diffMin += Math.round(props.departure.realtimeDelay / 60)
+    diffMin += delayMinutes.value
   }
   return diffMin
 }
 
-const displayTime = computed(() => {
-  const nowMs = props.now ?? Date.now()
-  const diffMin = effectiveMinutes(nowMs)
+const effectiveMinutes = computed(() => computeEffectiveMinutes(props.now ?? Date.now()))
 
-  if (diffMin < 0) return props.departure.time
-  if (diffMin === 0) return s.value.now
-  if (diffMin < 60) return `${diffMin} ${s.value.minutes}`
-  return props.departure.time
-})
-
-const delayAriaLabel = computed(() => {
-  if (props.departure.realtimeDelay === undefined || props.departure.realtimeDelay === 0) return null
-  const delayMin = Math.abs(Math.round(props.departure.realtimeDelay / 60))
-  return `${delayMin} ${s.value.minutesDelay}`
-})
+const timeClass = computed(() =>
+  effectiveMinutes.value >= 0 && effectiveMinutes.value < 2
+    ? 'text-green-600 dark:text-green-400'
+    : ''
+)
 
 const rowAriaLabel = computed(() => {
-  const nowMs = props.now ?? Date.now()
-  const diffMin = effectiveMinutes(nowMs)
+  const diffMin = effectiveMinutes.value
   let timeDescription: string
   if (diffMin === 0) {
     timeDescription = s.value.now
@@ -118,13 +158,5 @@ const rowAriaLabel = computed(() => {
     timeDescription = props.departure.time
   }
   return `${s.value.lineLabel} ${props.departure.lineName}, ${props.departure.headsign}, ${timeDescription}`
-})
-
-const timeClass = computed(() => {
-  const nowMs = props.now ?? Date.now()
-  const diffMin = effectiveMinutes(nowMs)
-  return diffMin >= 0 && diffMin < 2
-    ? 'text-green-600 dark:text-green-400'
-    : 'text-gray-900 dark:text-gray-100'
 })
 </script>

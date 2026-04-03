@@ -10,7 +10,7 @@
       margin-bottom="mb-6"
     />
 
-    <div v-if="pending" class="space-y-4 animate-pulse" aria-busy="true" aria-label="Caricamento">
+    <div v-if="pending" class="space-y-4 animate-pulse" aria-busy="true" :aria-label="s.ariaLoading">
       <div v-for="i in 3" :key="i" class="h-6 bg-gray-200 dark:bg-white/10 rounded" />
     </div>
 

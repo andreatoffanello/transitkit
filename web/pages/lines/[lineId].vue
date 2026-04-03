@@ -9,13 +9,13 @@
       :title="route ? `${route.name}${route.longName ? ' — ' + route.longName : ''}` : ''"
     />
 
-    <div v-if="pending" class="space-y-3 animate-pulse" aria-busy="true" aria-label="Caricamento">
+    <div v-if="pending" class="space-y-3 animate-pulse" aria-busy="true" :aria-label="s.ariaLoading">
       <div v-for="i in 8" :key="i" class="h-10 bg-gray-200 dark:bg-white/10 rounded-xl" />
     </div>
 
     <template v-else-if="route">
       <!-- Direction switcher -->
-      <div v-if="route.directions.length > 1" class="flex gap-2 mb-4" role="tablist" aria-label="Direzioni">
+      <div v-if="route.directions.length > 1" class="flex gap-2 mb-4" role="tablist" :aria-label="s.ariaDirections">
         <button
           v-for="dir in route.directions"
           :key="dir.id"

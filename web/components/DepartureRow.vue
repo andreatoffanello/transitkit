@@ -9,7 +9,7 @@
     <span class="flex-1 text-sm text-gray-900 dark:text-gray-100 truncate">
       {{ departure.headsign }}
       <span v-if="departure.dock" class="text-gray-400 text-xs ml-1">
-        Dock {{ departure.dock }}
+        {{ s.dockPrefix }}{{ departure.dock }}
       </span>
     </span>
 
@@ -17,7 +17,7 @@
       <span
         v-if="departure.isRealtime"
         role="img"
-        aria-label="Dati in tempo reale"
+        :aria-label="s.ariaRealtimeData"
         class="w-2 h-2 rounded-full bg-green-500 animate-pulse"
       />
       <span

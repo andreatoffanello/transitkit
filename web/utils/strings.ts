@@ -50,6 +50,17 @@ export interface AppStrings {
     ferry: string; cable_tram: string; gondola: string
     funicular: string; trolleybus: string; monorail: string
   }
+
+  // Aria labels
+  ariaLoading: string
+  ariaLinesAtStop: string
+  ariaDayGroupTabs: string
+  ariaDirections: string
+  ariaRealtimeData: string
+  ariaGoBack: string
+
+  // Component prefixes
+  dockPrefix: string
 }
 
 const IT: AppStrings = {
@@ -89,6 +100,13 @@ const IT: AppStrings = {
     ferry: 'Ferry', cable_tram: 'Funivia', gondola: 'Gondola',
     funicular: 'Funicolare', trolleybus: 'Filobus', monorail: 'Monorotaia',
   },
+  ariaLoading: 'Caricamento',
+  ariaLinesAtStop: 'Linee che fermano qui',
+  ariaDayGroupTabs: 'Gruppi orari',
+  ariaDirections: 'Direzioni',
+  ariaRealtimeData: 'Dati in tempo reale',
+  ariaGoBack: 'Torna indietro',
+  dockPrefix: 'Dock ',
 }
 
 const EN: AppStrings = {
@@ -128,6 +146,13 @@ const EN: AppStrings = {
     ferry: 'Ferry', cable_tram: 'Cable Car', gondola: 'Gondola',
     funicular: 'Funicular', trolleybus: 'Trolleybus', monorail: 'Monorail',
   },
+  ariaLoading: 'Loading',
+  ariaLinesAtStop: 'Lines stopping here',
+  ariaDayGroupTabs: 'Schedule groups',
+  ariaDirections: 'Directions',
+  ariaRealtimeData: 'Real-time data',
+  ariaGoBack: 'Go back',
+  dockPrefix: 'Dock ',
 }
 
 const STRINGS: Record<Locale, AppStrings> = { it: IT, en: EN }

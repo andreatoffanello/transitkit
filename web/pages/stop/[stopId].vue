@@ -10,7 +10,7 @@
     />
 
     <!-- Skeleton loading -->
-    <div v-if="pending" class="space-y-6 animate-pulse" aria-busy="true" aria-label="Caricamento">
+    <div v-if="pending" class="space-y-6 animate-pulse" aria-busy="true" :aria-label="s.ariaLoading">
       <!-- Stop name + line badges -->
       <div class="space-y-2 mb-5">
         <div class="h-7 bg-gray-200 dark:bg-white/10 rounded-lg w-3/4" />
@@ -43,7 +43,7 @@
       <!-- Nome fermata + badge linee -->
       <div class="mb-5">
         <h1 class="text-2xl font-bold leading-tight">{{ stop.name }}</h1>
-        <div class="flex flex-wrap gap-1.5 mt-2" role="list" aria-label="Linee che fermano qui">
+        <div class="flex flex-wrap gap-1.5 mt-2" role="list" :aria-label="s.ariaLinesAtStop">
           <LineBadge
             v-for="r in stopRoutes"
             :key="r.id"

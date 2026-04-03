@@ -35,7 +35,7 @@ withDefaults(defineProps<{
   primaryColor: '#003366',
   textColor: '#FFFFFF',
   backText: '',
-  backLabel: 'Torna indietro',
+  backLabel: undefined,
   title: undefined,
   marginBottom: 'mb-4',
 })

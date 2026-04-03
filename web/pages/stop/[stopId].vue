@@ -153,6 +153,9 @@
             >
               <p class="font-semibold text-gray-600 dark:text-gray-300 mb-1">{{ s.noDeparturesToday }}</p>
               <p class="text-sm">{{ s.noDeparturesHint }}</p>
+              <p v-if="nextServiceLabel" class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {{ s.nextServiceDay }}: {{ nextServiceLabel }}
+              </p>
             </div>
           </template>
         </DayGroupTabs>
@@ -184,7 +187,7 @@
 
 <script setup lang="ts">
 import { onMounted, nextTick } from 'vue'
-import { decodeDepartures, getTodayDayGroupKey, parseDayGroup } from '~/utils/schedule'
+import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getNextServiceDayGroupKey, getDayGroupLabel } from '~/utils/schedule'
 import type { DayGroup, Departure, ScheduleStop, Route } from '~/types'
 
 const route = useRoute()
@@ -219,6 +222,18 @@ const dayGroups = computed<DayGroup[]>(() =>
 const todayKey = computed(() =>
   stop.value ? getTodayDayGroupKey(stop.value.departures, config.value?.timezone) : null,
 )
+
+const nextServiceDayKey = computed(() =>
+  todayKey.value !== null
+    ? null
+    : getNextServiceDayGroupKey(stop.value?.departures ?? {}, config.value?.timezone)
+)
+
+const nextServiceLabel = computed(() => {
+  if (!nextServiceDayKey.value || !stop.value) return null
+  const dg = parseDayGroup(nextServiceDayKey.value)
+  return getDayGroupLabel(dg, s.value)
+})
 
 // Linee che servono effettivamente questa fermata, derivate dai dati di partenza
 const servingRoutes = computed((): Route[] => {

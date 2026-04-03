@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getDayGroupLabel } from '~/utils/schedule'
+import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getDayGroupLabel, getNextServiceDayGroupKey } from '~/utils/schedule'
 import { getStrings } from '~/utils/strings'
 import type { ScheduleData } from '~/types'
 
@@ -197,5 +197,36 @@ describe('getTodayDayGroupKey', () => {
     const key = getTodayDayGroupKey(departures as any, 'Invalid/Timezone')
     expect(key).toBe('mon,tue,wed,thu,fri')
     vi.restoreAllMocks()
+  })
+})
+
+describe('getNextServiceDayGroupKey', () => {
+  afterEach(() => { vi.restoreAllMocks() })
+
+  it('returns null when departures is empty', () => {
+    expect(getNextServiceDayGroupKey({})).toBeNull()
+  })
+
+  it('finds next weekday key when today has no service', () => {
+    // Mock today as Monday (index 1)
+    vi.spyOn(Date.prototype, 'getDay').mockReturnValue(1)
+    const deps = { 'wed': [['08:00', 0, 0]] }
+    const key = getNextServiceDayGroupKey(deps)
+    expect(key).toBe('wed')
+  })
+
+  it('skips today even if today is in a key', () => {
+    vi.spyOn(Date.prototype, 'getDay').mockReturnValue(1) // Monday
+    const deps = { 'mon': [['08:00', 0, 0]], 'tue': [['09:00', 0, 0]] }
+    // today is mon, should return tue (next day)
+    const key = getNextServiceDayGroupKey(deps)
+    expect(key).toBe('tue')
+  })
+
+  it('wraps around week boundary', () => {
+    vi.spyOn(Date.prototype, 'getDay').mockReturnValue(6) // Saturday
+    const deps = { 'mon': [['08:00', 0, 0]] }
+    const key = getNextServiceDayGroupKey(deps)
+    expect(key).toBe('mon')
   })
 })

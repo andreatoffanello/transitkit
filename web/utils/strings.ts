@@ -56,6 +56,7 @@ export interface AppStrings {
   // Empty state
   noDeparturesToday: string
   noDeparturesHint: string
+  nextServiceDay: string
 
   // Realtime status
   schedulesNotLive: string
@@ -131,6 +132,7 @@ const IT: AppStrings = {
   },
   noDeparturesToday: 'Nessuna partenza oggi',
   noDeparturesHint: 'Non ci sono corse programmate per oggi su questa fermata.',
+  nextServiceDay: 'Prossima corsa',
   schedulesNotLive: 'Orari non in tempo reale',
   upcomingDepartures: 'Prossime partenze',
   todaySchedule: 'Orari di oggi',
@@ -188,6 +190,7 @@ const EN: AppStrings = {
   },
   noDeparturesToday: 'No departures today',
   noDeparturesHint: 'There are no scheduled trips for today at this stop.',
+  nextServiceDay: 'Next service',
   schedulesNotLive: 'Schedules may not be live',
   upcomingDepartures: 'Upcoming departures',
   todaySchedule: "Today's schedule",

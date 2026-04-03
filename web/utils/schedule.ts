@@ -88,6 +88,41 @@ export function getTodayDayGroupKey(
   return null
 }
 
+/**
+ * Given the departures map and a reference date, find the next day group key
+ * that has service (i.e., the nearest upcoming day after today that appears
+ * in the departures map). Returns null if no future day group is found.
+ */
+export function getNextServiceDayGroupKey(
+  departures: Record<string, (string | number)[][]>,
+  timezone?: string,
+): string | null {
+  // Find today's index
+  let todayIndex: number
+  if (timezone) {
+    try {
+      const formatter = new Intl.DateTimeFormat('en-US', { timeZone: timezone, weekday: 'long' })
+      const dayStr = formatter.format(new Date()).toLowerCase().slice(0, 3)
+      todayIndex = WEEKDAY_ABBR.indexOf(dayStr as typeof WEEKDAY_ABBR[number])
+      if (todayIndex === -1) todayIndex = new Date().getDay()
+    } catch {
+      todayIndex = new Date().getDay()
+    }
+  } else {
+    todayIndex = new Date().getDay()
+  }
+
+  // Search the next 7 days (skip today)
+  for (let offset = 1; offset <= 7; offset++) {
+    const nextIndex = (todayIndex + offset) % 7
+    const nextAbbr = WEEKDAY_ABBR[nextIndex]
+    for (const key of Object.keys(departures)) {
+      if (key.split(',').includes(nextAbbr ?? '')) return key
+    }
+  }
+  return null
+}
+
 export function decodeDepartures(
   compactDeps: (string | number)[][],
   data: ScheduleData,

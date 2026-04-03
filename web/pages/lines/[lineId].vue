@@ -127,16 +127,30 @@
                   :style="nuxtRoute.query.stop === stop.id ? 'color: #fff' : 'color: var(--text-tertiary)'"
                 >{{ index + 1 }}</span>
               </div>
-              <span
-                class="flex-1 text-[15px] truncate"
-                :class="index === 0 || index === currentStops.length - 1 ? 'font-semibold' : 'font-medium'"
-                :style="nuxtRoute.query.stop === stop.id
-                  ? 'color: var(--color-primary); font-weight: 600'
-                  : 'color: var(--text-primary)'"
-              >
-                {{ stop.name }}
+              <span class="flex-1 min-w-0">
+                <span
+                  class="text-[15px] truncate block"
+                  :class="index === 0 || index === currentStops.length - 1 ? 'font-semibold' : 'font-medium'"
+                  :style="nuxtRoute.query.stop === stop.id
+                    ? 'color: var(--color-primary); font-weight: 600'
+                    : 'color: var(--text-primary)'"
+                >
+                  {{ stop.name }}
+                </span>
+                <span
+                  v-if="nuxtRoute.query.stop === stop.id"
+                  class="text-[11px] font-medium"
+                  style="color: var(--color-primary)"
+                >
+                  Prossime partenze →
+                </span>
               </span>
-              <ChevronRight :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+              <ChevronRight
+                :size="16"
+                :stroke-width="nuxtRoute.query.stop === stop.id ? 2 : 1.75"
+                :style="nuxtRoute.query.stop === stop.id ? 'color: var(--color-primary)' : 'color: var(--text-tertiary)'"
+                class="shrink-0"
+              />
             </NuxtLink>
           </div>
         </div>

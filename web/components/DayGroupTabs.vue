@@ -17,8 +17,11 @@
         style="border-radius: 20px;"
         :style="selected === dg.id
           ? `background-color: var(--color-primary); color: var(--color-text-on-primary);`
-          : `background-color: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border);`"
-        @click="selected = dg.id"
+          : (departuresByDayGroup[dg.id]?.length ?? 0) === 0
+            ? `background-color: var(--bg-elevated); color: var(--text-tertiary); border: 1px solid var(--border); opacity: 0.38; cursor: not-allowed`
+            : `background-color: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border);`"
+        :disabled="(departuresByDayGroup[dg.id]?.length ?? 0) === 0"
+        @click="(departuresByDayGroup[dg.id]?.length ?? 0) > 0 && (selected = dg.id)"
       >
         {{ strings ? getDayGroupLabel(dg, strings) : dg.displayLabel }}
       </button>

@@ -357,9 +357,18 @@
         </section>
 
         <!-- Schedule freshness -->
-        <p v-if="schedules?.lastUpdated" class="text-center text-xs" style="color: var(--text-tertiary)">
-          {{ formatDate(schedules.lastUpdated) }}<template v-if="schedules.validUntil"> · {{ s.schedulesValidUntil }} {{ formatDate(schedules.validUntil) }}</template>
-        </p>
+        <div v-if="schedules?.validUntil" class="flex items-center justify-center gap-1.5">
+          <span
+            v-if="schedulesExpiringSoon"
+            class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold"
+            style="background-color: #d97706; color: #fff"
+          >
+            In scadenza
+          </span>
+          <p class="text-center text-xs" style="color: var(--text-tertiary)">
+            Orari validi · scadono il {{ formatShortDate(schedules.validUntil) }}
+          </p>
+        </div>
 
         <!-- Privacy link -->
         <a
@@ -468,6 +477,19 @@ function formatDate(dateStr: string | undefined): string {
   if (isNaN(d.getTime())) return dateStr
   return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
 }
+
+function formatShortDate(dateStr: string): string {
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return dateStr
+  return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+const schedulesExpiringSoon = computed(() => {
+  if (!schedules.value?.validUntil) return false
+  const d = new Date(schedules.value.validUntil)
+  const daysLeft = (d.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+  return daysLeft >= 0 && daysLeft < 30
+})
 
 const hasRealtime = computed(() => !!config.value?.gtfsRt)
 

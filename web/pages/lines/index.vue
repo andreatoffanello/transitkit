@@ -95,8 +95,15 @@
         </div>
       </div>
 
-      <div v-if="filteredRoutesByType.length === 0" class="text-center py-16 text-gray-400">
-        {{ s.noLines }}
+      <div v-if="filteredRoutes.length === 0 && !pending" class="text-center py-12 text-gray-400">
+        <p class="font-semibold text-gray-600 dark:text-gray-300 mb-2">{{ s.noLinesFound }}</p>
+        <button
+          class="text-sm underline"
+          :style="{ color: config?.theme.primaryColor }"
+          @click="clearFilters()"
+        >
+          {{ s.clearFilters }}
+        </button>
       </div>
     </template>
   </div>
@@ -114,6 +121,11 @@ const searchQuery = ref('')
 
 function transitTypeLabel(type: string): string {
   return s.value.transitTypes[type as TransitType] ?? type
+}
+
+function clearFilters() {
+  searchQuery.value = ''
+  selectedType.value = null
 }
 
 const allRoutes = computed(() => schedules.value?.routes ?? [])

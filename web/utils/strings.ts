@@ -88,6 +88,10 @@ export interface AppStrings {
 
   // Lines list — search
   searchLines: string
+
+  // Lines list — empty state
+  noLinesFound: string
+  clearFilters: string
 }
 
 const IT: AppStrings = {
@@ -147,6 +151,8 @@ const IT: AppStrings = {
   lineLabel: 'Linea',
   stops: 'fermate',
   searchLines: 'Cerca linea…',
+  noLinesFound: 'Nessuna linea trovata',
+  clearFilters: 'Cancella filtri',
 }
 
 const EN: AppStrings = {
@@ -206,6 +212,8 @@ const EN: AppStrings = {
   lineLabel: 'Line',
   stops: 'stops',
   searchLines: 'Search line…',
+  noLinesFound: 'No lines found',
+  clearFilters: 'Clear filters',
 }
 
 const STRINGS: Record<Locale, AppStrings> = { it: IT, en: EN }

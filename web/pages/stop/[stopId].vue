@@ -289,7 +289,7 @@ useHead({
       content: computed(() => {
         const stopName = stop.value?.name ?? ''
         const op = config.value?.fullName ?? config.value?.name ?? ''
-        return `${stopName} — Orari e partenze${op ? ` — ${op}` : ''}`
+        return `${stopName} — ${s.value.schedulesAndDepartures}${op ? ` — ${op}` : ''}`
       }),
     },
   ],

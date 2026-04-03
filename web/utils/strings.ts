@@ -92,6 +92,10 @@ export interface AppStrings {
   // Lines list — empty state
   noLinesFound: string
   clearFilters: string
+
+  // SEO meta description fragments
+  schedulesAndDepartures: string
+  stopsAndSchedules: string
 }
 
 const IT: AppStrings = {
@@ -153,6 +157,8 @@ const IT: AppStrings = {
   searchLines: 'Cerca linea…',
   noLinesFound: 'Nessuna linea trovata',
   clearFilters: 'Cancella filtri',
+  schedulesAndDepartures: 'Orari e partenze',
+  stopsAndSchedules: 'Fermate e orari',
 }
 
 const EN: AppStrings = {
@@ -214,6 +220,8 @@ const EN: AppStrings = {
   searchLines: 'Search line…',
   noLinesFound: 'No lines found',
   clearFilters: 'Clear filters',
+  schedulesAndDepartures: 'Schedules and departures',
+  stopsAndSchedules: 'Stops and schedules',
 }
 
 const STRINGS: Record<Locale, AppStrings> = { it: IT, en: EN }

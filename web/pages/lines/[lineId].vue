@@ -147,7 +147,7 @@ useHead({
       content: computed(() => {
         const lineName = route.value?.longName ?? route.value?.name ?? ''
         const op = config.value?.fullName ?? config.value?.name ?? ''
-        return `${lineName} — Fermate e orari${op ? ` — ${op}` : ''}`
+        return `${lineName} — ${s.value.stopsAndSchedules}${op ? ` — ${op}` : ''}`
       }),
     },
   ],

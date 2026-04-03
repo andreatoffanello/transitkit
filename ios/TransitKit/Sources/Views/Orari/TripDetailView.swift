@@ -5,9 +5,7 @@ import SwiftUI
 struct TripDetailView: View {
     let departure: Departure
     let fromStop: ResolvedStop
-    var isRoot: Bool = false
     @Environment(ScheduleStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
 
     /// Resolved trip stops (from the stop pattern).
     private var tripStops: [ResolvedStop]? {
@@ -52,22 +50,8 @@ struct TripDetailView: View {
         .background(AppTheme.background)
         .navigationTitle(String(localized: "trip_line_title \(departure.lineName)"))
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarRole(isRoot ? .automatic : .editor)
+        .toolbarRole(.editor)
         .toolbar(.hidden, for: .tabBar)
-        .toolbar {
-            if isRoot {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        LucideIcon.circleX.sized(24)
-                            .foregroundStyle(.secondary)
-                    }
-                    .accessibilityLabel(String(localized: "close_label"))
-                    .accessibilityIdentifier("btn_close")
-                }
-            }
-        }
         .navigationDestination(for: ResolvedStop.self) { stop in
             StopDetailView(stop: stop)
         }

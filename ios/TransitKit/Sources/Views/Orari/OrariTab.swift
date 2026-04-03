@@ -88,7 +88,7 @@ struct OrariTab: View {
                 LineDetailView(route: route)
             }
             .navigationDestination(for: TripTarget.self) { target in
-                TripDetailView(departure: target.departure, fromStop: target.fromStop, isRoot: true)
+                TripDetailView(departure: target.departure, fromStop: target.fromStop)
             }
             .task {
                 if store.stops.isEmpty && !store.isLoading {

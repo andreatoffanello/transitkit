@@ -15,5 +15,15 @@ const OPERATOR_HOSTS: Record<string, string> = {
 export const CDN_BASE = 'https://andreatoffanello.github.io/transitkit-data'
 
 export function resolveOperatorId(host: string): string | null {
-  return OPERATOR_HOSTS[host] ?? null
+  if (OPERATOR_HOSTS[host]) return OPERATOR_HOSTS[host] ?? null
+
+  // In development: fall back to NUXT_OPERATOR env var, or the first registered operator
+  if (import.meta.dev) {
+    const devOp = process.env.NUXT_OPERATOR
+    if (devOp) return devOp
+    const first = Object.values(OPERATOR_HOSTS)[0]
+    return first ?? null
+  }
+
+  return null
 }

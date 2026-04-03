@@ -69,7 +69,12 @@
             :to="`/stop/${stop.stopId}`"
             class="flex items-center justify-between py-1.5"
           >
-            <span class="text-sm text-gray-900 dark:text-gray-100">{{ stop.name }}</span>
+            <span class="flex flex-col">
+              <span class="text-sm text-gray-900 dark:text-gray-100">{{ stop.name }}</span>
+              <span v-if="favoriteNextDepartures[stop.stopId]" class="text-xs text-gray-400 tabular-nums">
+                {{ favoriteNextDepartures[stop.stopId] }}
+              </span>
+            </span>
             <span class="text-gray-400 text-sm" aria-hidden="true">›</span>
           </NuxtLink>
         </div>
@@ -85,10 +90,37 @@
             :to="`/stop/${stop.stopId}`"
             class="flex items-center justify-between py-1.5"
           >
-            <span class="text-sm text-gray-900 dark:text-gray-100">{{ stop.name }}</span>
+            <span class="flex flex-col">
+              <span class="text-sm text-gray-900 dark:text-gray-100">{{ stop.name }}</span>
+              <span v-if="recentNextDepartures[stop.stopId]" class="text-xs text-gray-400 tabular-nums">
+                {{ recentNextDepartures[stop.stopId] }}
+              </span>
+            </span>
             <span class="text-gray-400 text-sm" aria-hidden="true">›</span>
           </NuxtLink>
         </div>
+      </div>
+
+      <!-- Schedule freshness -->
+      <div v-if="schedules?.lastUpdated" class="text-center text-xs text-gray-400 space-y-0.5">
+        <p>{{ s.schedulesUpdated }}: {{ schedules.lastUpdated }}</p>
+        <p v-if="schedules.validUntil">{{ s.schedulesValidUntil }}: {{ schedules.validUntil }}</p>
+      </div>
+
+      <!-- Onboarding empty state -->
+      <div
+        v-if="!favoriteStops.length && !recentStops.length"
+        class="flex flex-col items-center gap-3 py-8 text-center text-gray-400"
+      >
+        <span class="text-4xl" aria-hidden="true">🚏</span>
+        <p class="text-sm max-w-[240px]">{{ s.onboardingHint }}</p>
+        <NuxtLink
+          to="/lines"
+          class="text-sm font-semibold underline"
+          :style="{ color: config?.theme.primaryColor }"
+        >
+          {{ s.linesAndSchedules }}
+        </NuxtLink>
       </div>
 
       <!-- Privacy link -->
@@ -106,12 +138,53 @@
 </template>
 
 <script setup lang="ts">
-const { config } = await useOperator()
+import { computeNowMin, getNextDeparture } from '~/utils/schedule'
+
+const { config, schedules } = await useOperator()
 const s = useStrings(config)
 
 const { recentStops, load } = useRecentStops()
 const { favoriteStops, load: loadFavorites } = useFavoriteStops()
-onMounted(() => { load(); loadFavorites() })
+
+const now = ref(Date.now())
+onMounted(() => {
+  load()
+  loadFavorites()
+  now.value = Date.now()
+  setInterval(() => { now.value = Date.now() }, 30_000)
+})
+
+const favoriteNextDepartures = computed<Record<string, string>>(() => {
+  const result: Record<string, string> = {}
+  const nowMin = computeNowMin(now.value)
+  for (const fav of favoriteStops.value) {
+    if (!schedules.value) continue
+    const dep = getNextDeparture(fav.stopId, schedules.value, now.value, config.value?.timezone, config.value?.headsignMap)
+    if (!dep) continue
+    const diff = dep.minutesFromMidnight - nowMin
+    if (diff < 0) continue
+    if (diff === 0) result[fav.stopId] = `${dep.lineName} · ${s.value.now}`
+    else if (diff < 60) result[fav.stopId] = `${dep.lineName} · ${diff} ${s.value.minutes}`
+    else result[fav.stopId] = `${dep.lineName} · ${dep.time}`
+  }
+  return result
+})
+
+const recentNextDepartures = computed<Record<string, string>>(() => {
+  const result: Record<string, string> = {}
+  const nowMin = computeNowMin(now.value)
+  for (const recent of recentStops.value) {
+    if (!schedules.value) continue
+    const dep = getNextDeparture(recent.stopId, schedules.value, now.value, config.value?.timezone, config.value?.headsignMap)
+    if (!dep) continue
+    const diff = dep.minutesFromMidnight - nowMin
+    if (diff < 0) continue
+    if (diff === 0) result[recent.stopId] = `${dep.lineName} · ${s.value.now}`
+    else if (diff < 60) result[recent.stopId] = `${dep.lineName} · ${diff} ${s.value.minutes}`
+    else result[recent.stopId] = `${dep.lineName} · ${dep.time}`
+  }
+  return result
+})
 
 useHead({
   title: computed(() => `${config.value?.fullName ?? config.value?.name ?? ''} — Orari e linee`),

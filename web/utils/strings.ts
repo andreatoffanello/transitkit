@@ -122,6 +122,9 @@ export interface AppStrings {
   schedulesUpdated: string
   schedulesValidUntil: string
 
+  // Home page — onboarding empty state
+  onboardingHint: string
+
   // Line count words (singular/plural)
   lineSingular: string
   linePlural: string
@@ -202,6 +205,7 @@ const IT: AppStrings = {
   nextDepartureToday: 'Prossima oggi',
   schedulesUpdated: 'Orari aggiornati al',
   schedulesValidUntil: 'Validi fino al',
+  onboardingHint: 'Cerca le linee per trovare e salvare le tue fermate preferite',
   lineSingular: 'linea',
   linePlural: 'linee',
   updatedAt: 'Aggiornato alle',
@@ -279,6 +283,7 @@ const EN: AppStrings = {
   nextDepartureToday: 'Next today',
   schedulesUpdated: 'Schedules updated',
   schedulesValidUntil: 'Valid until',
+  onboardingHint: 'Browse lines to find and save your favourite stops',
   lineSingular: 'line',
   linePlural: 'lines',
   updatedAt: 'Updated at',

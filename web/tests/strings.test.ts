@@ -156,3 +156,24 @@ describe('getStrings', () => {
     expect(getStrings('en').minutesDelay).toBe('minutes late')
   })
 })
+
+describe('IT/EN key parity', () => {
+  const IT = getStrings('it')
+  const EN = getStrings('en')
+
+  it('top-level keys are identical', () => {
+    expect(Object.keys(IT).sort()).toEqual(Object.keys(EN).sort())
+  })
+
+  it('weekdayLabels keys are identical', () => {
+    expect(Object.keys(IT.weekdayLabels).sort()).toEqual(Object.keys(EN.weekdayLabels).sort())
+  })
+
+  it('weekdayGroupNames keys are identical', () => {
+    expect(Object.keys(IT.weekdayGroupNames).sort()).toEqual(Object.keys(EN.weekdayGroupNames).sort())
+  })
+
+  it('transitTypes keys are identical', () => {
+    expect(Object.keys(IT.transitTypes).sort()).toEqual(Object.keys(EN.transitTypes).sort())
+  })
+})

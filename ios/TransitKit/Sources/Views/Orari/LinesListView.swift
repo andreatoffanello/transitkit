@@ -35,6 +35,32 @@ struct LinesListView: View {
         return qi == q.endIndex ? 50 : 0
     }
 
+    // MARK: - Deduplication
+
+    /// Deduplicates routes by name, keeping the one with the most directions.
+    /// Preserves the original order of first occurrence.
+    private func deduplicated(_ routes: [Route]) -> [Route] {
+        var seen: [String: Route] = [:]
+        for route in routes {
+            if let existing = seen[route.name] {
+                if route.directions.count > existing.directions.count {
+                    seen[route.name] = route
+                }
+            } else {
+                seen[route.name] = route
+            }
+        }
+        var result: [Route] = []
+        var added: Set<String> = []
+        for route in routes {
+            if !added.contains(route.name) {
+                result.append(seen[route.name]!)
+                added.insert(route.name)
+            }
+        }
+        return result
+    }
+
     // MARK: - Filtering
 
     private var filteredRoutes: [Route] {
@@ -59,22 +85,23 @@ struct LinesListView: View {
                     )
                     return score > 0 ? (route, score) : nil
                 }
-                return scored
+                let sorted = scored
                     .sorted { $0.score != $1.score ? $0.score > $1.score : $0.route.name.localizedStandardCompare($1.route.name) == .orderedAscending }
                     .map(\.route)
+                return deduplicated(sorted)
             } else {
                 let query = searchQuery.lowercased()
                 result = result.filter { route in
                     route.name.lowercased().contains(query)
                     || route.longName.lowercased().contains(query)
                 }
-                return result.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+                return deduplicated(result.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
             }
         }
 
-        return result.sorted {
+        return deduplicated(result.sorted {
             $0.name.localizedStandardCompare($1.name) == .orderedAscending
-        }
+        })
     }
 
     /// Recent routes resolved from the store, preserving recency order.

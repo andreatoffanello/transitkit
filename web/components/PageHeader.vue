@@ -33,7 +33,7 @@ withDefaults(defineProps<{
   marginBottom?: string
 }>(), {
   primaryColor: '#003366',
-  textColor: '#FFFFFF',
+  textColor: '#ffffff',
   backText: '',
   backLabel: undefined,
   title: undefined,

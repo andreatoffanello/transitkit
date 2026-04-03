@@ -28,7 +28,18 @@ export async function useOperator() {
   // hydration key, preventing hydration style mismatches on theme :style bindings.
   const configAsync = useAsyncData<OperatorConfig>(
     'operator-config',
-    () => fetchJson<OperatorConfig>(`${cdnBase}/${id}/config.json`, signal),
+    async () => {
+      const cfg = await fetchJson<OperatorConfig>(`${cdnBase}/${id}/config.json`, signal)
+      // Normalize hex colors to lowercase so SSR style output matches client hydration.
+      // Vue's server-renderer lowercases hex values in style attributes, but the client
+      // uses the raw value from the Nuxt state — normalizing here makes them consistent.
+      if (cfg.theme) {
+        cfg.theme.primaryColor = cfg.theme.primaryColor.toLowerCase()
+        cfg.theme.accentColor = cfg.theme.accentColor.toLowerCase()
+        cfg.theme.textOnPrimary = cfg.theme.textOnPrimary.toLowerCase()
+      }
+      return cfg
+    },
   )
   const schedulesAsync = useAsyncData<ScheduleData>(
     'operator-schedules',

@@ -2,8 +2,8 @@ import type { OperatorConfig } from '~/types'
 
 const DEFAULT_THEME = {
   '--color-primary': '#003366',
-  '--color-accent': '#0066CC',
-  '--color-text-on-primary': '#FFFFFF',
+  '--color-accent': '#0066cc',
+  '--color-text-on-primary': '#ffffff',
 }
 
 function applyTheme(cfg: OperatorConfig | null | undefined): void {

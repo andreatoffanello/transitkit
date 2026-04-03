@@ -60,85 +60,88 @@
         🌐 {{ s.officialWebsite }}
       </a>
 
-      <!-- Preferiti -->
-      <div v-if="favoriteStops.length" class="bg-white dark:bg-white/5 rounded-2xl p-4">
-        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">{{ s.favoriteStops }}</p>
-        <div class="space-y-2">
-          <NuxtLink
-            v-for="stop in sortedFavoriteStops"
-            :key="stop.stopId"
-            :to="`/stop/${stop.stopId}`"
-            :prefetch="false"
-            class="flex items-center justify-between py-1.5"
-          >
-            <span class="flex flex-col">
-              <span class="flex items-center gap-1.5">
-                <span class="text-sm text-gray-900 dark:text-gray-100">{{ stop.name }}</span>
-                <span
-                  v-if="hasRealtime"
-                  class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse flex-shrink-0"
-                  aria-hidden="true"
-                />
+      <!-- Preferiti / Recenti / Onboarding — client-only: depend on localStorage -->
+      <ClientOnly>
+        <!-- Preferiti -->
+        <div v-if="favoriteStops.length" class="bg-white dark:bg-white/5 rounded-2xl p-4">
+          <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">{{ s.favoriteStops }}</p>
+          <div class="space-y-2">
+            <NuxtLink
+              v-for="stop in sortedFavoriteStops"
+              :key="stop.stopId"
+              :to="`/stop/${stop.stopId}`"
+              :prefetch="false"
+              class="flex items-center justify-between py-1.5"
+            >
+              <span class="flex flex-col">
+                <span class="flex items-center gap-1.5">
+                  <span class="text-sm text-gray-900 dark:text-gray-100">{{ stop.name }}</span>
+                  <span
+                    v-if="hasRealtime"
+                    class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse flex-shrink-0"
+                    aria-hidden="true"
+                  />
+                </span>
+                <span v-if="favoriteNextDepartures[stop.stopId]" class="text-xs text-gray-400 tabular-nums">
+                  {{ favoriteNextDepartures[stop.stopId] }}
+                </span>
               </span>
-              <span v-if="favoriteNextDepartures[stop.stopId]" class="text-xs text-gray-400 tabular-nums">
-                {{ favoriteNextDepartures[stop.stopId] }}
-              </span>
-            </span>
-            <span class="text-gray-400 text-sm" aria-hidden="true">›</span>
-          </NuxtLink>
+              <span class="text-gray-400 text-sm" aria-hidden="true">›</span>
+            </NuxtLink>
+          </div>
         </div>
-      </div>
 
-      <!-- Fermate recenti -->
-      <div v-if="recentStops.length" class="bg-white dark:bg-white/5 rounded-2xl p-4">
-        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">{{ s.recentStops }}</p>
-        <div class="space-y-2">
+        <!-- Fermate recenti -->
+        <div v-if="recentStops.length" class="bg-white dark:bg-white/5 rounded-2xl p-4">
+          <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">{{ s.recentStops }}</p>
+          <div class="space-y-2">
+            <NuxtLink
+              v-for="stop in sortedRecentStops"
+              :key="stop.stopId"
+              :to="`/stop/${stop.stopId}`"
+              :prefetch="false"
+              class="flex items-center justify-between py-1.5"
+            >
+              <span class="flex flex-col">
+                <span class="flex items-center gap-1.5">
+                  <span class="text-sm text-gray-900 dark:text-gray-100">{{ stop.name }}</span>
+                  <span
+                    v-if="hasRealtime"
+                    class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse flex-shrink-0"
+                    aria-hidden="true"
+                  />
+                </span>
+                <span v-if="recentNextDepartures[stop.stopId]" class="text-xs text-gray-400 tabular-nums">
+                  {{ recentNextDepartures[stop.stopId] }}
+                </span>
+              </span>
+              <span class="text-gray-400 text-sm" aria-hidden="true">›</span>
+            </NuxtLink>
+          </div>
+        </div>
+
+        <!-- Onboarding empty state -->
+        <div
+          v-if="!favoriteStops.length && !recentStops.length"
+          class="flex flex-col items-center gap-3 py-8 text-center text-gray-400"
+        >
+          <span class="text-4xl" aria-hidden="true">🚏</span>
+          <p class="text-sm max-w-[240px]">{{ s.onboardingHint }}</p>
           <NuxtLink
-            v-for="stop in sortedRecentStops"
-            :key="stop.stopId"
-            :to="`/stop/${stop.stopId}`"
-            :prefetch="false"
-            class="flex items-center justify-between py-1.5"
+            to="/lines"
+            prefetch
+            class="text-sm font-semibold underline"
+            :style="{ color: config?.theme.primaryColor }"
           >
-            <span class="flex flex-col">
-              <span class="flex items-center gap-1.5">
-                <span class="text-sm text-gray-900 dark:text-gray-100">{{ stop.name }}</span>
-                <span
-                  v-if="hasRealtime"
-                  class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse flex-shrink-0"
-                  aria-hidden="true"
-                />
-              </span>
-              <span v-if="recentNextDepartures[stop.stopId]" class="text-xs text-gray-400 tabular-nums">
-                {{ recentNextDepartures[stop.stopId] }}
-              </span>
-            </span>
-            <span class="text-gray-400 text-sm" aria-hidden="true">›</span>
+            {{ s.linesAndSchedules }}
           </NuxtLink>
         </div>
-      </div>
+      </ClientOnly>
 
       <!-- Schedule freshness -->
       <div v-if="schedules?.lastUpdated" class="text-center text-xs text-gray-400 space-y-0.5">
         <p>{{ s.schedulesUpdated }}: {{ schedules.lastUpdated }}</p>
         <p v-if="schedules.validUntil">{{ s.schedulesValidUntil }}: {{ schedules.validUntil }}</p>
-      </div>
-
-      <!-- Onboarding empty state -->
-      <div
-        v-if="!favoriteStops.length && !recentStops.length"
-        class="flex flex-col items-center gap-3 py-8 text-center text-gray-400"
-      >
-        <span class="text-4xl" aria-hidden="true">🚏</span>
-        <p class="text-sm max-w-[240px]">{{ s.onboardingHint }}</p>
-        <NuxtLink
-          to="/lines"
-          prefetch
-          class="text-sm font-semibold underline"
-          :style="{ color: config?.theme.primaryColor }"
-        >
-          {{ s.linesAndSchedules }}
-        </NuxtLink>
       </div>
 
       <!-- Privacy link -->

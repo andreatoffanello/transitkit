@@ -63,6 +63,7 @@
 
 <script setup lang="ts">
 import { normalizeHex } from '~/utils/color'
+import type { Route, RouteDirection, ScheduleStop } from '~/types'
 
 const nuxtRoute = useRoute()
 const lineId = computed(() => String(nuxtRoute.params.lineId))
@@ -71,7 +72,7 @@ const { config, schedules, pending } = await useOperator()
 const s = useStrings(config)
 
 const route = computed(() =>
-  schedules.value?.routes.find(r => r.id === lineId.value) ?? null,
+  schedules.value?.routes.find((r: Route) => r.id === lineId.value) ?? null,
 )
 
 const headerBg = computed(() => {
@@ -92,11 +93,11 @@ watch(route, (r) => {
 }, { immediate: true })
 
 const currentStops = computed(() => {
-  const dir = route.value?.directions.find(d => d.id === selectedDirectionId.value)
+  const dir = route.value?.directions.find((d: RouteDirection) => d.id === selectedDirectionId.value)
   if (!dir) return []
   return dir.stopIds
-    .map(id => schedules.value?.stops.find(s => s.id === id))
-    .filter((s): s is NonNullable<typeof s> => s !== undefined)
+    .map((id: string) => schedules.value?.stops.find((s: ScheduleStop) => s.id === id))
+    .filter((s: ScheduleStop | undefined): s is ScheduleStop => s !== undefined)
 })
 
 useHead({

@@ -66,9 +66,11 @@ export function useRealtime(
     return { departures: merged, isLive }
   }
 
+  const feedUrl: string = gtfsRtUrl
+
   async function poll() {
     try {
-      const res = await fetch(gtfsRtUrl, { mode: 'cors' })
+      const res = await fetch(feedUrl, { mode: 'cors' })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const buffer = await res.arrayBuffer()
 

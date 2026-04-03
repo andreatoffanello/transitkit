@@ -1,4 +1,4 @@
-import type { ScheduleData, Departure, DayGroup } from '~/types'
+import type { ScheduleData, Departure, DayGroup, Route } from '~/types'
 import type { AppStrings } from '~/utils/strings'
 
 const WEEKDAY_ABBR = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const
@@ -101,7 +101,7 @@ export function decodeDepartures(
         ? data.tripIds[tripIdIdx]
         : undefined
 
-    const route = data.routes.find(r => r.id === routeId)
+    const route = data.routes.find((r: Route) => r.id === routeId)
 
     const [hStr, mStr] = time.split(':')
     const h = parseInt(hStr ?? '0', 10)

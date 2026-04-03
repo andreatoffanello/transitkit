@@ -129,7 +129,7 @@
 
 <script setup lang="ts">
 import { decodeDepartures, getTodayDayGroupKey, parseDayGroup } from '~/utils/schedule'
-import type { DayGroup, Departure } from '~/types'
+import type { DayGroup, Departure, ScheduleStop, Route } from '~/types'
 
 const route = useRoute()
 const stopId = computed(() => String(route.params.stopId))
@@ -142,7 +142,7 @@ const pending = computed(() => !config.value || !schedules.value)
 
 // Fermata corrente
 const stop = computed(() =>
-  schedules.value?.stops.find(st => st.id === stopId.value) ?? null,
+  schedules.value?.stops.find((st: ScheduleStop) => st.id === stopId.value) ?? null,
 )
 
 // Departures decodificate per ogni day group (ordinate per orario)
@@ -151,7 +151,7 @@ const departuresByGroup = computed<Record<string, Departure[]>>(() => {
   const result: Record<string, Departure[]> = {}
   for (const [key, compact] of Object.entries(stop.value.departures)) {
     const deps = decodeDepartures(compact, schedules.value, config.value?.headsignMap)
-    result[key] = deps.sort((a, b) => a.minutesFromMidnight - b.minutesFromMidnight)
+    result[key] = deps.sort((a: Departure, b: Departure) => a.minutesFromMidnight - b.minutesFromMidnight)
   }
   return result
 })
@@ -168,9 +168,9 @@ const todayKey = computed(() =>
 const stopRoutes = computed(() => {
   if (!stop.value || !schedules.value) return []
   return stop.value.lines
-    .map(lineName => schedules.value!.routes.find(r => r.name === lineName))
-    .filter((r): r is NonNullable<typeof r> => r !== undefined)
-    .map(r => ({ id: r.id, name: r.name, color: r.color, textColor: r.textColor }))
+    .map((lineName: string) => schedules.value!.routes.find((r: Route) => r.name === lineName))
+    .filter((r: Route | undefined): r is Route => r !== undefined)
+    .map((r: Route) => ({ id: r.id, name: r.name, color: r.color, textColor: r.textColor }))
 })
 
 // Tick ogni 30s per aggiornare countdown
@@ -201,7 +201,7 @@ const upcomingDepartures = computed<Departure[]>(() => {
   midnight.setHours(0, 0, 0, 0)
   const nowMin = Math.floor((now.value - midnight.getTime()) / 60_000)
   return deps
-    .filter(d => {
+    .filter((d: Departure) => {
       const effectiveMin = d.minutesFromMidnight + Math.round((d.realtimeDelay ?? 0) / 60)
       return effectiveMin >= nowMin && effectiveMin <= nowMin + 120
     })

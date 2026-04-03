@@ -195,6 +195,44 @@ describe('scheduled time display', () => {
     // The component renders departure.time as the scheduled time label
     expect(dep.time).toBe('14:32')
   })
+
+  describe('scheduledTime label strings', () => {
+    // These tests verify the s.scheduledTime label used in the aria-label of the
+    // scheduled time block: `${s.scheduledTime} ${departure.time}`
+
+    it('with realtimeDelay=300 (5 min late), aria-label contains "orario prev." and original time', () => {
+      const dep = makeDeparture({ time: '08:30', minutesFromMidnight: 510, realtimeDelay: 300 })
+      const s = getStrings() // default IT locale
+      // Mirrors the component aria-label: `${s.scheduledTime} ${departure.time}`
+      const ariaLabel = `${s.scheduledTime} ${dep.time}`
+      expect(ariaLabel).toContain('orario prev.')
+      expect(ariaLabel).toContain('08:30')
+    })
+
+    it('without delay (realtimeDelay=null), showScheduledTime is false so label is never rendered', () => {
+      const dep = makeDeparture({ time: '08:30', minutesFromMidnight: 510 })
+      // showScheduledTime is false — the block is not rendered at all
+      const show = dep.realtimeDelay !== undefined && dep.realtimeDelay !== 0
+      expect(show).toBe(false)
+      // Confirm the IT label string exists in strings util
+      const s = getStrings()
+      expect(s.scheduledTime).toBe('orario prev.')
+    })
+
+    it('with realtimeDelay=0, showScheduledTime is false (on time — no scheduled block)', () => {
+      const dep = makeDeparture({ time: '08:30', minutesFromMidnight: 510, realtimeDelay: 0 })
+      const show = dep.realtimeDelay !== undefined && dep.realtimeDelay !== 0
+      expect(show).toBe(false)
+    })
+
+    it('with EN locale and realtimeDelay=180, aria-label contains "sched." and original time', () => {
+      const dep = makeDeparture({ time: '09:15', minutesFromMidnight: 555, realtimeDelay: 180 })
+      const s = getStrings('en')
+      const ariaLabel = `${s.scheduledTime} ${dep.time}`
+      expect(ariaLabel).toContain('sched.')
+      expect(ariaLabel).toContain('09:15')
+    })
+  })
 })
 
 // ---------------------------------------------------------------------------

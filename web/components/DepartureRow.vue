@@ -35,7 +35,7 @@
       </span>
       <span
         v-if="showScheduledTime"
-        class="text-xs text-gray-400 tabular-nums"
+        class="text-xs text-gray-400 dark:text-gray-500 tabular-nums"
         :aria-label="`${s.scheduledTime} ${departure.time}`"
       >
         {{ departure.time }}

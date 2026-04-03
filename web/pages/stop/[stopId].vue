@@ -56,6 +56,17 @@
         </div>
       </div>
 
+      <div v-if="servingRoutes.length > 1" class="flex flex-wrap gap-2 mb-4">
+        <LineBadge
+          v-for="route in servingRoutes"
+          :key="route.id"
+          :name="route.name"
+          :color="route.color"
+          :text-color="route.textColor"
+          :locale="config?.locale[0]"
+        />
+      </div>
+
       <!-- Sezione "Adesso" -->
       <section class="mb-6" aria-labelledby="section-adesso">
         <h2
@@ -214,6 +225,21 @@ const dayGroups = computed<DayGroup[]>(() =>
 const todayKey = computed(() =>
   stop.value ? getTodayDayGroupKey(stop.value.departures, config.value?.timezone) : null,
 )
+
+// Linee che servono effettivamente questa fermata, derivate dai dati di partenza
+const servingRoutes = computed((): Route[] => {
+  if (!stop.value || !schedules.value) return []
+  const routeIds = new Set<string>()
+  for (const deps of Object.values(stop.value.departures)) {
+    for (const dep of deps) {
+      const lineIdx = Number(dep[1])
+      const routeId = schedules.value!.routeIds[lineIdx]
+      if (routeId) routeIds.add(routeId)
+    }
+  }
+  const routeMap = new Map(schedules.value.routes.map(r => [r.id, r]))
+  return [...routeIds].map(id => routeMap.get(id)).filter((r): r is Route => r !== undefined)
+})
 
 // Badge linee risolte dalle route
 const stopRoutes = computed(() => {

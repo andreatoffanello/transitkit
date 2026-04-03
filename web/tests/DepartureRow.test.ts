@@ -190,19 +190,13 @@ describe('scheduled time display', () => {
     expect(showScheduledTime(dep)).toBe(true)
   })
 
-  it('scheduled time value is departure.time (the original scheduled time string)', () => {
-    const dep = makeDeparture({ time: '14:32', minutesFromMidnight: 872, realtimeDelay: 300 })
-    // The component renders departure.time as the scheduled time label
-    expect(dep.time).toBe('14:32')
-  })
-
   describe('scheduledTime label strings', () => {
     // These tests verify the s.scheduledTime label used in the aria-label of the
     // scheduled time block: `${s.scheduledTime} ${departure.time}`
 
     it('with realtimeDelay=300 (5 min late), aria-label contains "orario prev." and original time', () => {
       const dep = makeDeparture({ time: '08:30', minutesFromMidnight: 510, realtimeDelay: 300 })
-      const s = getStrings() // default IT locale
+      const s = getStrings(undefined) // default IT locale
       // Mirrors the component aria-label: `${s.scheduledTime} ${departure.time}`
       const ariaLabel = `${s.scheduledTime} ${dep.time}`
       expect(ariaLabel).toContain('orario prev.')
@@ -215,7 +209,7 @@ describe('scheduled time display', () => {
       const show = dep.realtimeDelay !== undefined && dep.realtimeDelay !== 0
       expect(show).toBe(false)
       // Confirm the IT label string exists in strings util
-      const s = getStrings()
+      const s = getStrings(undefined)
       expect(s.scheduledTime).toBe('orario prev.')
     })
 

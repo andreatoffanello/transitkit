@@ -125,13 +125,17 @@
               v-if="departures.length"
               class="bg-white dark:bg-white/5 rounded-2xl px-4"
             >
-              <DepartureRow
-                v-for="dep in departures"
+              <div
+                v-for="(dep, index) in departures"
                 :key="dep.id"
-                :departure="dep"
-                :now="now"
-                :locale="config?.locale[0]"
-              />
+                :data-departure-future="dep.minutesFromMidnight >= nowMin && departures.findIndex((d: Departure) => d.minutesFromMidnight >= nowMin) === index ? 'true' : undefined"
+              >
+                <DepartureRow
+                  :departure="dep"
+                  :now="now"
+                  :locale="config?.locale[0]"
+                />
+              </div>
             </div>
             <div
               v-else
@@ -169,6 +173,7 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, nextTick } from 'vue'
 import { decodeDepartures, getTodayDayGroupKey, parseDayGroup } from '~/utils/schedule'
 import type { DayGroup, Departure, ScheduleStop, Route } from '~/types'
 
@@ -217,11 +222,21 @@ const stopRoutes = computed(() => {
 // Tick ogni 30s per aggiornare countdown
 const now = ref(Date.now())
 let interval: ReturnType<typeof setInterval>
-onMounted(() => {
+onMounted(async () => {
   now.value = Date.now()
   interval = setInterval(() => { now.value = Date.now() }, 30_000)
+  await nextTick()
+  const el = document.querySelector<HTMLElement>('[data-departure-future="true"]')
+  el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
 })
 onUnmounted(() => clearInterval(interval))
+
+// Minutes since midnight — used to mark the first upcoming departure in the schedule
+const nowMin = computed(() => {
+  const midnight = new Date()
+  midnight.setHours(0, 0, 0, 0)
+  return Math.floor((Date.now() - midnight.getTime()) / 60_000)
+})
 
 // Real-time — client-side con fallback silenzioso
 const todayDepartures = computed<Departure[]>(() => {

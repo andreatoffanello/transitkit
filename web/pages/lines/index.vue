@@ -73,7 +73,7 @@
         <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">
           {{ transitTypeLabel(type) }}
         </h2>
-        <div class="flex flex-wrap gap-2" role="list" :aria-label="`Linee ${transitTypeLabel(type)}`">
+        <div class="flex flex-wrap gap-2" role="list" :aria-label="`${s.ariaLinesOfTypePrefix} ${transitTypeLabel(type)}`">
           <NuxtLink
             v-for="route in routes"
             :key="route.id"

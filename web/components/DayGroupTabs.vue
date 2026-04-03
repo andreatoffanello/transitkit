@@ -2,7 +2,7 @@
   <div>
     <div
       role="tablist"
-      :aria-label="strings?.ariaDayGroupTabs ?? 'Gruppi orari'"
+      :aria-label="strings?.ariaDayGroupTabs"
       class="flex gap-1 mb-4 overflow-x-auto pb-1"
     >
       <button

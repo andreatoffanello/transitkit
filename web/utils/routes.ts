@@ -24,8 +24,8 @@ export function filterRoutes(
   return result
 }
 
-export function sortRoutes(routes: Route[]): Route[] {
+export function sortRoutes(routes: Route[], locale?: string): Route[] {
   return [...routes].sort((a, b) =>
-    a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+    a.name.localeCompare(b.name, locale, { numeric: true, sensitivity: 'base' })
   )
 }

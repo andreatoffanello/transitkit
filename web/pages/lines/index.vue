@@ -136,7 +136,10 @@ const availableTypes = computed(() => {
 })
 
 const filteredRoutes = computed(() =>
-  sortRoutes(filterRoutes(allRoutes.value, selectedType.value, searchQuery.value)),
+  sortRoutes(
+    filterRoutes(allRoutes.value, selectedType.value, searchQuery.value),
+    config.value?.locale?.[0],
+  )
 )
 
 // Count unique stop IDs per route across all directions

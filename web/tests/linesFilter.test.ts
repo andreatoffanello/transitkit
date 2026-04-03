@@ -129,4 +129,9 @@ describe('sortRoutes', () => {
     const input = [makeRoute('42')]
     expect(sortRoutes(input)).toHaveLength(1)
   })
+
+  it('accepts an optional locale parameter without error', () => {
+    const input = ['2', '1', '10'].map(makeRoute)
+    expect(sortRoutes(input, 'it').map(r => r.name)).toEqual(['1', '2', '10'])
+  })
 })

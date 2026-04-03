@@ -552,10 +552,14 @@ struct StopDetailView: View {
                 ForEach(Array(departures.enumerated()), id: \.element.id) { index, dep in
                     let isFirst = index == 0
 
-                    DepartureRowContent(departure: dep, isFirst: isFirst, hasDocks: !stop.docks.isEmpty)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, isFirst ? 14 : 10)
-                        .contentShape(Rectangle())
+                    NavigationLink(value: TripTarget(departure: dep, fromStop: stop)) {
+                        DepartureRowContent(departure: dep, isFirst: isFirst, hasDocks: !stop.docks.isEmpty)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, isFirst ? 14 : 10)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("departure_row_\(dep.id)")
 
                     if index < departures.count - 1 {
                         Divider()

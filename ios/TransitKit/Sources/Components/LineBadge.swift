@@ -101,7 +101,7 @@ struct LineBadge: View {
     /// via WCAG luminance. Custom colors are kept only when they pass the WCAG 4.5:1
     /// contrast ratio against the badge background; otherwise the computed contrast is used.
     private static func resolvedTextColor(_ textColor: String, background: String) -> String {
-        let sentinels: Set<String> = ["", "000000", "FFFFFF", "#000000", "#FFFFFF"]
+        let sentinels: Set<String> = ["", "#", "000000", "FFFFFF", "#000000", "#FFFFFF"]
         // For sentinel/generic values, always compute WCAG contrast
         if sentinels.contains(textColor) {
             return contrastingTextColor(for: background)

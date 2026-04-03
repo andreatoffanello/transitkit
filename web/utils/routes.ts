@@ -23,3 +23,9 @@ export function filterRoutes(
   }
   return result
 }
+
+export function sortRoutes(routes: Route[]): Route[] {
+  return [...routes].sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+  )
+}

@@ -111,7 +111,7 @@
 
 <script setup lang="ts">
 import type { TransitType } from '~/types'
-import { filterRoutes } from '~/utils/routes'
+import { filterRoutes, sortRoutes } from '~/utils/routes'
 
 const { config, schedules, pending } = await useOperator()
 const s = useStrings(config)
@@ -136,7 +136,7 @@ const availableTypes = computed(() => {
 })
 
 const filteredRoutes = computed(() =>
-  filterRoutes(allRoutes.value, selectedType.value, searchQuery.value),
+  sortRoutes(filterRoutes(allRoutes.value, selectedType.value, searchQuery.value)),
 )
 
 // Count unique stop IDs per route across all directions

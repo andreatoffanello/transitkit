@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { filterRoutes } from '~/utils/routes'
+import { filterRoutes, sortRoutes } from '~/utils/routes'
 import type { Route } from '~/types'
 
 function makeRoute(overrides: Partial<Route> & { id: string; name: string; transitType: Route['transitType'] }): Route {
@@ -95,5 +95,38 @@ describe('filterRoutes', () => {
     const copy = [...ALL]
     filterRoutes(ALL, 'bus', 'centro')
     expect(ALL).toEqual(copy)
+  })
+})
+
+describe('sortRoutes', () => {
+  const makeRoute = (name: string) => ({
+    id: name, name, color: '#000', textColor: '#fff', transitType: 'bus' as const,
+    directions: [], shortName: name,
+  })
+
+  it('sorts numerically, not lexicographically', () => {
+    const input = ['10', '2', '1', '11'].map(makeRoute)
+    expect(sortRoutes(input).map(r => r.name)).toEqual(['1', '2', '10', '11'])
+  })
+
+  it('sorts mixed alpha-numeric', () => {
+    const input = ['B', 'A', '2', '1'].map(makeRoute)
+    expect(sortRoutes(input).map(r => r.name)).toEqual(['1', '2', 'A', 'B'])
+  })
+
+  it('handles empty array', () => {
+    expect(sortRoutes([])).toEqual([])
+  })
+
+  it('does not mutate input array', () => {
+    const input = ['2', '1'].map(makeRoute)
+    const original = [...input]
+    sortRoutes(input)
+    expect(input.map(r => r.name)).toEqual(original.map(r => r.name))
+  })
+
+  it('handles single element', () => {
+    const input = [makeRoute('42')]
+    expect(sortRoutes(input)).toHaveLength(1)
   })
 })

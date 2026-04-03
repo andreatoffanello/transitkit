@@ -4,9 +4,9 @@
       :primary-color="config?.theme.primaryColor"
       :text-color="config?.theme.textOnPrimary"
       back-to="/"
+      :back-text="config?.name ?? ''"
       :back-label="s.backToHome"
-      :back-text="s.backToHome"
-      :title="config?.name ?? ''"
+      :title="s.pageNotFound"
     />
 
     <div role="alert" class="text-center py-16 text-gray-400">

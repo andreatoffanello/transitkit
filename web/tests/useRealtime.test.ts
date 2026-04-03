@@ -368,3 +368,58 @@ describe('useRealtime — isLoading and refresh()', () => {
     expect(isLoading.value).toBe(false)
   })
 })
+
+describe('useRealtime — lastUpdated', () => {
+  let mountedCallback: (() => Promise<void>) | undefined
+
+  beforeEach(async () => {
+    vi.resetModules()
+    mountedCallback = undefined
+
+    // Re-stub Nuxt auto-imports
+    vi.stubGlobal('ref', vi.fn((v: unknown) => ({ value: v })))
+    vi.stubGlobal('watch', vi.fn())
+    vi.stubGlobal('computed', vi.fn((fn: () => unknown) => ({ value: fn() })))
+    vi.stubGlobal('onMounted', vi.fn((cb: () => Promise<void>) => { mountedCallback = cb }))
+    vi.stubGlobal('onUnmounted', vi.fn())
+
+    // Provide a minimal mock document for the composable
+    vi.stubGlobal('document', {
+      hidden: false,
+      visibilityState: 'visible',
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('lastUpdated.value is null before any poll is called', async () => {
+    const { useRealtime } = await import('~/composables/useRealtime')
+    const deps = { value: [] as Departure[] }
+
+    const { lastUpdated } = useRealtime(deps as any, 'https://example.com/gtfs-rt')
+
+    expect(lastUpdated.value).toBeNull()
+  })
+
+  it('lastUpdated.value matches HH:MM format after poll() resolves', async () => {
+    const { useRealtime } = await import('~/composables/useRealtime')
+
+    // fetch fails with a non-ok response; lastUpdated is still set in the finally block
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+    } as Response))
+
+    const deps = { value: [] as Departure[] }
+    const result = useRealtime(deps as any, 'https://example.com/gtfs-rt')
+
+    // Trigger the mounted lifecycle to run poll()
+    await mountedCallback!()
+
+    expect(result.lastUpdated.value).toMatch(/^\d{2}:\d{2}$/)
+  })
+})

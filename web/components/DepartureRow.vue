@@ -7,6 +7,12 @@
       :locale="locale"
     />
 
+    <span
+      v-if="transitTypeIcon"
+      aria-hidden="true"
+      class="text-base shrink-0"
+    >{{ transitTypeIcon }}</span>
+
     <span class="flex-1 text-sm text-gray-900 dark:text-gray-100 truncate">
       {{ departure.headsign }}
       <span v-if="departure.dock" class="text-gray-400 text-xs ml-1">
@@ -42,6 +48,18 @@ const props = defineProps<{
 }>()
 
 const s = computed(() => getStrings(props.locale))
+
+const TRANSIT_ICONS: Record<string, string> = {
+  bus: '🚌',
+  tram: '🚃',
+  rail: '🚆',
+  ferry: '⛴️',
+  subway: '🚇',
+}
+
+const transitTypeIcon = computed(() =>
+  props.departure.transitType ? TRANSIT_ICONS[props.departure.transitType] ?? null : null
+)
 
 function effectiveMinutes(nowMs: number): number {
   // Use pre-computed minutesFromMidnight instead of re-parsing the time string

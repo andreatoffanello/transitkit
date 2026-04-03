@@ -108,7 +108,7 @@ struct TripDetailView: View {
                     let isTerminal = index == 0 || index == stops.count - 1
                     let isOrigin = index == origin
                     let isPast = index < origin
-                    let dotSize: CGFloat = isTerminal || isOrigin ? 12 : 8
+                    let dotSize: CGFloat = isOrigin ? 14 : (isTerminal ? 12 : 8)
 
                     timelineRow(
                         stop: stop,
@@ -165,6 +165,11 @@ struct TripDetailView: View {
                     .overlay(
                         Circle().fill(.white).frame(width: isTerminal || isOrigin ? 5 : 0)
                     )
+                    .overlay(
+                        isOrigin && !isTerminal
+                            ? AnyView(Circle().stroke(lineColor, lineWidth: 2).frame(width: dotSize + 6, height: dotSize + 6))
+                            : AnyView(EmptyView())
+                    )
             }
             .frame(width: 20)
             .frame(minHeight: 40)
@@ -172,10 +177,21 @@ struct TripDetailView: View {
 
             // Stop info
             VStack(alignment: .leading, spacing: 1) {
-                Text(stop.name)
-                    .font(.system(size: 15, weight: isTerminal || isOrigin ? .semibold : .regular))
-                    .foregroundStyle(isPast ? AppTheme.textTertiary : isOrigin ? lineColor : AppTheme.textPrimary)
-                    .lineLimit(1)
+                HStack(spacing: 6) {
+                    Text(stop.name)
+                        .font(.system(size: 15, weight: isTerminal || isOrigin ? .semibold : .regular))
+                        .foregroundStyle(isPast ? AppTheme.textTertiary : isOrigin ? lineColor : AppTheme.textPrimary)
+                        .lineLimit(1)
+
+                    if isOrigin {
+                        Text("Now")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(lineColor, in: Capsule())
+                    }
+                }
 
                 // Coincidence badges
                 if !otherLines.isEmpty && !isPast {

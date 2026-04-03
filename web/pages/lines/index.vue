@@ -116,16 +116,29 @@ import { filterRoutes, sortRoutes } from '~/utils/routes'
 const { config, schedules, pending } = await useOperator()
 const s = useStrings(config)
 
-const selectedType = ref<string | null>(null)
-const searchQuery = ref('')
+const route = useRoute()
+const router = useRouter()
+
+const searchQuery = computed({
+  get: () => String(route.query.q ?? ''),
+  set: (val: string) => {
+    router.replace({ query: { ...route.query, q: val || undefined } })
+  },
+})
+
+const selectedType = computed({
+  get: () => (route.query.type ? String(route.query.type) : null),
+  set: (val: string | null) => {
+    router.replace({ query: { ...route.query, type: val ?? undefined } })
+  },
+})
 
 function transitTypeLabel(type: string): string {
   return s.value.transitTypes[type as TransitType] ?? type
 }
 
 function clearFilters() {
-  searchQuery.value = ''
-  selectedType.value = null
+  router.replace({ query: {} })
 }
 
 const allRoutes = computed(() => schedules.value?.routes ?? [])

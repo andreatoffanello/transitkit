@@ -123,18 +123,23 @@
           {{ s.updatedAt }} {{ realtimeLastUpdated }}
         </span>
 
-        <div
+        <ul
           v-if="upcomingDepartures.length"
-          class="bg-white dark:bg-white/5 rounded-2xl px-4 divide-y divide-gray-100 dark:divide-white/5"
+          role="list"
+          class="bg-white dark:bg-white/5 rounded-2xl px-4 divide-y divide-gray-100 dark:divide-white/5 list-none p-0 m-0"
         >
-          <DepartureRow
+          <li
             v-for="dep in upcomingDepartures"
             :key="dep.id"
-            :departure="dep"
-            :now="now"
-            :locale="config?.locale[0]"
-          />
-        </div>
+            class="list-none"
+          >
+            <DepartureRow
+              :departure="dep"
+              :now="now"
+              :locale="config?.locale[0]"
+            />
+          </li>
+        </ul>
         <div v-else class="text-sm text-gray-400 py-4">
           <p>{{ s.noDepartures }}</p>
           <p v-if="nextDepartureTodayHint" class="text-xs text-gray-400 mt-1">
@@ -190,13 +195,15 @@
           :strings="s"
         >
           <template #default="{ departures }">
-            <div
+            <ul
               v-if="departures.length"
-              class="bg-white dark:bg-white/5 rounded-2xl px-4"
+              role="list"
+              class="bg-white dark:bg-white/5 rounded-2xl px-4 list-none p-0 m-0"
             >
-              <div
+              <li
                 v-for="(dep, index) in departures"
                 :key="dep.id"
+                class="list-none"
                 :data-departure-future="dep.minutesFromMidnight >= nowMin && departures.findIndex((d: Departure) => d.minutesFromMidnight >= nowMin) === index ? 'true' : undefined"
               >
                 <DepartureRow
@@ -204,8 +211,8 @@
                   :now="now"
                   :locale="config?.locale[0]"
                 />
-              </div>
-            </div>
+              </li>
+            </ul>
             <div
               v-else
               class="text-center py-12 text-gray-400"

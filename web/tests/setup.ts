@@ -4,6 +4,11 @@ import { vi } from 'vitest'
 // I test che ne hanno bisogno possono sovrascrivere questi stub localmente
 vi.stubGlobal('useState', vi.fn((_, init) => ({ value: init?.() })))
 vi.stubGlobal('useAsyncData', vi.fn())
+vi.stubGlobal('useRuntimeConfig', vi.fn(() => ({
+  public: {
+    cdnBase: process.env.CDN_BASE ?? 'https://andreatoffanello.github.io/transitkit-data',
+  },
+})))
 vi.stubGlobal('$fetch', vi.fn())
 vi.stubGlobal('useRequestURL', vi.fn(() => new URL('http://appalcart.transitkit.app/')))
 vi.stubGlobal('defineNuxtRouteMiddleware', vi.fn((fn) => fn))

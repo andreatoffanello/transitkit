@@ -1,5 +1,9 @@
 import type { Route } from '~/types'
 
+function normalize(s: string): string {
+  return s.normalize('NFD').replace(/\p{Mn}/gu, '').toLowerCase()
+}
+
 /**
  * Pure function for filtering routes by transit type and/or search query.
  * Used by lines/index.vue and its unit tests.
@@ -13,12 +17,12 @@ export function filterRoutes(
   if (selectedType) {
     result = result.filter(r => r.transitType === selectedType)
   }
-  const q = searchQuery.trim().toLowerCase()
+  const q = normalize(searchQuery.trim())
   if (q) {
     result = result.filter(
       r =>
-        r.name.toLowerCase().includes(q) ||
-        r.longName?.toLowerCase().includes(q),
+        normalize(r.name).includes(q) ||
+        (r.longName !== undefined && normalize(r.longName).includes(q)),
     )
   }
   return result

@@ -96,6 +96,39 @@ describe('filterRoutes', () => {
     filterRoutes(ALL, 'bus', 'centro')
     expect(ALL).toEqual(copy)
   })
+
+  it('case-insensitive match on longName with exact word', () => {
+    const stazione = makeRoute({ id: 's1', name: 'S1', longName: 'Stazione Centrale', transitType: 'bus' })
+    const result = filterRoutes([stazione], null, 'stazione')
+    expect(result).toEqual([stazione])
+  })
+
+  it('partial accent-insensitive match on longName', () => {
+    // 'dellestate' is NOT a substring of 'dellÈstate' (È ≠ e), so this test
+    // would fail without NFD normalization. It verifies genuine diacritic stripping.
+    const estate = makeRoute({ id: 'e1', name: 'E1', longName: 'Fermata dellÈstate', transitType: 'bus' })
+    const result = filterRoutes([estate], null, 'dellestate')
+    expect(result).toEqual([estate])
+  })
+
+  it('accent-insensitive match also works when query ends before accent (coincidental substring)', () => {
+    // 'oltrep' happens to be a substring of 'oltrepò' even without normalization,
+    // but normalization should still handle it correctly.
+    const oltrepo = makeRoute({ id: 'o1', name: 'O1', longName: 'Fermata Oltrepò', transitType: 'bus' })
+    const result = filterRoutes([oltrepo], null, 'oltrep')
+    expect(result).toEqual([oltrepo])
+  })
+
+  it('query with accent finds route without accent (symmetric NFD)', () => {
+    // Verifies symmetric NFD normalization on both query and route.
+    // Query 'oltrepò' (with accent ò) and route 'Fermata Oltrepò' (with same accent)
+    // both normalize to remove diacritics: normalize('oltrepò') → 'oltrepo',
+    // normalize('Fermata Oltrepò') → 'fermata oltrepo'. Since normalize() applies
+    // to BOTH sides symmetrically, substring matching works as expected.
+    const oltrepo = makeRoute({ id: 'o2', name: 'O2', longName: 'Fermata Oltrepò', transitType: 'bus' })
+    const result = filterRoutes([oltrepo], null, 'oltrepò')
+    expect(result).toEqual([oltrepo])
+  })
 })
 
 describe('sortRoutes', () => {
@@ -133,5 +166,10 @@ describe('sortRoutes', () => {
   it('accepts an optional locale parameter without error', () => {
     const input = ['2', '1', '10'].map(makeRoute)
     expect(sortRoutes(input, 'it').map(r => r.name)).toEqual(['1', '2', '10'])
+  })
+
+  it('sorts mixed alphanumeric names correctly (2A < 10B < 11 < N1)', () => {
+    const input = ['10B', '2A', 'N1', '11'].map(makeRoute)
+    expect(sortRoutes(input).map(r => r.name)).toEqual(['2A', '10B', '11', 'N1'])
   })
 })

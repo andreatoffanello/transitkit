@@ -18,7 +18,7 @@
           : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/20'"
         @click="selected = dg.id"
       >
-        {{ strings ? getDayGroupLabel(dg, strings) : dg.displayLabel }}
+        {{ strings ? getDayGroupLabel(dg, strings) : dg.displayLabel }}<template v-if="(departuresByDayGroup[dg.id]?.length ?? 0) > 0"> <span class="tabular-nums">({{ departuresByDayGroup[dg.id]!.length }})</span></template>
       </button>
     </div>
 

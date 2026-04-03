@@ -1,0 +1,32 @@
+{
+  "id": "appalcart",
+  "name": "AppalCart",
+  "fullName": "AppalCart Demo",
+  "region": "Emilia-Romagna, IT",
+  "country": "IT",
+  "url": "https://appalcart.it",
+  "locale": ["it"],
+  "timezone": "Europe/Rome",
+  "theme": {
+    "primaryColor": "#1e40af",
+    "accentColor": "#f59e0b",
+    "textOnPrimary": "#ffffff"
+  },
+  "store": {
+    "title": "AppalCart Orari",
+    "subtitle": "Orari autobus in tempo reale",
+    "keywords": "autobus, orari, trasporto pubblico, Carpi"
+  },
+  "map": {
+    "centerLat": 44.781,
+    "centerLng": 10.883,
+    "defaultZoom": 13
+  },
+  "features": {
+    "enableMap": true,
+    "enableGeolocation": true,
+    "enableFavorites": true,
+    "enableNotifications": false
+  },
+  "operators": [{ "id": "appalcart", "name": "AppalCart" }]
+}

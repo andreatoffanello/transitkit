@@ -135,6 +135,9 @@ export interface AppStrings {
   // Stop page — copy link fallback (desktop)
   copyLink: string
   copiedFeedback: string
+
+  // Accessibility
+  skipToContent: string
 }
 
 const IT: AppStrings = {
@@ -215,6 +218,7 @@ const IT: AppStrings = {
   updatedAt: 'Aggiornato alle',
   copyLink: 'Copia link',
   copiedFeedback: 'Copiato!',
+  skipToContent: 'Vai al contenuto principale',
 }
 
 const EN: AppStrings = {
@@ -295,6 +299,7 @@ const EN: AppStrings = {
   updatedAt: 'Updated at',
   copyLink: 'Copy link',
   copiedFeedback: 'Copied!',
+  skipToContent: 'Skip to main content',
 }
 
 const STRINGS: Record<Locale, AppStrings> = { it: IT, en: EN }

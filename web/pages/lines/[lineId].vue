@@ -33,11 +33,12 @@
       <!-- Direction switcher -->
       <div v-if="route.directions.length > 1" class="flex gap-2 mb-4" role="tablist" :aria-label="s.ariaDirections">
         <button
-          v-for="dir in route.directions"
+          v-for="(dir, dirIdx) in route.directions"
           :key="dir.id"
           role="tab"
           :aria-selected="selectedDirectionId === dir.id"
           aria-controls="direction-panel"
+          :aria-label="dir.headsign ?? `${s.ariaDirections} ${dirIdx + 1}`"
           class="flex-1 py-2 rounded-xl text-sm font-medium transition-colors"
           :class="selectedDirectionId === dir.id
             ? 'text-white'
@@ -62,11 +63,14 @@
         class="space-y-1"
       >
         <NuxtLink
-          v-for="stop in currentStops"
+          v-for="(stop, index) in currentStops"
           :key="stop.id"
           :to="`/stop/${stop.id}`"
           class="flex items-center gap-3 py-3 px-4 bg-white dark:bg-white/5 rounded-xl hover:bg-gray-50 dark:hover:bg-white/10 transition-colors"
         >
+          <span class="text-xs font-mono text-gray-400 dark:text-gray-500 w-6 shrink-0 text-right tabular-nums">
+            {{ index + 1 }}
+          </span>
           <span class="w-2 h-2 rounded-full shrink-0" :style="{ backgroundColor: normalizeHex(route.color) }" aria-hidden="true" />
           <span class="text-sm">{{ stop.name }}</span>
           <span class="ml-auto text-gray-400 text-xs" aria-hidden="true">→</span>
@@ -81,6 +85,17 @@
         <p class="font-semibold text-gray-600 dark:text-gray-300 mb-1">{{ s.noStopsFound }}</p>
         <p class="text-sm">{{ s.noStopsFoundHint }}</p>
       </div>
+      <!-- Share footer -->
+      <footer v-if="canShare" class="mt-8">
+        <button
+          type="button"
+          class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition-colors active:scale-95 duration-100"
+          :aria-label="s.shareStop"
+          @click="shareLine"
+        >
+          📤 {{ s.shareStop }}
+        </button>
+      </footer>
     </template>
 
     <div v-else role="alert" class="text-center py-16 text-gray-400">
@@ -93,6 +108,7 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { normalizeHex } from '~/utils/color'
 import type { Route, RouteDirection, ScheduleStop } from '~/types'
 
@@ -101,6 +117,22 @@ const lineId = computed(() => String(nuxtRoute.params.lineId))
 
 const { config, schedules, pending } = await useOperator()
 const s = useStrings(config)
+
+// Web Share API
+const canShare = ref(false)
+onMounted(() => {
+  canShare.value = typeof navigator !== 'undefined' && 'share' in navigator
+})
+
+async function shareLine() {
+  if (!route.value || !canShare.value) return
+  try {
+    await navigator.share({
+      title: route.value.longName ?? route.value.name,
+      url: window.location.href,
+    })
+  } catch { /* user cancelled or not supported */ }
+}
 
 const route = computed(() =>
   schedules.value?.routes.find((r: Route) => r.id === lineId.value) ?? null,
@@ -140,7 +172,12 @@ useHead({
   title: computed(() => {
     const lineName = route.value?.longName ?? route.value?.name ?? ''
     const op = config.value?.fullName ?? config.value?.name ?? ''
-    return lineName ? `${lineName} — ${op}` : op
+    const currentDir = route.value?.directions.find((d: RouteDirection) => d.id === selectedDirectionId.value)
+    const headsign = currentDir?.headsign
+
+    if (!lineName) return op
+    if (headsign) return `${lineName} → ${headsign} — ${op}`
+    return `${lineName} — ${op}`
   }),
   meta: [
     {
@@ -152,8 +189,21 @@ useHead({
       content: computed(() => {
         const lineName = route.value?.longName ?? route.value?.name ?? ''
         const op = config.value?.fullName ?? config.value?.name ?? ''
-        return `${lineName} — ${s.value.stopsAndSchedules}${op ? ` — ${op}` : ''}`
+        const currentDir = route.value?.directions.find((d: RouteDirection) => d.id === selectedDirectionId.value)
+        const headsign = currentDir?.headsign
+        const stopCount = currentStops.value.length
+
+        let desc = lineName
+        if (headsign) desc += ` → ${headsign}`
+        if (stopCount > 0) desc += ` · ${stopCount} ${s.value.stops}`
+        desc += ` · ${s.value.stopsAndSchedules}`
+        if (op) desc += ` — ${op}`
+        return desc
       }),
+    },
+    {
+      name: 'robots',
+      content: computed(() => (!pending.value && !route.value) ? 'noindex, nofollow' : 'index, follow'),
     },
   ],
 })

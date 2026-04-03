@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getDayGroupLabel, getNextServiceDayGroupKey, computeNowMin, getNextDeparture } from '~/utils/schedule'
 import { getStrings } from '~/utils/strings'
 import type { ScheduleData } from '~/types'
@@ -219,6 +219,66 @@ describe('getTodayDayGroupKey', () => {
     const key = getTodayDayGroupKey(departures as any, 'Invalid/Timezone')
     expect(key).toBe('mon,tue,wed,thu,fri')
     vi.restoreAllMocks()
+  })
+})
+
+describe('getTodayDayGroupKey — timezone', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('Europe/Rome — Monday morning: 09:00 UTC is 10:00 in Rome (same day)', () => {
+    // 2024-01-08T09:00:00Z = Monday Jan 8 in UTC; 10:00 in Rome (UTC+1) → still Monday
+    vi.setSystemTime(new Date('2024-01-08T09:00:00Z').getTime())
+    const departures: Record<string, (string | number)[][]> = {
+      'mon,tue,wed,thu,fri': [['08:00', 0, 0]],
+      'sat,sun': [['10:00', 0, 0]],
+    }
+    const key = getTodayDayGroupKey(departures, 'Europe/Rome')
+    expect(key).toBe('mon,tue,wed,thu,fri')
+  })
+
+  it('Europe/Rome — midnight boundary: 23:30 UTC is 00:30 Tuesday in Rome', () => {
+    // 2024-01-08T23:30:00Z = Monday in UTC, but 00:30 on Tuesday Jan 9 in Rome (UTC+1)
+    vi.setSystemTime(new Date('2024-01-08T23:30:00Z').getTime())
+    const departures: Record<string, (string | number)[][]> = {
+      'mon,tue,wed,thu,fri': [['08:00', 0, 0]],
+      'sat,sun': [['10:00', 0, 0]],
+    }
+    // With Europe/Rome → Tuesday → matches 'mon,tue,wed,thu,fri'
+    const keyRome = getTodayDayGroupKey(departures, 'Europe/Rome')
+    expect(keyRome).toBe('mon,tue,wed,thu,fri')
+
+    // Without timezone (UTC) → Monday → also matches 'mon,tue,wed,thu,fri'
+    // but the day name in UTC is still 'mon', so let's verify it returns the weekday key
+    const keyUtc = getTodayDayGroupKey(departures)
+    expect(keyUtc).toBe('mon,tue,wed,thu,fri')
+  })
+
+  it('Europe/Rome — midnight boundary: distinguishes sun from sat at 23:30 UTC on Jan 13', () => {
+    // 2024-01-13T23:30:00Z:
+    //   - Europe/Rome (UTC+1): 00:30 on Sunday Jan 14 → getDay() returns 0 (sun)
+    //   - UTC: still Saturday Jan 13 → but resolveTodayIndex() uses new Date().getDay()
+    //     which returns the local day, so on a UTC+1 machine it also returns 0 (sun)
+    // To get a clear timezone split, use America/New_York (UTC-5): still Saturday there
+    vi.setSystemTime(new Date('2024-01-14T03:30:00Z').getTime())
+    // UTC+1 (Rome): 04:30 Sunday Jan 14 → sun
+    // America/New_York (UTC-5): 22:30 Saturday Jan 13 → sat
+    const departures: Record<string, (string | number)[][]> = {
+      'sat': [['10:00', 0, 0]],
+      'sun': [['11:00', 0, 0]],
+    }
+    // Europe/Rome → Sunday → returns 'sun'
+    const keyRome = getTodayDayGroupKey(departures, 'Europe/Rome')
+    expect(keyRome).toBe('sun')
+
+    // America/New_York → Saturday → returns 'sat'
+    const keyNY = getTodayDayGroupKey(departures, 'America/New_York')
+    expect(keyNY).toBe('sat')
   })
 })
 

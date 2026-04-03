@@ -106,18 +106,33 @@
               :prefetch="false"
               :aria-current="nuxtRoute.query.stop === stop.id ? 'location' : undefined"
               class="flex items-center gap-3 py-3 px-2 rounded-xl relative transition-opacity duration-150 active:opacity-70"
+              :style="nuxtRoute.query.stop === stop.id
+                ? 'background-color: color-mix(in srgb, var(--color-primary) 8%, transparent)'
+                : ''"
             >
+              <!-- Terminal stops: primary ring; intermediate: numbered dot -->
               <div
-                class="w-4 h-4 rounded-full border-2 shrink-0 z-10"
+                class="shrink-0 z-10 flex items-center justify-center rounded-full border-2"
+                :class="index === 0 || index === currentStops.length - 1 ? 'w-4 h-4' : 'w-5 h-5'"
                 :style="index === 0 || index === currentStops.length - 1
                   ? 'border-color: var(--color-primary); background-color: var(--bg-primary)'
-                  : 'border-color: var(--border); background-color: var(--bg-secondary)'"
+                  : nuxtRoute.query.stop === stop.id
+                    ? 'border-color: var(--color-primary); background-color: var(--color-primary)'
+                    : 'border-color: var(--border); background-color: var(--bg-secondary)'"
                 aria-hidden="true"
-              />
+              >
+                <span
+                  v-if="index !== 0 && index !== currentStops.length - 1"
+                  class="text-[8px] font-bold leading-none"
+                  :style="nuxtRoute.query.stop === stop.id ? 'color: #fff' : 'color: var(--text-tertiary)'"
+                >{{ index + 1 }}</span>
+              </div>
               <span
                 class="flex-1 text-[15px] truncate"
                 :class="index === 0 || index === currentStops.length - 1 ? 'font-semibold' : 'font-medium'"
-                style="color: var(--text-primary)"
+                :style="nuxtRoute.query.stop === stop.id
+                  ? 'color: var(--color-primary); font-weight: 600'
+                  : 'color: var(--text-primary)'"
               >
                 {{ stop.name }}
               </span>

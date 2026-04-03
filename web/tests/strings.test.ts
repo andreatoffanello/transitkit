@@ -130,4 +130,9 @@ describe('getStrings', () => {
     expect(getStrings('it').updatedAt).toBe('Aggiornato alle')
     expect(getStrings('en').updatedAt).toBe('Updated at')
   })
+
+  it('onboardingHint: IT and EN', () => {
+    expect(getStrings('it').onboardingHint).toBe('Cerca le linee per trovare e salvare le tue fermate preferite')
+    expect(getStrings('en').onboardingHint).toBe('Browse lines to find and save your favourite stops')
+  })
 })

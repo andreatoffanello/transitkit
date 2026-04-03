@@ -55,6 +55,10 @@ export interface AppStrings {
     funicular: string; trolleybus: string; monorail: string
   }
 
+  // Empty state
+  noDeparturesToday: string
+  noDeparturesHint: string
+
   // Aria labels
   ariaLoading: string
   ariaLinesAtStop: string
@@ -106,6 +110,8 @@ const IT: AppStrings = {
     ferry: 'Ferry', cable_tram: 'Funivia', gondola: 'Gondola',
     funicular: 'Funicolare', trolleybus: 'Filobus', monorail: 'Monorotaia',
   },
+  noDeparturesToday: 'Nessuna partenza oggi',
+  noDeparturesHint: 'Non ci sono corse programmate per oggi su questa fermata.',
   ariaLoading: 'Caricamento',
   ariaLinesAtStop: 'Linee che fermano qui',
   ariaDayGroupTabs: 'Gruppi orari',
@@ -154,6 +160,8 @@ const EN: AppStrings = {
     ferry: 'Ferry', cable_tram: 'Cable Car', gondola: 'Gondola',
     funicular: 'Funicular', trolleybus: 'Trolleybus', monorail: 'Monorail',
   },
+  noDeparturesToday: 'No departures today',
+  noDeparturesHint: 'There are no scheduled trips for today at this stop.',
   ariaLoading: 'Loading',
   ariaLinesAtStop: 'Lines stopping here',
   ariaDayGroupTabs: 'Schedule groups',

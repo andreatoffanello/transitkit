@@ -124,9 +124,13 @@
                 :locale="config?.locale[0]"
               />
             </div>
-            <p v-else class="text-sm text-gray-400 py-4">
-              {{ s.noSchedule }}
-            </p>
+            <div
+              v-else
+              class="text-center py-12 text-gray-400"
+            >
+              <p class="font-semibold text-gray-600 dark:text-gray-300 mb-1">{{ s.noDeparturesToday }}</p>
+              <p class="text-sm">{{ s.noDeparturesHint }}</p>
+            </div>
           </template>
         </DayGroupTabs>
       </section>

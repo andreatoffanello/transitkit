@@ -90,6 +90,7 @@
           :day-groups="dayGroups"
           :departures-by-day-group="departuresByGroup"
           :initial-key="todayKey ?? undefined"
+          :strings="s"
         >
           <template #default="{ departures }">
             <div
@@ -150,7 +151,7 @@ const pending = computed(() => !config.value || !schedules.value)
 
 // Fermata corrente
 const stop = computed(() =>
-  schedules.value?.stops.find(s => s.id === stopId.value) ?? null,
+  schedules.value?.stops.find(st => st.id === stopId.value) ?? null,
 )
 
 // Departures decodificate per ogni day group (ordinate per orario)

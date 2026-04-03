@@ -17,7 +17,7 @@
           : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/20'"
         @click="selected = dg.id"
       >
-        {{ dg.displayLabel }}
+        {{ strings ? getDayGroupLabel(dg, strings) : dg.displayLabel }}
       </button>
     </div>
 
@@ -32,11 +32,14 @@
 
 <script setup lang="ts">
 import type { DayGroup, Departure } from '~/types'
+import type { AppStrings } from '~/utils/strings'
+import { getDayGroupLabel } from '~/utils/schedule'
 
 const props = defineProps<{
   dayGroups: DayGroup[]
   departuresByDayGroup: Record<string, Departure[]>
   initialKey?: string
+  strings?: AppStrings
 }>()
 
 const selected = ref(props.initialKey ?? props.dayGroups[0]?.id ?? '')

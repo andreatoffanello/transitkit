@@ -1,4 +1,5 @@
 import type { ScheduleData, Departure, DayGroup } from '~/types'
+import type { AppStrings } from '~/utils/strings'
 
 const WEEKDAY_ABBR = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const
 const WEEKDAY_LABELS: Record<string, string> = {
@@ -21,6 +22,39 @@ function buildDisplayLabel(days: string[]): string {
   if (days.length === 2 && days.includes('sat') && days.includes('sun')) return 'Sat–Sun'
   if (days.length === 1) return WEEKDAY_LABELS[days[0] ?? ''] ?? days[0] ?? ''
   return days.map(d => WEEKDAY_LABELS[d] ?? d).join(', ')
+}
+
+const DAY_KEY_MAP: Record<string, keyof AppStrings['weekdayLabels']> = {
+  mon: 'mon', tue: 'tue', wed: 'wed', thu: 'thu',
+  fri: 'fri', sat: 'sat', sun: 'sun',
+}
+
+export function getDayGroupLabel(dayGroup: DayGroup, strings: AppStrings): string {
+  const { days } = dayGroup
+  if (days.length === 7) return strings.weekdayGroupNames.everyday
+  if (days.length === 5 && !days.includes('sat') && !days.includes('sun')) {
+    return strings.weekdayGroupNames.weekdays
+  }
+  if (days.length === 2 && days.includes('sat') && days.includes('sun')) {
+    return `${strings.weekdayLabels.sat}–${strings.weekdayLabels.sun}`
+  }
+  if (days.length === 1) {
+    const key = DAY_KEY_MAP[days[0] ?? '']
+    return key ? strings.weekdayLabels[key] : (days[0] ?? '')
+  }
+  if (days.length === 6 && !days.includes('sun')) {
+    return strings.weekdayGroupNames.weekdaysSat
+  }
+  // Fallback: first–last abbreviated
+  const sorted = [...days].sort((a, b) =>
+    (WEEKDAY_ABBR.indexOf(a as typeof WEEKDAY_ABBR[number]) ?? 0) -
+    (WEEKDAY_ABBR.indexOf(b as typeof WEEKDAY_ABBR[number]) ?? 0),
+  )
+  const firstKey = DAY_KEY_MAP[sorted[0] ?? '']
+  const lastKey = DAY_KEY_MAP[sorted[sorted.length - 1] ?? '']
+  const first = firstKey ? strings.weekdayLabels[firstKey] : (sorted[0] ?? '')
+  const last = lastKey ? strings.weekdayLabels[lastKey] : (sorted[sorted.length - 1] ?? '')
+  return `${first}–${last}`
 }
 
 export function getTodayDayGroupKey(

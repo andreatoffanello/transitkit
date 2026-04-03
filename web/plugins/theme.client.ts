@@ -13,17 +13,21 @@ function applyTheme(cfg: OperatorConfig | null | undefined): void {
     for (const [key, value] of Object.entries(DEFAULT_THEME)) {
       root.style.setProperty(key, value)
     }
-    return
   }
-  root.style.setProperty('--color-primary', cfg.theme.primaryColor)
-  root.style.setProperty('--color-accent', cfg.theme.accentColor)
-  root.style.setProperty('--color-text-on-primary', cfg.theme.textOnPrimary)
+  else {
+    root.style.setProperty('--color-primary', cfg.theme.primaryColor)
+    root.style.setProperty('--color-accent', cfg.theme.accentColor)
+    root.style.setProperty('--color-text-on-primary', cfg.theme.textOnPrimary)
+  }
 
-  // Update browser chrome color (mobile browsers)
-  const themeColorMeta = document.querySelector('meta[name="theme-color"]')
-  if (themeColorMeta) {
-    themeColorMeta.setAttribute('content', cfg?.theme.primaryColor ?? '#003366')
+  // Update browser chrome color (mobile)
+  let themeColorMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+  if (!themeColorMeta) {
+    themeColorMeta = document.createElement('meta')
+    themeColorMeta.setAttribute('name', 'theme-color')
+    document.head.appendChild(themeColorMeta)
   }
+  themeColorMeta.setAttribute('content', cfg?.theme.primaryColor ?? DEFAULT_THEME['--color-primary'])
 }
 
 export default defineNuxtPlugin((nuxtApp) => {

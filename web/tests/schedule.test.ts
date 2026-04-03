@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { decodeDepartures, getTodayDayGroupKey, parseDayGroup } from '~/utils/schedule'
+import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getDayGroupLabel } from '~/utils/schedule'
+import { getStrings } from '~/utils/strings'
 import type { ScheduleData } from '~/types'
 
 const mockScheduleData: ScheduleData = {
@@ -101,6 +102,41 @@ describe('parseDayGroup', () => {
   it('parsa sab-dom insieme', () => {
     const dg = parseDayGroup('sat,sun')
     expect(dg.displayLabel).toBe('Sat–Sun')
+  })
+})
+
+describe('getDayGroupLabel', () => {
+  const it_strings = getStrings('it')
+  const en_strings = getStrings('en')
+
+  it('weekdays: IT → Lun-Ven, EN → Mon-Fri', () => {
+    const dg = parseDayGroup('mon,tue,wed,thu,fri')
+    expect(getDayGroupLabel(dg, it_strings)).toBe('Lun-Ven')
+    expect(getDayGroupLabel(dg, en_strings)).toBe('Mon-Fri')
+  })
+
+  it('everyday: IT → Ogni giorno, EN → Every day', () => {
+    const dg = parseDayGroup('mon,tue,wed,thu,fri,sat,sun')
+    expect(getDayGroupLabel(dg, it_strings)).toBe('Ogni giorno')
+    expect(getDayGroupLabel(dg, en_strings)).toBe('Every day')
+  })
+
+  it('sat–sun range: IT → Sab–Dom, EN → Sat–Sun', () => {
+    const dg = parseDayGroup('sat,sun')
+    expect(getDayGroupLabel(dg, it_strings)).toBe('Sab–Dom')
+    expect(getDayGroupLabel(dg, en_strings)).toBe('Sat–Sun')
+  })
+
+  it('single day: IT → Sab, EN → Sat', () => {
+    const dg = parseDayGroup('sat')
+    expect(getDayGroupLabel(dg, it_strings)).toBe('Sab')
+    expect(getDayGroupLabel(dg, en_strings)).toBe('Sat')
+  })
+
+  it('mon-sat (6 days): IT → Lun-Sab, EN → Mon-Sat', () => {
+    const dg = parseDayGroup('mon,tue,wed,thu,fri,sat')
+    expect(getDayGroupLabel(dg, it_strings)).toBe('Lun-Sab')
+    expect(getDayGroupLabel(dg, en_strings)).toBe('Mon-Sat')
   })
 })
 

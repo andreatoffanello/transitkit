@@ -9,8 +9,24 @@
       :title="route ? `${route.name}${route.longName ? ' — ' + route.longName : ''}` : ''"
     />
 
-    <div v-if="pending" class="space-y-3 animate-pulse" aria-busy="true" :aria-label="s.ariaLoading">
-      <div v-for="i in 8" :key="i" class="h-10 bg-gray-200 dark:bg-white/10 rounded-xl" />
+    <div v-if="pending" aria-busy="true" :aria-label="s.ariaLoading">
+      <!-- Direction tabs skeleton -->
+      <div class="flex gap-2 mb-4">
+        <div class="h-9 flex-1 bg-gray-200 dark:bg-white/10 rounded-xl animate-pulse" />
+        <div class="h-9 flex-1 bg-gray-200 dark:bg-white/10 rounded-xl animate-pulse" />
+      </div>
+
+      <!-- Stop list skeleton — 6 rows -->
+      <div class="space-y-1">
+        <div
+          v-for="i in 6"
+          :key="i"
+          class="flex items-center gap-3 py-3 px-4 bg-gray-200 dark:bg-white/10 rounded-xl animate-pulse"
+        >
+          <div class="w-2 h-2 rounded-full bg-gray-300 dark:bg-white/20 shrink-0" />
+          <div class="h-3 rounded bg-gray-300 dark:bg-white/20" :style="{ width: `${48 + (i * 13) % 40}%` }" />
+        </div>
+      </div>
     </div>
 
     <template v-else-if="route">

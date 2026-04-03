@@ -20,6 +20,27 @@
 
     <!-- Body -->
     <div class="max-w-lg mx-auto px-4 py-8 space-y-4">
+      <!-- Ricerca fermata -->
+      <div v-if="schedules" class="bg-white dark:bg-white/5 rounded-2xl px-4 pt-4 pb-2">
+        <input
+          v-model="searchStopQuery"
+          type="search"
+          :placeholder="s.searchStops"
+          class="w-full bg-gray-100 dark:bg-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-[var(--color-primary,#003366)] placeholder:text-gray-400"
+        />
+        <div v-if="stopResults.length" class="mt-2 space-y-0.5">
+          <NuxtLink
+            v-for="stop in stopResults"
+            :key="stop.id"
+            :to="`/stop/${stop.id}`"
+            class="flex items-center justify-between py-2 text-sm text-gray-800 dark:text-gray-100"
+          >
+            <span v-html="highlightMatch(stop.name, searchStopQuery)" />
+            <span class="text-gray-400" aria-hidden="true">›</span>
+          </NuxtLink>
+        </div>
+      </div>
+
       <!-- Store info (app link) -->
       <div v-if="config?.store" class="bg-white dark:bg-white/5 rounded-2xl p-4">
         <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">{{ s.officialApp }}</p>
@@ -157,9 +178,21 @@
 
 <script setup lang="ts">
 import { computeNowMin, getNextDeparture, sortStopsByNextDeparture } from '~/utils/schedule'
+import { highlightMatch } from '~/utils/highlight'
 
 const { config, schedules } = await useOperator()
 const s = useStrings(config)
+
+const searchStopQuery = ref('')
+
+const stopResults = computed(() => {
+  const q = searchStopQuery.value.trim()
+  if (!q || !schedules.value) return []
+  const norm = q.normalize('NFD').replace(/\p{Mn}/gu, '').toLowerCase()
+  return schedules.value.stops
+    .filter(s => s.name.normalize('NFD').replace(/\p{Mn}/gu, '').toLowerCase().includes(norm))
+    .slice(0, 5)
+})
 
 const requestUrl = useRequestURL()
 const currentRoute = useRoute()

@@ -89,6 +89,9 @@ export interface AppStrings {
   // Lines list — stop count
   stops: string
 
+  // Home page — stop search
+  searchStops: string
+
   // Lines list — search
   searchLines: string
 
@@ -200,6 +203,7 @@ const IT: AppStrings = {
   dockPrefix: 'Dock ',
   lineLabel: 'Linea',
   stops: 'fermate',
+  searchStops: 'Cerca fermata...',
   searchLines: 'Cerca linea…',
   noLinesFound: 'Nessuna linea trovata',
   clearFilters: 'Cancella filtri',
@@ -282,6 +286,7 @@ const EN: AppStrings = {
   dockPrefix: 'Dock ',
   lineLabel: 'Line',
   stops: 'stops',
+  searchStops: 'Search stop...',
   searchLines: 'Search line…',
   noLinesFound: 'No lines found',
   clearFilters: 'Clear filters',

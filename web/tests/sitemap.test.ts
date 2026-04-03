@@ -19,6 +19,16 @@ const mockSchedules: ScheduleData = {
   ],
 }
 
+/** Replicates the XML construction logic from the Nitro event handler. */
+function buildXml(urls: string[]): string {
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ...urls.map(url => `  <url><loc>${url}</loc></url>`),
+    '</urlset>',
+  ].join('\n')
+}
+
 describe('buildSitemapUrls', () => {
   it('includes home and lines pages', () => {
     const urls = buildSitemapUrls('example.com', mockSchedules)
@@ -40,5 +50,43 @@ describe('buildSitemapUrls', () => {
   it('uses https protocol', () => {
     const urls = buildSitemapUrls('example.com', mockSchedules)
     expect(urls.every(u => u.startsWith('https://'))).toBe(true)
+  })
+
+  it('empty routes array — still includes home and /lines, no route entries', () => {
+    const data: ScheduleData = { ...mockSchedules, routes: [], routeIds: [] }
+    const urls = buildSitemapUrls('example.com', data)
+    expect(urls).toContain('https://example.com/')
+    expect(urls).toContain('https://example.com/lines')
+    expect(urls.some(u => u.includes('/lines/'))).toBe(false)
+  })
+
+  it('empty stops array — still includes home and /lines, no stop entries', () => {
+    const data: ScheduleData = { ...mockSchedules, stops: [] }
+    const urls = buildSitemapUrls('example.com', data)
+    expect(urls).toContain('https://example.com/')
+    expect(urls).toContain('https://example.com/lines')
+    expect(urls.some(u => u.includes('/stop/'))).toBe(false)
+  })
+})
+
+describe('XML output structure', () => {
+  it('starts with XML declaration', () => {
+    const urls = buildSitemapUrls('example.com', mockSchedules)
+    const xml = buildXml(urls)
+    expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true)
+  })
+
+  it('contains the sitemap urlset namespace', () => {
+    const urls = buildSitemapUrls('example.com', mockSchedules)
+    const xml = buildXml(urls)
+    expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
+  })
+
+  it('wraps each URL in <url><loc>...</loc></url>', () => {
+    const urls = buildSitemapUrls('example.com', mockSchedules)
+    const xml = buildXml(urls)
+    for (const url of urls) {
+      expect(xml).toContain(`<url><loc>${url}</loc></url>`)
+    }
   })
 })

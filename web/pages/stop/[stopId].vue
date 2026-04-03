@@ -75,7 +75,7 @@
         <!-- Sezione "Nella rete" -->
         <div class="space-y-2">
           <div class="h-3 w-40 rounded" style="background-color: var(--bg-elevated)" />
-          <div class="rounded-2xl px-4 divide-y" style="background-color: var(--bg-elevated); border-color: var(--border)">
+          <div class="rounded-2xl px-4 divide-app" style="background-color: var(--bg-elevated); border-color: var(--border)">
             <div v-for="i in 3" :key="i" class="flex items-center gap-3 py-3">
               <div class="w-8 h-5 rounded shrink-0" style="background-color: var(--bg-secondary)" />
               <div class="flex-1 h-3 rounded" style="background-color: var(--bg-secondary)" />
@@ -121,7 +121,7 @@
           <!-- Lista partenze -->
           <div
             v-if="upcomingDepartures.length"
-            class="rounded-2xl overflow-hidden divide-y"
+            class="rounded-2xl overflow-hidden divide-app"
             style="background-color: var(--bg-elevated); box-shadow: var(--shadow-md); border-color: var(--border)"
           >
             <DepartureRow
@@ -209,7 +209,7 @@
             <template #default="{ departures }">
               <div
                 v-if="departures.length"
-                class="rounded-2xl overflow-hidden divide-y"
+                class="rounded-2xl overflow-hidden divide-app"
                 style="background-color: var(--bg-elevated); box-shadow: var(--shadow-md); border-color: var(--border)"
               >
                 <DepartureRow
@@ -246,7 +246,7 @@
             {{ s.stopInNetwork }}
           </h2>
           <div
-            class="rounded-2xl divide-y overflow-hidden"
+            class="rounded-2xl divide-app overflow-hidden"
             style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border-color: var(--border)"
           >
             <div

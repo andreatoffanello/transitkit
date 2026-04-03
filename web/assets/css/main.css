@@ -50,3 +50,8 @@ body {
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* Divider utility that respects CSS-variable theming (works in both light and dark mode) */
+.divide-app > * + * {
+  border-top: 1px solid var(--border);
+}

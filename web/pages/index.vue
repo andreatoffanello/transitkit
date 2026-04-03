@@ -49,7 +49,7 @@
         <!-- Search results -->
         <div
           v-if="stopResults.length"
-          class="mt-2 rounded-2xl overflow-hidden divide-y"
+          class="mt-2 rounded-2xl overflow-hidden divide-app"
           style="background-color: var(--bg-elevated); box-shadow: var(--shadow-md); border-color: var(--border)"
         >
           <NuxtLink
@@ -82,7 +82,7 @@
             <!-- Skeleton / locating -->
             <div
               v-if="nearbyState === 'locating'"
-              class="rounded-2xl overflow-hidden divide-y"
+              class="rounded-2xl overflow-hidden divide-app"
               style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border-color: var(--border)"
             >
               <div v-for="n in 3" :key="n" class="flex items-center gap-3 px-4 py-3.5">
@@ -95,7 +95,7 @@
             <!-- Nearby stops list -->
             <div
               v-else-if="nearbyStops.length"
-              class="rounded-2xl overflow-hidden divide-y"
+              class="rounded-2xl overflow-hidden divide-app"
               style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border-color: var(--border)"
             >
               <NuxtLink
@@ -126,7 +126,7 @@
               {{ s.favoriteStops }}
             </h2>
             <div
-              class="rounded-2xl overflow-hidden divide-y"
+              class="rounded-2xl overflow-hidden divide-app"
               style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border-color: var(--border)"
             >
               <NuxtLink
@@ -165,7 +165,7 @@
               {{ s.recentStops }}
             </h2>
             <div
-              class="rounded-2xl overflow-hidden divide-y"
+              class="rounded-2xl overflow-hidden divide-app"
               style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border-color: var(--border)"
             >
               <NuxtLink
@@ -227,7 +227,7 @@
             {{ s.contacts }}
           </h2>
           <div
-            class="rounded-2xl overflow-hidden divide-y"
+            class="rounded-2xl overflow-hidden divide-app"
             style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border-color: var(--border)"
           >
             <a
@@ -254,7 +254,7 @@
         <!-- Sito ufficiale -->
         <section v-if="config?.url || config?.store">
           <div
-            class="rounded-2xl overflow-hidden divide-y"
+            class="rounded-2xl overflow-hidden divide-app"
             style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border-color: var(--border)"
           >
             <a

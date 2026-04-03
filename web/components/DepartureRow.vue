@@ -56,8 +56,10 @@
           <span
             v-else
             class="text-[15px] font-semibold"
-            :class="timeClass"
-            style="font-variant-numeric: tabular-nums; letter-spacing: -0.02em"
+            :style="[
+              'font-variant-numeric: tabular-nums; letter-spacing: -0.02em',
+              timeColorStyle,
+            ]"
           >{{ departure.time }}</span>
         </template>
       </div>
@@ -111,10 +113,10 @@ function computeEffectiveMinutes(nowMs: number): number {
 
 const effectiveMinutes = computed(() => computeEffectiveMinutes(props.now ?? Date.now()))
 
-const timeClass = computed(() =>
+const timeColorStyle = computed(() =>
   effectiveMinutes.value >= 0 && effectiveMinutes.value < 2
-    ? 'text-green-600 dark:text-green-400'
-    : ''
+    ? 'color: #16a34a'
+    : 'color: var(--text-primary)'
 )
 
 const rowAriaLabel = computed(() => {

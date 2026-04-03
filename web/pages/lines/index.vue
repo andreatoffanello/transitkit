@@ -109,7 +109,7 @@
           </h2>
 
           <div
-            class="rounded-2xl overflow-hidden divide-y"
+            class="rounded-2xl overflow-hidden divide-app"
             :style="{ backgroundColor: 'var(--bg-elevated)', boxShadow: 'var(--shadow-sm)', borderColor: 'var(--border)' }"
             role="list"
             :aria-label="`${s.ariaLinesOfTypePrefix} ${transitTypeLabel(type)}`"

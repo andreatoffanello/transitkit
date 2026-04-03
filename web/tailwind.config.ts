@@ -1,17 +1,20 @@
 import type { Config } from 'tailwindcss'
 
 export default {
+  darkMode: 'class',
   content: [
-    './components/**/*.{vue,ts}',
+    './components/**/*.{js,vue,ts}',
     './layouts/**/*.vue',
     './pages/**/*.vue',
-    './composables/**/*.ts',
-    './middleware/**/*.ts',
-    './utils/**/*.ts',
+    './plugins/**/*.{js,ts}',
     './app.vue',
+    './error.vue',
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+      },
       colors: {
         primary: 'var(--color-primary)',
         accent: 'var(--color-accent)',
@@ -19,4 +22,5 @@ export default {
       },
     },
   },
+  plugins: [],
 } satisfies Config

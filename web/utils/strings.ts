@@ -41,8 +41,6 @@ export interface AppStrings {
   }
   weekdayGroupNames: {
     weekdays: string
-    saturday: string
-    sunday: string
     everyday: string
     weekdaysSat: string
   }
@@ -141,8 +139,6 @@ const IT: AppStrings = {
   },
   weekdayGroupNames: {
     weekdays: 'Lun-Ven',
-    saturday: 'Sabato',
-    sunday: 'Domenica',
     everyday: 'Ogni giorno',
     weekdaysSat: 'Lun-Sab',
   },
@@ -209,8 +205,6 @@ const EN: AppStrings = {
   },
   weekdayGroupNames: {
     weekdays: 'Mon-Fri',
-    saturday: 'Saturday',
-    sunday: 'Sunday',
     everyday: 'Every day',
     weekdaysSat: 'Mon-Sat',
   },

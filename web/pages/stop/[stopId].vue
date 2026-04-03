@@ -10,10 +10,33 @@
     />
 
     <!-- Skeleton loading -->
-    <div v-if="pending" class="space-y-4 animate-pulse" aria-busy="true" aria-label="Caricamento">
-      <div class="h-8 bg-gray-200 dark:bg-white/10 rounded-lg w-2/3" />
-      <div class="h-4 bg-gray-200 dark:bg-white/10 rounded w-1/2" />
-      <div class="h-32 bg-gray-200 dark:bg-white/10 rounded-2xl" />
+    <div v-if="pending" class="space-y-6 animate-pulse" aria-busy="true" aria-label="Caricamento">
+      <!-- Stop name + line badges -->
+      <div class="space-y-2 mb-5">
+        <div class="h-7 bg-gray-200 dark:bg-white/10 rounded-lg w-3/4" />
+        <div class="flex gap-2">
+          <div class="h-5 w-8 bg-gray-200 dark:bg-white/10 rounded-md" />
+          <div class="h-5 w-8 bg-gray-200 dark:bg-white/10 rounded-md" />
+          <div class="h-5 w-8 bg-gray-200 dark:bg-white/10 rounded-md" />
+        </div>
+      </div>
+
+      <!-- Sezione "Adesso" -->
+      <div class="space-y-2">
+        <div class="h-3 bg-gray-200 dark:bg-white/10 rounded w-16" />
+        <div class="h-36 bg-gray-200 dark:bg-white/10 rounded-2xl" />
+      </div>
+
+      <!-- Sezione "Orari" -->
+      <div class="space-y-2">
+        <div class="h-3 bg-gray-200 dark:bg-white/10 rounded w-12" />
+        <div class="flex gap-2">
+          <div class="h-7 w-20 bg-gray-200 dark:bg-white/10 rounded-full" />
+          <div class="h-7 w-20 bg-gray-200 dark:bg-white/10 rounded-full" />
+          <div class="h-7 w-20 bg-gray-200 dark:bg-white/10 rounded-full" />
+        </div>
+        <div class="h-48 bg-gray-200 dark:bg-white/10 rounded-2xl" />
+      </div>
     </div>
 
     <template v-else-if="stop">

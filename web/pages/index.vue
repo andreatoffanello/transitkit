@@ -70,11 +70,30 @@
             class="flex items-center gap-3 px-4 py-3.5 transition-opacity duration-150 active:opacity-70"
           >
             <MapPin :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
-            <span
-              class="flex-1 text-[15px] font-medium truncate"
-              style="color: var(--text-primary)"
-              v-html="highlightMatch(stop.name, searchStopQuery)"
-            />
+            <div class="flex-1 min-w-0 text-left">
+              <span
+                class="text-[15px] font-medium truncate block"
+                style="color: var(--text-primary)"
+                v-html="highlightMatch(stop.name, searchStopQuery)"
+              />
+              <!-- LineBadge per le linee che servono questa fermata -->
+              <div v-if="stopRoutesMap[stop.id]?.length" class="flex gap-1 mt-1 flex-wrap">
+                <LineBadge
+                  v-for="r in (stopRoutesMap[stop.id] ?? []).slice(0, 3)"
+                  :key="r.id"
+                  :name="r.name"
+                  :color="r.color"
+                  :text-color="r.textColor"
+                />
+                <span
+                  v-if="(stopRoutesMap[stop.id]?.length ?? 0) > 3"
+                  class="text-[11px] px-1.5 py-0.5 rounded font-medium"
+                  style="color: var(--text-tertiary)"
+                >
+                  +{{ (stopRoutesMap[stop.id]?.length ?? 0) - 3 }}
+                </span>
+              </div>
+            </div>
             <ChevronRight :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
           </NuxtLink>
         </div>
@@ -335,6 +354,23 @@ const stopResults = computed(() => {
   return schedules.value.stops
     .filter(s => s.name.normalize('NFD').replace(/\p{Mn}/gu, '').toLowerCase().includes(norm))
     .slice(0, 5)
+})
+
+// Mappa stopId → routes che servono quella fermata
+const stopRoutesMap = computed(() => {
+  if (!schedules.value) return {} as Record<string, typeof schedules.value.routes>
+  const map: Record<string, typeof schedules.value.routes> = {}
+  for (const route of schedules.value.routes ?? []) {
+    for (const dir of route.directions ?? []) {
+      for (const stopId of dir.stopIds ?? []) {
+        if (!map[stopId]) map[stopId] = []
+        if (!map[stopId].find(r => r.id === route.id)) {
+          map[stopId].push(route)
+        }
+      }
+    }
+  }
+  return map
 })
 
 const requestUrl = useRequestURL()

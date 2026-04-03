@@ -247,37 +247,42 @@
           </DayGroupTabs>
         </section>
 
-        <!-- Posizione nella rete -->
-        <section v-if="stopPositions.length" class="px-4 mb-6" aria-labelledby="section-network">
-          <h2
+        <!-- Linee che passano qui -->
+        <section v-if="servingRoutes.length" class="px-4 mb-6" aria-labelledby="section-network">
+          <h3
             id="section-network"
             class="text-xs font-semibold uppercase tracking-wider mb-3"
             style="color: var(--text-tertiary)"
           >
-            {{ s.stopInNetwork }}
-          </h2>
+            Linee che passano qui
+          </h3>
           <div
-            class="rounded-2xl divide-app overflow-hidden"
-            style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border-color: var(--border)"
+            class="rounded-2xl overflow-hidden divide-app"
+            style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm)"
           >
-            <div
-              v-for="(pos, idx) in stopPositions"
-              :key="idx"
-              class="flex items-center gap-3 px-4 py-3"
+            <NuxtLink
+              v-for="r in servingRoutes"
+              :key="r.id"
+              :to="`/lines/${r.id}`"
+              class="flex items-center gap-3 px-4 py-3.5 transition-opacity duration-150 active:opacity-70"
             >
-              <LineBadge
-                :name="pos.route.name"
-                :color="pos.route.color"
-                :text-color="pos.route.textColor"
-                :locale="config?.locale[0]"
-              />
-              <span class="flex-1 text-sm truncate" style="color: var(--text-secondary)">
-                {{ pos.directionName }}
-              </span>
-              <span class="text-sm font-semibold shrink-0 tabular-nums" style="color: var(--text-primary)">
-                {{ s.stopPosition }} {{ pos.position }} {{ s.stopPositionOf }} {{ pos.total }}
-              </span>
-            </div>
+              <LineBadge :name="r.name" :color="r.color" :text-color="r.textColor" :locale="config?.locale[0]" />
+              <div class="flex-1 min-w-0">
+                <span class="text-[15px] font-medium" style="color: var(--text-primary)">{{ r.longName }}</span>
+                <!-- Headsign chips compatte -->
+                <div v-if="r.directions?.length" class="flex gap-1.5 mt-1 flex-wrap">
+                  <span
+                    v-for="dir in r.directions.slice(0, 2)"
+                    :key="dir.id"
+                    class="text-[11px] px-2 py-0.5 rounded-full font-medium"
+                    style="background-color: var(--bg-secondary); color: var(--text-secondary)"
+                  >
+                    {{ dir.headsign }}
+                  </span>
+                </div>
+              </div>
+              <ChevronRight :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+            </NuxtLink>
           </div>
         </section>
 
@@ -334,7 +339,7 @@
 <script setup lang="ts">
 definePageMeta({ pageTransition: { name: 'page-slide-up', mode: 'out-in' } })
 import { onMounted, nextTick, ref } from 'vue'
-import { Star, Share2, RefreshCw, MapPin, Copy, Check, Clock, ChevronDown } from 'lucide-vue-next'
+import { Star, Share2, RefreshCw, MapPin, Copy, Check, Clock, ChevronDown, ChevronRight } from 'lucide-vue-next'
 import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getNextServiceDayGroupKey, getDayGroupLabel, computeNowMin, getNextDeparture } from '~/utils/schedule'
 import type { DayGroup, Departure, ScheduleStop, Route } from '~/types'
 

@@ -54,7 +54,7 @@
 
     <div v-else role="alert" class="text-center py-16 text-gray-400">
       <p class="text-lg font-medium">{{ s.lineNotFound }}</p>
-      <NuxtLink to="/lines" class="mt-4 inline-block text-sm underline">
+      <NuxtLink to="/lines" class="mt-4 inline-block text-sm underline text-accent">
         {{ s.backToLines }}
       </NuxtLink>
     </div>

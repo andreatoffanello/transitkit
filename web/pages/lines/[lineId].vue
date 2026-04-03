@@ -207,6 +207,21 @@ useHead({
     return `${lineName} — ${op}`
   }),
   link: [{ rel: 'canonical', href: computed(() => `${requestUrl.origin}${nuxtRoute.path}`) }],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: computed(() => {
+        if (!route.value) return '{}'
+        const data: Record<string, string> = {
+          '@context': 'https://schema.org',
+          '@type': 'BusRoute',
+          name: route.value.longName ?? route.value.name,
+          identifier: route.value.id,
+        }
+        return JSON.stringify(data)
+      }),
+    },
+  ],
   meta: [
     {
       property: 'og:title',

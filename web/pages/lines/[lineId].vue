@@ -90,7 +90,7 @@
         <button
           v-if="canShare"
           type="button"
-          class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition-colors active:scale-95 duration-100"
+          class="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition-colors active:scale-95 duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
           :aria-label="s.shareStop"
           @click="shareLine"
         >
@@ -99,7 +99,7 @@
         <button
           v-else
           type="button"
-          class="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 active:scale-95 transition-transform duration-100"
+          class="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 active:scale-95 transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
           :aria-label="s.copyLink"
           @click="copyLink"
         >

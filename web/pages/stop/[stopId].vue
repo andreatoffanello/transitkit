@@ -59,7 +59,7 @@
           <button
             type="button"
             :aria-label="isFavorite(stopId) ? s.removeFromFavorites : s.addToFavorites"
-            class="text-2xl shrink-0 mt-1"
+            class="text-2xl shrink-0 mt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
             @click="toggleFavorite({ stopId: stopId, name: stop.name })"
           >
             {{ isFavorite(stopId) ? '★' : '☆' }}
@@ -105,7 +105,7 @@
             v-if="isLive"
             type="button"
             aria-label="Aggiorna"
-            class="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 active:scale-95 transition-transform duration-100"
+            class="ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 active:scale-95 transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
             :class="{ 'animate-spin': realtimeLoading }"
             @click="refreshRealtime"
           >
@@ -257,7 +257,7 @@
         <button
           v-if="canShare"
           type="button"
-          class="flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition-colors active:scale-95 transition-transform duration-100"
+          class="flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition-colors active:scale-95 transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
           @click="shareStop"
         >
           📤 {{ s.shareStop }}
@@ -265,7 +265,7 @@
         <button
           v-else
           @click="copyLink"
-          class="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 active:scale-95 transition-transform duration-100"
+          class="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 active:scale-95 transition-transform duration-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
           :aria-label="s.copyLink"
         >
           <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

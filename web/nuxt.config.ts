@@ -6,10 +6,10 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   routeRules: {
-    '/': { isr: 3600 },
-    '/lines': { isr: 3600 },
-    '/lines/**': { isr: 3600 },
-    '/stop/**': { isr: 3600 },
+    '/': { isr: 3600, headers: { 'cache-control': 'public, max-age=60, stale-while-revalidate=120' } },
+    '/lines': { isr: 3600, headers: { 'cache-control': 'public, max-age=300, stale-while-revalidate=600' } },
+    '/lines/**': { isr: 3600, headers: { 'cache-control': 'public, max-age=300, stale-while-revalidate=600' } },
+    '/stop/**': { isr: 3600, headers: { 'cache-control': 'public, max-age=60, stale-while-revalidate=120' } },
   },
 
   nitro: {
@@ -22,5 +22,6 @@ export default defineNuxtConfig({
 
   experimental: {
     payloadExtraction: false,
+    inlineSSRStyles: false,
   },
 })

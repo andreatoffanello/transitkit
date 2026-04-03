@@ -274,19 +274,24 @@ const upcomingDepartures = computed<Departure[]>(() => {
 
 // SEO
 useHead({
-  title: computed(() =>
-    stop.value ? `${stop.value.name} — ${config.value?.name ?? ''}` : 'Fermata',
-  ),
+  title: computed(() => {
+    const stopName = stop.value?.name
+    const op = config.value?.fullName ?? config.value?.name ?? ''
+    return stopName ? `${stopName} — ${op}` : op
+  }),
   meta: [
     {
-      name: 'description',
-      content: computed(() =>
-        stop.value
-          ? `Orari e prossime partenze dalla fermata ${stop.value.name}. Linee: ${stop.value.lines.join(', ')}.`
-          : 'Fermata non trovata',
-      ),
+      property: 'og:title',
+      content: computed(() => stop.value?.name ?? config.value?.fullName ?? config.value?.name ?? ''),
     },
-    { property: 'og:title', content: computed(() => stop.value?.name ?? 'Fermata') },
+    {
+      name: 'description',
+      content: computed(() => {
+        const stopName = stop.value?.name ?? ''
+        const op = config.value?.fullName ?? config.value?.name ?? ''
+        return `${stopName} — Orari e partenze${op ? ` — ${op}` : ''}`
+      }),
+    },
   ],
 })
 useOperatorHead(config)

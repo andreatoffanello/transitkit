@@ -132,19 +132,23 @@ const currentStops = computed(() => {
 })
 
 useHead({
-  title: computed(() =>
-    route.value
-      ? `Linea ${route.value.name} — ${config.value?.name ?? ''}`
-      : 'Linea',
-  ),
+  title: computed(() => {
+    const lineName = route.value?.longName ?? route.value?.name ?? ''
+    const op = config.value?.fullName ?? config.value?.name ?? ''
+    return lineName ? `${lineName} — ${op}` : op
+  }),
   meta: [
     {
+      property: 'og:title',
+      content: computed(() => route.value?.longName ?? route.value?.name ?? config.value?.fullName ?? config.value?.name ?? ''),
+    },
+    {
       name: 'description',
-      content: computed(() =>
-        route.value
-          ? `Fermate della linea ${route.value.name} ${route.value.longName ?? ''} — ${config.value?.name ?? ''}.`
-          : 'Linea non trovata',
-      ),
+      content: computed(() => {
+        const lineName = route.value?.longName ?? route.value?.name ?? ''
+        const op = config.value?.fullName ?? config.value?.name ?? ''
+        return `${lineName} — Fermate e orari${op ? ` — ${op}` : ''}`
+      }),
     },
   ],
 })

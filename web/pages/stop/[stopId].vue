@@ -65,6 +65,15 @@
           {{ s.sectionNow }}
         </h2>
 
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-2">
+          {{ s.upcomingDepartures }}
+          <span
+            v-if="isLive"
+            class="w-2 h-2 rounded-full bg-green-500 animate-pulse"
+            aria-hidden="true"
+          />
+        </h2>
+
         <div
           v-if="upcomingDepartures.length"
           class="bg-white dark:bg-white/5 rounded-2xl px-4 divide-y divide-gray-100 dark:divide-white/5"
@@ -104,6 +113,10 @@
           class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2"
         >
           {{ s.sectionSchedule }}
+        </h2>
+
+        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400 mt-6 mb-2">
+          {{ s.todaySchedule }}
         </h2>
 
         <div

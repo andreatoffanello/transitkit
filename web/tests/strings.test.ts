@@ -135,4 +135,14 @@ describe('getStrings', () => {
     expect(getStrings('it').onboardingHint).toBe('Cerca le linee per trovare e salvare le tue fermate preferite')
     expect(getStrings('en').onboardingHint).toBe('Browse lines to find and save your favourite stops')
   })
+
+  it('copyLink: IT and EN', () => {
+    expect(getStrings('it').copyLink).toBe('Copia link')
+    expect(getStrings('en').copyLink).toBe('Copy link')
+  })
+
+  it('copiedFeedback: IT and EN', () => {
+    expect(getStrings('it').copiedFeedback).toBe('Copiato!')
+    expect(getStrings('en').copiedFeedback).toBe('Copied!')
+  })
 })

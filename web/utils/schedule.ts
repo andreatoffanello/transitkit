@@ -59,8 +59,28 @@ export function getDayGroupLabel(dayGroup: DayGroup, strings: AppStrings): strin
 
 export function getTodayDayGroupKey(
   departures: Record<string, (string | number)[][]>,
+  timezone?: string,
 ): string | null {
-  const todayAbbr = WEEKDAY_ABBR[new Date().getDay()]
+  let dayIndex: number
+  if (timezone) {
+    try {
+      // Use Intl to get the weekday in the operator's timezone
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        weekday: 'short',
+      })
+      const dayStr = formatter.format(new Date()).toLowerCase()
+      // Intl weekday 'short' in en-US gives 'Sun', 'Mon', etc. → lowercased = 'sun', 'mon'
+      dayIndex = WEEKDAY_ABBR.indexOf(dayStr as typeof WEEKDAY_ABBR[number])
+      if (dayIndex === -1) dayIndex = new Date().getDay() // fallback
+    } catch {
+      // Invalid timezone; fallback to browser's local timezone
+      dayIndex = new Date().getDay()
+    }
+  } else {
+    dayIndex = new Date().getDay()
+  }
+  const todayAbbr = WEEKDAY_ABBR[dayIndex]
   for (const key of Object.keys(departures)) {
     if (key.split(',').includes(todayAbbr ?? '')) return key
   }

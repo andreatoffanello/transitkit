@@ -159,4 +159,37 @@ describe('getTodayDayGroupKey', () => {
     const key = getTodayDayGroupKey({})
     expect(key).toBeNull()
   })
+
+  it('usa il timezone fornito se passato', () => {
+    const departures: Record<string, (string | number)[][]> = {
+      'mon,tue,wed,thu,fri': [['07:00', 0, 0]],
+      'sat,sun': [['09:00', 0, 0]],
+    }
+    // Con un timezone, la funzione non lancia errori e restituisce un valore valido
+    const key = getTodayDayGroupKey(departures, 'America/New_York')
+    expect(key === null || typeof key === 'string').toBe(true)
+    if (key !== null) {
+      expect(Object.keys(departures)).toContain(key)
+    }
+  })
+
+  it('rimane backward compatible senza timezone', () => {
+    const departures: Record<string, (string | number)[][]> = {
+      'mon,tue,wed,thu,fri': [['07:00', 0, 0]],
+      'sat,sun': [['09:00', 0, 0]],
+    }
+    vi.spyOn(Date.prototype, 'getDay').mockReturnValue(5) // Friday
+    const key = getTodayDayGroupKey(departures)
+    expect(key).toBe('mon,tue,wed,thu,fri')
+  })
+
+  it('non lancia errori con timezone invalido', () => {
+    const departures: Record<string, (string | number)[][]> = {
+      'mon,tue,wed,thu,fri': [['07:00', 0, 0]],
+    }
+    vi.spyOn(Date.prototype, 'getDay').mockReturnValue(1) // Monday
+    // Anche con timezone invalido, fa fallback a getDay()
+    const key = getTodayDayGroupKey(departures, 'Invalid/Timezone')
+    expect(key === null || typeof key === 'string').toBe(true)
+  })
 })

@@ -65,6 +65,13 @@
         </span>
       </div>
 
+      <p
+        v-if="hasActiveFilter && !pending"
+        class="text-xs text-gray-400 text-right mb-2"
+      >
+        {{ filteredRoutes.length }} {{ s.linesFound }}
+      </p>
+
       <div
         v-for="[type, routes] in filteredRoutesByType"
         :key="type"
@@ -147,6 +154,10 @@ const availableTypes = computed(() => {
   const types = new Set(allRoutes.value.map(r => r.transitType).filter(Boolean))
   return [...types] as string[]
 })
+
+const hasActiveFilter = computed(() =>
+  searchQuery.value !== '' || selectedType.value !== null
+)
 
 const filteredRoutes = computed(() =>
   sortRoutes(

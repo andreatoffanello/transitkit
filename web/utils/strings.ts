@@ -93,6 +93,9 @@ export interface AppStrings {
   noLinesFound: string
   clearFilters: string
 
+  // Lines list — filtered results count
+  linesFound: string
+
   // SEO meta description fragments
   schedulesAndDepartures: string
   stopsAndSchedules: string
@@ -164,6 +167,7 @@ const IT: AppStrings = {
   searchLines: 'Cerca linea…',
   noLinesFound: 'Nessuna linea trovata',
   clearFilters: 'Cancella filtri',
+  linesFound: 'linee trovate',
   schedulesAndDepartures: 'Orari e partenze',
   stopsAndSchedules: 'Fermate e orari',
   stopInNetwork: 'Questa fermata nella rete',
@@ -230,6 +234,7 @@ const EN: AppStrings = {
   searchLines: 'Search line…',
   noLinesFound: 'No lines found',
   clearFilters: 'Clear filters',
+  linesFound: 'lines found',
   schedulesAndDepartures: 'Schedules and departures',
   stopsAndSchedules: 'Stops and schedules',
   stopInNetwork: 'This stop in the network',

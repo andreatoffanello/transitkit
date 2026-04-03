@@ -100,7 +100,7 @@ describe('filterRoutes', () => {
 
 describe('sortRoutes', () => {
   const makeRoute = (name: string) => ({
-    id: name, name, color: '#000', textColor: '#fff', transitType: 'bus' as const,
+    id: name, name, longName: name, color: '#000', textColor: '#fff', transitType: 'bus' as const,
     directions: [], shortName: name,
   })
 

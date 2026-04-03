@@ -96,6 +96,11 @@ export interface AppStrings {
   // SEO meta description fragments
   schedulesAndDepartures: string
   stopsAndSchedules: string
+
+  // Stop position in network
+  stopInNetwork: string
+  stopPosition: string
+  stopPositionOf: string
 }
 
 const IT: AppStrings = {
@@ -157,6 +162,9 @@ const IT: AppStrings = {
   clearFilters: 'Cancella filtri',
   schedulesAndDepartures: 'Orari e partenze',
   stopsAndSchedules: 'Fermate e orari',
+  stopInNetwork: 'Questa fermata nella rete',
+  stopPosition: 'fermata',
+  stopPositionOf: 'di',
 }
 
 const EN: AppStrings = {
@@ -218,6 +226,9 @@ const EN: AppStrings = {
   clearFilters: 'Clear filters',
   schedulesAndDepartures: 'Schedules and departures',
   stopsAndSchedules: 'Stops and schedules',
+  stopInNetwork: 'This stop in the network',
+  stopPosition: 'stop',
+  stopPositionOf: 'of',
 }
 
 const STRINGS: Record<Locale, AppStrings> = { it: IT, en: EN }

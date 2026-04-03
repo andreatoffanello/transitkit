@@ -161,6 +161,36 @@
         </DayGroupTabs>
       </section>
 
+      <!-- Posizione nella rete -->
+      <section v-if="stopPositions.length" class="mt-6" aria-labelledby="section-network">
+        <h2
+          id="section-network"
+          class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2"
+        >
+          {{ s.stopInNetwork }}
+        </h2>
+        <div class="bg-white dark:bg-white/5 rounded-2xl px-4 divide-y divide-gray-100 dark:divide-white/5">
+          <div
+            v-for="(pos, idx) in stopPositions"
+            :key="idx"
+            class="flex items-center gap-3 py-3"
+          >
+            <LineBadge
+              :name="pos.route.name"
+              :color="pos.route.color"
+              :text-color="pos.route.textColor"
+              :locale="config?.locale[0]"
+            />
+            <span class="flex-1 text-sm text-gray-600 dark:text-gray-400 truncate">
+              {{ pos.directionName }}
+            </span>
+            <span class="text-sm font-semibold text-gray-900 dark:text-gray-100 shrink-0 tabular-nums">
+              {{ s.stopPosition }} {{ pos.position }} {{ s.stopPositionOf }} {{ pos.total }}
+            </span>
+          </div>
+        </div>
+      </section>
+
       <!-- Footer -->
       <footer class="mt-8 flex flex-col gap-3 text-sm">
         <a
@@ -233,6 +263,26 @@ const nextServiceLabel = computed(() => {
   if (!nextServiceDayKey.value || !stop.value) return null
   const dg = parseDayGroup(nextServiceDayKey.value)
   return getDayGroupLabel(dg, s.value)
+})
+
+// Posizione della fermata nelle direzioni di ogni linea che la serve
+const stopPositions = computed(() => {
+  if (!schedules.value || !stop.value) return []
+  const sid = route.params.stopId as string
+  return servingRoutes.value.flatMap(r =>
+    r.directions
+      .map((dir, dirIdx) => {
+        const pos = dir.stopIds.indexOf(sid)
+        if (pos === -1) return null
+        return {
+          route: r,
+          directionName: dir.headsign ?? (dirIdx === 0 ? '→' : '←'),
+          position: pos + 1,
+          total: dir.stopIds.length,
+        }
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null)
+  )
 })
 
 // Linee che servono effettivamente questa fermata, derivate dai dati di partenza

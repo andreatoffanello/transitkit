@@ -86,3 +86,17 @@ describe('highlightMatch — HTML entity safety', () => {
     expect(result).toContain('&amp;')
   })
 })
+
+describe('escapeHtml — edge cases', () => {
+  it('empty string returns empty string', () => {
+    expect(escapeHtml('')).toBe('')
+  })
+
+  it('string with no special chars returns identical string', () => {
+    expect(escapeHtml('Hello World')).toBe('Hello World')
+  })
+
+  it('string with only spaces returns identical string', () => {
+    expect(escapeHtml('   ')).toBe('   ')
+  })
+})

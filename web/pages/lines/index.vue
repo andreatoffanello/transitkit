@@ -64,7 +64,7 @@
             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all active:scale-95"
             :style="selectedType === null
               ? { backgroundColor: 'var(--color-primary)', color: 'var(--color-text-on-primary)' }
-              : { backgroundColor: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }"
+              : { backgroundColor: 'var(--bg-elevated)', color: 'var(--text-tertiary)', border: '1px solid var(--border)' }"
             :aria-pressed="selectedType === null"
             @click="selectedType = null"
           >
@@ -78,7 +78,7 @@
             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all active:scale-95"
             :style="selectedType === type
               ? { backgroundColor: 'var(--color-primary)', color: 'var(--color-text-on-primary)' }
-              : { backgroundColor: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }"
+              : { backgroundColor: 'var(--bg-elevated)', color: 'var(--text-tertiary)', border: '1px solid var(--border)' }"
             :aria-pressed="selectedType === type"
             @click="selectedType = type"
           >

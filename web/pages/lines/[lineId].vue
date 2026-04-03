@@ -19,7 +19,7 @@
       </template>
     </PageHeader>
 
-    <div class="max-w-lg mx-auto px-4 pb-8">
+    <div class="max-w-lg mx-auto px-4 pt-4 pb-8">
       <h1 class="sr-only">{{ route?.longName ?? route?.name ?? '' }}</h1>
 
       <div v-if="pending" aria-busy="true" :aria-label="s.ariaLoading">

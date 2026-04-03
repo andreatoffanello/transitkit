@@ -51,6 +51,34 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+/* App main layout — accounts for fixed tab bar (64px) + device safe area on mobile */
+.app-main {
+  padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px) + 1rem);
+}
+@media (min-width: 1024px) {
+  .app-main {
+    padding-bottom: 2rem;
+  }
+}
+
+/* Hero section gradient — light mode subtle, dark mode more visible */
+.hero-section {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--color-primary) 12%, transparent) 0%,
+    color-mix(in srgb, var(--color-primary) 4%, transparent) 45%,
+    transparent 70%
+  );
+}
+html.dark .hero-section {
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--color-primary) 28%, transparent) 0%,
+    color-mix(in srgb, var(--color-primary) 12%, transparent) 45%,
+    transparent 75%
+  );
+}
+
 /* Divider utility that respects CSS-variable theming (works in both light and dark mode) */
 .divide-app > * + * {
   border-top: 1px solid var(--border);

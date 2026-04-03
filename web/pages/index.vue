@@ -3,15 +3,7 @@
     <div class="max-w-lg mx-auto lg:max-w-2xl">
 
       <!-- Hero -->
-      <section
-        class="px-5 pt-8 pb-6 relative overflow-hidden"
-        style="background: linear-gradient(
-          160deg,
-          color-mix(in srgb, var(--color-primary) 12%, transparent) 0%,
-          color-mix(in srgb, var(--color-primary) 4%, transparent) 45%,
-          transparent 70%
-        )"
-      >
+      <section class="hero-section px-5 pt-8 pb-6 relative overflow-hidden">
         <!-- Cerchio decorativo sfondo -->
         <div
           class="absolute -top-12 -right-12 w-40 h-40 rounded-full pointer-events-none"
@@ -217,10 +209,17 @@
                   </span>
                   <span
                     v-if="recentNextDepartures[stop.stopId]"
-                    class="block text-xs tabular-nums truncate"
-                    style="color: var(--text-tertiary)"
+                    class="flex items-center gap-1.5 mt-0.5"
                   >
-                    {{ recentNextDepartures[stop.stopId] }}
+                    <LineBadge
+                      :name="recentNextDepartures[stop.stopId]!.lineName"
+                      :color="recentNextDepartures[stop.stopId]!.lineColor"
+                      :text-color="recentNextDepartures[stop.stopId]!.lineTextColor"
+                      :locale="config?.locale[0]"
+                    />
+                    <span class="text-xs tabular-nums" style="color: var(--text-tertiary); letter-spacing: -0.01em">
+                      {{ recentNextDepartures[stop.stopId]!.timeLabel }}
+                    </span>
                   </span>
                 </span>
                 <ChevronRight :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
@@ -283,6 +282,9 @@
 
         <!-- Sito ufficiale -->
         <section v-if="config?.url || config?.store">
+          <h2 class="text-xs font-semibold uppercase tracking-wider mb-3" style="color: var(--text-tertiary)">
+            {{ s.resources ?? 'Risorse' }}
+          </h2>
           <div
             class="rounded-2xl overflow-hidden divide-app"
             style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border-color: var(--border)"
@@ -315,10 +317,9 @@
         </section>
 
         <!-- Schedule freshness -->
-        <div v-if="schedules?.lastUpdated" class="text-center text-xs space-y-0.5" style="color: var(--text-tertiary)">
-          <p>{{ s.schedulesUpdated }}: {{ formatDate(schedules.lastUpdated) }}</p>
-          <p v-if="schedules.validUntil">{{ s.schedulesValidUntil }}: {{ formatDate(schedules.validUntil) }}</p>
-        </div>
+        <p v-if="schedules?.lastUpdated" class="text-center text-xs" style="color: var(--text-tertiary)">
+          {{ formatDate(schedules.lastUpdated) }}<template v-if="schedules.validUntil"> · {{ s.schedulesValidUntil }} {{ formatDate(schedules.validUntil) }}</template>
+        </p>
 
         <!-- Privacy link -->
         <a
@@ -456,8 +457,8 @@ const favoriteNextDepartures = computed<Record<string, string>>(() => {
   return result
 })
 
-const recentNextDepartures = computed<Record<string, string>>(() => {
-  const result: Record<string, string> = {}
+const recentNextDepartures = computed<Record<string, { lineName: string; lineColor?: string; lineTextColor?: string; timeLabel: string }>>(() => {
+  const result: Record<string, { lineName: string; lineColor?: string; lineTextColor?: string; timeLabel: string }> = {}
   const nowMin = computeNowMin(now.value)
   for (const recent of recentStops.value) {
     if (!schedules.value) continue
@@ -465,9 +466,12 @@ const recentNextDepartures = computed<Record<string, string>>(() => {
     if (!dep) continue
     const diff = dep.minutesFromMidnight - nowMin
     if (diff < 0) continue
-    if (diff === 0) result[recent.stopId] = `${dep.lineName} · ${s.value.now}`
-    else if (diff < 60) result[recent.stopId] = `${dep.lineName} · ${diff} ${s.value.minutes}`
-    else result[recent.stopId] = `${dep.lineName} · ${dep.time}`
+    const route = schedules.value.routes.find(r => r.name === dep.lineName)
+    let timeLabel: string
+    if (diff === 0) timeLabel = s.value.now
+    else if (diff < 60) timeLabel = `${diff} ${s.value.minutes}`
+    else timeLabel = dep.time
+    result[recent.stopId] = { lineName: dep.lineName, lineColor: route?.color, lineTextColor: route?.textColor, timeLabel }
   }
   return result
 })

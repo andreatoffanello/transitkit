@@ -17,10 +17,10 @@
         style="border-radius: 20px;"
         :style="selected === dg.id
           ? `background-color: var(--color-primary); color: var(--color-text-on-primary);`
-          : `background-color: var(--bg-primary); color: var(--text-secondary); border: 1px solid var(--border);`"
+          : `background-color: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border);`"
         @click="selected = dg.id"
       >
-        {{ strings ? getDayGroupLabel(dg, strings) : dg.displayLabel }}<template v-if="(departuresByDayGroup[dg.id]?.length ?? 0) > 0"> <span class="tabular-nums">({{ departuresByDayGroup[dg.id]!.length }})</span></template>
+        {{ strings ? getDayGroupLabel(dg, strings) : dg.displayLabel }}
       </button>
     </div>
 

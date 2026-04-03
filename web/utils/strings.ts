@@ -34,6 +34,7 @@ export interface AppStrings {
   contacts: string
   officialWebsite: string
   privacy: string
+  resources: string
   recentStops: string
   favoriteStops: string
   addToFavorites: string
@@ -175,6 +176,7 @@ const IT: AppStrings = {
   contacts: 'Contatti',
   officialWebsite: 'Sito ufficiale',
   privacy: 'Privacy policy',
+  resources: 'Risorse',
   recentStops: 'Fermate recenti',
   favoriteStops: 'Preferiti',
   addToFavorites: 'Aggiungi ai preferiti',
@@ -262,6 +264,7 @@ const EN: AppStrings = {
   contacts: 'Contact',
   officialWebsite: 'Official Website',
   privacy: 'Privacy policy',
+  resources: 'Resources',
   recentStops: 'Recent stops',
   favoriteStops: 'Favorites',
   addToFavorites: 'Add to favorites',

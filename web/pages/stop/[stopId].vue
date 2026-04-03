@@ -87,7 +87,7 @@
 
       <template v-else-if="stop">
         <!-- Sezione "Prossime partenze" — above the fold, massima priorità -->
-        <section class="px-4 mb-6" aria-labelledby="section-adesso">
+        <section class="px-4 pt-4 mb-6" aria-labelledby="section-adesso">
           <div class="flex items-center justify-between mb-3">
             <h2
               id="section-adesso"
@@ -151,10 +151,16 @@
               {{ s.noDepartures ?? 'Nessuna partenza nelle prossime 2 ore' }}
             </p>
             <!-- Prossima partenza oggi se disponibile -->
-            <div v-if="nextDepartureTodayHint" class="flex items-center justify-center gap-2 mb-3">
+            <div v-if="nextDepartureTodayData" class="flex items-center justify-center gap-2 mb-3">
               <span class="text-sm" style="color: var(--text-secondary)">{{ s.nextDepartureToday }}:</span>
-              <span class="text-sm font-semibold" style="color: var(--text-primary); font-variant-numeric: tabular-nums">
-                {{ nextDepartureTodayHint }}
+              <LineBadge
+                :name="nextDepartureTodayData.lineName"
+                :color="nextDepartureTodayData.lineColor"
+                :text-color="nextDepartureTodayData.lineTextColor"
+                :locale="config?.locale[0]"
+              />
+              <span class="text-sm font-semibold" style="color: var(--text-primary); font-variant-numeric: tabular-nums; letter-spacing: -0.02em">
+                {{ nextDepartureTodayData.time }}
               </span>
             </div>
             <a
@@ -182,13 +188,6 @@
             {{ isLive ? s.updatedRealtime : '' }}
           </div>
 
-          <a
-            href="#section-orari"
-            class="block text-center text-sm font-medium mt-3 py-2"
-            :style="{ color: config?.theme.primaryColor }"
-          >
-            {{ s.viewFullSchedule }} <span aria-hidden="true">&#8594;</span>
-          </a>
         </section>
 
         <!-- Sezione "Orario" con DayGroupTabs -->
@@ -512,13 +511,14 @@ const upcomingDepartures = computed<Departure[]>(() => {
 })
 
 // First departure beyond the 2h window — shown when upcoming list is empty
-const nextDepartureTodayHint = computed<string | null>(() => {
+const nextDepartureTodayData = computed<{ time: string; lineName: string; lineColor?: string; lineTextColor?: string } | null>(() => {
   if (!stop.value || !schedules.value) return null
   const result = getNextDeparture(stop.value.id, schedules.value, now.value, config.value?.timezone, config.value?.headsignMap)
   if (!result) return null
   const curNowMin = computeNowMin(now.value)
   if (result.minutesFromMidnight <= curNowMin + 120) return null
-  return `${result.time} (${result.lineName})`
+  const route = schedules.value.routes.find(r => r.name === result.lineName)
+  return { time: result.time, lineName: result.lineName, lineColor: route?.color, lineTextColor: route?.textColor }
 })
 
 // SEO

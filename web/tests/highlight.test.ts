@@ -27,6 +27,23 @@ describe('highlightMatch', () => {
     const result = highlightMatch('Été', 'ete')
     expect(result).toContain('<span')
   })
+
+  it('query longer than text returns original text unchanged', () => {
+    const result = highlightMatch('ABC', 'ABCDEFG')
+    expect(result).toBe('ABC')
+    expect(result).not.toContain('<span')
+  })
+
+  it('query equals entire text wraps everything in span', () => {
+    const result = highlightMatch('Centro', 'centro')
+    expect(result).toBe('<span class="font-semibold text-gray-900 dark:text-white">Centro</span>')
+  })
+
+  it('empty text with non-empty query returns empty string', () => {
+    const result = highlightMatch('', 'test')
+    expect(result).toBe('')
+    expect(result).not.toContain('<span')
+  })
 })
 
 describe('escapeHtml', () => {

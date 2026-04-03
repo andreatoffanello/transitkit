@@ -1,14 +1,19 @@
 import { resolveOperatorId, CDN_BASE } from '~/utils/operators'
 import type { ScheduleData } from '~/types'
 
-export function buildSitemapUrls(host: string, schedules: ScheduleData): string[] {
+export type SitemapUrl = { loc: string; changefreq: string; priority: number }
+
+export function buildSitemapUrls(host: string, schedules: ScheduleData): SitemapUrl[] {
   const base = `https://${host}`
-  const urls: string[] = [base + '/', base + '/lines']
+  const urls: SitemapUrl[] = [
+    { loc: base + '/', changefreq: 'weekly', priority: 0.8 },
+    { loc: base + '/lines', changefreq: 'weekly', priority: 0.7 },
+  ]
   for (const route of schedules.routes) {
-    urls.push(`${base}/lines/${route.id}`)
+    urls.push({ loc: `${base}/lines/${route.id}`, changefreq: 'weekly', priority: 0.6 })
   }
   for (const stop of schedules.stops) {
-    urls.push(`${base}/stop/${stop.id}`)
+    urls.push({ loc: `${base}/stop/${stop.id}`, changefreq: 'daily', priority: 0.9 })
   }
   return urls
 }
@@ -28,14 +33,19 @@ export default defineEventHandler(async (event) => {
     // CDN unreachable — serve minimal sitemap
   }
 
-  const urls = schedules
+  const sitemapUrls: SitemapUrl[] = schedules
     ? buildSitemapUrls(host, schedules)
-    : [`https://${host}/`, `https://${host}/lines`]
+    : [
+        { loc: `https://${host}/`, changefreq: 'weekly', priority: 0.8 },
+        { loc: `https://${host}/lines`, changefreq: 'weekly', priority: 0.7 },
+      ]
 
   const xml = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    ...urls.map(url => `  <url><loc>${url}</loc></url>`),
+    ...sitemapUrls.map(({ loc, changefreq, priority }) =>
+      `  <url>\n    <loc>${loc}</loc>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`,
+    ),
     '</urlset>',
   ].join('\n')
 

@@ -20,11 +20,13 @@ const mockSchedules: ScheduleData = {
 }
 
 /** Replicates the XML construction logic from the Nitro event handler. */
-function buildXml(urls: string[]): string {
+function buildXml(urls: ReturnType<typeof buildSitemapUrls>): string {
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    ...urls.map(url => `  <url><loc>${url}</loc></url>`),
+    ...urls.map(({ loc, changefreq, priority }) =>
+      `  <url>\n    <loc>${loc}</loc>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`,
+    ),
     '</urlset>',
   ].join('\n')
 }
@@ -32,40 +34,80 @@ function buildXml(urls: string[]): string {
 describe('buildSitemapUrls', () => {
   it('includes home and lines pages', () => {
     const urls = buildSitemapUrls('example.com', mockSchedules)
-    expect(urls).toContain('https://example.com/')
-    expect(urls).toContain('https://example.com/lines')
+    const locs = urls.map(u => u.loc)
+    expect(locs).toContain('https://example.com/')
+    expect(locs).toContain('https://example.com/lines')
   })
 
   it('includes all route pages', () => {
     const urls = buildSitemapUrls('example.com', mockSchedules)
-    expect(urls).toContain('https://example.com/lines/r1')
+    const locs = urls.map(u => u.loc)
+    expect(locs).toContain('https://example.com/lines/r1')
   })
 
   it('includes all stop pages', () => {
     const urls = buildSitemapUrls('example.com', mockSchedules)
-    expect(urls).toContain('https://example.com/stop/s1')
-    expect(urls).toContain('https://example.com/stop/s2')
+    const locs = urls.map(u => u.loc)
+    expect(locs).toContain('https://example.com/stop/s1')
+    expect(locs).toContain('https://example.com/stop/s2')
   })
 
   it('uses https protocol', () => {
     const urls = buildSitemapUrls('example.com', mockSchedules)
-    expect(urls.every(u => u.startsWith('https://'))).toBe(true)
+    expect(urls.every(u => u.loc.startsWith('https://'))).toBe(true)
   })
 
   it('empty routes array — still includes home and /lines, no route entries', () => {
     const data: ScheduleData = { ...mockSchedules, routes: [], routeIds: [] }
     const urls = buildSitemapUrls('example.com', data)
-    expect(urls).toContain('https://example.com/')
-    expect(urls).toContain('https://example.com/lines')
-    expect(urls.some(u => u.includes('/lines/'))).toBe(false)
+    const locs = urls.map(u => u.loc)
+    expect(locs).toContain('https://example.com/')
+    expect(locs).toContain('https://example.com/lines')
+    expect(locs.some(u => u.includes('/lines/'))).toBe(false)
   })
 
   it('empty stops array — still includes home and /lines, no stop entries', () => {
     const data: ScheduleData = { ...mockSchedules, stops: [] }
     const urls = buildSitemapUrls('example.com', data)
-    expect(urls).toContain('https://example.com/')
-    expect(urls).toContain('https://example.com/lines')
-    expect(urls.some(u => u.includes('/stop/'))).toBe(false)
+    const locs = urls.map(u => u.loc)
+    expect(locs).toContain('https://example.com/')
+    expect(locs).toContain('https://example.com/lines')
+    expect(locs.some(u => u.includes('/stop/'))).toBe(false)
+  })
+
+  it('stop URLs have changefreq daily and priority 0.9', () => {
+    const urls = buildSitemapUrls('example.com', mockSchedules)
+    const stopUrls = urls.filter(u => u.loc.includes('/stop/'))
+    expect(stopUrls.length).toBeGreaterThan(0)
+    for (const u of stopUrls) {
+      expect(u.changefreq).toBe('daily')
+      expect(u.priority).toBe(0.9)
+    }
+  })
+
+  it('route (lines/:id) URLs have changefreq weekly and priority 0.6', () => {
+    const urls = buildSitemapUrls('example.com', mockSchedules)
+    const routeUrls = urls.filter(u => u.loc.includes('/lines/'))
+    expect(routeUrls.length).toBeGreaterThan(0)
+    for (const u of routeUrls) {
+      expect(u.changefreq).toBe('weekly')
+      expect(u.priority).toBe(0.6)
+    }
+  })
+
+  it('home URL has priority 0.8', () => {
+    const urls = buildSitemapUrls('example.com', mockSchedules)
+    const home = urls.find(u => u.loc === 'https://example.com/')
+    expect(home).toBeDefined()
+    expect(home!.priority).toBe(0.8)
+  })
+
+  it('/lines URL has changefreq weekly and priority 0.7', () => {
+    const urls = buildSitemapUrls('example.com', mockSchedules)
+    const lines = urls.find(u => u.loc === 'https://example.com/lines')
+    expect(lines).toBeDefined()
+    expect(lines!.changefreq).toBe('weekly')
+    expect(lines!.priority).toBe(0.7)
   })
 })
 
@@ -82,11 +124,33 @@ describe('XML output structure', () => {
     expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
   })
 
-  it('wraps each URL in <url><loc>...</loc></url>', () => {
+  it('wraps each URL in <url>...</url> with loc, changefreq, priority', () => {
     const urls = buildSitemapUrls('example.com', mockSchedules)
     const xml = buildXml(urls)
-    for (const url of urls) {
-      expect(xml).toContain(`<url><loc>${url}</loc></url>`)
+    for (const { loc, changefreq, priority } of urls) {
+      expect(xml).toContain(`<loc>${loc}</loc>`)
+      expect(xml).toContain(`<changefreq>${changefreq}</changefreq>`)
+      expect(xml).toContain(`<priority>${priority}</priority>`)
     }
+  })
+
+  it('stop URLs emit <changefreq>daily</changefreq> and <priority>0.9</priority> in XML', () => {
+    const urls = buildSitemapUrls('example.com', mockSchedules)
+    const xml = buildXml(urls)
+    expect(xml).toContain('<changefreq>daily</changefreq>')
+    expect(xml).toContain('<priority>0.9</priority>')
+  })
+
+  it('route URLs emit <changefreq>weekly</changefreq> and <priority>0.6</priority> in XML', () => {
+    const urls = buildSitemapUrls('example.com', mockSchedules)
+    const xml = buildXml(urls)
+    expect(xml).toContain('<changefreq>weekly</changefreq>')
+    expect(xml).toContain('<priority>0.6</priority>')
+  })
+
+  it('home URL emits <priority>0.8</priority> in XML', () => {
+    const urls = buildSitemapUrls('example.com', mockSchedules)
+    const xml = buildXml(urls)
+    expect(xml).toContain('<priority>0.8</priority>')
   })
 })

@@ -57,6 +57,11 @@
           {{ s.noDepartures }}
         </p>
 
+        <!-- Annuncio realtime per screen reader -->
+        <div aria-live="polite" class="sr-only">
+          {{ isLive ? s.updatedRealtime : '' }}
+        </div>
+
         <!-- Indicatore realtime — visibile solo quando il feed GTFS-RT è attivo -->
         <p
           v-if="isLive"

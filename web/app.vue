@@ -1,7 +1,15 @@
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-[#080C18] text-gray-900 dark:text-gray-100">
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-gray-900 focus:rounded-lg focus:shadow"
+    >
+      Salta al contenuto
+    </a>
     <NuxtErrorBoundary>
-      <NuxtPage />
+      <main id="main-content" tabindex="-1">
+        <NuxtPage />
+      </main>
       <template #error="{ error, clearError }">
         <div class="min-h-screen flex flex-col items-center justify-center px-6 text-center bg-gray-50 dark:bg-gray-950">
           <div class="max-w-sm w-full">

@@ -8,6 +8,7 @@
       <button
         v-for="dg in dayGroups"
         :key="dg.id"
+        :id="`tab-${dg.id}`"
         role="tab"
         :aria-selected="selected === dg.id"
         aria-controls="daytabs-panel"
@@ -24,6 +25,7 @@
     <div
       id="daytabs-panel"
       role="tabpanel"
+      :aria-labelledby="`tab-${selected}`"
     >
       <slot :departures="currentDepartures" />
     </div>

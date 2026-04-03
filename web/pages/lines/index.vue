@@ -42,6 +42,7 @@
           class="px-3 py-1 rounded-full text-sm font-medium transition-colors active:scale-95 transition-transform duration-100"
           :class="selectedType === type ? 'text-white' : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'"
           :style="selectedType === type ? { backgroundColor: config?.theme.primaryColor } : {}"
+          :aria-pressed="selectedType === type"
           @click="selectedType = type"
         >
           <span v-if="TRANSIT_ICONS[type]" aria-hidden="true">{{ TRANSIT_ICONS[type] }}</span>

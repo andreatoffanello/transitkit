@@ -221,6 +221,9 @@ const todayDepartures = computed<Departure[]>(() => {
   return departuresByGroup.value[key] ?? []
 })
 
+// SAFETY: config.value is guaranteed to be populated here because `await useOperator()`
+// above suspends the component setup (Nuxt 3 <Suspense>) until the operator config
+// resolves. The snapshot passed to useRealtime() is therefore stable and correct.
 const { departures: realtimeDepartures, isLive } = useRealtime(
   todayDepartures,
   config.value?.gtfsRt?.trip_updates,

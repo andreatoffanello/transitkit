@@ -3,7 +3,10 @@
     <div class="max-w-lg mx-auto lg:max-w-2xl">
 
       <!-- Hero -->
-      <section class="px-5 pt-8 pb-6">
+      <section
+        class="px-5 pt-8 pb-6 relative overflow-hidden"
+        style="background: linear-gradient(160deg, color-mix(in srgb, var(--color-primary) 6%, transparent) 0%, transparent 60%)"
+      >
         <div
           class="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
           style="background-color: var(--color-primary)"
@@ -283,8 +286,8 @@
 
         <!-- Schedule freshness -->
         <div v-if="schedules?.lastUpdated" class="text-center text-xs space-y-0.5" style="color: var(--text-tertiary)">
-          <p>{{ s.schedulesUpdated }}: {{ schedules.lastUpdated }}</p>
-          <p v-if="schedules.validUntil">{{ s.schedulesValidUntil }}: {{ schedules.validUntil }}</p>
+          <p>{{ s.schedulesUpdated }}: {{ formatDate(schedules.lastUpdated) }}</p>
+          <p v-if="schedules.validUntil">{{ s.schedulesValidUntil }}: {{ formatDate(schedules.validUntil) }}</p>
         </div>
 
         <!-- Privacy link -->
@@ -370,6 +373,13 @@ onMounted(() => {
     { timeout: 10000, maximumAge: 60000 },
   )
 })
+
+function formatDate(dateStr: string | undefined): string {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return dateStr
+  return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
+}
 
 const hasRealtime = computed(() => !!config.value?.gtfsRt)
 

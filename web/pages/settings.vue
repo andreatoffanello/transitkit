@@ -22,7 +22,7 @@
               </div>
               <div class="flex-1 text-left">
                 <p class="text-[15px] font-medium" style="color: var(--text-primary)">Tema scuro</p>
-                <p class="text-sm" style="color: var(--text-secondary)">{{ isDark ? 'Attivo' : 'Non attivo' }}</p>
+                <p class="text-sm" style="color: var(--text-secondary)">{{ isDark ? 'Scuro' : 'Chiaro' }}</p>
               </div>
               <!-- Toggle visivo -->
               <div

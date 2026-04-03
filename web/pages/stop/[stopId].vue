@@ -60,12 +60,8 @@
       <section class="mb-6" aria-labelledby="section-adesso">
         <h2
           id="section-adesso"
-          class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2"
+          class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-2"
         >
-          {{ s.sectionNow }}
-        </h2>
-
-        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-2">
           {{ s.upcomingDepartures }}
           <span
             v-if="isLive"
@@ -110,12 +106,8 @@
       <section aria-labelledby="section-orari">
         <h2
           id="section-orari"
-          class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2"
+          class="text-xs font-semibold uppercase tracking-wider text-gray-400 mt-6 mb-2"
         >
-          {{ s.sectionSchedule }}
-        </h2>
-
-        <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-400 mt-6 mb-2">
           {{ s.todaySchedule }}
         </h2>
 

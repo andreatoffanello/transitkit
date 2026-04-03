@@ -324,12 +324,16 @@ const servingRoutes = computed((): Route[] => {
 // Tick ogni 30s per aggiornare countdown
 const now = ref(Date.now())
 let interval: ReturnType<typeof setInterval>
+const { addStop } = useRecentStops()
 onMounted(async () => {
   now.value = Date.now()
   interval = setInterval(() => { now.value = Date.now() }, 30_000)
   await nextTick()
   const el = document.querySelector<HTMLElement>('[data-departure-future="true"]')
   el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  if (stop.value) {
+    addStop({ stopId: stop.value.id, name: stop.value.name })
+  }
 })
 onUnmounted(() => clearInterval(interval))
 

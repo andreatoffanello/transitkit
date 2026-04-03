@@ -8,6 +8,23 @@ const BASE_ICONS = [
   { src: '/icons/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
 ]
 
+const SHORTCUTS = [
+  {
+    name: 'Linee',
+    short_name: 'Linee',
+    description: 'Vedi tutte le linee',
+    url: '/lines',
+    icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }],
+  },
+  {
+    name: 'Preferiti',
+    short_name: 'Preferiti',
+    description: 'Fermate preferite',
+    url: '/',
+    icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }],
+  },
+]
+
 const FALLBACK: Record<string, unknown> = {
   name: 'TransitKit',
   short_name: 'Transit',
@@ -22,6 +39,7 @@ export function buildManifest(config: OperatorConfig | null): Record<string, unk
     display: 'standalone',
     background_color: '#080C18',
     icons: BASE_ICONS,
+    shortcuts: SHORTCUTS,
   }
 
   if (!config) {

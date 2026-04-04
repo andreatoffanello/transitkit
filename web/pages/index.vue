@@ -11,12 +11,12 @@
           aria-hidden="true"
         />
         <div
-          class="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
+          class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
           style="background-color: var(--color-primary)"
         >
-          <Bus :size="24" :stroke-width="1.75" style="color: var(--color-text-on-primary)" />
+          <Bus :size="26" :stroke-width="1.75" style="color: var(--color-text-on-primary)" />
         </div>
-        <h1 class="text-2xl font-bold leading-tight mb-1" style="color: var(--text-primary)">
+        <h1 class="text-3xl font-bold leading-tight mb-1" style="color: var(--text-primary); letter-spacing: -0.015em">
           {{ config?.fullName ?? config?.name }}
         </h1>
         <p class="text-sm" style="color: var(--text-secondary)">
@@ -235,7 +235,12 @@
                       :text-color="recentNextDepartures[stop.stopId]!.lineTextColor"
                       :locale="config?.locale[0]"
                     />
-                    <span class="text-xs tabular-nums" style="color: var(--text-tertiary); letter-spacing: -0.01em">
+                    <span
+                      class="text-xs tabular-nums"
+                      :style="recentNextDepartures[stop.stopId]!.minutesFromNow <= 5
+                        ? 'color: #16a34a; font-weight: 600; letter-spacing: -0.01em'
+                        : 'color: var(--text-tertiary); letter-spacing: -0.01em'"
+                    >
                       {{ recentNextDepartures[stop.stopId]!.timeLabel }}
                     </span>
                   </span>
@@ -345,8 +350,9 @@
               to="/lines"
               prefetch
               class="flex items-center gap-3 px-4 py-3.5 transition-opacity duration-150 active:opacity-70"
+              style="background-color: color-mix(in srgb, var(--color-primary) 4%, transparent)"
             >
-              <Smartphone :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+              <Smartphone :size="16" :stroke-width="1.75" style="color: var(--color-primary); opacity: 0.7" class="shrink-0" />
               <span class="flex-1 min-w-0">
                 <span class="block text-[15px] font-medium truncate" style="color: var(--text-primary)">{{ config.store.title }}</span>
                 <span v-if="config.store.subtitle" class="block text-xs truncate" style="color: var(--text-tertiary)">{{ config.store.subtitle }}</span>
@@ -519,8 +525,8 @@ const favoriteNextDepartures = computed<Record<string, string>>(() => {
   return result
 })
 
-const recentNextDepartures = computed<Record<string, { lineName: string; lineColor?: string; lineTextColor?: string; timeLabel: string }>>(() => {
-  const result: Record<string, { lineName: string; lineColor?: string; lineTextColor?: string; timeLabel: string }> = {}
+const recentNextDepartures = computed<Record<string, { lineName: string; lineColor?: string; lineTextColor?: string; timeLabel: string; minutesFromNow: number }>>(() => {
+  const result: Record<string, { lineName: string; lineColor?: string; lineTextColor?: string; timeLabel: string; minutesFromNow: number }> = {}
   const nowMin = computeNowMin(now.value)
   for (const recent of recentStops.value) {
     if (!schedules.value) continue
@@ -533,7 +539,7 @@ const recentNextDepartures = computed<Record<string, { lineName: string; lineCol
     if (diff === 0) timeLabel = s.value.now
     else if (diff < 60) timeLabel = `${diff} ${s.value.minutes}`
     else timeLabel = dep.time
-    result[recent.stopId] = { lineName: dep.lineName, lineColor: route?.color, lineTextColor: route?.textColor, timeLabel }
+    result[recent.stopId] = { lineName: dep.lineName, lineColor: route?.color, lineTextColor: route?.textColor, timeLabel, minutesFromNow: diff }
   }
   return result
 })

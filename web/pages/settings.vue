@@ -1,9 +1,9 @@
 <template>
   <AppLayout>
-    <div class="max-w-lg mx-auto lg:max-w-2xl">
+    <div class="max-w-lg mx-auto lg:max-w-2xl flex flex-col" style="min-height: calc(100vh - 4rem)">
       <PageHeader title="Impostazioni" />
 
-      <div class="px-4 space-y-6 pb-8">
+      <div class="px-4 space-y-6 pb-8 flex-1">
 
         <!-- Aspetto -->
         <section>
@@ -110,11 +110,13 @@
           </div>
         </section>
 
-        <!-- Version footer -->
-        <p class="text-center text-xs py-4" style="color: var(--text-tertiary)">
+      </div>
+
+      <!-- Version footer anchored to bottom -->
+      <div class="px-4 py-5 text-center" style="border-top: 1px solid var(--border)">
+        <p class="text-xs" style="color: var(--text-tertiary)">
           Powered by transit-engine
         </p>
-
       </div>
     </div>
   </AppLayout>

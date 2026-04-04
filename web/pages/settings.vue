@@ -7,7 +7,7 @@
 
         <!-- Aspetto -->
         <section>
-          <h2 class="text-xs font-semibold uppercase tracking-wider px-1 mb-2" style="color: var(--text-tertiary)">
+          <h2 class="text-xs font-semibold uppercase tracking-widest px-1 mb-2" style="color: var(--text-tertiary)">
             Aspetto
           </h2>
           <div class="rounded-2xl overflow-hidden" style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm)">
@@ -40,7 +40,7 @@
 
         <!-- Informazioni -->
         <section>
-          <h2 class="text-xs font-semibold uppercase tracking-wider px-1 mb-2" style="color: var(--text-tertiary)">
+          <h2 class="text-xs font-semibold uppercase tracking-widest px-1 mb-2" style="color: var(--text-tertiary)">
             Informazioni
           </h2>
           <div
@@ -89,7 +89,7 @@
 
         <!-- Dati orari -->
         <section v-if="schedules?.validUntil">
-          <h2 class="text-xs font-semibold uppercase tracking-wider px-1 mb-2" style="color: var(--text-tertiary)">
+          <h2 class="text-xs font-semibold uppercase tracking-widest px-1 mb-2" style="color: var(--text-tertiary)">
             Dati orari
           </h2>
           <div class="rounded-2xl overflow-hidden" style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm)">

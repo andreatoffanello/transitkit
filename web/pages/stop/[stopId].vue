@@ -114,7 +114,7 @@
           <div class="flex items-center justify-between mb-3">
             <h2
               id="section-adesso"
-              class="text-xs font-semibold uppercase tracking-wider flex items-center gap-2"
+              class="text-xs font-semibold uppercase tracking-widest flex items-center gap-2"
               style="color: var(--text-tertiary)"
             >
               {{ s.upcomingDepartures }}
@@ -219,7 +219,7 @@
           <div class="flex items-center justify-between mb-3">
             <h2
               id="section-orari"
-              class="text-xs font-semibold uppercase tracking-wider"
+              class="text-xs font-semibold uppercase tracking-widest"
               style="color: var(--text-tertiary)"
             >
               {{ s.todaySchedule }}
@@ -274,7 +274,7 @@
         <section v-if="servingRoutes.length" class="px-4 mb-6" aria-labelledby="section-network">
           <h3
             id="section-network"
-            class="text-[11px] font-medium uppercase tracking-wide mb-3"
+            class="text-xs font-semibold uppercase tracking-widest mb-3"
             style="color: var(--text-tertiary)"
           >
             Linee che passano qui

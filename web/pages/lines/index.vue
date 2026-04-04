@@ -110,7 +110,7 @@
           :key="type"
           class="mb-6"
         >
-          <h2 class="text-xs font-semibold uppercase tracking-wider mb-3" style="color: var(--text-tertiary)">
+          <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
             {{ transitTypeLabel(type) }}
           </h2>
 
@@ -143,7 +143,7 @@
                 />
                 <span v-else>{{ route.longName ?? route.name }}</span>
               </span>
-              <span v-if="stopCountByRoute.get(route.id)" class="text-xs shrink-0" style="color: var(--text-tertiary)">
+              <span v-if="stopCountByRoute.get(route.id)" class="text-xs font-medium shrink-0" style="color: var(--text-secondary)">
                 {{ stopCountByRoute.get(route.id) }} {{ s.stops }}
               </span>
               <ChevronRight :size="16" :stroke-width="1.75" class="shrink-0" style="color: var(--text-tertiary)" aria-hidden="true" />

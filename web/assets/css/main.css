@@ -89,6 +89,15 @@ html.dark .hero-section {
   border-top: 1px solid var(--border);
 }
 
+/* Search / input container focus ring — keyboard accessible, matches primary color */
+.input-focus-ring {
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.input-focus-ring:focus-within {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent), var(--shadow-sm), inset 0 1px 2px rgba(0,0,0,0.04);
+}
+
 /* Hover row feedback for desktop — only fires on pointer devices, not touch */
 @media (hover: hover) {
   .hover-row:hover {

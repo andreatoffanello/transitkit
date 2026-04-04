@@ -27,8 +27,8 @@
       <!-- Search bar -->
       <section v-if="schedules" class="px-5 mb-6">
         <div
-          class="flex items-center gap-2 rounded-2xl px-4 py-3"
-          style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm)"
+          class="flex items-center gap-2 rounded-2xl px-4 py-3.5"
+          style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border: 1.5px solid color-mix(in srgb, var(--color-primary) 18%, var(--border))"
         >
           <Search :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
           <input
@@ -110,7 +110,7 @@
       </section>
 
       <!-- Main content area -->
-      <div class="px-5 pb-10 space-y-6">
+      <div class="px-5 pb-10 space-y-8">
 
         <!-- Fermate nelle vicinanze -->
         <ClientOnly>
@@ -363,7 +363,7 @@
         </section>
 
         <!-- Schedule freshness -->
-        <div v-if="schedules?.validUntil" class="flex items-center justify-center gap-1.5">
+        <div v-if="schedules?.validUntil" class="flex items-center justify-center gap-2">
           <span
             v-if="schedulesExpiringSoon"
             class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold"
@@ -371,8 +371,9 @@
           >
             In scadenza
           </span>
-          <p class="text-center text-xs" style="color: var(--text-tertiary)">
-            Orari validi · scadono il {{ formatShortDate(schedules.validUntil) }}
+          <CalendarDays :size="13" :stroke-width="1.75" style="color: var(--text-tertiary)" />
+          <p class="text-xs" style="color: var(--text-tertiary)">
+            Valido fino al {{ formatShortDate(schedules.validUntil) }}
           </p>
         </div>
 
@@ -396,7 +397,7 @@
 import { computeNowMin, getNextDeparture, sortStopsByNextDeparture } from '~/utils/schedule'
 import { highlightMatch } from '~/utils/highlight'
 import type { ScheduleStop } from '~/types'
-import { Bus, Search, X, MapPin, Navigation, Star, Clock, ChevronRight, Phone, Mail, Globe, Smartphone, Route } from 'lucide-vue-next'
+import { Bus, Search, X, MapPin, Navigation, Star, Clock, ChevronRight, Phone, Mail, Globe, Smartphone, Route, CalendarDays } from 'lucide-vue-next'
 
 const { config, schedules } = await useOperator()
 const s = useStrings(config)

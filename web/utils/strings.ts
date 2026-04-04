@@ -176,7 +176,7 @@ const IT: AppStrings = {
   contacts: 'Contatti',
   officialWebsite: 'Sito ufficiale',
   privacy: 'Privacy policy',
-  resources: 'Risorse',
+  resources: 'Link utili',
   recentStops: 'Fermate recenti',
   favoriteStops: 'Preferiti',
   addToFavorites: 'Aggiungi ai preferiti',

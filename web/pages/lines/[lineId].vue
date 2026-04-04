@@ -45,7 +45,7 @@
 
       <template v-else-if="route">
         <!-- LineBadge in evidenza -->
-        <div class="mb-6">
+        <div class="mb-6 inline-block p-3 rounded-2xl" style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border: 1px solid var(--border)">
           <LineBadge
             :name="route.name"
             :color="route.color"

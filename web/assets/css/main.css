@@ -89,6 +89,13 @@ html.dark .hero-section {
   border-top: 1px solid var(--border);
 }
 
+/* Hover row feedback for desktop — only fires on pointer devices, not touch */
+@media (hover: hover) {
+  .hover-row:hover {
+    background-color: color-mix(in srgb, var(--color-primary) 4%, transparent);
+  }
+}
+
 /* Page transitions */
 @media (prefers-reduced-motion: no-preference) {
   .page-fade-enter-active,

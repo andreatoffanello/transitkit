@@ -25,12 +25,12 @@
         <li v-for="tab in visibleTabs" :key="tab.path">
           <NuxtLink
             :to="tab.path"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 hover-row"
             :style="isActive(tab.path)
               ? `background-color: color-mix(in srgb, var(--color-primary) 10%, transparent); color: var(--color-primary);`
               : `color: var(--text-secondary);`"
           >
-            <component :is="tab.icon" :size="20" :stroke-width="1.75" />
+            <component :is="tab.icon" :size="20" :stroke-width="isActive(tab.path) ? 2.25 : 1.75" />
             {{ tab.label }}
           </NuxtLink>
         </li>

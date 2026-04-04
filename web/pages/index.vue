@@ -252,20 +252,26 @@
 
           <!-- Empty state onboarding -->
           <section v-if="!favoriteStops.length && !recentStops.length">
-            <div class="flex flex-col items-center gap-2 py-8 text-center">
+            <div
+              class="flex flex-col items-center gap-3 py-8 text-center rounded-2xl mb-1 px-4"
+              style="background: linear-gradient(160deg, color-mix(in srgb, var(--color-primary) 6%, transparent) 0%, transparent 70%)"
+            >
               <div
-                class="w-12 h-12 rounded-2xl flex items-center justify-center"
-                style="background-color: var(--bg-elevated)"
+                class="w-14 h-14 rounded-2xl flex items-center justify-center"
+                style="background-color: color-mix(in srgb, var(--color-primary) 10%, var(--bg-elevated)); box-shadow: 0 2px 8px rgba(0,0,0,0.06)"
               >
-                <MapPin :size="22" :stroke-width="1.5" style="color: var(--text-tertiary)" />
+                <MapPin :size="24" :stroke-width="1.5" style="color: var(--color-primary); opacity: 0.75" />
               </div>
-              <p class="text-sm max-w-[240px]" style="color: var(--text-secondary)">{{ s.onboardingHint }}</p>
+              <div>
+                <p class="text-sm font-semibold mb-0.5" style="color: var(--text-primary)">Inizia la tua ricerca</p>
+                <p class="text-xs max-w-[240px]" style="color: var(--text-secondary)">{{ s.onboardingHint }}</p>
+              </div>
             </div>
 
             <!-- Featured lines — prime 3 linee come punto di partenza -->
-            <div v-if="schedules?.routes?.length" class="mt-1">
-              <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
-                Linee disponibili
+            <div v-if="schedules?.routes?.length" class="mt-4">
+              <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--color-primary); opacity: 0.75">
+                Linee consigliate
               </h2>
               <div
                 class="rounded-2xl overflow-hidden divide-app"
@@ -275,7 +281,7 @@
                   v-for="r in schedules.routes.slice(0, 4)"
                   :key="r.id"
                   :to="`/lines/${r.id}`"
-                  class="flex items-center gap-3 px-4 py-3.5 transition-opacity duration-150 active:opacity-70"
+                  class="flex items-center gap-3 px-4 py-3.5 transition-all active:opacity-70 hover-row"
                 >
                   <LineBadge :name="r.name" :color="r.color" :text-color="r.textColor" :locale="config?.locale[0]" />
                   <span class="flex-1 text-[15px] font-medium truncate" style="color: var(--text-primary)">{{ r.longName }}</span>

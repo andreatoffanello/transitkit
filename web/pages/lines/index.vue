@@ -39,8 +39,9 @@
             :placeholder="s.searchLines"
             class="w-full pl-9 pr-9 py-2.5 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-offset-0"
             :style="{
-              backgroundColor: 'var(--bg-secondary)',
-              border: '1px solid var(--border)',
+              backgroundColor: 'var(--bg-elevated)',
+              border: '1px solid color-mix(in srgb, var(--color-primary) 22%, var(--border))',
+              boxShadow: 'var(--shadow-sm), inset 0 1px 2px rgba(0,0,0,0.04)',
               color: 'var(--text-primary)',
               '--tw-ring-color': config?.theme.primaryColor,
             }"
@@ -125,7 +126,7 @@
               :to="`/lines/${route.id}`"
               :prefetch="false"
               role="listitem"
-              class="flex items-center gap-3 px-4 py-3 transition-opacity active:opacity-70"
+              class="flex items-center gap-3 px-4 py-3 transition-all active:opacity-70 hover-row"
               style="border-color: var(--border)"
             >
               <LineBadge

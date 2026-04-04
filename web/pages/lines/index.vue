@@ -64,12 +64,17 @@
             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all active:scale-95"
             :style="selectedType === null
               ? { backgroundColor: 'var(--color-primary)', color: 'var(--color-text-on-primary)' }
-              : { backgroundColor: 'var(--bg-elevated)', color: 'var(--text-tertiary)', border: '1px solid var(--border)' }"
+              : { backgroundColor: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }"
             :aria-pressed="selectedType === null"
             @click="selectedType = null"
           >
             <Route :size="13" :stroke-width="1.75" aria-hidden="true" />
             {{ s.all }}
+            <span
+              v-if="selectedType === null"
+              class="inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-bold px-1"
+              style="background-color: rgba(255,255,255,0.25)"
+            >{{ allRoutes.length }}</span>
           </button>
           <!-- Type chips -->
           <button
@@ -78,7 +83,7 @@
             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all active:scale-95"
             :style="selectedType === type
               ? { backgroundColor: 'var(--color-primary)', color: 'var(--color-text-on-primary)' }
-              : { backgroundColor: 'var(--bg-elevated)', color: 'var(--text-tertiary)', border: '1px solid var(--border)' }"
+              : { backgroundColor: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }"
             :aria-pressed="selectedType === type"
             @click="selectedType = type"
           >

@@ -3,7 +3,7 @@
     <div class="max-w-lg mx-auto lg:max-w-2xl">
       <PageHeader title="Impostazioni" />
 
-      <div class="px-4 space-y-4 pb-8">
+      <div class="px-4 space-y-6 pb-8">
 
         <!-- Aspetto -->
         <section>
@@ -87,6 +87,29 @@
           </div>
         </section>
 
+        <!-- Dati orari -->
+        <section v-if="schedules?.validUntil">
+          <h2 class="text-xs font-semibold uppercase tracking-wider px-1 mb-2" style="color: var(--text-tertiary)">
+            Dati orari
+          </h2>
+          <div class="rounded-2xl overflow-hidden" style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm)">
+            <div class="flex items-center gap-4 px-4 py-4">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background-color: var(--bg-secondary)">
+                <CalendarDays :size="18" :stroke-width="1.75" style="color: var(--text-secondary)" />
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-[15px] font-medium" style="color: var(--text-primary)">Orari validi fino al</p>
+                <p class="text-sm" style="color: var(--text-secondary)">{{ formatValidUntil(schedules.validUntil) }}</p>
+              </div>
+              <span
+                v-if="schedulesExpiringSoon"
+                class="text-xs font-semibold px-2 py-0.5 rounded-full"
+                style="background-color: rgba(245,158,11,0.12); color: #d97706"
+              >In scadenza</span>
+            </div>
+          </div>
+        </section>
+
         <!-- Version footer -->
         <p class="text-center text-xs py-4" style="color: var(--text-tertiary)">
           Powered by transit-engine
@@ -98,10 +121,22 @@
 </template>
 
 <script setup lang="ts">
-import { Sun, Moon, Bus, Shield, ExternalLink, Globe } from 'lucide-vue-next'
+import { Sun, Moon, Bus, Shield, ExternalLink, Globe, CalendarDays } from 'lucide-vue-next'
 
 const { isDark, toggleTheme } = useTheme()
-const { config } = await useOperator()
+const { config, schedules } = await useOperator()
+
+const schedulesExpiringSoon = computed(() => {
+  if (!schedules.value?.validUntil) return false
+  const exp = new Date(schedules.value.validUntil)
+  const daysLeft = (exp.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+  return daysLeft < 30
+})
+
+function formatValidUntil(dateStr: string): string {
+  const d = new Date(dateStr)
+  return d.toLocaleDateString(config.value?.locale?.[0] ?? 'it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
+}
 
 useHead({ title: 'Impostazioni' })
 </script>

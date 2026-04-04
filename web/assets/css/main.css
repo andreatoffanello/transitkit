@@ -66,12 +66,12 @@ input[type="search"]::-webkit-search-cancel-button {
   display: none;
 }
 
-/* Hero section gradient — light mode subtle, dark mode more visible */
+/* Hero section gradient — light mode intentional, dark mode more visible */
 .hero-section {
   background: linear-gradient(
     160deg,
-    color-mix(in srgb, var(--color-primary) 12%, transparent) 0%,
-    color-mix(in srgb, var(--color-primary) 4%, transparent) 45%,
+    color-mix(in srgb, var(--color-primary) 18%, transparent) 0%,
+    color-mix(in srgb, var(--color-primary) 10%, transparent) 45%,
     transparent 70%
   );
 }

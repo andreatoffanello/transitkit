@@ -52,13 +52,13 @@
           <!-- Imminent: green pill badge "Ora" -->
           <span
             v-if="showCountdown && typeof effectiveMinutes === 'number' && effectiveMinutes >= 0 && effectiveMinutes <= 1"
-            class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-bold"
+            class="inline-flex items-center justify-center h-6 px-2.5 rounded-md text-xs font-bold leading-none"
             style="background-color: #16a34a; color: #ffffff; letter-spacing: 0"
           >{{ s.now }}</span>
           <!-- Short countdown: large primary number -->
           <span
             v-else-if="showCountdown && typeof effectiveMinutes === 'number' && effectiveMinutes >= 0 && effectiveMinutes <= 30"
-            class="text-[17px] font-bold"
+            class="text-[17px] font-bold leading-none"
             style="color: var(--color-primary); font-variant-numeric: tabular-nums; letter-spacing: -0.03em"
           >{{ effectiveMinutes }}<span class="text-[11px] font-medium ml-0.5">min</span></span>
           <!-- Fixed time: full-weight when in schedule context, secondary when in countdown context -->

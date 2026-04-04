@@ -89,19 +89,19 @@
         <!-- Tab switcher: Prossime / Orario -->
         <div class="mx-4 mt-4 mb-4 flex p-1 rounded-xl gap-1" style="background-color: var(--bg-elevated); border: 1px solid var(--border)">
           <button
-            class="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all"
+            class="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all active:opacity-80"
             :style="activeTab === 'prossime'
               ? { backgroundColor: 'var(--color-primary)', color: 'var(--color-text-on-primary)' }
-              : { color: 'var(--text-secondary)' }"
+              : { color: 'var(--text-tertiary)' }"
             @click="activeTab = 'prossime'"
           >
             Prossime
           </button>
           <button
-            class="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5"
+            class="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all active:opacity-80 flex items-center justify-center gap-1.5"
             :style="activeTab === 'orario'
               ? { backgroundColor: 'var(--color-primary)', color: 'var(--color-text-on-primary)' }
-              : { color: 'var(--text-secondary)' }"
+              : { color: 'var(--text-tertiary)' }"
             @click="activeTab = 'orario'"
           >
             Orario
@@ -165,10 +165,10 @@
             style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm)"
           >
             <div
-              class="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
-              style="background-color: var(--bg-secondary)"
+              class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+              style="background-color: color-mix(in srgb, var(--color-primary) 5%, var(--bg-secondary)); box-shadow: 0 2px 8px rgba(0,0,0,0.06)"
             >
-              <Clock :size="22" :stroke-width="1.5" style="color: var(--text-tertiary)" />
+              <Clock :size="28" :stroke-width="1.5" style="color: var(--color-primary); opacity: 0.6" />
             </div>
             <p class="text-[15px] font-medium mb-2" style="color: var(--text-primary)">
               {{ s.noDepartures ?? 'Nessuna partenza nelle prossime 2 ore' }}
@@ -274,7 +274,7 @@
         <section v-if="servingRoutes.length" class="px-4 mb-6" aria-labelledby="section-network">
           <h3
             id="section-network"
-            class="text-xs font-semibold uppercase tracking-wider mb-3"
+            class="text-[11px] font-medium uppercase tracking-wide mb-3"
             style="color: var(--text-tertiary)"
           >
             Linee che passano qui
@@ -318,7 +318,7 @@
               target="_blank"
               rel="noopener noreferrer"
               class="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-semibold transition-opacity duration-150 active:opacity-70"
-              style="background-color: var(--bg-elevated); color: var(--text-primary); box-shadow: var(--shadow-sm); border: 1px solid var(--border)"
+              style="background-color: color-mix(in srgb, var(--color-primary) 6%, var(--bg-elevated)); color: var(--text-primary); box-shadow: var(--shadow-sm); border: 1px solid var(--border)"
             >
               <MapPin :size="16" :stroke-width="1.75" />
               Google Maps
@@ -327,7 +327,7 @@
               v-if="canShare"
               type="button"
               class="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-semibold transition-opacity duration-150 active:opacity-70"
-              style="background-color: var(--bg-elevated); color: var(--text-primary); box-shadow: var(--shadow-sm); border: 1px solid var(--border)"
+              style="background-color: color-mix(in srgb, var(--color-primary) 6%, var(--bg-elevated)); color: var(--text-primary); box-shadow: var(--shadow-sm); border: 1px solid var(--border)"
               @click="shareStop"
             >
               <Share2 :size="16" :stroke-width="1.75" />
@@ -337,7 +337,7 @@
               v-else
               type="button"
               class="flex-1 flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-semibold transition-opacity duration-150 active:opacity-70"
-              style="background-color: var(--bg-elevated); color: var(--text-primary); box-shadow: var(--shadow-sm); border: 1px solid var(--border)"
+              style="background-color: color-mix(in srgb, var(--color-primary) 6%, var(--bg-elevated)); color: var(--text-primary); box-shadow: var(--shadow-sm); border: 1px solid var(--border)"
               @click="copyLink"
             >
               <component :is="copied ? Check : Copy" :size="16" :stroke-width="1.75" />

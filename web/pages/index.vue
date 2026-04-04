@@ -28,7 +28,7 @@
       <section v-if="schedules" class="px-5 mb-6">
         <div
           class="flex items-center gap-2 rounded-2xl px-4 py-3.5"
-          style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border: 1.5px solid color-mix(in srgb, var(--color-primary) 18%, var(--border))"
+          style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border: 1px solid color-mix(in srgb, var(--color-primary) 22%, var(--border))"
         >
           <Search :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
           <input

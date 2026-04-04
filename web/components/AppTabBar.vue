@@ -28,7 +28,7 @@
               height: 32px;
               top: 50%;
               left: 50%;
-              transform: translate(-50%, -60%);
+              transform: translate(-50%, -55%);
               background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
             "
             aria-hidden="true"

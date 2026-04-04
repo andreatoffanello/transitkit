@@ -270,7 +270,7 @@
 
             <!-- Featured lines — prime 3 linee come punto di partenza -->
             <div v-if="schedules?.routes?.length" class="mt-4">
-              <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--color-primary); opacity: 0.75">
+              <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
                 Linee consigliate
               </h2>
               <div

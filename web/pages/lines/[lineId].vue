@@ -73,7 +73,7 @@
             class="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all truncate active:opacity-80"
             :style="selectedDirectionId === dir.id
               ? { backgroundColor: 'var(--color-primary)', color: 'var(--color-text-on-primary)' }
-              : { color: 'var(--text-primary)' }"
+              : { color: 'var(--text-secondary)' }"
             @click="selectedDirectionId = dir.id"
           >
             {{ dir.headsign ?? `${s.ariaDirections} ${dirIdx + 1}` }}

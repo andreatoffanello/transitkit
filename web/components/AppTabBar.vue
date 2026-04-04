@@ -11,7 +11,7 @@
       padding-bottom: env(safe-area-inset-bottom);
     "
   >
-    <ul class="flex items-stretch h-16">
+    <ul class="flex items-stretch h-14">
       <li v-for="tab in visibleTabs" :key="tab.path" class="flex-1">
         <NuxtLink
           :to="tab.path"

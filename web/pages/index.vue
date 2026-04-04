@@ -19,7 +19,7 @@
         <h1 class="text-3xl font-bold leading-tight mb-1" style="color: var(--text-primary); letter-spacing: -0.015em">
           {{ config?.fullName ?? config?.name }}
         </h1>
-        <p class="text-sm" style="color: var(--text-secondary)">
+        <p class="text-base" style="color: var(--text-secondary)">
           {{ config?.store?.subtitle ?? 'Orari e partenze in tempo reale' }}
         </p>
       </section>
@@ -115,7 +115,7 @@
         <!-- Fermate nelle vicinanze -->
         <ClientOnly>
           <section v-if="nearbyState !== 'denied' && (nearbyState === 'locating' || nearbyStops.length)">
-            <h2 class="text-xs font-semibold uppercase tracking-wider mb-3" style="color: var(--text-tertiary)">
+            <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
               {{ s.nearbyStops }}
             </h2>
 
@@ -162,7 +162,7 @@
         <ClientOnly>
           <!-- Preferiti -->
           <section v-if="favoriteStops.length">
-            <h2 class="text-xs font-semibold uppercase tracking-wider mb-3" style="color: var(--text-tertiary)">
+            <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
               {{ s.favoriteStops }}
             </h2>
             <div
@@ -201,7 +201,7 @@
 
           <!-- Recenti -->
           <section v-if="recentStops.length">
-            <h2 class="text-xs font-semibold uppercase tracking-wider mb-3" style="color: var(--text-tertiary)">
+            <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
               {{ s.recentStops }}
             </h2>
             <div
@@ -264,7 +264,7 @@
 
             <!-- Featured lines — prime 3 linee come punto di partenza -->
             <div v-if="schedules?.routes?.length" class="mt-1">
-              <h2 class="text-xs font-semibold uppercase tracking-wider mb-3" style="color: var(--text-tertiary)">
+              <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
                 Linee disponibili
               </h2>
               <div
@@ -297,7 +297,7 @@
 
         <!-- Contatti -->
         <section v-if="config?.contact?.phone || config?.contact?.email">
-          <h2 class="text-xs font-semibold uppercase tracking-wider mb-3" style="color: var(--text-tertiary)">
+          <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
             {{ s.contacts }}
           </h2>
           <div
@@ -327,7 +327,7 @@
 
         <!-- Sito ufficiale -->
         <section v-if="config?.url || config?.store">
-          <h2 class="text-xs font-semibold uppercase tracking-wider mb-3" style="color: var(--text-tertiary)">
+          <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
             {{ s.resources ?? 'Risorse' }}
           </h2>
           <div

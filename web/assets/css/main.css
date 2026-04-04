@@ -51,9 +51,9 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* App main layout — accounts for fixed tab bar (64px) + device safe area on mobile */
+/* App main layout — accounts for fixed tab bar (56px) + device safe area on mobile */
 .app-main {
-  padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px) + 1rem);
+  padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px) + 1rem);
 }
 @media (min-width: 1024px) {
   .app-main {

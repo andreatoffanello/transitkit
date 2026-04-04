@@ -128,7 +128,7 @@
               type="button"
               aria-label="Aggiorna"
               class="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity active:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
-              style="color: var(--color-primary); background-color: color-mix(in srgb, var(--color-primary) 8%, transparent)"
+              style="color: var(--color-primary); background-color: color-mix(in srgb, var(--color-primary) 12%, transparent)"
               @click="refreshRealtime"
             >
               <RefreshCw :size="15" :stroke-width="1.75" :class="{ 'animate-spin': realtimeLoading }" />

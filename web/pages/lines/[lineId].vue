@@ -1,7 +1,7 @@
 <template>
   <AppLayout>
     <PageHeader
-      :title="route ? `${route.name}${route.longName ? ' — ' + route.longName : ''}` : ''"
+      :title="route ? (route.longName ? `${route.name}: ${route.longName}` : route.name) : ''"
       back-to="/lines"
       back-label="Linee"
     >

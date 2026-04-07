@@ -99,7 +99,7 @@ struct TransitKitApp: App {
             let config = try ConfigLoader.load()
             AppTheme.configure(from: config)
             loadingConfig = config
-            let scheduleStore = ScheduleStore(operatorId: config.id)
+            let scheduleStore = ScheduleStore(operatorId: config.id, apiUrl: config.apiUrl)
             scheduleStore.configure(with: config)
             favoritesManager = FavoritesManager(operatorId: config.id)
             searchHistoryStore = SearchHistoryStore(operatorId: config.id)

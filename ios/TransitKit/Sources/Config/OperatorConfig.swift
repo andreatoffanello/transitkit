@@ -10,6 +10,7 @@ struct OperatorConfig: Codable {
     let name: String
     let fullName: String
     let url: String
+    let apiUrl: String?
     let region: String
     let country: String
     let timezone: String

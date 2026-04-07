@@ -13,32 +13,26 @@ import MapKit
 /// }
 /// ```
 struct RouteOverlay: MapContent {
-    let route: Route
+    let route: APIRoute
     var directionId: Int? = nil
 
     /// Directions to render. If directionId is specified, show only that one;
     /// otherwise show all directions.
-    private var directionsToRender: [RouteDirection] {
+    private var directionsToRender: [APIRouteDirection] {
         if let directionId {
-            return route.directions.filter { $0.id == directionId }
+            return route.directions.filter { $0.directionId == directionId }
         }
         return route.directions
     }
 
     private var strokeColor: Color {
-        Color(hex: route.color)
+        Color(hex: route.color ?? "#000000")
     }
 
-    /// Pre-computed coordinate arrays for each direction (filtered to valid shapes).
+    /// shapePolyline is an encoded polyline string — not yet decoded.
+    /// For now, no shape overlays are drawn; stop annotations provide fallback visualization.
     private var polylines: [(id: Int, coordinates: [CLLocationCoordinate2D])] {
-        directionsToRender.compactMap { direction in
-            let coords = direction.shape.compactMap { pair -> CLLocationCoordinate2D? in
-                guard pair.count >= 2 else { return nil }
-                return CLLocationCoordinate2D(latitude: pair[0], longitude: pair[1])
-            }
-            guard coords.count >= 2 else { return nil }
-            return (id: direction.id, coordinates: coords)
-        }
+        return []
     }
 
     var body: some MapContent {

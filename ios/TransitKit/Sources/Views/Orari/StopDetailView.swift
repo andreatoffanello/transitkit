@@ -47,7 +47,7 @@ struct StopDetailView: View {
     }
 
     /// Line badges with route data for the header.
-    private var lineBadges: [(name: String, route: Route?)] {
+    private var lineBadges: [(name: String, route: APIRoute?)] {
         stop.lineNames.map { name in
             let route = store.routes.first { $0.name == name }
             return (name, route)
@@ -144,13 +144,6 @@ struct StopDetailView: View {
                     }
                     .shadow(color: .black.opacity(0.2), radius: 3, y: 1)
                 }
-            } else {
-                ForEach(stop.docks, id: \.letter) { dock in
-                    let coord = CLLocationCoordinate2D(latitude: dock.lat, longitude: dock.lng)
-                    Annotation(String(format: NSLocalizedString("dock_label", comment: ""), dock.letter), coordinate: coord) {
-                        DockPin(letter: dock.letter)
-                    }
-                }
             }
         }
         .mapStyle(.standard(elevation: .realistic, pointsOfInterest: .excludingAll))
@@ -196,13 +189,6 @@ struct StopDetailView: View {
                                     .foregroundStyle(.white)
                             }
                             .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
-                        }
-                    } else {
-                        ForEach(stop.docks, id: \.letter) { dock in
-                            let coord = CLLocationCoordinate2D(latitude: dock.lat, longitude: dock.lng)
-                            Annotation(String(format: NSLocalizedString("dock_label", comment: ""), dock.letter), coordinate: coord) {
-                                DockPin(letter: dock.letter)
-                            }
                         }
                     }
                 }
@@ -471,9 +457,9 @@ struct StopDetailView: View {
                     ForEach(visible, id: \.name) { badge in
                         LineBadge(
                             lineName: badge.name,
-                            color: badge.route?.color ?? "#666666",
-                            textColor: badge.route?.textColor ?? "#FFFFFF",
-                            transitType: badge.route?.transitType ?? .bus,
+                            color: badge.route.flatMap(\.color) ?? "#666666",
+                            textColor: badge.route.flatMap(\.textColor) ?? "#FFFFFF",
+                            transitType: badge.route.map { TransitType(gtfsRouteType: $0.transitType) } ?? .bus,
                             size: .medium
                         )
                     }
@@ -577,18 +563,11 @@ struct StopDetailView: View {
     // MARK: - Helpers
 
     private func centerOnStop() {
-        if stop.docks.count > 1 {
-            let lats = stop.docks.map(\.lat)
-            let lngs = stop.docks.map(\.lng)
-            let center = CLLocationCoordinate2D(
-                latitude: (lats.min()! + lats.max()!) / 2,
-                longitude: (lngs.min()! + lngs.max()!) / 2
-            )
-            let spanDeg = max((lats.max()! - lats.min()!) * 5.0, 0.005)
-            let distance = spanDeg * 111_000 * 1.3
+        if false {
+            // dock lat/lng not available in API v2 — docks array is always empty
             mapPosition = .camera(MapCamera(
-                centerCoordinate: center,
-                distance: max(distance, 500),
+                centerCoordinate: stopCoordinate,
+                distance: 500,
                 heading: 0,
                 pitch: 50
             ))

@@ -12,6 +12,7 @@ struct DepartureRow: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(VehicleStore.self) private var vehicleStore
+    @Environment(ScheduleStore.self) private var scheduleStore
 
     /// Mirrors the threshold logic in TimeDisplay.init(departure:now:).
     /// ≤ 60 min → .minutes countdown; > 60 min → .absolute clock time.
@@ -50,12 +51,25 @@ struct DepartureRow: View {
             // Line badge
             LineBadge(departure: departure, size: .big)
 
-            // Headsign
-            Text(departure.headsign)
-                .font(.system(size: isFirst ? 14 : 13, weight: isFirst ? .semibold : .regular))
-                .foregroundStyle(isDeparted ? AppTheme.textTertiary : AppTheme.textPrimary)
-                .lineLimit(1)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            // Destination sequence (marquee) or headsign fallback
+            VStack(alignment: .leading, spacing: 1) {
+                let sequence: String? = {
+                    if let s = scheduleStore.routeStopSequences[departure.routeId], !s.isEmpty { return s }
+                    return nil
+                }()
+                if let sequence {
+                    MarqueeText(
+                        text: sequence,
+                        foregroundStyle: isDeparted ? AppTheme.textTertiary : AppTheme.textPrimary
+                    )
+                } else {
+                    Text(departure.headsign)
+                        .font(.system(size: isFirst ? 14 : 13, weight: isFirst ? .semibold : .regular))
+                        .foregroundStyle(isDeparted ? AppTheme.textTertiary : AppTheme.textPrimary)
+                        .lineLimit(1)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             // Dock indicator (if present)
             if !departure.dock.isEmpty {

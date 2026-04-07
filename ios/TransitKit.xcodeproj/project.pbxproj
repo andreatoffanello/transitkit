@@ -16,6 +16,7 @@
 		23DEEFDA9FD22463C9C348FD /* FilterChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7410BEEC0AEB17E6FFB2785 /* FilterChip.swift */; };
 		28924DA06A3B5D02B0C0DCB6 /* StopAnnotationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5481BF9847C559057368FA6B /* StopAnnotationView.swift */; };
 		289F832C5077F291F197874C /* ScheduleLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64B8B11F2D7D9CAE4F81E2B /* ScheduleLoader.swift */; };
+		AABB1122CC3344DDAABB1122 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = AABB1122CC3344DDAABB0000 /* APIClient.swift */; };
 		AA00BB11CC22DD33AA00BB11 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00BB11CC22DD33AA00BB00 /* LocationManager.swift */; };
 		2BCA1D7672AA34A413EA9F64 /* OrariTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 265421698770DB34151D287D /* OrariTab.swift */; };
 		30E9F573C22D358FC846D364 /* StopMapSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24A2F8550F9D65EFD7B990BA /* StopMapSheet.swift */; };
@@ -23,7 +24,7 @@
 		35FDAB23947D090227ED347E /* config.json in Resources */ = {isa = PBXBuildFile; fileRef = CC677A39447A949F646FA8DF /* config.json */; };
 		295C0E21D8D347BCA84031DE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E3DD1D0873E34BB0B0595D79 /* Assets.xcassets */; };
 		379B6C3D2E804EEE3E5257C7 /* TimeDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3298ECC36B6DC09D4139EC06 /* TimeDisplay.swift */; };
-		444BA507DF5B29C9BE635812 /* Departure.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EFD1147E3084F33E1731415 /* Departure.swift */; };
+		/* Departure.swift removed — merged into Schedule.swift */
 		A97E40788F9B41ECBF709B23 /* GtfsRtDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF666B132F924819AC4A3250 /* GtfsRtDecoder.swift */; };
 		570955E4E445283DADAE8C0E /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 282C0DBEBC4A33831DC99EBA /* EmptyStateView.swift */; };
 		5785D9F624777AC708F5FC1E /* RouteOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF29A33249EEAAC16698F765 /* RouteOverlay.swift */; };
@@ -107,7 +108,7 @@
 		3ECCF222F6E839416B5E8973 /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
 		40C190F3ADD2E1B0E41BDFC6 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		4A20EEA199B52A3A2B66325A /* FavoritesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesListView.swift; sourceTree = "<group>"; };
-		4EFD1147E3084F33E1731415 /* Departure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Departure.swift; sourceTree = "<group>"; };
+		/* Departure.swift file reference removed */
 		EF666B132F924819AC4A3250 /* GtfsRtDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GtfsRtDecoder.swift; sourceTree = "<group>"; };
 		5481BF9847C559057368FA6B /* StopAnnotationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopAnnotationView.swift; sourceTree = "<group>"; };
 		56A72FCF47290855E84C160B /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
@@ -131,6 +132,7 @@
 		EB0D2941E87A9FC1F213D9C7 /* schedules.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = schedules.json; sourceTree = "<group>"; };
 		EC6BBEB0DCFFFF27DB881B02 /* SkeletonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkeletonView.swift; sourceTree = "<group>"; };
 		F64B8B11F2D7D9CAE4F81E2B /* ScheduleLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleLoader.swift; sourceTree = "<group>"; };
+		AABB1122CC3344DDAABB0000 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		AA00BB11CC22DD33AA00BB00 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		FA83972FA950E8F68E2FB2F0 /* Schedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Schedule.swift; sourceTree = "<group>"; };
 		FE1EBB88E53560FB389C43FA /* FareInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FareInfoView.swift; sourceTree = "<group>"; };
@@ -171,6 +173,7 @@
 			isa = PBXGroup;
 			children = (
 				F64B8B11F2D7D9CAE4F81E2B /* ScheduleLoader.swift */,
+				AABB1122CC3344DDAABB0000 /* APIClient.swift */,
 				AA00BB11CC22DD33AA00BB00 /* LocationManager.swift */,
 			);
 			path = Services;
@@ -210,7 +213,6 @@
 		3249C6F15F3583889B1B4EC5 /* Models */ = {
 			isa = PBXGroup;
 			children = (
-				4EFD1147E3084F33E1731415 /* Departure.swift */,
 				EF666B132F924819AC4A3250 /* GtfsRtDecoder.swift */,
 				FA83972FA950E8F68E2FB2F0 /* Schedule.swift */,
 				DD44556677889900DDEE0004 /* StopCluster.swift */,
@@ -474,8 +476,8 @@
 			files = (
 				CCEAFD601CAE70A4485CB7F4 /* AboutView.swift in Sources */,
 				A187D445C8D1E57438EDC41F /* ContentView.swift in Sources */,
-				444BA507DF5B29C9BE635812 /* Departure.swift in Sources */,
 				A97E40788F9B41ECBF709B23 /* GtfsRtDecoder.swift in Sources */,
+				AABB1122CC3344DDAABB1122 /* APIClient.swift in Sources */,
 				CF82333AC918F9A07C2B1890 /* DepartureRow.swift in Sources */,
 				A2B3C4D5E6F7A8B9C0D1E2F3 /* LiveBadge.swift in Sources */,
 				570955E4E445283DADAE8C0E /* EmptyStateView.swift in Sources */,

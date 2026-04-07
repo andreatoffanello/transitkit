@@ -75,11 +75,11 @@ struct LineBadge: View {
     }
 
     /// Convenience init from a Route model.
-    init(route: Route, size: BadgeSize = .big) {
+    init(route: APIRoute, size: BadgeSize = .big) {
         self.lineName = route.name
-        self.color = route.color
-        self.textColor = LineBadge.resolvedTextColor(route.textColor, background: route.color)
-        self.transitType = route.transitType
+        self.color = route.color ?? "#000000"
+        self.textColor = LineBadge.resolvedTextColor(route.textColor ?? "#FFFFFF", background: route.color ?? "#000000")
+        self.transitType = route.resolvedTransitType
         self.size = size
     }
 

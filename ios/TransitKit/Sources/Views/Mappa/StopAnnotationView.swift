@@ -68,9 +68,9 @@ struct StopAnnotationView: View {
                         .foregroundStyle(.white)
                 }
                 .shadow(color: .black.opacity(0.2), radius: 2.5, y: 1)
+                .drawingGroup() // GPU compositing only for the icon branch
                 .scaleEffect(isSelected ? 1.2 : 1.0)
                 .animation(.spring(response: 0.3), value: isSelected)
-                .drawingGroup() // GPU compositing only for the icon branch
                 .frame(minWidth: 44, minHeight: 44)
                 .contentShape(Rectangle())
             }

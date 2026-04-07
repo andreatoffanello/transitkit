@@ -16,7 +16,7 @@ struct StopMapSheet: View {
     }
 
     /// Unique routes serving this stop (for line badges).
-    private var routesAtStop: [Route] {
+    private var routesAtStop: [APIRoute] {
         stop.lineNames.compactMap { lineName in
             store.routes.first { $0.name == lineName }
         }
@@ -138,9 +138,9 @@ struct StopMapSheet: View {
                 ForEach(routesAtStop) { route in
                     LineBadge(
                         lineName: route.name,
-                        color: route.color,
-                        textColor: route.textColor,
-                        transitType: route.transitType,
+                        color: route.color ?? "#000000",
+                        textColor: route.textColor ?? "#FFFFFF",
+                        transitType: route.resolvedTransitType,
                         size: .medium
                     )
                 }

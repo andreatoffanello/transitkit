@@ -39,8 +39,8 @@ struct LinesListView: View {
 
     /// Deduplicates routes by name, keeping the one with the most directions.
     /// Preserves the original order of first occurrence.
-    private func deduplicated(_ routes: [Route]) -> [Route] {
-        var seen: [String: Route] = [:]
+    private func deduplicated(_ routes: [APIRoute]) -> [APIRoute] {
+        var seen: [String: APIRoute] = [:]
         for route in routes {
             if let existing = seen[route.name] {
                 if route.directions.count > existing.directions.count {
@@ -50,7 +50,7 @@ struct LinesListView: View {
                 seen[route.name] = route
             }
         }
-        var result: [Route] = []
+        var result: [APIRoute] = []
         var added: Set<String> = []
         for route in routes {
             if !added.contains(route.name) {
@@ -63,23 +63,23 @@ struct LinesListView: View {
 
     // MARK: - Filtering
 
-    private var filteredRoutes: [Route] {
+    private var filteredAPIRoutes: [APIRoute] {
         var result = store.routes
 
         // Filter by transit type
         if let type = transitTypeFilter {
-            result = result.filter { $0.transitType == type }
+            result = result.filter { TransitType(gtfsRouteType: $0.transitType) == type }
         }
 
         // Filter and sort by search query
         if !searchQuery.isEmpty {
             if searchQuery.count >= 2 {
                 // Fuzzy-scored filter: compute best score across name, longName and id
-                let scored = result.compactMap { route -> (route: Route, score: Int)? in
+                let scored = result.compactMap { route -> (route: APIRoute, score: Int)? in
                     let score = max(
                         fuzzyScore(route.name, query: searchQuery),
                         max(
-                            fuzzyScore(route.longName, query: searchQuery),
+                            fuzzyScore(route.longName ?? "", query: searchQuery),
                             fuzzyScore(route.id, query: searchQuery)
                         )
                     )
@@ -93,7 +93,7 @@ struct LinesListView: View {
                 let query = searchQuery.lowercased()
                 result = result.filter { route in
                     route.name.lowercased().contains(query)
-                    || route.longName.lowercased().contains(query)
+                    || (route.longName ?? "").lowercased().contains(query)
                 }
                 return deduplicated(result.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending })
             }
@@ -105,16 +105,16 @@ struct LinesListView: View {
     }
 
     /// Recent routes resolved from the store, preserving recency order.
-    private var recentRoutes: [Route] {
+    private var recentAPIRoutes: [APIRoute] {
         guard searchQuery.isEmpty else { return [] }
         return recentIds.compactMap { id in store.routes.first { $0.id == id } }
     }
 
     /// Group routes by transit type for sectioned display.
-    private var groupedRoutes: [(type: TransitType, routes: [Route])] {
-        var groups: [(TransitType, [Route])] = []
+    private var groupedAPIRoutes: [(type: TransitType, routes: [APIRoute])] {
+        var groups: [(TransitType, [APIRoute])] = []
         for type in TransitType.allCases {
-            let matching = filteredRoutes.filter { $0.transitType == type }
+            let matching = filteredAPIRoutes.filter { TransitType(gtfsRouteType: $0.transitType) == type }
             if !matching.isEmpty {
                 groups.append((type, matching))
             }
@@ -122,14 +122,14 @@ struct LinesListView: View {
         return groups
     }
 
-    private var hasMultipleTransitTypes: Bool { groupedRoutes.count > 1 }
+    private var hasMultipleTransitTypes: Bool { groupedAPIRoutes.count > 1 }
 
     // MARK: - Body
 
     var body: some View {
         if store.isLoading && store.routes.isEmpty {
             loadingState
-        } else if filteredRoutes.isEmpty && recentRoutes.isEmpty {
+        } else if filteredAPIRoutes.isEmpty && recentAPIRoutes.isEmpty {
             emptyState
         } else {
             routesScrollView
@@ -171,13 +171,13 @@ struct LinesListView: View {
         .frame(maxWidth: .infinity)
     }
 
-    // MARK: - Routes List
+    // MARK: - APIRoutes List
 
     // MARK: - Recent Section
 
     @ViewBuilder
     private var recentSection: some View {
-        if !recentRoutes.isEmpty {
+        if !recentAPIRoutes.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
                 Text(String(localized: "recent_searches"))
                     .font(.caption.weight(.semibold))
@@ -185,7 +185,7 @@ struct LinesListView: View {
                     .padding(.horizontal, 4)
 
                 VStack(spacing: 8) {
-                    ForEach(recentRoutes) { route in
+                    ForEach(recentAPIRoutes) { route in
                         NavigationLink(value: route) {
                             LineRowContent(route: route, hasMultipleTypes: hasMultipleTransitTypes, store: store)
                         }
@@ -206,14 +206,14 @@ struct LinesListView: View {
 
                 // Result count when searching
                 if !searchQuery.isEmpty {
-                    Text(String(format: NSLocalizedString("lines_result_count", comment: ""), filteredRoutes.count))
+                    Text(String(format: NSLocalizedString("lines_result_count", comment: ""), filteredAPIRoutes.count))
                         .font(.caption)
                         .foregroundStyle(AppTheme.textTertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 4)
                 }
 
-                ForEach(groupedRoutes, id: \.type) { group in
+                ForEach(groupedAPIRoutes, id: \.type) { group in
                     VStack(alignment: .leading, spacing: 10) {
                         // Category header — only shown when multiple transit types are present
                         if hasMultipleTransitTypes {
@@ -251,7 +251,7 @@ struct LinesListView: View {
                             .buttonStyle(.plain)
                         }
 
-                        // Route rows — always visible when only one type; collapsible otherwise
+                        // APIRoute rows — always visible when only one type; collapsible otherwise
                         if !hasMultipleTransitTypes || !collapsedTypes.contains(group.type) {
                             VStack(spacing: 8) {
                                 ForEach(group.routes) { route in
@@ -278,16 +278,19 @@ struct LinesListView: View {
 // MARK: - Line Row Content (glass card)
 
 private struct LineRowContent: View {
-    let route: Route
+    let route: APIRoute
     let hasMultipleTypes: Bool
     let store: ScheduleStore
 
+    private var resolvedTransitType: TransitType { route.resolvedTransitType }
+
     private var lineColor: Color {
         // Use luminance to detect very light colors that would be invisible against the card background
-        let textOnColor = contrastingTextColor(for: route.color)
+        let colorHex = route.color ?? "#000000"
+        let textOnColor = contrastingTextColor(for: colorHex)
         // If white text is needed on this color, the color is dark enough to use as-is
         // If black text is needed, the color is very light — fall back to accent
-        return textOnColor == "#FFFFFF" ? Color(hex: route.color) : AppTheme.accent
+        return textOnColor == "#FFFFFF" ? Color(hex: colorHex) : AppTheme.accent
     }
 
     var body: some View {
@@ -295,15 +298,15 @@ private struct LineRowContent: View {
             // Line badge
             LineBadge(
                 lineName: route.name,
-                color: route.color,
-                textColor: route.textColor,
-                transitType: route.transitType,
+                color: route.color ?? "#000000",
+                textColor: route.textColor ?? "#FFFFFF",
+                transitType: resolvedTransitType,
                 size: .big
             )
 
             VStack(alignment: .leading, spacing: 2) {
-                // Route long name
-                Text(route.longName)
+                // APIRoute long name
+                Text(route.longName ?? route.name)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(AppTheme.textPrimary)
                     .lineLimit(2)
@@ -326,9 +329,9 @@ private struct LineRowContent: View {
                 if showTransitType || showDirections {
                     HStack(spacing: 6) {
                         if showTransitType {
-                            route.transitType.icon.sized(10)
+                            resolvedTransitType.icon.sized(10)
                                 .foregroundStyle(AppTheme.textTertiary)
-                            Text(route.transitType.displayName)
+                            Text(resolvedTransitType.displayName)
                                 .font(.caption2.weight(.medium))
                                 .foregroundStyle(AppTheme.textTertiary)
                         }

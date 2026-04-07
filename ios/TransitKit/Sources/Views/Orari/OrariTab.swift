@@ -26,7 +26,7 @@ struct OrariTab: View {
     // MARK: - Available transit types (auto-populated from data)
 
     private var availableTransitTypes: [TransitType] {
-        let types = Set(store.routes.map(\.transitType))
+        let types = Set(store.routes.map { TransitType(gtfsRouteType: $0.transitType) })
         return TransitType.allCases.filter { types.contains($0) }
     }
 
@@ -83,7 +83,7 @@ struct OrariTab: View {
                 let _ = searchHistoryStore.recordStop(stop.id)
                 StopDetailView(stop: stop)
             }
-            .navigationDestination(for: Route.self) { route in
+            .navigationDestination(for: APIRoute.self) { route in
                 let _ = searchHistoryStore.recordLine(route.id)
                 LineDetailView(route: route)
             }

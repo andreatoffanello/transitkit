@@ -242,16 +242,7 @@ struct InfoTab: View {
                         icon: .clock
                     )
                 }
-                if let validUntil = store.scheduleData?.validUntil {
-                    Rectangle()
-                        .fill(AppTheme.separatorLine)
-                        .frame(height: 0.5)
-                    dataRow(
-                        label: String(localized: "info_data_valid_until"),
-                        value: formatGTFSDate(validUntil),
-                        icon: .clock
-                    )
-                }
+                // validUntil not available in new API response
                 Rectangle()
                     .fill(AppTheme.separatorLine)
                     .frame(height: 0.5)

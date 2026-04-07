@@ -2,7 +2,7 @@ import SwiftUI
 
 /// Route detail screen: header with line badge, direction picker, and stop sequence list.
 struct LineDetailView: View {
-    let route: Route
+    let route: APIRoute
     @Environment(ScheduleStore.self) private var store
     @Environment(VehicleStore.self) private var vehicleStore
     @Environment(DeepLinkRouter.self) private var router
@@ -10,15 +10,15 @@ struct LineDetailView: View {
     @State private var showLineMap = false
 
     private var lineColor: Color {
-        Color(hex: route.color)
+        Color(hex: route.color ?? "#000000")
     }
 
     private var headerTextColor: Color {
-        Color(hex: contrastingTextColor(for: route.color))
+        Color(hex: contrastingTextColor(for: route.color ?? "#000000"))
     }
 
-    private var selectedDirection: RouteDirection? {
-        route.directions.first { $0.id == selectedDirectionId }
+    private var selectedDirection: APIRouteDirection? {
+        route.directions.first { $0.directionId == selectedDirectionId }
     }
 
     private var stopsInDirection: [ResolvedStop] {
@@ -51,7 +51,7 @@ struct LineDetailView: View {
                     }
 
                     // Official schedule link (only shown when route_url is present in GTFS)
-                    if let routeUrl = route.url, let url = URL(string: routeUrl) {
+                    if false, let url = URL(string: "") {
                         Link(destination: url) {
                             HStack(spacing: 6) {
                                 LucideIcon.externalLink.sized(14)
@@ -95,11 +95,11 @@ struct LineDetailView: View {
         }
         .onAppear {
             if let dirId = router.pendingDirectionId,
-               route.directions.contains(where: { $0.id == dirId }) {
+               route.directions.contains(where: { $0.directionId == dirId }) {
                 selectedDirectionId = dirId
                 router.pendingDirectionId = nil
             } else if let first = route.directions.first {
-                selectedDirectionId = first.id
+                selectedDirectionId = first.directionId
             }
             if router.autoOpenMap {
                 router.autoOpenMap = false
@@ -137,12 +137,12 @@ struct LineDetailView: View {
                             .background(.white.opacity(0.2), in: RoundedRectangle(cornerRadius: 10))
 
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(route.longName)
+                            Text(route.longName ?? route.name)
                                 .font(.system(size: 20, weight: .bold))
                                 .foregroundStyle(headerTextColor)
                                 .lineLimit(2)
 
-                            Text(route.transitType.displayName)
+                            Text(route.resolvedTransitType.displayName)
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundStyle(headerTextColor.opacity(0.85))
                         }
@@ -177,9 +177,9 @@ struct LineDetailView: View {
         VStack(spacing: 0) {
             Picker(String(localized: "direction_label"), selection: $selectedDirectionId) {
                 ForEach(route.directions) { dir in
-                    Text(dir.headsign)
+                    Text(dir.headsign ?? "")
                         .lineLimit(1)
-                        .tag(dir.id)
+                        .tag(dir.directionId)
                 }
             }
             .pickerStyle(.segmented)
@@ -310,7 +310,7 @@ struct LineDetailView: View {
                     lineName: name,
                     color: r?.color ?? "#666666",
                     textColor: r?.textColor ?? "#FFFFFF",
-                    transitType: r?.transitType ?? .bus,
+                    transitType: r?.resolvedTransitType ?? .bus,
                     size: .medium
                 )
             }

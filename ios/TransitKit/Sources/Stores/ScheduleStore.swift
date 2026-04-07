@@ -3,38 +3,32 @@ import SwiftUI
 
 // MARK: - Schedule Store
 
-/// Main data store for the app. Loads schedule data and provides
+/// Main data store for the app. Loads schedule data via APIClient and provides
 /// resolved stops, routes, and departures to the UI.
 @MainActor
 @Observable
 class ScheduleStore {
     // MARK: Published state
     var stops: [ResolvedStop] = []
-    var routes: [Route] = []
+    var routes: [APIRoute] = []
     var isLoading = false
     var error: String?
     var lastUpdated: String?
 
-    // MARK: Lookup tables (built once on load)
-    private(set) var scheduleData: ScheduleData?
-    private var routeById: [String: Route] = [:]
+    // MARK: Lookup tables
+    private(set) var scheduleResponse: ScheduleResponse?
+    private var routeById: [String: APIRoute] = [:]
     private var stopById: [String: ResolvedStop] = [:]
-    /// Pre-computed stop-sequence strings for each route (first direction).
-    /// Key = routeId, value = "Stop A → Stop B → …" ready for MarqueeText.
     private(set) var routeStopSequences: [String: String] = [:]
-    /// Pre-computed set of trip IDs per route ID.
-    /// Used to filter GTFS-RT vehicle positions to a specific route.
     private(set) var tripIdsByRouteId: [String: Set<String>] = [:]
 
     private let loader: ScheduleLoader
     private var operatorConfig: OperatorConfig? = nil
 
-    init(operatorId: String, cdnBaseURL: String? = nil) {
-        self.loader = ScheduleLoader(operatorId: operatorId, cdnBaseURL: cdnBaseURL)
+    init(operatorId: String, apiUrl: String? = nil) {
+        self.loader = ScheduleLoader(operatorId: operatorId, apiUrl: apiUrl)
     }
 
-    /// Supplies the operator config so headsign normalization can use the operator's map.
-    /// Call this once from the app's bootstrap sequence, before or after `load()`.
     func configure(with config: OperatorConfig) {
         self.operatorConfig = config
     }
@@ -45,59 +39,52 @@ class ScheduleStore {
         guard !isLoading else { return }
         isLoading = true
         error = nil
-
         do {
-            let data = try await loader.load()
-            apply(data)
+            let response = try await loader.load()
+            apply(response)
         } catch {
             self.error = error.localizedDescription
         }
-
         isLoading = false
     }
 
     func refresh() async {
         isLoading = true
         error = nil
-
         do {
-            let data = try await loader.refresh()
-            apply(data)
+            let response = try await loader.refresh()
+            apply(response)
         } catch {
             self.error = error.localizedDescription
         }
-
         isLoading = false
     }
 
-    private func apply(_ data: ScheduleData) {
-        scheduleData = data
-        lastUpdated = data.lastUpdated
+    private func apply(_ response: ScheduleResponse) {
+        scheduleResponse = response
+        lastUpdated = response.lastUpdated
 
-        // Build route lookup
-        routeById = Dictionary(uniqueKeysWithValues: data.routes.map { ($0.id, $0) })
+        routeById = Dictionary(uniqueKeysWithValues: response.routes.map { ($0.id, $0) })
+        routes = response.routes
 
-        // Build resolved routes
-        routes = data.routes
-
-        // Build resolved stops
-        stops = data.stops.map { stop in
-            let transitTypes = resolveTransitTypes(for: stop, data: data)
+        stops = response.stops.map { apiStop in
+            let lineNames = Array(Set(apiStop.departures.map(\.routeName))).sorted()
+            let transitTypes = Set(apiStop.departures.compactMap { dep in
+                routeById[dep.routeId].map { TransitType(gtfsRouteType: $0.transitType) }
+            })
             return ResolvedStop(
-                id: stop.id,
-                name: stop.name,
-                lat: stop.lat,
-                lng: stop.lng,
-                lineNames: stop.lines,
-                transitTypes: transitTypes,
-                docks: stop.docks ?? []
+                id: apiStop.id,
+                name: apiStop.name,
+                lat: apiStop.lat,
+                lng: apiStop.lng,
+                lineNames: lineNames,
+                transitTypes: transitTypes.isEmpty ? [.bus] : transitTypes,
+                docks: []
             )
         }
 
-        // O(1) stop lookup used by stopsForRoute and sequence cache
         stopById = Dictionary(uniqueKeysWithValues: stops.map { ($0.id, $0) })
 
-        // Pre-cache stop-sequence strings for MarqueeText (first direction per route)
         routeStopSequences = Dictionary(uniqueKeysWithValues: routes.compactMap { route in
             guard let dir = route.directions.first else { return nil }
             let names = dir.stopIds.compactMap { stopById[$0]?.name }
@@ -105,20 +92,10 @@ class ScheduleStore {
             return (route.id, names.joined(separator: " → "))
         })
 
-        // Build trip ID → route ID mapping for GTFS-RT vehicle filtering
         var tripMap: [String: Set<String>] = [:]
-        for stop in data.stops {
-            for (_, deps) in stop.departures {
-                for compact in deps {
-                    guard compact.count > 5 else { continue }
-                    let lineIdx = compact[1].intValue
-                    let tripIdIdx = compact[5].intValue
-                    guard lineIdx < data.routeIds.count,
-                          tripIdIdx < data.tripIds.count else { continue }
-                    let routeId = data.routeIds[lineIdx]
-                    let tripId = data.tripIds[tripIdIdx]
-                    tripMap[routeId, default: []].insert(tripId)
-                }
+        for stop in response.stops {
+            for dep in stop.departures {
+                tripMap[dep.routeId, default: []].insert(dep.tripId)
             }
         }
         tripIdsByRouteId = tripMap
@@ -126,135 +103,68 @@ class ScheduleStore {
 
     // MARK: - Departures for a stop
 
-    /// Returns departures for a stop, grouped by day.
     func departures(forStopId stopId: String) -> [DayGroup: [Departure]] {
-        guard let data = scheduleData,
-              let stop = data.stops.first(where: { $0.id == stopId })
+        guard let response = scheduleResponse,
+              let apiStop = response.stops.first(where: { $0.id == stopId })
         else { return [:] }
 
-        var result: [DayGroup: [Departure]] = [:]
-
-        for (dayKey, compactDeps) in stop.departures {
-            let dayGroup = DayGroup.parse(dayKey)
-            var deps: [Departure] = []
-
-            for compact in compactDeps {
-                guard compact.count >= 3 else { continue }
-
-                let time = compact[0].stringValue
-                let lineIdx = compact[1].intValue
-                let headsignIdx = compact[2].intValue
-
-                guard lineIdx < data.lineNames.count,
-                      headsignIdx < data.headsigns.count,
-                      lineIdx < data.routeIds.count
-                else { continue }
-
-                let lineName = data.lineNames[lineIdx]
-                let routeId = data.routeIds[lineIdx]
-                let rawHeadsign = data.headsigns[headsignIdx]
-                let headsign = HeadsignNormalizer.normalize(rawHeadsign, map: operatorConfig?.headsignMap)
-                let route = routeById[routeId]
-
-                let dock = compact.count > 3 ? compact[3].stringValue : ""
-                let patternIdx = compact.count > 4 ? compact[4].intValue : nil
-                let tripIdIdx = compact.count > 5 ? compact[5].intValue : nil
-
-                let resolvedTripId: String? = tripIdIdx.flatMap { idx in
-                    idx < data.tripIds.count ? data.tripIds[idx] : nil
-                }
-                let dep = Departure(
-                    id: "\(time)_\(lineName)_\(headsign)_\(dock)",
-                    time: time,
-                    lineName: lineName,
-                    routeId: routeId,
-                    headsign: headsign,
-                    color: route?.color ?? "#000000",
-                    textColor: route?.textColor ?? "#FFFFFF",
-                    transitType: route?.transitType ?? .bus,
-                    dock: dock,
-                    patternIndex: patternIdx,
-                    tripIdIndex: tripIdIdx,
-                    tripId: resolvedTripId
-                )
-                deps.append(dep)
-            }
-
-            result[dayGroup] = deps
+        var grouped: [String: [APIDeparture]] = [:]
+        for dep in apiStop.departures {
+            let key = dep.serviceDays.sorted().joined(separator: ",")
+            grouped[key, default: []].append(dep)
         }
 
+        var result: [DayGroup: [Departure]] = [:]
+        for (dayKey, deps) in grouped {
+            let dayGroup = parseDayGroup(from: dayKey)
+            let resolved = deps.map { Departure(from: $0, route: routeById[$0.routeId]) }
+            result[dayGroup] = resolved.sorted { $0.minutesFromMidnight < $1.minutesFromMidnight }
+        }
         return result
     }
 
-    /// Returns departures for the current day of week, sorted ascending by time.
     func todayDepartures(forStopId stopId: String) -> [Departure] {
         let allDeps = departures(forStopId: stopId)
         let today = currentWeekday()
-
         for (dayGroup, deps) in allDeps {
             if dayGroup.days.contains(today) {
                 return deps.sorted { $0.minutesFromMidnight < $1.minutesFromMidnight }
             }
         }
-
         return []
     }
 
-    /// Returns upcoming departures from now (or the next ones if past last departure).
     func upcomingDepartures(forStopId stopId: String, limit: Int = 10) -> [Departure] {
-        let deps = todayDepartures(forStopId: stopId) // already sorted ascending
+        let deps = todayDepartures(forStopId: stopId)
         let nowMinutes = currentMinutesFromMidnight()
-
-        // Find first departure at or after now
         if let idx = deps.firstIndex(where: { $0.minutesFromMidnight >= nowMinutes }) {
             return Array(deps[idx..<min(idx + limit, deps.count)])
         }
-
-        // All departures are past → show first ones (next day preview)
         return Array(deps.prefix(limit))
     }
 
     // MARK: - Route details
 
     var availableTransitTypes: Set<TransitType> {
-        Set(routes.map(\.transitType))
+        Set(routes.map { TransitType(gtfsRouteType: $0.transitType) })
     }
 
-    func route(forId routeId: String) -> Route? {
+    func route(forId routeId: String) -> APIRoute? {
         routeById[routeId]
     }
 
-    /// Returns all stops served by a route, in direction order.
     func stopsForRoute(_ routeId: String, directionId: Int) -> [ResolvedStop] {
         guard let route = routeById[routeId],
-              let direction = route.directions.first(where: { $0.id == directionId })
+              let direction = route.directions.first(where: { $0.directionId == directionId })
         else { return [] }
-
         return direction.stopIds.compactMap { stopById[$0] }
-    }
-
-    // MARK: - Trip detail
-
-    /// Returns the stop sequence for a specific trip.
-    func tripStops(patternIndex: Int) -> [ResolvedStop]? {
-        guard let patterns = scheduleData?.stopPatterns,
-              patternIndex >= 0 && patternIndex < patterns.count
-        else { return nil }
-
-        let stationIds = patterns[patternIndex]
-        return stationIds.compactMap { sid in
-            stops.first { $0.id == sid }
-        }
     }
 
     // MARK: - Spatial Queries
 
-    /// Returns up to 5 stops within `radiusMeters` of the given stop,
-    /// sorted by distance, excluding the stop itself and duplicates < 30m away.
     func nearbyStops(to stop: ResolvedStop, radiusMeters: Double = 400) -> [ResolvedStop] {
         let latPerMeter = 1.0 / 111_320.0
         let lngPerMeter = 1.0 / (111_320.0 * cos(stop.lat * .pi / 180.0))
-
         return stops
             .filter { $0.id != stop.id }
             .compactMap { candidate -> (ResolvedStop, Double)? in
@@ -271,33 +181,36 @@ class ScheduleStore {
 
     // MARK: - Helpers
 
-    private func resolveTransitTypes(for stop: ScheduleStop, data: ScheduleData) -> Set<TransitType> {
-        var types = Set<TransitType>()
-        for lineName in stop.lines {
-            if let idx = data.lineNames.firstIndex(of: lineName),
-               idx < data.routeIds.count {
-                let routeId = data.routeIds[idx]
-                if let route = routeById[routeId] {
-                    types.insert(route.transitType)
-                }
+    private func parseDayGroup(from serviceDaysKey: String) -> DayGroup {
+        let parts = serviceDaysKey.split(separator: ",").map(String.init)
+        let days: [Weekday] = parts.compactMap { gtfsDay in
+            switch gtfsDay {
+            case "monday":    return .mon
+            case "tuesday":   return .tue
+            case "wednesday": return .wed
+            case "thursday":  return .thu
+            case "friday":    return .fri
+            case "saturday":  return .sat
+            case "sunday":    return .sun
+            default:          return nil
             }
         }
-        return types
+        let abbrevKey = days.map { abbrev(for: $0) }.joined(separator: ",")
+        return DayGroup(id: abbrevKey, days: days)
+    }
+
+    private func abbrev(for day: Weekday) -> String {
+        switch day {
+        case .mon: "mon"; case .tue: "tue"; case .wed: "wed"
+        case .thu: "thu"; case .fri: "fri"; case .sat: "sat"; case .sun: "sun"
+        }
     }
 
     private func currentWeekday() -> Weekday {
-        let cal = Calendar.current
-        let dow = cal.component(.weekday, from: Date())
-        // Calendar weekday: 1=Sun, 2=Mon, ... 7=Sat
-        switch dow {
-        case 1: return .sun
-        case 2: return .mon
-        case 3: return .tue
-        case 4: return .wed
-        case 5: return .thu
-        case 6: return .fri
-        case 7: return .sat
-        default: return .mon
+        switch Calendar.current.component(.weekday, from: Date()) {
+        case 1: return .sun; case 2: return .mon; case 3: return .tue
+        case 4: return .wed; case 5: return .thu; case 6: return .fri
+        case 7: return .sat; default: return .mon
         }
     }
 
@@ -310,7 +223,6 @@ class ScheduleStore {
 
 // MARK: - Resolved Stop (UI-ready)
 
-/// A stop ready for display, with resolved transit types and line names.
 struct ResolvedStop: Identifiable, Hashable {
     let id: String
     let name: String
@@ -318,13 +230,12 @@ struct ResolvedStop: Identifiable, Hashable {
     let lng: Double
     let lineNames: [String]
     let transitTypes: Set<TransitType>
-    let docks: [Dock]
+    let docks: [APIDock]
 
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
+    func hash(into hasher: inout Hasher) { hasher.combine(id) }
+    static func == (lhs: ResolvedStop, rhs: ResolvedStop) -> Bool { lhs.id == rhs.id }
+}
 
-    static func == (lhs: ResolvedStop, rhs: ResolvedStop) -> Bool {
-        lhs.id == rhs.id
-    }
+struct APIDock: Codable, Hashable {
+    let letter: String
 }

@@ -285,7 +285,7 @@ private struct StopRowContent: View {
     }
 
     /// Line badges: resolve route colors for each line at this stop.
-    private var lineBadges: [(name: String, route: Route?)] {
+    private var lineBadges: [(name: String, route: APIRoute?)] {
         stop.lineNames.prefix(6).map { name in
             let route = store.routes.first { $0.name == name }
             return (name, route)
@@ -318,9 +318,9 @@ private struct StopRowContent: View {
                         ForEach(lineBadges, id: \.name) { badge in
                             LineBadge(
                                 lineName: badge.name,
-                                color: badge.route?.color ?? "#666666",
-                                textColor: badge.route?.textColor ?? "#FFFFFF",
-                                transitType: badge.route?.transitType ?? primaryType,
+                                color: badge.route.flatMap(\.color) ?? "#666666",
+                                textColor: badge.route.flatMap(\.textColor) ?? "#FFFFFF",
+                                transitType: badge.route.map { TransitType(gtfsRouteType: $0.transitType) } ?? primaryType,
                                 size: .medium
                             )
                         }

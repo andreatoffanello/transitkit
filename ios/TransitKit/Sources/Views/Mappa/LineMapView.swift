@@ -6,15 +6,15 @@ import MapKit
 /// Full-screen map showing a single route's shape + real-time vehicle positions.
 /// Opened via fullScreenCover from LineDetailView.
 struct LineMapView: View {
-    let route: Route
+    let route: APIRoute
     let directionId: Int
 
     @Environment(\.dismiss) private var dismiss
     @Environment(VehicleStore.self) private var vehicleStore
     @Environment(ScheduleStore.self) private var store
 
-    private var lineColor: Color { Color(hex: route.color) }
-    private var textColor: Color { Color(hex: contrastingTextColor(for: route.color)) }
+    private var lineColor: Color { Color(hex: route.color ?? "#000000") }
+    private var textColor: Color { Color(hex: contrastingTextColor(for: route.color ?? "#000000")) }
 
     private var vehicles: [GtfsRtVehicle] {
         vehicleStore.vehicles(forRouteId: route.id)
@@ -38,7 +38,7 @@ struct LineMapView: View {
                     Annotation("", coordinate: CLLocationCoordinate2D(latitude: stop.lat, longitude: stop.lng), anchor: .center) {
                         ZStack {
                             Circle()
-                                .fill(Color(hex: route.color))
+                                .fill(Color(hex: route.color ?? "#000000"))
                                 .frame(width: 10, height: 10)
                                 .overlay(Circle().stroke(.white, lineWidth: 1.5))
                         }
@@ -102,7 +102,7 @@ struct LineMapView: View {
                             Text(route.name)
                                 .font(.system(size: 13, weight: .bold, design: .rounded))
                                 .foregroundStyle(.primary)
-                            Text(route.longName)
+                            Text(route.longName ?? "")
                                 .font(.system(size: 11))
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)
@@ -132,19 +132,8 @@ struct LineMapView: View {
     // MARK: - Zoom helpers
 
     private func zoomToStops() {
-        // Prefer shape data if available
-        let direction = route.directions.first { $0.id == directionId } ?? route.directions.first
-        let shapeCoords = direction?.shape.compactMap { pair -> CLLocationCoordinate2D? in
-            guard pair.count >= 2 else { return nil }
-            return CLLocationCoordinate2D(latitude: pair[0], longitude: pair[1])
-        } ?? []
-
-        let coords: [CLLocationCoordinate2D]
-        if shapeCoords.count >= 2 {
-            coords = shapeCoords
-        } else {
-            coords = routeStops.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lng) }
-        }
+        // Use stop coordinates (shapePolyline is encoded polyline, not yet decoded)
+        let coords = routeStops.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lng) }
 
         guard !coords.isEmpty else { return }
 

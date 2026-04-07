@@ -7,10 +7,10 @@ struct TripDetailView: View {
     let fromStop: ResolvedStop
     @Environment(ScheduleStore.self) private var store
 
-    /// Resolved trip stops (from the stop pattern).
+    /// Trip stop sequence — not available from the new API without a separate /trips/{id} call.
+    /// Returns nil to show the "no data" placeholder for now.
     private var tripStops: [ResolvedStop]? {
-        guard let idx = departure.patternIndex else { return nil }
-        return store.tripStops(patternIndex: idx)
+        return nil
     }
 
     private var lineColor: Color {
@@ -204,9 +204,9 @@ struct TripDetailView: View {
                             let r = store.routes.first { $0.name == name }
                             LineBadge(
                                 lineName: name,
-                                color: r?.color ?? "#666666",
-                                textColor: r?.textColor ?? "#FFFFFF",
-                                transitType: r?.transitType ?? .bus,
+                                color: r.flatMap(\.color) ?? "#666666",
+                                textColor: r.flatMap(\.textColor) ?? "#FFFFFF",
+                                transitType: r.map { TransitType(gtfsRouteType: $0.transitType) } ?? .bus,
                                 size: .medium
                             )
                         }

@@ -43,7 +43,7 @@ struct MappaTab: View {
     @State private var isExpanded = false
 
     // MARK: Route overlay
-    @State private var selectedRoute: Route?
+    @State private var selectedRoute: APIRoute?
     @State private var selectedDirectionId: Int?
     @State private var showRouteOverlay = false
 
@@ -123,7 +123,7 @@ struct MappaTab: View {
                             RouteOverlayToggle(
                                 isVisible: $showRouteOverlay,
                                 routeName: route.name,
-                                routeColor: route.color
+                                routeColor: route.color ?? "#000000"
                             )
                             Spacer()
                         }
@@ -143,7 +143,7 @@ struct MappaTab: View {
                             RouteOverlayToggle(
                                 isVisible: $showRouteOverlay,
                                 routeName: route.name,
-                                routeColor: route.color
+                                routeColor: route.color ?? "#000000"
                             )
                             Spacer()
                         }
@@ -456,33 +456,10 @@ struct MappaTab: View {
     // MARK: - Public API for route selection
 
     /// Call this to show a route overlay on the map (e.g. from a line detail view).
-    func selectRoute(_ route: Route, directionId: Int? = nil) {
+    func selectRoute(_ route: APIRoute, directionId: Int? = nil) {
         selectedRoute = route
         selectedDirectionId = directionId
         showRouteOverlay = true
-
-        // Zoom to fit the route shape
-        if let direction = route.directions.first(where: { directionId == nil || $0.id == directionId }),
-           !direction.shape.isEmpty {
-            let coords = direction.shape.compactMap { pair -> CLLocationCoordinate2D? in
-                guard pair.count >= 2 else { return nil }
-                return CLLocationCoordinate2D(latitude: pair[0], longitude: pair[1])
-            }
-            if !coords.isEmpty {
-                let lats = coords.map(\.latitude)
-                let lngs = coords.map(\.longitude)
-                let center = CLLocationCoordinate2D(
-                    latitude: (lats.min()! + lats.max()!) / 2,
-                    longitude: (lngs.min()! + lngs.max()!) / 2
-                )
-                let span = MKCoordinateSpan(
-                    latitudeDelta: (lats.max()! - lats.min()!) * 1.3,
-                    longitudeDelta: (lngs.max()! - lngs.min()!) * 1.3
-                )
-                withAnimation {
-                    mapPosition = .region(MKCoordinateRegion(center: center, span: span))
-                }
-            }
-        }
+        // shapePolyline is encoded polyline (not yet decoded) — no zoom-to-shape available
     }
 }

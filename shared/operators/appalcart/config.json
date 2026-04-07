@@ -1,5 +1,6 @@
 {
   "id": "appalcart",
+  "apiUrl": "https://transitkit-engine.vercel.app",
   "name": "AppalCART",
   "fullName": "Appalachian District Transportation Authority",
   "url": "https://appalachiantransit.com",

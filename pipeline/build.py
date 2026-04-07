@@ -920,7 +920,7 @@ def _build_service_days_map(feed: dict) -> dict[str, list[str]]:
     return service_days
 
 
-def _write_to_db(operator_id, config, stations, routes_list, feed, directions, output):
+def _write_to_db(operator_id, config, stations, routes_list, feed, directions, output, stop_to_station=None):
     """Write pipeline output to Neon DB using db_writer."""
     import os
     from dotenv import load_dotenv
@@ -992,16 +992,27 @@ def _write_to_db(operator_id, config, stations, routes_list, feed, directions, o
                 "service_days": service_days_map.get(t["service_id"], []),
             })
 
-        stop_time_dicts = [
-            {
+        # Map raw GTFS stop_id → station_id (grouped stop). stop_times reference
+        # raw GTFS IDs but the DB stops table uses station IDs. Skip any stop_time
+        # whose stop was excluded from the station grouping (no coords, excluded name…).
+        _s2s = stop_to_station or {}
+        stop_time_dicts = []
+        skipped_st = 0
+        for st in feed.get("stop_times", []):
+            raw_sid = st["stop_id"].strip()
+            mapped_sid = _s2s.get(raw_sid)
+            if mapped_sid is None:
+                skipped_st += 1
+                continue
+            stop_time_dicts.append({
                 "trip_id": st["trip_id"],
-                "stop_id": st["stop_id"],
+                "stop_id": mapped_sid,
                 "arrival_time": st.get("arrival_time", st["departure_time"]),
                 "departure_time": st["departure_time"],
                 "stop_sequence": int(st["stop_sequence"]),
-            }
-            for st in feed.get("stop_times", [])
-        ]
+            })
+        if skipped_st:
+            print(f"  Skipped {skipped_st} stop_times for excluded/unmapped stops.")
         db_writer.write_trips_and_stop_times(conn, operator_id, trip_dicts, stop_time_dicts)
 
         # Route directions
@@ -1140,7 +1151,7 @@ def main():
 
     # DB output branch
     if output_mode == "db":
-        _write_to_db(operator_id, config, stations, routes, feed, directions, output)
+        _write_to_db(operator_id, config, stations, routes, feed, directions, output, stop_to_station=stop_to_station)
         print(f"\n✓ Done! Wrote to Neon DB for operator '{operator_id}'.")
         return
 

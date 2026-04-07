@@ -878,13 +878,164 @@ def validate_output(output: dict) -> list[str]:
 
 # --- Main ---
 
-def main():
-    if len(sys.argv) < 2:
-        print("Usage: python pipeline/build.py <operator_id>")
-        print("Example: python pipeline/build.py rfta")
+def load_normalizer(operator_id: str):
+    """Dynamically load the operator-specific normalizer, or return None."""
+    import importlib.util
+    import inspect
+    normalizer_path = SCRIPT_DIR / "operators" / operator_id / "normalizer.py"
+    if not normalizer_path.exists():
+        return None
+    sys.path.insert(0, str(SCRIPT_DIR))
+    from normalizer_base import OperatorNormalizer
+    spec = importlib.util.spec_from_file_location("normalizer", normalizer_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    for name, obj in inspect.getmembers(module, inspect.isclass):
+        if issubclass(obj, OperatorNormalizer) and obj is not OperatorNormalizer:
+            return obj()
+    return None
+
+
+def _transit_type_to_int(transit_type_str: str) -> int:
+    mapping = {
+        "tram": 0, "metro": 1, "rail": 2, "bus": 3,
+        "ferry": 4, "cable_tram": 5, "gondola": 6,
+        "funicular": 7, "trolleybus": 11, "monorail": 12,
+    }
+    return mapping.get(transit_type_str.lower(), 3)
+
+
+def _build_service_days_map(feed: dict) -> dict[str, list[str]]:
+    """Build a map from service_id → list of day names (e.g. ['monday', 'tuesday'])."""
+    DAY_COLS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+    service_days = {}
+    for row in feed.get("calendar", []):
+        days = [d for d in DAY_COLS if row.get(d) == "1"]
+        service_days[row["service_id"]] = days
+    # calendar_dates: if a service_id only appears in calendar_dates (no calendar.txt row),
+    # we can't determine weekday pattern — use empty list as fallback.
+    for row in feed.get("calendar_dates", []):
+        if row["service_id"] not in service_days:
+            service_days[row["service_id"]] = []
+    return service_days
+
+
+def _write_to_db(operator_id, config, stations, routes_list, feed, directions, output):
+    """Write pipeline output to Neon DB using db_writer."""
+    import os
+    from dotenv import load_dotenv
+    import psycopg2
+    sys.path.insert(0, str(SCRIPT_DIR))
+    import db_writer
+
+    env_path = REPO_ROOT / "shared" / "operators" / operator_id / ".env"
+    load_dotenv(env_path)
+    database_url = os.environ.get("DATABASE_URL")
+    if not database_url:
+        print(f"ERROR: DATABASE_URL not set in {env_path}")
         sys.exit(1)
 
-    operator_id = sys.argv[1]
+    print(f"\n[DB] Connecting to Neon for operator '{operator_id}'...")
+    conn = psycopg2.connect(database_url)
+
+    try:
+        db_writer.clear_operator_data(conn, operator_id)
+
+        # Operator
+        db_writer.write_operator(
+            conn,
+            operator_id=operator_id,
+            name=config.get("name", operator_id),
+            url=config.get("url"),
+            timezone=config.get("timezone", "UTC"),
+            features=config.get("features", {}),
+        )
+
+        # Routes
+        route_dicts = [
+            {
+                "id": r["id"],
+                "name": r["name"],
+                "long_name": r.get("longName"),
+                "color": r.get("color", "").lstrip("#") or None,
+                "text_color": r.get("textColor", "").lstrip("#") or None,
+                "transit_type": _transit_type_to_int(r.get("transitType", "bus")),
+            }
+            for r in routes_list
+        ]
+        db_writer.write_routes(conn, operator_id, route_dicts)
+
+        # Stops — from stations dict (already grouped by the pipeline)
+        stop_dicts = [
+            {
+                "id": s["id"],
+                "name": s["name"],
+                "lat": s["lat"],
+                "lng": s["lng"],
+                "platform_code": None,
+                "dock_letter": s.get("docks", [{}])[0].get("letter") if s.get("docks") else None,
+            }
+            for s in stations.values()
+        ]
+        db_writer.write_stops(conn, operator_id, stop_dicts)
+
+        # Trips + stop_times — from GTFS feed
+        service_days_map = _build_service_days_map(feed)
+
+        trip_dicts = []
+        for t in feed.get("trips", []):
+            trip_dicts.append({
+                "id": t["trip_id"],
+                "route_id": t["route_id"],
+                "direction_id": int(t.get("direction_id", 0)),
+                "headsign": t.get("trip_headsign", "").strip() or None,
+                "service_days": service_days_map.get(t["service_id"], []),
+            })
+
+        stop_time_dicts = [
+            {
+                "trip_id": st["trip_id"],
+                "stop_id": st["stop_id"],
+                "arrival_time": st.get("arrival_time", st["departure_time"]),
+                "departure_time": st["departure_time"],
+                "stop_sequence": int(st["stop_sequence"]),
+            }
+            for st in feed.get("stop_times", [])
+        ]
+        db_writer.write_trips_and_stop_times(conn, operator_id, trip_dicts, stop_time_dicts)
+
+        # Route directions
+        direction_dicts = []
+        for route_id, dir_list in directions.items():
+            for d in dir_list:
+                direction_dicts.append({
+                    "route_id": route_id,
+                    "direction_id": int(d.get("id", 0)),
+                    "headsign": d.get("headsign"),
+                    "stop_ids": d.get("stopIds", []),
+                    "shape_polyline": None,  # shape is stored as list of coords in current pipeline
+                })
+        db_writer.write_route_directions(conn, operator_id, direction_dicts)
+
+    finally:
+        conn.close()
+
+
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(description="TransitKit GTFS pipeline")
+    parser.add_argument("operator_id", help="Operator ID (e.g. appalcart)")
+    parser.add_argument(
+        "--output",
+        choices=["json", "db"],
+        default="json",
+        help="Output target: 'json' (default) writes schedules.json, 'db' writes to Neon",
+    )
+    args = parser.parse_args()
+    operator_id = args.operator_id
+    output_mode = args.output
+
     print(f"=== TransitKit — GTFS → JSON for '{operator_id}' ===\n")
 
     # 1. Load config
@@ -986,6 +1137,12 @@ def main():
     if validation_errors:
         print(f"\n✘ BUILD FAILED: {len(validation_errors)} critical errors.")
         sys.exit(1)
+
+    # DB output branch
+    if output_mode == "db":
+        _write_to_db(operator_id, config, stations, routes, feed, directions, output)
+        print(f"\n✓ Done! Wrote to Neon DB for operator '{operator_id}'.")
+        return
 
     # 5. Save
     print("\n[4/4] Saving...")

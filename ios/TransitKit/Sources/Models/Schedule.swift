@@ -220,7 +220,7 @@ struct Departure: Identifiable, Hashable {
         self.id         = "\(t)_\(apiDep.routeName)_\(apiDep.headsign ?? "")_\(apiDep.tripId)"
         self.lineName   = apiDep.routeName
         self.routeId    = apiDep.routeId
-        self.headsign   = apiDep.headsign ?? ""
+        self.headsign   = HeadsignNormalizer.resolve(apiDep.headsign ?? "", route: route)
         self.color      = apiDep.routeColor.map { "#\($0)" } ?? "#000000"
         self.textColor  = apiDep.routeTextColor.map { "#\($0)" } ?? "#FFFFFF"
         self.transitType = route.map { TransitType(gtfsRouteType: $0.transitType) } ?? .bus

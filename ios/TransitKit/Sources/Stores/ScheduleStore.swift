@@ -23,9 +23,11 @@ class ScheduleStore {
     private(set) var tripIdsByRouteId: [String: Set<String>] = [:]
 
     private let loader: ScheduleLoader
+    private(set) var apiUrl: String?
     private var operatorConfig: OperatorConfig? = nil
 
     init(operatorId: String, apiUrl: String? = nil) {
+        self.apiUrl = apiUrl
         self.loader = ScheduleLoader(operatorId: operatorId, apiUrl: apiUrl)
     }
 
@@ -89,7 +91,10 @@ class ScheduleStore {
             guard let dir = route.directions.first else { return nil }
             let names = dir.stopIds.compactMap { stopById[$0]?.name }
             guard !names.isEmpty else { return nil }
-            return (route.id, names.joined(separator: " → "))
+            // Circular/loop routes have a single direction — use · instead of → to avoid
+            // implying one-way directionality. Linear routes keep the → arrow.
+            let sep = route.directions.count == 1 ? " · " : " → "
+            return (route.id, names.joined(separator: sep))
         })
 
         var tripMap: [String: Set<String>] = [:]

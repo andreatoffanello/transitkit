@@ -6,11 +6,26 @@ struct TripDetailView: View {
     let departure: Departure
     let fromStop: ResolvedStop
     @Environment(ScheduleStore.self) private var store
+    @State private var tripDetail: TripDetail? = nil
+    @State private var isLoadingTrip = false
 
-    /// Trip stop sequence — not available from the new API without a separate /trips/{id} call.
-    /// Returns nil to show the "no data" placeholder for now.
+    /// Resolves trip stops from the loaded TripDetail, preferring store-cached
+    /// ResolvedStop for richer coincidence/dock data where available.
     private var tripStops: [ResolvedStop]? {
-        return nil
+        guard let detail = tripDetail else { return nil }
+        let sorted = detail.stopTimes.sorted { $0.stopSequence < $1.stopSequence }
+        return sorted.map { st in
+            store.stops.first(where: { $0.id == st.stopId })
+                ?? ResolvedStop(
+                    id: st.stopId,
+                    name: st.stopName,
+                    lat: st.stopLat,
+                    lng: st.stopLng,
+                    lineNames: [],
+                    transitTypes: [.bus],
+                    docks: []
+                )
+        }
     }
 
     private var lineColor: Color {
@@ -32,6 +47,11 @@ struct TripDetailView: View {
 
                 if let stops = tripStops, !stops.isEmpty {
                     stopsTimeline(stops: stops)
+                } else if isLoadingTrip {
+                    ProgressView()
+                        .tint(AppTheme.accent)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 40)
                 } else {
                     VStack(spacing: 8) {
                         LucideIcon.alertTriangle.sized(28)
@@ -54,6 +74,15 @@ struct TripDetailView: View {
         .toolbar(.hidden, for: .tabBar)
         .navigationDestination(for: ResolvedStop.self) { stop in
             StopDetailView(stop: stop)
+        }
+        .task {
+            guard let tripId = departure.tripId, !tripId.isEmpty,
+                  let apiUrl = store.apiUrl,
+                  let client = try? APIClient(apiUrl: apiUrl)
+            else { return }
+            isLoadingTrip = true
+            tripDetail = try? await client.fetchTrip(tripId: tripId)
+            isLoadingTrip = false
         }
     }
 

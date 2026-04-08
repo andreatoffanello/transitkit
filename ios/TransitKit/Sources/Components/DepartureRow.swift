@@ -81,21 +81,20 @@ struct DepartureRow: View {
                 LiveBadge()
             }
 
-            // Countdown
-            TimeDisplay(state: timeState)
-
-            // Absolute time (always shown alongside countdown when within 60 min)
-            if case .minutes = timeState {
-                Text(departure.time)
-                    .font(.system(size: isFirst ? 13 : 12, weight: .medium, design: .monospaced))
-                    .foregroundStyle(AppTheme.textSecondary)
-                    .fixedSize(horizontal: true, vertical: false)
-            } else if case .departing = timeState {
-                Text(departure.time)
-                    .font(.system(size: isFirst ? 13 : 12, weight: .medium, design: .monospaced))
-                    .foregroundStyle(AppTheme.textSecondary)
-                    .fixedSize(horizontal: true, vertical: false)
+            // Countdown + absolute time stacked
+            VStack(alignment: .trailing, spacing: 1) {
+                TimeDisplay(state: timeState)
+                if case .minutes = timeState {
+                    Text(departure.time)
+                        .font(.system(size: isFirst ? 12 : 11, weight: .medium, design: .monospaced))
+                        .foregroundStyle(AppTheme.textSecondary)
+                } else if case .departing = timeState {
+                    Text(departure.time)
+                        .font(.system(size: isFirst ? 12 : 11, weight: .medium, design: .monospaced))
+                        .foregroundStyle(AppTheme.textSecondary)
+                }
             }
+            .fixedSize(horizontal: true, vertical: false)
         }
         .padding(.vertical, isFirst ? 14 : 10)
         .overlay(alignment: .bottom) {

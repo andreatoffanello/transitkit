@@ -4,6 +4,38 @@ import Foundation
 /// Strips common meaningless prefixes and applies operator-specific mappings.
 enum HeadsignNormalizer {
 
+    /// Generic direction words that convey no useful destination information.
+    private static let genericDirections: Set<String> = [
+        "inbound", "outbound", "northbound", "southbound", "eastbound", "westbound",
+        "north", "south", "east", "west", "inward", "outward", "loop", "circular"
+    ]
+
+    /// Resolves a headsign for display. When the raw headsign is a generic direction
+    /// word ("Inbound", "Outbound", etc.), falls back to the route's long name or
+    /// first non-generic direction headsign.
+    static func resolve(_ raw: String, route: APIRoute?) -> String {
+        guard let route else { return normalize(raw) }
+        let lower = raw.lowercased().trimmingCharacters(in: .whitespaces)
+        guard genericDirections.contains(lower) else { return normalize(raw) }
+
+        // Prefer route longName if it's not also generic
+        if let longName = route.longName, !longName.isEmpty,
+           !genericDirections.contains(longName.lowercased()) {
+            return normalize(longName)
+        }
+
+        // Fall back to first non-generic direction headsign
+        for dir in route.directions {
+            if let h = dir.headsign, !h.isEmpty,
+               !genericDirections.contains(h.lowercased()) {
+                return normalize(h)
+            }
+        }
+
+        // Nothing better — keep the raw value normalized
+        return normalize(raw)
+    }
+
     /// Normalize a raw headsign string.
     /// - Parameters:
     ///   - raw: The raw GTFS trip_headsign value

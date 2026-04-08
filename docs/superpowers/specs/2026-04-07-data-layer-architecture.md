@@ -76,7 +76,14 @@ Ogni operatore ha un progetto Vercel separato. L'unica variabile d'ambiente nece
 | `GET` | `/routes/:id` | Singola linea con fermate ordinate per direzione |
 | `GET` | `/trips/:id` | Viaggio completo con tutti gli stop times |
 
-Il payload di `/schedule` usa lo stesso schema pulito degli endpoint granulari — nessun array compatto, nessun campo abbreviato. È lo stesso dato, serializzato in bulk.
+Il payload di `/schedule` usa lo stesso schema pulito degli endpoint granulari — nessun array compatto, nessun campo abbreviato. Contiene:
+
+- `routes` + `route_directions` (fermate ordinate per direzione + shape polyline)
+- `stops` (nome, coordinate, dock/platform se disponibili)
+- Partenze per fermata per giorno di servizio (aggregate da `stop_times`)
+- `config` + `features`
+
+I trip completi (orari per ogni fermata lungo la tratta) sono **esclusi** dal bulk. Il dettaglio di una corsa specifica si ottiene con `GET /trips/:id`, chiamato on-demand quando l'utente tocca una partenza. La risposta viene cachata su disco alla prima visualizzazione.
 
 L'URL dell'API per ogni operatore è registrato in `shared/operators/{id}/config.json` nel campo `apiUrl`.
 

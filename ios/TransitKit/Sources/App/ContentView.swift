@@ -86,7 +86,7 @@ struct ContentView: View {
         .toolbarBackground(.ultraThinMaterial, for: .tabBar)
         .modifier(TabBarVisibilityModifier())
         .modifier(TabBarAppearanceModifier())
-        .tint(AppTheme.accent)
+        .tint(.primary)
         .onChange(of: selectedTab) { _, _ in
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
         }
@@ -111,14 +111,30 @@ private struct TabBarVisibilityModifier: ViewModifier {
 // MARK: - Tab Bar Appearance
 
 /// Configures the native tab bar appearance with a subtle top separator.
+/// Selected item uses neutral .label color — accent is reserved for buttons/links only.
 private struct TabBarAppearanceModifier: ViewModifier {
     func body(content: Content) -> some View {
         content.onAppear {
             let appearance = UITabBarAppearance()
             appearance.configureWithDefaultBackground()
             appearance.shadowColor = UIColor.separator
+
+            // Neutral chrome: selected item uses .label, inactive uses .secondaryLabel
+            let item = UITabBarItemAppearance()
+            item.selected.iconColor = .label
+            item.selected.titleTextAttributes = [.foregroundColor: UIColor.label]
+            item.normal.iconColor = .secondaryLabel
+            item.normal.titleTextAttributes = [.foregroundColor: UIColor.secondaryLabel]
+            appearance.stackedLayoutAppearance = item
+            appearance.inlineLayoutAppearance = item
+            appearance.compactInlineLayoutAppearance = item
+
             UITabBar.appearance().scrollEdgeAppearance = appearance
             UITabBar.appearance().standardAppearance = appearance
+            UITabBar.appearance().tintColor = .label
+
+            // Nav bar back button and toolbar items use neutral color
+            UINavigationBar.appearance().tintColor = .label
         }
     }
 }

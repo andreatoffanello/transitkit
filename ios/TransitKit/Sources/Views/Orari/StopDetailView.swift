@@ -40,8 +40,10 @@ struct StopDetailView: View {
     }
 
     /// Available line names at this stop (for filtering).
+    /// Uses upcoming departures only — lines that have already finished for the day are excluded.
     private var availableLines: [String] {
-        let deps = store.todayDepartures(forStopId: stop.id)
+        _ = refreshTick
+        let deps = store.upcomingDepartures(forStopId: stop.id, limit: 500)
         var seen = Set<String>()
         return deps.map(\.lineName).filter { seen.insert($0).inserted }
     }
@@ -98,7 +100,6 @@ struct StopDetailView: View {
                     favoritesManager.toggle(stop.id)
                 } label: {
                     Image(systemName: favoritesManager.isFavorite(stop.id) ? "star.fill" : "star")
-                        .foregroundStyle(AppTheme.accent)
                 }
                 .accessibilityLabel(favoritesManager.isFavorite(stop.id)
                     ? String(localized: "remove_from_favorites")
@@ -515,7 +516,6 @@ struct StopDetailView: View {
 
                         ForEach(availableLines, id: \.self) { line in
                             let route = store.routes.first { $0.name == line }
-                            let hasTodayDepartures = store.todayDepartures(forStopId: stop.id).contains { $0.lineName == line }
                             LineFilterChip(
                                 lineName: line,
                                 routeColor: route?.color ?? "#666666",
@@ -523,8 +523,6 @@ struct StopDetailView: View {
                             ) {
                                 withAnimation(.smooth(duration: 0.2)) { filterLine = line }
                             }
-                            .disabled(!hasTodayDepartures)
-                            .opacity(hasTodayDepartures ? 1.0 : 0.4)
                             .accessibilityIdentifier("btn_filter_line_\(line)")
                         }
                     }
@@ -539,18 +537,12 @@ struct StopDetailView: View {
                     let isFirst = index == 0
 
                     NavigationLink(value: TripTarget(departure: dep, fromStop: stop)) {
-                        DepartureRowContent(departure: dep, isFirst: isFirst, hasDocks: !stop.docks.isEmpty)
+                        DepartureRow(departure: dep, isFirst: isFirst)
                             .padding(.horizontal, 20)
-                            .padding(.vertical, isFirst ? 14 : 10)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityIdentifier("departure_row_\(dep.id)")
-
-                    if index < departures.count - 1 {
-                        Divider()
-                            .padding(.leading, 20)
-                    }
                 }
             }
             .background(AppTheme.bgSecondary.opacity(0.4))
@@ -601,45 +593,6 @@ struct StopDetailView: View {
     private func openInWaze() {
         let url = URL(string: "waze://?ll=\(stopCoordinate.latitude),\(stopCoordinate.longitude)&navigate=false")!
         UIApplication.shared.open(url)
-    }
-}
-
-// MARK: - Departure Row Content
-
-private struct DepartureRowContent: View {
-    let departure: Departure
-    let isFirst: Bool
-    let hasDocks: Bool
-
-    var body: some View {
-        HStack(spacing: 10) {
-            // Line badge
-            LineBadge(
-                lineName: departure.lineName,
-                color: departure.color,
-                textColor: departure.textColor,
-                transitType: departure.transitType,
-                size: .big
-            )
-
-            // Headsign
-            Text(departure.headsign)
-                .font(.system(size: 14))
-                .foregroundStyle(AppTheme.textSecondary)
-                .lineLimit(1)
-
-            Spacer(minLength: 4)
-
-            // Dock indicator
-            if hasDocks && !departure.dock.isEmpty {
-                DockBadgeView(letter: departure.dock)
-            }
-
-            // Time display with urgency coloring and live countdown
-            TimelineView(.periodic(from: .now, by: 30)) { _ in
-                TimeDisplay(departure: departure)
-            }
-        }
     }
 }
 

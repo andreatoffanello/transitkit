@@ -87,7 +87,6 @@ struct HomeTab: View {
                 }
             }
             .frame(width: 56, height: 56)
-            .shadow(color: AppTheme.accent.opacity(0.35), radius: 8, y: 3)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(greeting)

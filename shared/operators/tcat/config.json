@@ -1,5 +1,6 @@
 {
   "id": "tcat",
+  "cdnUrl": "https://andreatoffanello.github.io/transit-engine",
   "name": "TCAT",
   "fullName": "Tompkins Consolidated Area Transit",
   "url": "https://tcatbus.com",

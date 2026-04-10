@@ -48,8 +48,9 @@ final class AppLaunchTests: XCTestCase {
         let firstRoute = app.cells.firstMatch
         XCTAssertTrue(firstRoute.waitForExistence(timeout: 20))
         firstRoute.tap()
-        let content = app.scrollViews.firstMatch.exists || app.tables.firstMatch.exists
-        XCTAssertTrue(content, "Line detail should show content")
+        // Wait for the detail view to appear after navigation
+        let detailContent = app.scrollViews.firstMatch
+        XCTAssertTrue(detailContent.waitForExistence(timeout: 5), "Line detail should show content after tap")
     }
 
     func testStopsTabShowsStops() throws {

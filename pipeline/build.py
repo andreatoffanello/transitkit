@@ -1040,21 +1040,6 @@ def load_normalizer(operator_id: str):
     return None
 
 
-def _build_service_days_map(feed: dict) -> dict[str, list[str]]:
-    """Build a map from service_id → list of day names (e.g. ['monday', 'tuesday'])."""
-    DAY_COLS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
-    service_days = {}
-    for row in feed.get("calendar", []):
-        days = [d for d in DAY_COLS if row.get(d) == "1"]
-        service_days[row["service_id"]] = days
-    # calendar_dates: if a service_id only appears in calendar_dates (no calendar.txt row),
-    # we can't determine weekday pattern — use empty list as fallback.
-    for row in feed.get("calendar_dates", []):
-        if row["service_id"] not in service_days:
-            service_days[row["service_id"]] = []
-    return service_days
-
-
 def main():
     import argparse
 
@@ -1172,6 +1157,17 @@ def main():
 
     # Write iOS-compatible schedules.json (matches ScheduleResponse wire format)
     ios_output = build_ios_json(config, stations, departures, routes, feed)
+
+    # Validate iOS output
+    ios_stops_with_deps = [s for s in ios_output["stops"] if s["departures"]]
+    if not ios_output["routes"]:
+        print("\n✘ iOS output has no routes — aborting.")
+        sys.exit(1)
+    if not ios_stops_with_deps:
+        print("\n✘ iOS output has no stops with departures — aborting.")
+        sys.exit(1)
+    print(f"  iOS format: {len(ios_output['routes'])} routes, {len(ios_stops_with_deps)} stops with departures")
+
     schedules_file = output_dir / "schedules.json"
     with open(schedules_file, "w", encoding="utf-8") as f:
         json.dump(ios_output, f, ensure_ascii=False, separators=(",", ":"))

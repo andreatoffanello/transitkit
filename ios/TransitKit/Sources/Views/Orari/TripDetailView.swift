@@ -76,6 +76,10 @@ struct TripDetailView: View {
             StopDetailView(stop: stop)
         }
         .task {
+            // NOTE: Trip detail endpoint was part of the Vercel API that is being retired.
+            // This call will gracefully fail (returning nil) once the Vercel deployment
+            // is updated without the API functions. The view handles nil tripDetail by
+            // showing the static schedule data from the CDN.
             guard let tripId = departure.tripId, !tripId.isEmpty,
                   let apiUrl = store.apiUrl,
                   let client = try? APIClient(apiUrl: apiUrl)

@@ -66,8 +66,9 @@ jobs:
               for field in ('operator','lastUpdated','routes','stops'):
                   if field not in data:
                       errors.append(f'{op}: missing field {field}')
-              if data.get('stops') and data['stops'][0].get('departures'):
-                  d = data['stops'][0]['departures'][0]
+              first_stop_deps = data['stops'][0].get('departures', []) if data.get('stops') else []
+              if first_stop_deps:
+                  d = first_stop_deps[0]
                   if isinstance(d.get('serviceDays'), list) and not d.get('routeColor','').startswith('#'):
                       print(f'{op}: OK ({len(data[\"stops\"])} stops, {len(data[\"routes\"])} routes)')
                   else:

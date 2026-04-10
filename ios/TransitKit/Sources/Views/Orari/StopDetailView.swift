@@ -17,6 +17,7 @@ struct StopDetailView: View {
     @State private var mapExpanded: Bool = false
     @State private var expandedMapPosition: MapCameraPosition = .automatic
     @State private var showMapAppPicker = false
+    @State private var mapReady = false
     /// Incremented every 30s to force re-evaluation of departure times and remove past entries.
     @State private var refreshTick: Int = 0
 
@@ -24,6 +25,27 @@ struct StopDetailView: View {
 
     private var stopCoordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: stop.lat, longitude: stop.lng)
+    }
+
+    // Camera for the compact map: 3D pitched, center offset north to compensate pitch perspective.
+    private var compactCamera: MapCameraPosition {
+        let offsetLat = stop.lat + 0.0006
+        return .camera(MapCamera(
+            centerCoordinate: CLLocationCoordinate2D(latitude: offsetLat, longitude: stop.lng),
+            distance: 600,
+            heading: 0,
+            pitch: 60
+        ))
+    }
+
+    // Initial camera — starts zoomed out for the fly-in animation on appear.
+    private var flyInStartCamera: MapCameraPosition {
+        .camera(MapCamera(
+            centerCoordinate: stopCoordinate,
+            distance: 1200,
+            heading: 0,
+            pitch: 40
+        ))
     }
 
     // MARK: - Departures
@@ -67,6 +89,7 @@ struct StopDetailView: View {
                 }
             }
             .background(AppTheme.background.ignoresSafeArea())
+            .ignoresSafeArea(edges: .top)
 
             if mapExpanded {
                 expandedMapOverlay
@@ -83,6 +106,7 @@ struct StopDetailView: View {
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .toolbar(.hidden, for: .tabBar)
         .toolbar(.visible, for: .navigationBar)
         .toolbar {
@@ -111,7 +135,7 @@ struct StopDetailView: View {
             FullScheduleSheet(stop: stop)
         }
         .onAppear {
-            centerOnStop()
+            mapPosition = flyInStartCamera
             if router.openScheduleForStop == stop.id {
                 router.openScheduleForStop = nil
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
@@ -120,8 +144,17 @@ struct StopDetailView: View {
             }
         }
         .onDisappear { }
+        .task(id: stop.id) {
+            // Fly-in: let tiles load at far distance, then zoom in
+            mapPosition = flyInStartCamera
+            try? await Task.sleep(for: .milliseconds(500))
+            mapReady = true
+            withAnimation(.easeInOut(duration: 1.2)) {
+                mapPosition = compactCamera
+            }
+        }
         .task {
-            // Refresh departure times every 30s so past entries disappear automatically
+            // Refresh departure times every 15s so past entries disappear automatically
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(15))
                 refreshTick &+= 1
@@ -133,43 +166,43 @@ struct StopDetailView: View {
 
     @ViewBuilder
     private var mapHeader: some View {
-        Map(position: $mapPosition) {
-            if stop.docks.isEmpty {
-                Annotation(stop.name, coordinate: stopCoordinate) {
-                    ZStack {
-                        Circle()
-                            .fill(AppTheme.accent)
-                            .frame(width: 28, height: 28)
-                        (stop.transitTypes.first ?? .bus).icon.sized(13)
-                            .foregroundStyle(.white)
+        ZStack(alignment: .bottomTrailing) {
+            Map(position: $mapPosition) {
+                if mapReady, stop.docks.isEmpty {
+                    Annotation(stop.name, coordinate: stopCoordinate, anchor: .bottom) {
+                        ZStack {
+                            Circle()
+                                .fill(AppTheme.accent)
+                                .frame(width: 28, height: 28)
+                            (stop.transitTypes.first ?? .bus).icon.sized(13)
+                                .foregroundStyle(.white)
+                        }
+                        .shadow(color: .black.opacity(0.2), radius: 3, y: 1)
                     }
-                    .shadow(color: .black.opacity(0.2), radius: 3, y: 1)
                 }
             }
-        }
-        .mapStyle(.standard(elevation: .realistic, pointsOfInterest: .excludingAll))
-        .frame(height: 190)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .disabled(true)
-        .overlay(alignment: .bottomTrailing) {
+            .mapStyle(.standard(pointsOfInterest: .excludingAll))
+            .allowsHitTesting(false)
+
             Button {
-                withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
+                withAnimation(.spring(duration: 0.35)) {
                     mapExpanded = true
                 }
             } label: {
                 LucideIcon.maximize2.sized(14)
-                    .foregroundStyle(.primary)
-                    .frame(width: 32, height: 32)
-                    .background(.regularMaterial, in: Capsule())
+                    .foregroundStyle(.white)
+                    .frame(width: 36, height: 36)
+                    .background(.ultraThinMaterial.opacity(0.9))
+                    .background(Color.black.opacity(0.3))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
             }
             .buttonStyle(.plain)
-            .padding(10)
+            .padding(12)
             .accessibilityLabel("Espandi mappa")
             .accessibilityIdentifier("btn_expand_map")
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 12)
-        .padding(.bottom, 8)
+        .frame(height: UIScreen.main.bounds.height * 0.4)
+        .clipped()
     }
 
     // MARK: - Expanded Map Overlay
@@ -553,25 +586,6 @@ struct StopDetailView: View {
     }
 
     // MARK: - Helpers
-
-    private func centerOnStop() {
-        if false {
-            // dock lat/lng not available in API v2 — docks array is always empty
-            mapPosition = .camera(MapCamera(
-                centerCoordinate: stopCoordinate,
-                distance: 500,
-                heading: 0,
-                pitch: 50
-            ))
-        } else {
-            mapPosition = .camera(MapCamera(
-                centerCoordinate: stopCoordinate,
-                distance: 400,
-                heading: 0,
-                pitch: 50
-            ))
-        }
-    }
 
     private func openInMaps() {
         showMapAppPicker = true

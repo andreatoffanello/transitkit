@@ -36,6 +36,12 @@ struct LineDetailView: View {
                     // Header
                     lineHeader
 
+                    // Inline minimap — shows route shape before the stop list
+                    if !stopsInDirection.isEmpty {
+                        LineStopsMap(stops: stopsInDirection, lineColor: lineColor)
+                            .frame(height: UIScreen.main.bounds.height * 0.35)
+                    }
+
                     // Direction picker
                     if route.directions.count > 1 {
                         directionPicker

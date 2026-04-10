@@ -37,6 +37,7 @@
 		7F19B3C784E533D5471C5BAC /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3ECCF222F6E839416B5E8973 /* MapKit.framework */; };
 		7F5F190ECED7C0E360386483 /* TripDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57168F694B2F4ED9A806021B /* TripDetailView.swift */; };
 		84A2B8BDA416F613EFD73749 /* LineDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FC30DB536DCC2557E2B1AF6 /* LineDetailView.swift */; };
+		AA1B2C3D4E5F607182930AB5 /* LineStopsMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB2C3D4E5F607182930A4B5C /* LineStopsMap.swift */; };
 		9348F246B0AD7805171D1AC0 /* ScheduleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF18EC8C137B8A6F37B3A79F /* ScheduleStore.swift */; };
 		E1F2A3B4C5D6E7F8A9B0C1D2 /* VehicleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E2D3C4B5A6978869504132 /* VehicleStore.swift */; };
 		970DD3E8ABA1AF549AAAC5B9 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 40C190F3ADD2E1B0E41BDFC6 /* Localizable.xcstrings */; };
@@ -48,6 +49,8 @@
 		B58FCF53043DB2955FCC1AA3 /* StopDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA621C317C78061A2EE1BCE /* StopDetailView.swift */; };
 		B9D2D53997DA76D3C57489BA /* SettingsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1860A6235DAC2FB85C1237E4 /* SettingsTab.swift */; };
 		C52AFB90BD321805702C6B01 /* PlaceholderTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BE5941F3F9B3CAE50A5F9AD /* PlaceholderTest.swift */; };
+		AA77881122334455AA778811 /* ScheduleDecodingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA77881122334455AA778800 /* ScheduleDecodingTests.swift */; };
+		BB99001122334455BB990011 /* AppLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB99001122334455BB990000 /* AppLaunchTests.swift */; };
 		CCEAFD601CAE70A4485CB7F4 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56A72FCF47290855E84C160B /* AboutView.swift */; };
 		CF82333AC918F9A07C2B1890 /* DepartureRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33103B5EDE272DE94D3F38FD /* DepartureRow.swift */; };
 		A2B3C4D5E6F7A8B9C0D1E2F3 /* LiveBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C4D5E6F7A8B9C0D1E2F3A4 /* LiveBadge.swift */; };
@@ -67,6 +70,13 @@
 
 /* Begin PBXContainerItemProxy section */
 		58C151666DA2D7B15C20616F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D5E7C2F9F16F7F694B4DD03C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 1892CFAA9DDFCCF022BEB53E;
+			remoteInfo = TransitKit;
+		};
+		DD11223344556677DD112233 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = D5E7C2F9F16F7F694B4DD03C /* Project object */;
 			proxyType = 1;
@@ -114,9 +124,13 @@
 		56A72FCF47290855E84C160B /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
 		57168F694B2F4ED9A806021B /* TripDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TripDetailView.swift; sourceTree = "<group>"; };
 		5BE5941F3F9B3CAE50A5F9AD /* PlaceholderTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceholderTest.swift; sourceTree = "<group>"; };
+		AA77881122334455AA778800 /* ScheduleDecodingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleDecodingTests.swift; sourceTree = "<group>"; };
+		BB99001122334455BB990000 /* AppLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLaunchTests.swift; sourceTree = "<group>"; };
+		CC00112233445566CC001100 /* TransitKitUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TransitKitUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5F3436F501268CE8E925D853 /* MappaTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MappaTab.swift; sourceTree = "<group>"; };
 		6F971BA014101FAA050D40F9 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		6FC30DB536DCC2557E2B1AF6 /* LineDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineDetailView.swift; sourceTree = "<group>"; };
+		BB2C3D4E5F607182930A4B5C /* LineStopsMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineStopsMap.swift; sourceTree = "<group>"; };
 		7EC580DFF98B83E2C0726F26 /* TransitKitApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransitKitApp.swift; sourceTree = "<group>"; };
 		C2D3E4F5A6B7C8D9E0F1A2B3 /* DeepLinkRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkRouter.swift; sourceTree = "<group>"; };
 		916321D65DB9CA29A8CBE188 /* InfoTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoTab.swift; sourceTree = "<group>"; };
@@ -183,6 +197,7 @@
 			isa = PBXGroup;
 			children = (
 				6FC30DB536DCC2557E2B1AF6 /* LineDetailView.swift */,
+				BB2C3D4E5F607182930A4B5C /* LineStopsMap.swift */,
 				015B4E53773EEE32AC100D6F /* LinesListView.swift */,
 				265421698770DB34151D287D /* OrariTab.swift */,
 				ADA621C317C78061A2EE1BCE /* StopDetailView.swift */,
@@ -205,6 +220,7 @@
 			children = (
 				723631A74E1D3B59F7D7C723 /* Sources */,
 				DE34AE920D7FB4C4C05E95D7 /* Tests */,
+				EE22334455667788EE223344 /* TransitKitUITests */,
 				1B8F15DBAE8C1B34936CCA0D /* Frameworks */,
 				BDA480932C50D9ED23BCF591 /* Products */,
 			);
@@ -336,6 +352,7 @@
 			children = (
 				1E065F67D4BCD87C25FD9357 /* TransitKit.app */,
 				06000FD86BE3D061DF6266BE /* TransitKitTests.xctest */,
+				CC00112233445566CC001100 /* TransitKitUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -344,9 +361,19 @@
 			isa = PBXGroup;
 			children = (
 				5BE5941F3F9B3CAE50A5F9AD /* PlaceholderTest.swift */,
+				AA77881122334455AA778800 /* ScheduleDecodingTests.swift */,
 			);
 			name = Tests;
 			path = TransitKit/Tests;
+			sourceTree = "<group>";
+		};
+		EE22334455667788EE223344 /* TransitKitUITests */ = {
+			isa = PBXGroup;
+			children = (
+				BB99001122334455BB990000 /* AppLaunchTests.swift */,
+			);
+			name = TransitKitUITests;
+			path = TransitKitUITests;
 			sourceTree = "<group>";
 		};
 		E98D6D8D0F3B3D2074E5D0DB /* Settings */ = {
@@ -411,6 +438,24 @@
 			productReference = 06000FD86BE3D061DF6266BE /* TransitKitTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		AA33445566778899AA334455 /* TransitKitUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BB44556677889900BB445566 /* Build configuration list for PBXNativeTarget "TransitKitUITests" */;
+			buildPhases = (
+				FF33445566778899FF334455 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CC55667788990011CC556677 /* PBXTargetDependency */,
+			);
+			name = TransitKitUITests;
+			packageProductDependencies = (
+			);
+			productName = TransitKitUITests;
+			productReference = CC00112233445566CC001100 /* TransitKitUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -443,6 +488,7 @@
 			targets = (
 				1892CFAA9DDFCCF022BEB53E /* TransitKit */,
 				952E419E3B8BBD7B14B998B8 /* TransitKitTests */,
+				AA33445566778899AA334455 /* TransitKitUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -467,6 +513,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				C52AFB90BD321805702C6B01 /* PlaceholderTest.swift in Sources */,
+				AA77881122334455AA778811 /* ScheduleDecodingTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FF33445566778899FF334455 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BB99001122334455BB990011 /* AppLaunchTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -490,6 +545,7 @@
 				15F1B4D3ABC0C2D023E249F0 /* InfoTab.swift in Sources */,
 				12DD8560C237FA40F6C9984E /* LineBadge.swift in Sources */,
 				84A2B8BDA416F613EFD73749 /* LineDetailView.swift in Sources */,
+				AA1B2C3D4E5F607182930AB5 /* LineStopsMap.swift in Sources */,
 				F189794232ECAE4227840D68 /* LinesListView.swift in Sources */,
 				D6C160C0BF1074C786C11059 /* MappaTab.swift in Sources */,
 				1DB7D0A77B4D8DE7DAAB9604 /* OperatorConfig.swift in Sources */,
@@ -532,6 +588,11 @@
 			isa = PBXTargetDependency;
 			target = 1892CFAA9DDFCCF022BEB53E /* TransitKit */;
 			targetProxy = 58C151666DA2D7B15C20616F /* PBXContainerItemProxy */;
+		};
+		CC55667788990011CC556677 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 1892CFAA9DDFCCF022BEB53E /* TransitKit */;
+			targetProxy = DD11223344556677DD112233 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -748,6 +809,42 @@
 			};
 			name = Release;
 		};
+		DD66778899001122DD667788 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.transitkit.TransitKitUITests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = TransitKit;
+			};
+			name = Debug;
+		};
+		EE77889900112233EE778899 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.transitkit.TransitKitUITests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = TransitKit;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -774,6 +871,15 @@
 			buildConfigurations = (
 				971FEE9319F33CB90A7575A3 /* Debug */,
 				9DBCDF8B58016ECC113E1E51 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		BB44556677889900BB445566 /* Build configuration list for PBXNativeTarget "TransitKitUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DD66778899001122DD667788 /* Debug */,
+				EE77889900112233EE778899 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

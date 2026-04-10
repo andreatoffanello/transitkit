@@ -15,6 +15,15 @@ struct TransitKitApp: App {
     @State private var router = DeepLinkRouter()
 
     var body: some Scene {
+        // Reset schedule cache for UI tests
+        let _ = {
+            if CommandLine.arguments.contains("--reset-schedule-cache") {
+                let cacheDir = FileManager.default.urls(
+                    for: .applicationSupportDirectory, in: .userDomainMask
+                )[0].appendingPathComponent("TransitKit", isDirectory: true)
+                try? FileManager.default.removeItem(at: cacheDir)
+            }
+        }()
         WindowGroup {
             Group {
                 if let store, let favoritesManager, let searchHistoryStore, let operatorConfig {

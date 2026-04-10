@@ -3,7 +3,7 @@ import SwiftUI
 
 // MARK: - Schedule Store
 
-/// Main data store for the app. Loads schedule data via APIClient and provides
+/// Main data store for the app. Loads schedule data via ScheduleLoader (CDN or legacy API) and provides
 /// resolved stops, routes, and departures to the UI.
 @MainActor
 @Observable

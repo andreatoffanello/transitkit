@@ -57,6 +57,11 @@ jobs:
               if not cfg.exists():
                   errors.append(f'{op}: config.json missing')
                   continue
+              # Validate config.json has required fields
+              cfg_data = json.loads(cfg.read_text())
+              for field in ('id', 'name', 'cdnUrl'):
+                  if field not in cfg_data:
+                      errors.append(f'{op}: config.json missing field {field}')
               data = json.loads(sched.read_text())
               for field in ('operator','lastUpdated','routes','stops'):
                   if field not in data:

@@ -1,0 +1,86 @@
+name: Build & Publish GTFS Data
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  push:
+    paths:
+      - 'pipeline/**'
+      - 'shared/operators/**'
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: 'pipeline/requirements.txt'
+
+      - name: Install Python deps
+        run: pip install -r pipeline/requirements.txt
+
+      - name: Run pipeline tests
+        run: python -m pytest pipeline/tests/ -v
+
+      - name: Build all operators
+        run: |
+          OPERATORS=$(ls shared/operators/)
+          for op in $OPERATORS; do
+            echo "=== Building $op ==="
+            python pipeline/build.py "$op"
+          done
+
+      - name: Validate outputs
+        run: |
+          python3 -c "
+          import json, sys, os
+          from pathlib import Path
+
+          errors = []
+          for op_dir in Path('output').iterdir():
+              if not op_dir.is_dir(): continue
+              op = op_dir.name
+              sched = op_dir / 'schedules.json'
+              cfg = op_dir / 'config.json'
+              if not sched.exists():
+                  errors.append(f'{op}: schedules.json missing')
+                  continue
+              if not cfg.exists():
+                  errors.append(f'{op}: config.json missing')
+                  continue
+              data = json.loads(sched.read_text())
+              for field in ('operator','lastUpdated','routes','stops'):
+                  if field not in data:
+                      errors.append(f'{op}: missing field {field}')
+              if data.get('stops') and data['stops'][0].get('departures'):
+                  d = data['stops'][0]['departures'][0]
+                  if isinstance(d.get('serviceDays'), list) and not d.get('routeColor','').startswith('#'):
+                      print(f'{op}: OK ({len(data[\"stops\"])} stops, {len(data[\"routes\"])} routes)')
+                  else:
+                      errors.append(f'{op}: wrong departure format')
+              else:
+                  errors.append(f'{op}: no stops with departures')
+
+          if errors:
+              for e in errors: print(f'ERROR: {e}', file=sys.stderr)
+              sys.exit(1)
+          print('All operators validated.')
+          "
+
+      - name: Publish to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./output
+          publish_branch: gh-pages
+          keep_files: false
+          commit_message: "chore: update GTFS data [skip ci]"

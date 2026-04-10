@@ -10,7 +10,8 @@ struct OperatorConfig: Codable {
     let name: String
     let fullName: String
     let url: String
-    let apiUrl: String?
+    let apiUrl: String?       // legacy — kept for transition
+    let cdnUrl: String?       // CDN base, e.g. "https://andreatoffanello.github.io/transit-engine"
     let region: String
     let country: String
     let timezone: String

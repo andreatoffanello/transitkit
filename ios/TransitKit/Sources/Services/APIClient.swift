@@ -17,14 +17,6 @@ actor APIClient {
         self.session = session
     }
 
-    // MARK: - /schedule
-
-    /// Download the bulk schedule payload for iOS.
-    func fetchSchedule() async throws -> ScheduleResponse {
-        let url = baseURL.appendingPathComponent("schedule")
-        return try await fetch(ScheduleResponse.self, from: url)
-    }
-
     // MARK: - /stops/{id}/departures
 
     func fetchDepartures(

@@ -3,19 +3,21 @@ import Foundation
 // MARK: - Schedule Loader
 
 /// Loads and caches the operator's schedule data.
-/// On first launch: downloads from API.
+/// On first launch: downloads from CDN (static GitHub Pages JSON).
 /// On subsequent launches: loads from disk cache, checks freshness in background.
 actor ScheduleLoader {
     private var cached: ScheduleResponse?
     private let operatorId: String
     private let apiUrl: String?
+    private let operatorConfig: OperatorConfig?
 
-    init(operatorId: String, apiUrl: String? = nil) {
+    init(operatorId: String, apiUrl: String? = nil, operatorConfig: OperatorConfig? = nil) {
         self.operatorId = operatorId
         self.apiUrl = apiUrl
+        self.operatorConfig = operatorConfig
     }
 
-    /// Load schedule data. Tries: memory cache → disk cache → API download.
+    /// Load schedule data. Tries: memory cache → disk cache → CDN download.
     func load() async throws -> ScheduleResponse {
         if let cached { return cached }
 
@@ -25,15 +27,15 @@ actor ScheduleLoader {
             return diskData
         }
 
-        let downloaded = try await downloadFromAPI()
+        let downloaded = try await downloadFromCDN()
         cached = downloaded
         saveToDisk(downloaded)
         return downloaded
     }
 
-    /// Force-refresh from API.
+    /// Force-refresh from CDN.
     func refresh() async throws -> ScheduleResponse {
-        let data = try await downloadFromAPI()
+        let data = try await downloadFromCDN()
         cached = data
         saveToDisk(data)
         return data
@@ -65,18 +67,37 @@ actor ScheduleLoader {
         try? data.write(to: cacheURL, options: .atomic)
     }
 
-    // MARK: - API Download
+    // MARK: - CDN Download
 
-    private func downloadFromAPI() async throws -> ScheduleResponse {
-        guard let apiUrl else {
-            throw ScheduleError.noAPIURLConfigured
+    private func scheduleURL() throws -> URL {
+        // Prefer cdnUrl (static CDN) over legacy apiUrl
+        if let cdnUrl = operatorConfig?.cdnUrl,
+           let url = URL(string: "\(cdnUrl)/\(operatorId)/schedules.json") {
+            return url
         }
-        let client = try APIClient(apiUrl: apiUrl)
-        return try await client.fetchSchedule()
+        // Fallback: legacy API endpoint
+        if let apiUrl,
+           let url = URL(string: "\(apiUrl)/schedule") {
+            return url
+        }
+        throw ScheduleError.noURLConfigured
+    }
+
+    private func downloadFromCDN() async throws -> ScheduleResponse {
+        let url = try scheduleURL()
+        let (data, response) = try await URLSession.shared.data(from: url)
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            throw ScheduleError.downloadFailed
+        }
+        do {
+            return try JSONDecoder().decode(ScheduleResponse.self, from: data)
+        } catch {
+            throw ScheduleError.decodingFailed(error)
+        }
     }
 
     private func checkForUpdates() async {
-        guard let newData = try? await downloadFromAPI() else { return }
+        guard let newData = try? await downloadFromCDN() else { return }
         if newData.lastUpdated != cached?.lastUpdated {
             cached = newData
             saveToDisk(newData)
@@ -86,13 +107,15 @@ actor ScheduleLoader {
     // MARK: - Errors
 
     enum ScheduleError: LocalizedError {
-        case noAPIURLConfigured
+        case noURLConfigured
         case downloadFailed
+        case decodingFailed(Error)
 
         var errorDescription: String? {
             switch self {
-            case .noAPIURLConfigured: "No API URL configured for this operator"
-            case .downloadFailed:     "Failed to download schedule"
+            case .noURLConfigured:        "No CDN or API URL configured for this operator"
+            case .downloadFailed:         "Failed to download schedule"
+            case .decodingFailed(let e):  "Failed to decode schedule: \(e.localizedDescription)"
             }
         }
     }

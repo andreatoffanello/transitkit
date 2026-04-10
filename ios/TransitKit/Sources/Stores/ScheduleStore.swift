@@ -22,7 +22,7 @@ class ScheduleStore {
     private(set) var routeStopSequences: [String: String] = [:]
     private(set) var tripIdsByRouteId: [String: Set<String>] = [:]
 
-    private let loader: ScheduleLoader
+    private var loader: ScheduleLoader
     private(set) var apiUrl: String?
     private var operatorConfig: OperatorConfig? = nil
 
@@ -33,6 +33,12 @@ class ScheduleStore {
 
     func configure(with config: OperatorConfig) {
         self.operatorConfig = config
+        // Re-create loader with config so it can resolve the CDN URL
+        self.loader = ScheduleLoader(
+            operatorId: config.id,
+            apiUrl: config.apiUrl,
+            operatorConfig: config
+        )
     }
 
     // MARK: - Load

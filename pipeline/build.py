@@ -846,6 +846,157 @@ def build_output(
     return output_dict
 
 
+# --- iOS-Compatible JSON Output ---
+
+_TRANSIT_TYPE_INT = {
+    "tram": 0, "metro": 1, "rail": 2, "bus": 3,
+    "ferry": 4, "cable_tram": 5, "gondola": 6,
+    "funicular": 7, "trolleybus": 11, "monorail": 12,
+}
+_DAY_INT_TO_NAME = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+
+
+def build_ios_json(
+    operator_config: dict,
+    stations: dict,
+    all_departures: dict,
+    routes_list: list[dict],
+    feed: dict,
+) -> dict:
+    """Build iOS-compatible schedule JSON matching ScheduleResponse wire format.
+
+    Wire format must match ios/TransitKit/Sources/Models/Schedule.swift exactly:
+    - transitType: Int (not string)
+    - colors: no # prefix
+    - departures: verbose objects (not compact indexed arrays)
+    - serviceDays: full string names e.g. ["monday", "tuesday"]
+    - departureTime: "HH:MM:00"
+    """
+    _DAY_COLS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+    service_days_str: dict[str, list[str]] = {}
+    for row in feed.get("calendar", []):
+        days = [d for d in _DAY_COLS if row.get(d) == "1"]
+        service_days_str[row["service_id"]] = days
+    for row in feed.get("calendar_dates", []):
+        sid = row["service_id"]
+        if sid not in service_days_str and row.get("exception_type") == "1":
+            date_str = row.get("date", "")
+            if date_str and len(date_str) == 8:
+                try:
+                    dt = datetime.strptime(date_str, "%Y%m%d")
+                    if sid not in service_days_str:
+                        service_days_str[sid] = []
+                    day_name = _DAY_COLS[dt.weekday()]
+                    if day_name not in service_days_str[sid]:
+                        service_days_str[sid].append(day_name)
+                except ValueError:
+                    pass
+
+    trip_service_days: dict[str, list[str]] = {}
+    for t in feed.get("trips", []):
+        tid = t["trip_id"].strip()
+        sid = t["service_id"].strip()
+        trip_service_days[tid] = service_days_str.get(sid, [])
+
+    def strip_hash(color: str) -> str:
+        return color.lstrip("#")
+
+    routes_output = []
+    for r in routes_list:
+        routes_output.append({
+            "id": r["id"],
+            "name": r["name"],
+            "longName": r.get("longName", ""),
+            "color": strip_hash(r.get("color", "#000000")),
+            "textColor": strip_hash(r.get("textColor", "#FFFFFF")),
+            "transitType": _TRANSIT_TYPE_INT.get(r.get("transitType", "bus"), 3),
+            "directions": [
+                {
+                    "directionId": d["id"],
+                    "headsign": d.get("headsign"),
+                    "stopIds": d.get("stopIds", []),
+                    "shapePolyline": None,
+                }
+                for d in r.get("directions", [])
+            ],
+        })
+
+    stops_output = []
+    for station in sorted(stations.values(), key=lambda s: s["name"]):
+        station_id = station["id"]
+        pontili = station.get("pontili", [station_id])
+
+        all_deps: list[dict] = []
+        seen_keys: set[tuple] = set()
+
+        for pontile_id in pontili:
+            if pontile_id not in all_departures:
+                continue
+            for day_idx, deps in all_departures[pontile_id].items():
+                for dep in deps:
+                    trip_id = dep.get("tripId", "")
+                    time_str = dep.get("time", "00:00")
+                    dep_time = time_str + ":00"
+
+                    key = (trip_id, dep_time)
+                    if key in seen_keys:
+                        continue
+                    seen_keys.add(key)
+
+                    service_days = trip_service_days.get(trip_id)
+                    if service_days is None:
+                        service_days = [_DAY_INT_TO_NAME[day_idx]] if 0 <= day_idx < 7 else []
+
+                    all_deps.append({
+                        "tripId": trip_id,
+                        "routeId": dep.get("routeId", ""),
+                        "routeName": dep.get("line", ""),
+                        "routeColor": strip_hash(dep.get("color", "#000000")),
+                        "routeTextColor": strip_hash(dep.get("textColor", "#FFFFFF")),
+                        "headsign": dep.get("headsign", ""),
+                        "departureTime": dep_time,
+                        "serviceDays": service_days,
+                    })
+
+        if not all_deps:
+            continue
+
+        all_deps.sort(key=lambda d: d["departureTime"])
+
+        docks_info = station.get("docks_info", {})
+        dock_letters = list({v["letter"] for v in docks_info.values() if v.get("letter")})
+        dock_letter = dock_letters[0] if len(dock_letters) == 1 else None
+
+        stops_output.append({
+            "id": station_id,
+            "name": station["name"],
+            "lat": station["lat"],
+            "lng": station["lng"],
+            "platformCode": None,
+            "dockLetter": dock_letter,
+            "departures": all_deps,
+        })
+
+    features = operator_config.get("features", {})
+    return {
+        "operator": {
+            "id": operator_config["id"],
+            "name": operator_config.get("name", ""),
+            "url": operator_config.get("url", ""),
+            "timezone": operator_config.get("timezone", "UTC"),
+            "features": {
+                "enableMap": bool(features.get("enableMap", True)),
+                "enableGeolocation": bool(features.get("enableGeolocation", False)),
+                "enableFavorites": bool(features.get("enableFavorites", True)),
+                "enableNotifications": bool(features.get("enableNotifications", False)),
+            },
+        },
+        "lastUpdated": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "routes": routes_output,
+        "stops": stops_output,
+    }
+
+
 # --- Validation ---
 
 def validate_output(output: dict) -> list[str]:
@@ -1160,14 +1311,30 @@ def main():
     output_dir = REPO_ROOT / "output" / operator_id
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    output_file = output_dir / "schedules.json"
-    with open(output_file, "w", encoding="utf-8") as f:
+    # Write iOS-compatible schedules.json (matches ScheduleResponse wire format)
+    ios_output = build_ios_json(config, stations, departures, routes, feed)
+    schedules_file = output_dir / "schedules.json"
+    with open(schedules_file, "w", encoding="utf-8") as f:
+        json.dump(ios_output, f, ensure_ascii=False, separators=(",", ":"))
+    size_mb = schedules_file.stat().st_size / (1024 * 1024)
+    print(f"  {schedules_file.relative_to(REPO_ROOT)} ({size_mb:.1f} MB)")
+
+    # Write config.json for CDN consumers (strip pipeline-internal keys)
+    cdn_config = {k: v for k, v in config.items()
+                  if k not in ("gtfs_url", "gtfs_rt", "exclude_patterns", "terminal_overrides")}
+    config_file = output_dir / "config.json"
+    with open(config_file, "w", encoding="utf-8") as f:
+        json.dump(cdn_config, f, ensure_ascii=False, indent=2)
+    print(f"  {config_file.relative_to(REPO_ROOT)}")
+
+    # Also write compact output for diagnostics
+    compact_file = output_dir / "schedules-compact.json"
+    with open(compact_file, "w", encoding="utf-8") as f:
         json.dump(output, f, ensure_ascii=False, separators=(",", ":"))
+    compact_mb = compact_file.stat().st_size / (1024 * 1024)
+    print(f"  {compact_file.relative_to(REPO_ROOT)} ({compact_mb:.1f} MB) [diagnostic]")
 
-    size_mb = output_file.stat().st_size / (1024 * 1024)
-    print(f"  {output_file.relative_to(REPO_ROOT)} ({size_mb:.1f} MB)")
-
-    print(f"\n✓ Done! {len(output['stops'])} stops, {len(output['routes'])} routes.")
+    print(f"\n✓ Done! {len(ios_output['stops'])} stops, {len(ios_output['routes'])} routes.")
 
 
 if __name__ == "__main__":

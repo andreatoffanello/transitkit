@@ -872,25 +872,16 @@ def build_ios_json(
     - serviceDays: full string names e.g. ["monday", "tuesday"]
     - departureTime: "HH:MM:00"
     """
-    _DAY_COLS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
-    service_days_str: dict[str, list[str]] = {}
-    for row in feed.get("calendar", []):
-        days = [d for d in _DAY_COLS if row.get(d) == "1"]
-        service_days_str[row["service_id"]] = days
-    for row in feed.get("calendar_dates", []):
-        sid = row["service_id"]
-        if sid not in service_days_str and row.get("exception_type") == "1":
-            date_str = row.get("date", "")
-            if date_str and len(date_str) == 8:
-                try:
-                    dt = datetime.strptime(date_str, "%Y%m%d")
-                    if sid not in service_days_str:
-                        service_days_str[sid] = []
-                    day_name = _DAY_COLS[dt.weekday()]
-                    if day_name not in service_days_str[sid]:
-                        service_days_str[sid].append(day_name)
-                except ValueError:
-                    pass
+    # Reuse existing build_service_day_map (returns dict[service_id, set[int]])
+    # then convert to string names for the iOS wire format.
+    raw_day_map = build_service_day_map(
+        feed.get("calendar", []),
+        feed.get("calendar_dates"),
+    )
+    service_days_str: dict[str, list[str]] = {
+        sid: [_DAY_INT_TO_NAME[d] for d in sorted(days)]
+        for sid, days in raw_day_map.items()
+    }
 
     trip_service_days: dict[str, list[str]] = {}
     for t in feed.get("trips", []):
@@ -899,7 +890,7 @@ def build_ios_json(
         trip_service_days[tid] = service_days_str.get(sid, [])
 
     def strip_hash(color: str) -> str:
-        return color.lstrip("#")
+        return color.removeprefix("#")
 
     routes_output = []
     for r in routes_list:
@@ -936,7 +927,7 @@ def build_ios_json(
                 for dep in deps:
                     trip_id = dep.get("tripId", "")
                     time_str = dep.get("time", "00:00")
-                    dep_time = time_str + ":00"
+                    dep_time = time_str if time_str.count(":") == 2 else time_str + ":00"
 
                     key = (trip_id, dep_time)
                     if key in seen_keys:
@@ -1010,6 +1001,8 @@ def validate_output(output: dict) -> list[str]:
     if len(routes) < 1:
         errors.append(f"CRITICAL: only {len(routes)} routes (expected ≥1)")
 
+    # NOTE: Expects compact build_output() format (departures is a dict).
+    # Do NOT call with the iOS build_ios_json() format (departures is a list).
     total_deps = sum(
         sum(len(deps) for deps in s["departures"].values())
         for s in stops

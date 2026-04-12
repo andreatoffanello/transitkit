@@ -25,6 +25,7 @@ class ScheduleStore {
     private var loader: ScheduleLoader
     private(set) var apiUrl: String?
     private var operatorConfig: OperatorConfig? = nil
+    private var operatorTimezone: TimeZone = .current
 
     init(operatorId: String, apiUrl: String? = nil) {
         self.apiUrl = apiUrl
@@ -33,6 +34,7 @@ class ScheduleStore {
 
     func configure(with config: OperatorConfig) {
         self.operatorConfig = config
+        self.operatorTimezone = TimeZone(identifier: config.timezone) ?? .current
         // Re-create loader with config so it can resolve the CDN URL
         self.loader = ScheduleLoader(
             operatorId: config.id,
@@ -225,15 +227,18 @@ class ScheduleStore {
     }
 
     private func currentWeekday() -> Weekday {
-        switch Calendar.current.component(.weekday, from: Date()) {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = operatorTimezone
+        switch cal.component(.weekday, from: Date()) {
         case 1: return .sun; case 2: return .mon; case 3: return .tue
         case 4: return .wed; case 5: return .thu; case 6: return .fri
         case 7: return .sat; default: return .mon
         }
     }
 
-    private func currentMinutesFromMidnight() -> Int {
-        let cal = Calendar.current
+    func currentMinutesFromMidnight() -> Int {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = operatorTimezone
         let now = Date()
         return cal.component(.hour, from: now) * 60 + cal.component(.minute, from: now)
     }

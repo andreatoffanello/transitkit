@@ -17,9 +17,7 @@ struct DepartureRow: View {
     /// Mirrors the threshold logic in TimeDisplay.init(departure:now:).
     /// ≤ 60 min → .minutes countdown; > 60 min → .absolute clock time.
     private var timeState: DepartureTimeState {
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.hour, .minute], from: .now)
-        let nowMinutes = (components.hour ?? 0) * 60 + (components.minute ?? 0)
+        let nowMinutes = scheduleStore.currentMinutesFromMidnight()
         let diff = departure.minutesFromMidnight - nowMinutes
 
         if diff < 0 {

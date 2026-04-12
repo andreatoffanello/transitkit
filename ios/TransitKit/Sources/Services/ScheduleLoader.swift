@@ -23,7 +23,6 @@ actor ScheduleLoader {
 
         if let diskData = loadFromDisk() {
             cached = diskData
-            Task { await checkForUpdates() }
             return diskData
         }
 
@@ -45,6 +44,16 @@ actor ScheduleLoader {
     func saveResponseToDisk(_ response: ScheduleResponse) {
         cached = response
         saveToDisk(response)
+    }
+
+    /// Downloads from CDN and returns the response only if its `lastUpdated` differs from
+    /// `knownLastUpdated`. Returns nil if already up-to-date or on network error.
+    func fetchUpdateIfNewer(than knownLastUpdated: String) async -> ScheduleResponse? {
+        guard let newData = try? await downloadFromCDN() else { return nil }
+        guard newData.lastUpdated != knownLastUpdated else { return nil }
+        cached = newData
+        saveToDisk(newData)
+        return newData
     }
 
     // MARK: - Disk Cache
@@ -93,14 +102,6 @@ actor ScheduleLoader {
             return try JSONDecoder().decode(ScheduleResponse.self, from: data)
         } catch {
             throw ScheduleError.decodingFailed(error)
-        }
-    }
-
-    private func checkForUpdates() async {
-        guard let newData = try? await downloadFromCDN() else { return }
-        if newData.lastUpdated != cached?.lastUpdated {
-            cached = newData
-            saveToDisk(newData)
         }
     }
 

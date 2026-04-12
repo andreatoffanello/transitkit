@@ -50,6 +50,13 @@ class ScheduleStore {
         do {
             let response = try await loader.load()
             apply(response)
+            // Propagate any background CDN update that arrives after disk-cache load.
+            Task { [weak self] in
+                guard let self else { return }
+                if let updated = await self.loader.fetchUpdateIfNewer(than: response.lastUpdated) {
+                    self.apply(updated)
+                }
+            }
         } catch {
             self.error = error.localizedDescription
         }
@@ -148,10 +155,10 @@ class ScheduleStore {
     func upcomingDepartures(forStopId stopId: String, limit: Int = 10) -> [Departure] {
         let deps = todayDepartures(forStopId: stopId)
         let nowMinutes = currentMinutesFromMidnight()
-        if let idx = deps.firstIndex(where: { $0.minutesFromMidnight >= nowMinutes }) {
-            return Array(deps[idx..<min(idx + limit, deps.count)])
+        guard let idx = deps.firstIndex(where: { $0.minutesFromMidnight >= nowMinutes }) else {
+            return []  // Service ended for today — don't show past buses as "upcoming"
         }
-        return Array(deps.prefix(limit))
+        return Array(deps[idx..<min(idx + limit, deps.count)])
     }
 
     // MARK: - Route details

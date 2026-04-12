@@ -1,0 +1,34 @@
+{
+  "id": "appalcart",
+  "cdnUrl": "https://andreatoffanello.github.io/transit-engine",
+  "name": "AppalCART",
+  "fullName": "Appalachian District Transportation Authority",
+  "url": "https://appalachiantransit.com",
+  "region": "Boone, North Carolina",
+  "country": "US",
+  "timezone": "America/New_York",
+  "locale": [
+    "en"
+  ],
+  "theme": {
+    "primaryColor": "#165F9C",
+    "accentColor": "#06845C",
+    "textOnPrimary": "#FFFFFF"
+  },
+  "store": {
+    "title": "Boone Bus — Community App",
+    "subtitle": "AppalCART schedules & live departures for Boone and App State",
+    "keywords": "appalachian transit,boone,bus,app state,appalachian state university,appalcart,nc"
+  },
+  "map": {
+    "centerLat": 36.2168,
+    "centerLng": -81.6746,
+    "defaultZoom": 13
+  },
+  "features": {
+    "enableMap": true,
+    "enableGeolocation": true,
+    "enableFavorites": true,
+    "enableNotifications": true
+  }
+}

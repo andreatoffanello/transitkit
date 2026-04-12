@@ -402,7 +402,7 @@
 <script setup lang="ts">
 import { computeNowMin, getNextDeparture, sortStopsByNextDeparture } from '~/utils/schedule'
 import { highlightMatch } from '~/utils/highlight'
-import type { ScheduleStop } from '~/types'
+import type { ScheduleStop, ScheduleData } from '~/types'
 import { Bus, Search, X, MapPin, Navigation, Star, Clock, ChevronRight, Phone, Mail, Globe, Smartphone, Route, CalendarDays } from 'lucide-vue-next'
 
 const { config, schedules } = await useOperator()
@@ -421,8 +421,8 @@ const stopResults = computed(() => {
 
 // Mappa stopId → routes che servono quella fermata
 const stopRoutesMap = computed(() => {
-  if (!schedules.value) return {} as Record<string, typeof schedules.value.routes>
-  const map: Record<string, typeof schedules.value.routes> = {}
+  if (!schedules.value) return {} as Record<string, ScheduleData['routes']>
+  const map: Record<string, ScheduleData['routes']> = {}
   for (const route of schedules.value.routes ?? []) {
     for (const dir of route.directions ?? []) {
       for (const stopId of dir.stopIds ?? []) {

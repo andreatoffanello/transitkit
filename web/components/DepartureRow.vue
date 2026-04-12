@@ -101,7 +101,7 @@ const hasDelay = computed(() => delayMinutes.value > 0)
 // Compute realtime display time by adding delay to scheduled time string (HH:MM)
 const realtimeTime = computed(() => {
   if (!hasDelay.value) return props.departure.time
-  const [h, m] = props.departure.time.split(':').map(Number)
+  const [h = 0, m = 0] = props.departure.time.split(':').map(Number)
   const totalMin = h * 60 + m + delayMinutes.value
   const rh = Math.floor(totalMin / 60) % 24
   const rm = totalMin % 60

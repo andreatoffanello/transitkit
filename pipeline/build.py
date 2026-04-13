@@ -906,6 +906,7 @@ def build_ios_json(
                     "directionId": d["id"],
                     "headsign": d.get("headsign"),
                     "stopIds": d.get("stopIds", []),
+                    "shape": d.get("shape", []),
                     "shapePolyline": None,
                 }
                 for d in r.get("directions", [])

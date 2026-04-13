@@ -55,6 +55,8 @@
 		CF82333AC918F9A07C2B1890 /* DepartureRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33103B5EDE272DE94D3F38FD /* DepartureRow.swift */; };
 		A2B3C4D5E6F7A8B9C0D1E2F3 /* LiveBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C4D5E6F7A8B9C0D1E2F3A4 /* LiveBadge.swift */; };
 		D6C160C0BF1074C786C11059 /* MappaTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F3436F501268CE8E925D853 /* MappaTab.swift */; };
+		D75A3111F9F441DD9040FE2B /* VehicleAnnotationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9447FC90E4B343B9B08540C4 /* VehicleAnnotationView.swift */; };
+		0AAD7CFDB512B6729D563C9E /* TransitMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D57271A1BE70337E949EE7EF /* TransitMapView.swift */; };
 		EDD673EC6CD887E9DDD47422 /* StopCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C69F73160D11EE306A2190B7 /* StopCard.swift */; };
 		F189794232ECAE4227840D68 /* LinesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 015B4E53773EEE32AC100D6F /* LinesListView.swift */; };
 		AA11223344556677AABBCCDD /* ColorUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA11223344556677AABB0001 /* ColorUtils.swift */; };
@@ -66,6 +68,8 @@
 		CC33445566778899CCDDEEFF /* HomeTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC33445566778899CCDD0003 /* HomeTab.swift */; };
 		DD44556677889900DDEEFF11 /* StopCluster.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD44556677889900DDEE0004 /* StopCluster.swift */; };
 		EE55667788990011EEFF1122 /* ClusterAnnotationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE55667788990011EEFF0005 /* ClusterAnnotationView.swift */; };
+		FF11223344556677FF001123 /* LinePickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF11223344556677FF000001 /* LinePickerSheet.swift */; };
+		FF11223344556677FF001125 /* VehicleDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF11223344556677FF000002 /* VehicleDetailSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -131,6 +135,8 @@
 		6F971BA014101FAA050D40F9 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		6FC30DB536DCC2557E2B1AF6 /* LineDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineDetailView.swift; sourceTree = "<group>"; };
 		BB2C3D4E5F607182930A4B5C /* LineStopsMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineStopsMap.swift; sourceTree = "<group>"; };
+		9447FC90E4B343B9B08540C4 /* VehicleAnnotationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleAnnotationView.swift; sourceTree = "<group>"; };
+		D57271A1BE70337E949EE7EF /* TransitMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransitMapView.swift; sourceTree = "<group>"; };
 		7EC580DFF98B83E2C0726F26 /* TransitKitApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransitKitApp.swift; sourceTree = "<group>"; };
 		C2D3E4F5A6B7C8D9E0F1A2B3 /* DeepLinkRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkRouter.swift; sourceTree = "<group>"; };
 		916321D65DB9CA29A8CBE188 /* InfoTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoTab.swift; sourceTree = "<group>"; };
@@ -161,6 +167,8 @@
 		CC33445566778899CCDD0003 /* HomeTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeTab.swift; sourceTree = "<group>"; };
 		DD44556677889900DDEE0004 /* StopCluster.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopCluster.swift; sourceTree = "<group>"; };
 		EE55667788990011EEFF0005 /* ClusterAnnotationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClusterAnnotationView.swift; sourceTree = "<group>"; };
+		FF11223344556677FF000001 /* LinePickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinePickerSheet.swift; sourceTree = "<group>"; };
+		FF11223344556677FF000002 /* VehicleDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleDetailSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -271,9 +279,13 @@
 			isa = PBXGroup;
 			children = (
 				EE55667788990011EEFF0005 /* ClusterAnnotationView.swift */,
+				FF11223344556677FF000001 /* LinePickerSheet.swift */,
 				5F3436F501268CE8E925D853 /* MappaTab.swift */,
+				FF11223344556677FF000002 /* VehicleDetailSheet.swift */,
 				AF29A33249EEAAC16698F765 /* RouteOverlay.swift */,
 				5481BF9847C559057368FA6B /* StopAnnotationView.swift */,
+				9447FC90E4B343B9B08540C4 /* VehicleAnnotationView.swift */,
+				D57271A1BE70337E949EE7EF /* TransitMapView.swift */,
 				24A2F8550F9D65EFD7B990BA /* StopMapSheet.swift */,
 				85B475C63D31473B8657BB83 /* LineMapView.swift */,
 			);
@@ -560,6 +572,8 @@
 				B9D2D53997DA76D3C57489BA /* SettingsTab.swift in Sources */,
 				58E4307F0EF6473220F053E8 /* SkeletonView.swift in Sources */,
 				28924DA06A3B5D02B0C0DCB6 /* StopAnnotationView.swift in Sources */,
+				D75A3111F9F441DD9040FE2B /* VehicleAnnotationView.swift in Sources */,
+				0AAD7CFDB512B6729D563C9E /* TransitMapView.swift in Sources */,
 				EDD673EC6CD887E9DDD47422 /* StopCard.swift in Sources */,
 				B58FCF53043DB2955FCC1AA3 /* StopDetailView.swift in Sources */,
 				6DAEEC32E27041A99CCEBE4E /* LineMapView.swift in Sources */,
@@ -578,6 +592,8 @@
 				CC33445566778899CCDDEEFF /* HomeTab.swift in Sources */,
 				DD44556677889900DDEEFF11 /* StopCluster.swift in Sources */,
 				EE55667788990011EEFF1122 /* ClusterAnnotationView.swift in Sources */,
+				FF11223344556677FF001123 /* LinePickerSheet.swift in Sources */,
+				FF11223344556677FF001125 /* VehicleDetailSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -634,6 +650,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				OPERATOR_ID = appalcart;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.transitkit.${OPERATOR_ID}";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -678,6 +695,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				OPERATOR_ID = appalcart;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.transitkit.${OPERATOR_ID}";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = singlefile;

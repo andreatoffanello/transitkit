@@ -1,8 +1,16 @@
 import Foundation
 
+// MARK: - Vehicle status enum
+
+enum VehicleStatus: UInt64 {
+    case incomingAt  = 0   // INCOMING_AT
+    case stoppedAt   = 1   // STOPPED_AT
+    case inTransitTo = 2   // IN_TRANSIT_TO
+}
+
 // MARK: - GTFS-RT Vehicle Position model
 
-struct GtfsRtVehicle: Identifiable {
+struct GtfsRtVehicle: Identifiable, Equatable {
     let id: String          // FeedEntity.id
     let tripId: String
     let routeId: String
@@ -11,12 +19,20 @@ struct GtfsRtVehicle: Identifiable {
     let longitude: Float
     let bearing: Float      // degrees clockwise from north
     let timestamp: UInt64
+    let currentStopId: String       // stop_id field in VehiclePosition
+    let currentStatus: VehicleStatus // INCOMING_AT / STOPPED_AT / IN_TRANSIT_TO
 }
 
-// MARK: - Minimal protobuf binary decoder
+// MARK: - GTFS-RT Trip Delay model
+
+struct GtfsRtTripDelay {
+    let tripId: String
+    let delay: Int32   // seconds; positive = late, negative = early
+}
+
+// MARK: - Minimal protobuf binary decoders
 
 /// Decodes a GTFS-RT FeedMessage (.pb) and returns all VehiclePosition entities.
-/// Handles only the fields needed for map display — skips everything else.
 func decodeGtfsRtVehicles(from data: Data) -> [GtfsRtVehicle] {
     var reader = ProtoReader(data: data)
     var vehicles: [GtfsRtVehicle] = []
@@ -32,7 +48,23 @@ func decodeGtfsRtVehicles(from data: Data) -> [GtfsRtVehicle] {
     return vehicles
 }
 
-// MARK: - Private decoders
+/// Decodes a GTFS-RT FeedMessage (.pb) and returns tripId → delay (seconds) for all TripUpdate entities.
+func decodeGtfsRtTripDelays(from data: Data) -> [String: Int32] {
+    var reader = ProtoReader(data: data)
+    var result: [String: Int32] = [:]
+    while let tag = reader.readTag() {
+        if tag.field == 2 && tag.wire == 2 {
+            if let d = decodeTripUpdateEntity(reader.readLengthDelimited()) {
+                result[d.tripId] = d.delay
+            }
+        } else {
+            reader.skipField(wireType: tag.wire)
+        }
+    }
+    return result
+}
+
+// MARK: - Private decoders — VehiclePosition
 
 private func decodeFeedEntity(_ data: Data) -> GtfsRtVehicle? {
     var r = ProtoReader(data: data)
@@ -48,14 +80,16 @@ private func decodeFeedEntity(_ data: Data) -> GtfsRtVehicle? {
     guard let v = vehicle else { return nil }
     return GtfsRtVehicle(id: entityId, tripId: v.tripId, routeId: v.routeId, label: v.label,
                          latitude: v.latitude, longitude: v.longitude, bearing: v.bearing,
-                         timestamp: v.timestamp)
+                         timestamp: v.timestamp, currentStopId: v.currentStopId,
+                         currentStatus: v.currentStatus)
 }
 
 private func decodeVehiclePosition(_ data: Data) -> GtfsRtVehicle? {
     var r = ProtoReader(data: data)
-    var tripId = "", routeId = "", label = ""
+    var tripId = "", routeId = "", label = "", currentStopId = ""
     var lat: Float = 0, lng: Float = 0, bearing: Float = 0
     var timestamp: UInt64 = 0
+    var currentStatus: VehicleStatus = .inTransitTo
     while let tag = r.readTag() {
         switch (tag.field, tag.wire) {
         case (1, 2):
@@ -76,6 +110,13 @@ private func decodeVehiclePosition(_ data: Data) -> GtfsRtVehicle? {
             // Standard position field.
             let (la, lo, be) = decodePosition(r.readLengthDelimited())
             lat = la; lng = lo; bearing = be
+        case (4, 0):
+            // current_stop_sequence — skip, we use stop_id instead
+            _ = r.readVarint()
+        case (5, 2):
+            currentStopId = r.readString()
+        case (6, 0):
+            currentStatus = VehicleStatus(rawValue: r.readVarint()) ?? .inTransitTo
         case (9, 0):
             timestamp = r.readVarint()
         default:
@@ -84,8 +125,91 @@ private func decodeVehiclePosition(_ data: Data) -> GtfsRtVehicle? {
     }
     guard lat != 0 || lng != 0 else { return nil }
     return GtfsRtVehicle(id: "", tripId: tripId, routeId: routeId, label: label,
-                         latitude: lat, longitude: lng, bearing: bearing, timestamp: timestamp)
+                         latitude: lat, longitude: lng, bearing: bearing, timestamp: timestamp,
+                         currentStopId: currentStopId, currentStatus: currentStatus)
 }
+
+// MARK: - Private decoders — TripUpdate
+
+private func decodeTripUpdateEntity(_ data: Data) -> GtfsRtTripDelay? {
+    var r = ProtoReader(data: data)
+    var tripUpdate: GtfsRtTripDelay?
+    while let tag = r.readTag() {
+        switch (tag.field, tag.wire) {
+        case (3, 2): tripUpdate = decodeTripUpdate(r.readLengthDelimited())
+        default: r.skipField(wireType: tag.wire)
+        }
+    }
+    return tripUpdate
+}
+
+/// Decodes a TripUpdate message.
+/// Uses TripUpdate.delay (field 5, sint32) if present — overall trip deviation in seconds.
+/// Falls back to the first stop_time_update's departure.delay.
+private func decodeTripUpdate(_ data: Data) -> GtfsRtTripDelay? {
+    var r = ProtoReader(data: data)
+    var tripId = ""
+    var delay: Int32? = nil
+    var firstStopDelay: Int32? = nil
+
+    while let tag = r.readTag() {
+        switch (tag.field, tag.wire) {
+        case (1, 2):
+            let (t, _) = decodeTripDescriptor(r.readLengthDelimited())
+            tripId = t
+        case (2, 2):
+            // stop_time_update — extract delay from first one as fallback
+            if firstStopDelay == nil {
+                firstStopDelay = decodeStopTimeUpdateDelay(r.readLengthDelimited())
+            } else {
+                _ = r.readLengthDelimited()
+            }
+        case (5, 0):
+            // TripUpdate.delay — sint32 (zigzag encoded)
+            delay = Int32(bitPattern: UInt32(zigzagDecode(r.readVarint())))
+        default:
+            r.skipField(wireType: tag.wire)
+        }
+    }
+
+    guard !tripId.isEmpty else { return nil }
+    let resolvedDelay = delay ?? firstStopDelay
+    guard let d = resolvedDelay else { return nil }
+    return GtfsRtTripDelay(tripId: tripId, delay: d)
+}
+
+/// Extracts departure.delay (or arrival.delay) from a StopTimeUpdate message.
+private func decodeStopTimeUpdateDelay(_ data: Data) -> Int32? {
+    var r = ProtoReader(data: data)
+    while let tag = r.readTag() {
+        switch (tag.field, tag.wire) {
+        case (3, 2), (4, 2):
+            // arrival (field 3) or departure (field 4) — StopTimeEvent
+            if let d = decodeStopTimeEventDelay(r.readLengthDelimited()) {
+                return d
+            }
+        default:
+            r.skipField(wireType: tag.wire)
+        }
+    }
+    return nil
+}
+
+/// Extracts delay from a StopTimeEvent message (field 2 = delay, sint32).
+private func decodeStopTimeEventDelay(_ data: Data) -> Int32? {
+    var r = ProtoReader(data: data)
+    while let tag = r.readTag() {
+        switch (tag.field, tag.wire) {
+        case (2, 0):
+            return Int32(bitPattern: UInt32(zigzagDecode(r.readVarint())))
+        default:
+            r.skipField(wireType: tag.wire)
+        }
+    }
+    return nil
+}
+
+// MARK: - Shared decoders
 
 private func decodeTripDescriptor(_ data: Data) -> (tripId: String, routeId: String) {
     var r = ProtoReader(data: data)
@@ -124,6 +248,11 @@ private func decodePosition(_ data: Data) -> (lat: Float, lng: Float, bearing: F
         }
     }
     return (lat, lng, bearing)
+}
+
+// Protobuf zigzag decoding for sint32/sint64
+private func zigzagDecode(_ n: UInt64) -> Int64 {
+    Int64(bitPattern: (n >> 1) ^ (~(n & 1) &+ 1))
 }
 
 // MARK: - Proto binary reader

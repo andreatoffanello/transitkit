@@ -84,6 +84,13 @@ struct TransitKitApp: App {
             router.openScheduleForStop = parts.count >= 2 && parts[1] == "schedule" ? stop.id : nil
             router.pendingStop = stop
 
+        // transitkit://map/stop/<stopId>  → Mappa tab + preview card
+        case "map":
+            guard parts.count >= 2, parts[0] == "stop",
+                  let stop = store.stops.first(where: { $0.id == parts[1] })
+            else { return }
+            router.pendingMapPreviewStop = stop
+
         // transitkit://trip/<stopId>/<routeId>/<time>   (time = "HH:MM")
         case "trip":
             guard parts.count >= 3,
@@ -115,8 +122,11 @@ struct TransitKitApp: App {
             await scheduleStore.load()
             store = scheduleStore
             operatorConfig = config
-            vehicleStore = VehicleStore(vehiclePositionsUrl: config.gtfsRt?.vehiclePositionsUrl)
-            vehicleStore.startPolling()
+            vehicleStore.configure(
+                vehiclePositionsUrl: config.gtfsRt?.vehiclePositionsUrl,
+                tripUpdatesUrl: config.gtfsRt?.tripUpdatesUrl,
+                routeIdByTripId: scheduleStore.routeIdByTripId
+            )
             if let pending = router.pendingUrl {
                 router.pendingUrl = nil
                 resolve(url: pending, store: scheduleStore)

@@ -18,18 +18,19 @@ actor ScheduleLoader {
     }
 
     /// Load schedule data. Tries: memory cache → disk cache → CDN download.
-    func load() async throws -> ScheduleResponse {
-        if let cached { return cached }
+    /// Returns the response and whether it came from a (potentially stale) cache.
+    func load() async throws -> (response: ScheduleResponse, fromCache: Bool) {
+        if let cached { return (cached, true) }
 
         if let diskData = loadFromDisk() {
             cached = diskData
-            return diskData
+            return (diskData, true)
         }
 
         let downloaded = try await downloadFromCDN()
         cached = downloaded
         saveToDisk(downloaded)
-        return downloaded
+        return (downloaded, false)
     }
 
     /// Force-refresh from CDN.

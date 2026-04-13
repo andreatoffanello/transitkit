@@ -21,6 +21,7 @@ class ScheduleStore {
     private var stopById: [String: ResolvedStop] = [:]
     private(set) var routeStopSequences: [String: String] = [:]
     private(set) var tripIdsByRouteId: [String: Set<String>] = [:]
+    private(set) var routeIdByTripId: [String: String] = [:]
 
     private var loader: ScheduleLoader
     private(set) var apiUrl: String?
@@ -50,13 +51,16 @@ class ScheduleStore {
         isLoading = true
         error = nil
         do {
-            let response = try await loader.load()
+            let (response, fromCache) = try await loader.load()
             apply(response)
-            // Propagate any background CDN update that arrives after disk-cache load.
-            Task { [weak self] in
-                guard let self else { return }
-                if let updated = await self.loader.fetchUpdateIfNewer(than: response.lastUpdated) {
-                    self.apply(updated)
+            // Only check CDN for fresher data when we loaded from disk (potentially stale).
+            // If we just downloaded from CDN, the data is already current — skip the check.
+            if fromCache {
+                Task { [weak self] in
+                    guard let self else { return }
+                    if let updated = await self.loader.fetchUpdateIfNewer(than: response.lastUpdated) {
+                        self.apply(updated)
+                    }
                 }
             }
         } catch {
@@ -119,6 +123,16 @@ class ScheduleStore {
             }
         }
         tripIdsByRouteId = tripMap
+
+        var routeByTrip: [String: String] = [:]
+        for stop in response.stops {
+            for dep in stop.departures {
+                if !dep.tripId.isEmpty && !dep.routeId.isEmpty {
+                    routeByTrip[dep.tripId] = dep.routeId
+                }
+            }
+        }
+        routeIdByTripId = routeByTrip
     }
 
     // MARK: - Departures for a stop
@@ -146,12 +160,16 @@ class ScheduleStore {
     func todayDepartures(forStopId stopId: String) -> [Departure] {
         let allDeps = departures(forStopId: stopId)
         let today = currentWeekday()
+        // Merge ALL day groups that include today — a stop can have multiple service patterns
+        // (e.g. "mon-sun" all-week + "fri,sat,sun" weekend extras). Returning only the first
+        // match was non-deterministic because Swift Dictionary iteration order is random.
+        var merged: [Departure] = []
         for (dayGroup, deps) in allDeps {
             if dayGroup.days.contains(today) {
-                return deps.sorted { $0.minutesFromMidnight < $1.minutesFromMidnight }
+                merged.append(contentsOf: deps)
             }
         }
-        return []
+        return merged.sorted { $0.minutesFromMidnight < $1.minutesFromMidnight }
     }
 
     func upcomingDepartures(forStopId stopId: String, limit: Int = 10) -> [Departure] {
@@ -160,7 +178,8 @@ class ScheduleStore {
         guard let idx = deps.firstIndex(where: { $0.minutesFromMidnight >= nowMinutes }) else {
             return []  // Service ended for today — don't show past buses as "upcoming"
         }
-        return Array(deps[idx..<min(idx + limit, deps.count)])
+        let result = Array(deps[idx..<min(idx + limit, deps.count)])
+        return result
     }
 
     // MARK: - Route details
@@ -171,6 +190,10 @@ class ScheduleStore {
 
     func route(forId routeId: String) -> APIRoute? {
         routeById[routeId]
+    }
+
+    func stop(forId stopId: String) -> ResolvedStop? {
+        stopById[stopId]
     }
 
     func stopsForRoute(_ routeId: String, directionId: Int) -> [ResolvedStop] {

@@ -62,12 +62,11 @@ struct StopDetailView: View {
     }
 
     /// Available line names at this stop (for filtering).
-    /// Uses upcoming departures only — lines that have already finished for the day are excluded.
+    /// Uses the static line list from stop data — stable across the day, not dependent on
+    /// which lines have upcoming departures right now. Prevents chips from disappearing as
+    /// service ends for individual lines.
     private var availableLines: [String] {
-        _ = refreshTick
-        let deps = store.upcomingDepartures(forStopId: stop.id, limit: 500)
-        var seen = Set<String>()
-        return deps.map(\.lineName).filter { seen.insert($0).inserted }
+        stop.lineNames
     }
 
     /// Line badges with route data for the header.
@@ -361,7 +360,56 @@ struct StopDetailView: View {
             // Lines section
             linesSection
 
-            // Next departures
+            // Next departures header + filter chips — always rendered when data is present
+            if !allDayGroups.isEmpty || store.isLoading {
+                HStack {
+                    Text(String(localized: "next_departures"))
+                        .font(.headline)
+                        .foregroundStyle(AppTheme.textPrimary)
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 8)
+
+                // Line filter chips (if multiple lines) — shown even when selected line has no upcoming deps
+                if availableLines.count > 1 {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            FilterChip(
+                                label: String(localized: "filter_all"),
+                                isSelected: filterLine == nil,
+                                action: {
+                                    withAnimation(.smooth(duration: 0.2)) { filterLine = nil }
+                                }
+                            )
+                            .opacity(filterLine != nil ? 0.35 : 1.0)
+                            .animation(.smooth(duration: 0.2), value: filterLine)
+                            .accessibilityIdentifier("btn_filter_all_lines")
+
+                            ForEach(availableLines, id: \.self) { line in
+                                let route = store.routes.first { $0.name == line }
+                                let isSelected = filterLine == line
+                                LineFilterChip(
+                                    lineName: line,
+                                    routeColor: route?.color ?? "#666666",
+                                    isSelected: isSelected
+                                ) {
+                                    withAnimation(.smooth(duration: 0.2)) {
+                                        filterLine = (filterLine == line) ? nil : line
+                                    }
+                                }
+                                .opacity(filterLine != nil && !isSelected ? 0.35 : 1.0)
+                                .animation(.smooth(duration: 0.2), value: filterLine)
+                                .accessibilityIdentifier("btn_filter_line_\(line)")
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 10)
+                    }
+                }
+            }
+
+            // Departure rows, empty states
             if !visible.isEmpty {
                 nextDeparturesSection(visible)
 
@@ -386,20 +434,13 @@ struct StopDetailView: View {
                     .padding(.bottom, 4)
                 }
             } else if filterLine != nil && upcomingDepartures.isEmpty {
-                VStack(spacing: 12) {
-                    Text(String(format: NSLocalizedString("no_departures_for_line", comment: ""), filterLine ?? ""))
-                        .font(.subheadline)
-                        .foregroundStyle(AppTheme.textSecondary)
-                        .multilineTextAlignment(.center)
-                    Button(String(localized: "show_all_departures")) {
-                        withAnimation { filterLine = nil }
-                    }
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(AppTheme.accent)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 24)
-                .padding(.horizontal, 20)
+                Text(String(format: NSLocalizedString("no_departures_for_line", comment: ""), filterLine ?? ""))
+                    .font(.subheadline)
+                    .foregroundStyle(AppTheme.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 24)
+                    .padding(.horizontal, 20)
             } else if !store.isLoading {
                 VStack(spacing: 8) {
                     LucideIcon.clock.sized(28)
@@ -524,46 +565,6 @@ struct StopDetailView: View {
 
     private func nextDeparturesSection(_ departures: [Departure]) -> some View {
         VStack(spacing: 0) {
-            // Section header with line filter
-            HStack {
-                Text(String(localized: "next_departures"))
-                    .font(.headline)
-                    .foregroundStyle(AppTheme.textPrimary)
-                Spacer()
-            }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 8)
-
-            // Line filter chips (if multiple lines)
-            if availableLines.count > 1 {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        FilterChip(
-                            label: String(localized: "filter_all"),
-                            isSelected: filterLine == nil,
-                            action: {
-                                withAnimation(.smooth(duration: 0.2)) { filterLine = nil }
-                            }
-                        )
-                        .accessibilityIdentifier("btn_filter_all_lines")
-
-                        ForEach(availableLines, id: \.self) { line in
-                            let route = store.routes.first { $0.name == line }
-                            LineFilterChip(
-                                lineName: line,
-                                routeColor: route?.color ?? "#666666",
-                                isSelected: filterLine == line
-                            ) {
-                                withAnimation(.smooth(duration: 0.2)) { filterLine = line }
-                            }
-                            .accessibilityIdentifier("btn_filter_line_\(line)")
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 10)
-                }
-            }
-
             // Departure rows
             VStack(spacing: 0) {
                 ForEach(Array(departures.enumerated()), id: \.element.id) { index, dep in
@@ -778,17 +779,24 @@ private struct FullScheduleSheet: View {
                             withAnimation(.smooth(duration: 0.2)) { filterLine = nil }
                         }
                     )
+                    .opacity(filterLine != nil ? 0.35 : 1.0)
+                    .animation(.smooth(duration: 0.2), value: filterLine)
                     .accessibilityIdentifier("btn_filter_all_lines_schedule")
 
                     ForEach(availableLines, id: \.self) { line in
                         let route = store.routes.first { $0.name == line }
+                        let isSelected = filterLine == line
                         LineFilterChip(
                             lineName: line,
                             routeColor: route?.color ?? "#666666",
-                            isSelected: filterLine == line
+                            isSelected: isSelected
                         ) {
-                            withAnimation(.smooth(duration: 0.2)) { filterLine = line }
+                            withAnimation(.smooth(duration: 0.2)) {
+                                filterLine = (filterLine == line) ? nil : line
+                            }
                         }
+                        .opacity(filterLine != nil && !isSelected ? 0.35 : 1.0)
+                        .animation(.smooth(duration: 0.2), value: filterLine)
                         .accessibilityIdentifier("btn_filter_line_\(line)")
                     }
                 }

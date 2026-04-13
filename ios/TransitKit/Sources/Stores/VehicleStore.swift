@@ -3,7 +3,7 @@ import Foundation
 // MARK: - Vehicle Store
 
 /// Global real-time vehicle feed. Polls every 15s and provides indexed lookups.
-/// Shared across all views via @Environment. Gracefully handles missing GTFS-RT URL.
+/// Shared across all views via @Environment. Gracefully handles missing GTFS-RT URLs.
 @MainActor
 @Observable
 final class VehicleStore {
@@ -12,16 +12,29 @@ final class VehicleStore {
     private(set) var lastFetchedAt: Date? = nil
 
     // MARK: Private
-    private let vehiclePositionsUrl: String?
+    private(set) var vehiclePositionsUrl: String?
+    private var tripUpdatesUrl: String?
     private var pollTask: Task<Void, Never>?
 
     /// Indexed for O(1) lookup: trip_id → vehicle
     private var vehicleByTripId: [String: GtfsRtVehicle] = [:]
     /// Indexed for O(1) lookup: route_id → vehicles
     private var vehiclesByRouteId: [String: [GtfsRtVehicle]] = [:]
+    /// Trip → route mapping from ScheduleStore, used to resolve vehicles that have empty routeId.
+    private var routeIdByTripId: [String: String] = [:]
+    /// Trip → delay in seconds (positive = late, negative = early) from TripUpdate feed.
+    private var delayByTripId: [String: Int32] = [:]
 
-    init(vehiclePositionsUrl: String?) {
+    init(vehiclePositionsUrl: String? = nil) {
         self.vehiclePositionsUrl = vehiclePositionsUrl
+    }
+
+    /// Configure URLs and trip→route mapping, then (re)start polling.
+    func configure(vehiclePositionsUrl: String?, tripUpdatesUrl: String? = nil, routeIdByTripId: [String: String] = [:]) {
+        self.vehiclePositionsUrl = vehiclePositionsUrl
+        self.tripUpdatesUrl = tripUpdatesUrl
+        self.routeIdByTripId = routeIdByTripId
+        startPolling()
     }
 
     // MARK: - Lifecycle
@@ -65,25 +78,59 @@ final class VehicleStore {
         return vehicleByTripId[tripId] != nil
     }
 
+    /// Delay in seconds for a trip (positive = late, negative = early). Nil if unknown.
+    func delay(forTripId tripId: String) -> Int32? {
+        delayByTripId[tripId]
+    }
+
     // MARK: - Fetch
 
     private func fetch() async {
+        async let vehicles = fetchVehiclePositions()
+        async let delays = fetchTripDelays()
+        let (v, d) = await (vehicles, delays)
+        apply(v, delays: d)
+    }
+
+    private func fetchVehiclePositions() async -> [GtfsRtVehicle] {
         guard let urlString = vehiclePositionsUrl,
-              let url = URL(string: urlString) else { return }
+              let url = URL(string: urlString) else { return [] }
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
-            let all = decodeGtfsRtVehicles(from: data)
-            await MainActor.run { apply(all) }
+            return decodeGtfsRtVehicles(from: data)
         } catch {
-            // Silently ignore — feed is optional
+            return []
         }
     }
 
-    private func apply(_ all: [GtfsRtVehicle]) {
+    private func fetchTripDelays() async -> [String: Int32] {
+        guard let urlString = tripUpdatesUrl,
+              let url = URL(string: urlString) else { return [:] }
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            return decodeGtfsRtTripDelays(from: data)
+        } catch {
+            return [:]
+        }
+    }
+
+    private func apply(_ all: [GtfsRtVehicle], delays: [String: Int32]) {
         vehicles = all
         lastFetchedAt = Date()
+        delayByTripId = delays
+
         vehicleByTripId = Dictionary(uniqueKeysWithValues: all.map { ($0.tripId, $0) })
-        vehiclesByRouteId = Dictionary(grouping: all, by: \.routeId)
-            .filter { !$0.key.isEmpty }
+
+        // Build route index — many feeds set routeId="" and only populate tripId.
+        // Fall back to routeIdByTripId (from ScheduleStore) in that case.
+        var byRoute: [String: [GtfsRtVehicle]] = [:]
+        for v in all {
+            let routeId = v.routeId.isEmpty
+                ? (routeIdByTripId[v.tripId] ?? "")
+                : v.routeId
+            guard !routeId.isEmpty else { continue }
+            byRoute[routeId, default: []].append(v)
+        }
+        vehiclesByRouteId = byRoute
     }
 }

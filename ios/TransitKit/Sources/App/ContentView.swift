@@ -83,6 +83,12 @@ struct ContentView: View {
         .onChange(of: router.pendingTrip) { _, trip in
             if trip != nil { selectedTab = 1 }
         }
+        .onChange(of: router.pendingMapPreviewStop) { _, stop in
+            if stop != nil { selectedTab = 2 }
+        }
+        .onAppear {
+            if router.pendingMapPreviewStop != nil { selectedTab = 2 }
+        }
         .toolbarBackground(.ultraThinMaterial, for: .tabBar)
         .modifier(TabBarVisibilityModifier())
         .modifier(TabBarAppearanceModifier())

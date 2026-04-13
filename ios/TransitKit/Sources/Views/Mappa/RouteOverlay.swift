@@ -1,46 +1,89 @@
 import SwiftUI
 import MapKit
 
+// MARK: - Cached Polyline
+
+/// A pre-decoded polyline for one route direction.
+/// Computed once off-main-thread and passed into `RouteOverlay` to avoid
+/// re-decoding on every Map body evaluation (which fires at 60 fps during pan).
+struct CachedPolyline: Identifiable, Sendable {
+    let id: Int                                 // direction ID
+    let coordinates: [CLLocationCoordinate2D]
+}
+
 // MARK: - Route Map Overlay
 
-/// Displays a route's polyline shape on the map.
-/// Uses `Route.directions.shape` coordinates and the route's GTFS color.
+/// Displays pre-decoded route polylines on the map.
+///
+/// Polylines are computed asynchronously in `MappaTab.recomputeRoutePolylines()`
+/// when the selected route or direction changes, and passed in as `CachedPolyline`
+/// values. This eliminates per-frame polyline decoding work.
 ///
 /// Usage inside a `Map { }` content builder:
 /// ```swift
-/// if let route = selectedRoute {
-///     RouteOverlay(route: route, directionId: 0)
-/// }
+/// RouteOverlay(polylines: cachedRoutePolylines, color: selectedRoute?.color)
 /// ```
 struct RouteOverlay: MapContent {
-    let route: APIRoute
-    var directionId: Int? = nil
-
-    /// Directions to render. If directionId is specified, show only that one;
-    /// otherwise show all directions.
-    private var directionsToRender: [APIRouteDirection] {
-        if let directionId {
-            return route.directions.filter { $0.directionId == directionId }
-        }
-        return route.directions
-    }
+    let polylines: [CachedPolyline]
+    let color: String?
 
     private var strokeColor: Color {
-        Color(hex: route.color ?? "#000000")
-    }
-
-    /// shapePolyline is an encoded polyline string — not yet decoded.
-    /// For now, no shape overlays are drawn; stop annotations provide fallback visualization.
-    private var polylines: [(id: Int, coordinates: [CLLocationCoordinate2D])] {
-        return []
+        Color(hex: color ?? "#3388FF")
     }
 
     var body: some MapContent {
-        ForEach(polylines, id: \.id) { polyline in
+        ForEach(polylines) { polyline in
             MapPolyline(coordinates: polyline.coordinates)
-                .stroke(strokeColor, lineWidth: 4)
+                .stroke(strokeColor, style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
         }
     }
+}
+
+// MARK: - Google Encoded Polyline Decoder
+
+/// Decodes a Google-encoded polyline string into an array of coordinates.
+/// Spec: https://developers.google.com/maps/documentation/utilities/polylinealgorithm
+///
+/// Called from `MappaTab.recomputeRoutePolylines()` on a background thread.
+func decodeGooglePolyline(_ encoded: String) -> [CLLocationCoordinate2D] {
+    var coordinates: [CLLocationCoordinate2D] = []
+    let bytes = Array(encoded.utf8)
+    var index = 0
+    var lat = 0
+    var lng = 0
+
+    while index < bytes.count {
+        // Decode latitude delta
+        var result = 0
+        var shift = 0
+        var byte: Int
+        repeat {
+            guard index < bytes.count else { return coordinates }
+            byte = Int(bytes[index]) - 63
+            index += 1
+            result |= (byte & 0x1F) << shift
+            shift += 5
+        } while byte >= 0x20
+        lat += (result & 1) != 0 ? ~(result >> 1) : (result >> 1)
+
+        // Decode longitude delta
+        result = 0
+        shift = 0
+        repeat {
+            guard index < bytes.count else { return coordinates }
+            byte = Int(bytes[index]) - 63
+            index += 1
+            result |= (byte & 0x1F) << shift
+            shift += 5
+        } while byte >= 0x20
+        lng += (result & 1) != 0 ? ~(result >> 1) : (result >> 1)
+
+        coordinates.append(CLLocationCoordinate2D(
+            latitude: Double(lat) / 1e5,
+            longitude: Double(lng) / 1e5
+        ))
+    }
+    return coordinates
 }
 
 // MARK: - Route Overlay Toggle

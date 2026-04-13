@@ -12,6 +12,7 @@ import SwiftUI
 ///   transitkit://stop/<stopId>                     → StopDetailView
 ///   transitkit://stop/<stopId>/schedule            → StopDetailView → FullScheduleSheet
 ///   transitkit://trip/<stopId>/<routeId>/<time>    → TripDetailView (e.g. time = "08:30")
+///   transitkit://map/stop/<stopId>                 → Mappa tab, mostra preview card fermata
 @Observable
 final class DeepLinkRouter {
     var pendingRoute: APIRoute? = nil
@@ -25,6 +26,8 @@ final class DeepLinkRouter {
     var openScheduleForStop: String? = nil
     /// Raw URL queued while store is still loading (cold start).
     var pendingUrl: URL? = nil
+    /// Stop to show as preview card on the Mappa tab (consumed by MappaTab).
+    var pendingMapPreviewStop: ResolvedStop? = nil
 }
 
 // MARK: - Trip Target

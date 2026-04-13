@@ -86,10 +86,12 @@ struct OperatorConfig: Codable {
         let tripUpdatesUrl: String?
         let serviceAlertsUrl: String?
 
+        // convertFromSnakeCase converts JSON keys before matching CodingKey rawValues,
+        // so rawValues must be camelCase (the converted form of the JSON snake_case key).
         enum CodingKeys: String, CodingKey {
-            case vehiclePositionsUrl = "vehicle_positions"
-            case tripUpdatesUrl = "trip_updates"
-            case serviceAlertsUrl = "service_alerts"
+            case vehiclePositionsUrl = "vehiclePositions"   // JSON: "vehicle_positions"
+            case tripUpdatesUrl = "tripUpdates"             // JSON: "trip_updates"
+            case serviceAlertsUrl = "serviceAlerts"         // JSON: "service_alerts"
         }
     }
 }

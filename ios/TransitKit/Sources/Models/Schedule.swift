@@ -46,11 +46,12 @@ struct APIRouteDirection: Codable, Identifiable, Hashable {
     let headsign: String?
     let stopIds: [String]
     let shapePolyline: String?
+    let shape: [[Double]]?
 
     var id: Int { directionId }
 
     enum CodingKeys: String, CodingKey {
-        case routeId, directionId, headsign, stopIds, shapePolyline
+        case routeId, directionId, headsign, stopIds, shapePolyline, shape
     }
 
     init(from decoder: Decoder) throws {
@@ -60,6 +61,7 @@ struct APIRouteDirection: Codable, Identifiable, Hashable {
         headsign = try c.decodeIfPresent(String.self, forKey: .headsign)
         stopIds = try c.decodeIfPresent([String].self, forKey: .stopIds) ?? []
         shapePolyline = try c.decodeIfPresent(String.self, forKey: .shapePolyline)
+        shape = try c.decodeIfPresent([[Double]].self, forKey: .shape)
     }
 }
 

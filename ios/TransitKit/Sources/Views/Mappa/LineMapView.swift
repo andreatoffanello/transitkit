@@ -28,10 +28,13 @@ struct LineMapView: View {
     @State private var cameraPosition: MapCameraPosition = .automatic
     @State private var latitudeDelta: Double = 0.1   // degrees; drives rendering tier
 
+    // Pre-decoded polylines for the current direction.
+    @State private var cachedPolylines: [CachedPolyline] = []
+
     var body: some View {
         ZStack(alignment: .topLeading) {
             Map(position: $cameraPosition) {
-                RouteOverlay(route: route, directionId: directionId)
+                RouteOverlay(polylines: cachedPolylines, color: route.color)
 
                 // Stop annotations — always shown (fallback when no shape data)
                 ForEach(routeStops) { stop in
@@ -72,6 +75,9 @@ struct LineMapView: View {
             .onChange(of: routeStops.count) { _, count in
                 guard count > 0 else { return }
                 zoomToStops()
+            }
+            .task(id: directionId) {
+                await decodePolylines()
             }
 
             // Close button
@@ -127,6 +133,32 @@ struct LineMapView: View {
                 Spacer()
             }
         }
+    }
+
+    // MARK: - Polyline decoding
+
+    private func decodePolylines() async {
+        let directions = route.directions.filter { $0.directionId == directionId }
+        // Capture stop fallback on main thread before dispatching.
+        let fallbackCoords = routeStops.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lng) }
+
+        cachedPolylines = await Task.detached(priority: .utility) {
+            directions.compactMap { dir -> CachedPolyline? in
+                if let encoded = dir.shapePolyline, !encoded.isEmpty {
+                    let coords = decodeGooglePolyline(encoded)
+                    if coords.count >= 2 { return CachedPolyline(id: dir.directionId, coordinates: coords) }
+                }
+                if let rawShape = dir.shape, rawShape.count >= 2 {
+                    let coords = rawShape.compactMap { pair -> CLLocationCoordinate2D? in
+                        guard pair.count >= 2 else { return nil }
+                        return CLLocationCoordinate2D(latitude: pair[0], longitude: pair[1])
+                    }
+                    if coords.count >= 2 { return CachedPolyline(id: dir.directionId, coordinates: coords) }
+                }
+                guard fallbackCoords.count >= 2 else { return nil }
+                return CachedPolyline(id: dir.directionId, coordinates: fallbackCoords)
+            }
+        }.value
     }
 
     // MARK: - Zoom helpers

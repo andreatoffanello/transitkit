@@ -21,9 +21,15 @@ const { config } = await useOperator()
 
 const bannerVisible = ref(false)
 
+const onBannerDismissed = () => { bannerVisible.value = false }
+
 onMounted(() => {
   const hasLink = !!(config.value?.appLinks?.ios || config.value?.appLinks?.android)
   bannerVisible.value = hasLink && localStorage.getItem('app-banner-dismissed') !== '1'
-  window.addEventListener('app-banner-dismissed', () => { bannerVisible.value = false })
+  window.addEventListener('app-banner-dismissed', onBannerDismissed)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('app-banner-dismissed', onBannerDismissed)
 })
 </script>

@@ -2,8 +2,8 @@
   <AppLayout>
     <div class="max-w-lg mx-auto lg:max-w-2xl">
 
-      <!-- Map header -->
-      <template v-if="!pending && stop">
+      <!-- Map header — only when coords are valid -->
+      <template v-if="!pending && stop && stop.lat && stop.lng">
         <StopMapHeader
           :lat="stop.lat"
           :lng="stop.lng"
@@ -12,8 +12,20 @@
       </template>
       <div v-else-if="pending" class="w-full skeleton-shimmer" style="height: 220px" />
 
+      <!-- Back navigation -->
+      <div v-if="!pending && stop" class="px-2 pt-2">
+        <NuxtLink
+          :to="fromLine ? `/lines/${fromLine.id}?stop=${stopId}` : '/'"
+          class="inline-flex items-center gap-1.5 text-sm font-medium px-2 py-1.5 rounded-lg transition-opacity active:opacity-60"
+          style="color: var(--color-primary)"
+        >
+          <ChevronLeft :size="16" :stroke-width="2" />
+          {{ fromLine ? fromLine.name : s.backToHome }}
+        </NuxtLink>
+      </div>
+
       <!-- Stop identity -->
-      <div class="px-4 pt-4 pb-2">
+      <div class="px-4 pt-2 pb-2">
         <template v-if="pending">
           <div class="h-7 rounded-lg w-3/4 skeleton-shimmer mb-2" />
           <div class="flex gap-2">
@@ -32,10 +44,10 @@
                 v-if="config?.features?.enableFavorites"
                 type="button"
                 :aria-label="isFavorite(stopId) ? s.removeFromFavorites : s.addToFavorites"
+                data-testid="btn_favorite"
                 class="p-2 rounded-lg transition-opacity active:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
                 :style="{ color: isFavorite(stopId) ? 'var(--color-primary)' : 'var(--text-tertiary)' }"
                 @click="toggleFavorite({ stopId: stopId, name: stop.name })"
-                :accessibilityidentifier="'btn_favorite'"
               >
                 <Bookmark :size="20" :stroke-width="1.75" :fill="isFavorite(stopId) ? 'currentColor' : 'none'" />
               </button>
@@ -80,29 +92,39 @@
         </template>
       </div>
 
-      <!-- Segmented control: Prossime / Orario — iOS pill style -->
+      <!-- Segmented control: Prossime / Orario — iOS pill style with ARIA tab pattern -->
       <div
         v-if="!pending && stop"
+        role="tablist"
+        :aria-label="s.upcomingDepartures + ' / ' + s.tabSchedule"
         class="mx-4 mt-3 mb-4 flex p-1 rounded-xl gap-1"
         style="background-color: rgba(120,120,128,0.12)"
       >
         <button
+          id="tab-prossime"
+          role="tab"
+          :aria-selected="activeTab === 'prossime'"
+          aria-controls="panel-prossime"
           class="flex-1 py-1.5 px-3 rounded-[10px] text-sm font-semibold transition-all duration-150 active:opacity-70"
           :style="activeTab === 'prossime'
             ? { backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)', boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08)' }
             : { color: 'var(--text-secondary)' }"
           @click="activeTab = 'prossime'"
         >
-          Prossime
+          {{ s.tabUpcoming }}
         </button>
         <button
+          id="tab-orario"
+          role="tab"
+          :aria-selected="activeTab === 'orario'"
+          aria-controls="panel-orario"
           class="flex-1 py-1.5 px-3 rounded-[10px] text-sm font-semibold transition-all duration-150 active:opacity-70 flex items-center justify-center gap-1.5"
           :style="activeTab === 'orario'
             ? { backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)', boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08)' }
             : { color: 'var(--text-secondary)' }"
           @click="activeTab = 'orario'"
         >
-          Orario
+          {{ s.tabSchedule }}
           <span v-if="isLive" class="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" aria-hidden="true" />
         </button>
       </div>
@@ -110,10 +132,16 @@
       <template v-if="!pending && stop">
 
         <!-- ── Prossime partenze ── -->
-        <section v-show="activeTab === 'prossime'" class="px-4 mb-6" aria-labelledby="section-adesso">
+        <section
+          id="panel-prossime"
+          role="tabpanel"
+          aria-labelledby="tab-prossime"
+          v-show="activeTab === 'prossime'"
+          class="px-4 mb-6"
+        >
           <div class="flex items-center justify-between mb-3">
-            <h2 id="section-adesso" class="text-[17px] font-bold flex items-center gap-2" style="color: var(--text-primary)">
-              Prossime partenze
+            <h2 class="text-[17px] font-bold flex items-center gap-2" style="color: var(--text-primary)">
+              {{ s.upcomingDepartures }}
               <span
                 v-if="isLive"
                 class="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse"
@@ -122,36 +150,38 @@
             </h2>
             <button
               type="button"
-              aria-label="Aggiorna"
+              :aria-label="s.refresh"
               class="flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-opacity active:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
               style="color: var(--color-primary); background-color: color-mix(in srgb, var(--color-primary) 10%, transparent)"
               @click="refreshRealtime"
             >
               <RefreshCw :size="13" :stroke-width="1.75" :class="{ 'animate-spin': realtimeLoading }" />
-              Aggiorna
+              {{ s.refresh }}
             </button>
           </div>
 
           <!-- Line filter chips (only if >1 line) -->
           <div
             v-if="servingRoutes.length > 1"
-            class="flex gap-1.5 mb-3 overflow-x-auto scrollbar-none pb-0.5"
             role="group"
-            aria-label="Filtra per linea"
+            :aria-label="s.ariaLinesAtStop"
+            class="flex gap-1.5 mb-3 overflow-x-auto scrollbar-none pb-0.5"
           >
             <button
               class="shrink-0 h-7 px-3 rounded-full text-xs font-semibold transition-all duration-150 active:opacity-70"
+              :aria-pressed="filterLine === null"
               :style="filterLine === null
                 ? { backgroundColor: 'var(--color-primary)', color: 'var(--color-text-on-primary)' }
                 : { backgroundColor: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }"
               @click="filterLine = null"
             >
-              Tutti
+              {{ s.all }}
             </button>
             <button
               v-for="r in servingRoutes"
               :key="r.id"
               class="shrink-0 h-7 px-3 rounded-full text-xs font-bold transition-all duration-150 active:opacity-70"
+              :aria-pressed="filterLine === r.name"
               :style="filterLine === r.name
                 ? { backgroundColor: r.color || 'var(--color-primary)', color: r.textColor || 'var(--color-text-on-primary)' }
                 : { backgroundColor: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }"
@@ -184,13 +214,12 @@
                 class="absolute top-2 left-14 text-[10px] font-bold px-1.5 py-0.5 rounded"
                 style="background-color: #16a34a; color: #fff; line-height: 1.2; z-index: 1; pointer-events: none"
                 aria-hidden="true"
-              >prossima</span>
+              >{{ s.nextDepartureLabel }}</span>
               <DepartureRow
                 :departure="filteredUpcomingDepartures[0]!"
                 :now="now"
                 :locale="config?.locale[0]"
                 :show-countdown="true"
-                :is-next="true"
                 class="pt-7"
               />
             </div>
@@ -210,7 +239,7 @@
               @click="showAllUpcoming = true"
             >
               <ChevronDown :size="15" :stroke-width="2" />
-              Mostra altri {{ filteredUpcomingDepartures.length - 5 }}
+              {{ s.showMore }} {{ filteredUpcomingDepartures.length - 5 }}
             </button>
           </div>
 
@@ -227,7 +256,7 @@
               <Clock :size="24" :stroke-width="1.5" style="color: var(--color-primary); opacity: 0.7" />
             </div>
             <p class="text-[15px] font-semibold mb-1" style="color: var(--text-primary)">
-              {{ s.noDepartures ?? 'Nessuna partenza nelle prossime 2 ore' }}
+              {{ s.noDepartures }}
             </p>
             <div v-if="nextDepartureTodayData" class="flex items-center justify-center gap-2 mt-2">
               <span class="text-sm" style="color: var(--text-secondary)">{{ s.nextDepartureToday }}:</span>
@@ -245,7 +274,7 @@
               style="color: var(--color-primary)"
               @click="activeTab = 'orario'"
             >
-              Vedi orario completo
+              {{ s.viewFullSchedule }}
               <ChevronDown :size="14" :stroke-width="1.75" />
             </button>
           </div>
@@ -263,9 +292,15 @@
         </section>
 
         <!-- ── Orario ── -->
-        <section v-show="activeTab === 'orario'" class="px-4 mb-6" aria-labelledby="section-orari">
-          <h2 id="section-orari" class="text-[17px] font-bold mb-3" style="color: var(--text-primary)">
-            Orario
+        <section
+          id="panel-orario"
+          role="tabpanel"
+          aria-labelledby="tab-orario"
+          v-show="activeTab === 'orario'"
+          class="px-4 mb-6"
+        >
+          <h2 class="text-[17px] font-bold mb-3" style="color: var(--text-primary)">
+            {{ s.tabSchedule }}
           </h2>
           <div
             v-if="config?.gtfsRt && !isLive"
@@ -332,7 +367,7 @@
             @click="shareStop"
           >
             <Share2 :size="14" :stroke-width="1.75" />
-            Condividi
+            {{ s.share }}
           </button>
           <button
             v-else
@@ -342,7 +377,7 @@
             @click="copyLink"
           >
             <component :is="copied ? Check : Copy" :size="14" :stroke-width="1.75" />
-            {{ copied ? 'Copiato' : 'Copia link' }}
+            {{ copied ? s.copiedFeedback : s.copyLink }}
           </button>
         </footer>
 
@@ -363,8 +398,8 @@
 
 <script setup lang="ts">
 definePageMeta({ pageTransition: { name: 'page-slide-up', mode: 'out-in' } })
-import { onMounted, nextTick, ref } from 'vue'
-import { Bookmark, Share2, RefreshCw, MapPin, Copy, Check, Clock, ChevronDown } from 'lucide-vue-next'
+import { onMounted, nextTick, ref, watch } from 'vue'
+import { Bookmark, Share2, RefreshCw, MapPin, Copy, Check, Clock, ChevronDown, ChevronLeft } from 'lucide-vue-next'
 import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getNextServiceDayGroupKey, getDayGroupLabel, computeNowMin, getNextDeparture } from '~/utils/schedule'
 import type { DayGroup, Departure, ScheduleStop, Route } from '~/types'
 
@@ -378,6 +413,23 @@ const requestUrl = useRequestURL()
 
 const { config, schedules } = await useOperator()
 const s = useStrings(config)
+
+const fromLineId = computed(() => {
+  const from = route.query.from
+  return typeof from === 'string' ? from : null
+})
+
+const fromLine = computed(() => {
+  if (!fromLineId.value || !schedules.value) return null
+  return schedules.value.routes.find(r => r.id === fromLineId.value) ?? null
+})
+
+// Reset per-stop UI state when navigating to a different stop
+watch(stopId, () => {
+  filterLine.value = null
+  showAllUpcoming.value = false
+  activeTab.value = 'prossime'
+})
 
 // Web Share API
 const canShare = ref(false)

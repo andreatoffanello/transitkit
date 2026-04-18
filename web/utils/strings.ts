@@ -140,6 +140,20 @@ export interface AppStrings {
   copyLink: string
   copiedFeedback: string
 
+  // Stop page — tab labels
+  tabUpcoming: string
+  tabSchedule: string
+
+  // Stop page — actions
+  refresh: string
+  share: string
+
+  // Stop page — next departure badge
+  nextDepartureLabel: string
+
+  // Stop page — show more departures
+  showMore: string
+
   // Accessibility
   skipToContent: string
 
@@ -239,6 +253,12 @@ const IT: AppStrings = {
   locating: 'Localizzazione in corso...',
   distanceM: 'm',
   distanceKm: 'km',
+  tabUpcoming: 'Prossime',
+  tabSchedule: 'Orario',
+  refresh: 'Aggiorna',
+  share: 'Condividi',
+  nextDepartureLabel: 'prossima',
+  showMore: 'Mostra altri',
 }
 
 const EN: AppStrings = {
@@ -327,6 +347,12 @@ const EN: AppStrings = {
   locating: 'Locating...',
   distanceM: 'm',
   distanceKm: 'km',
+  tabUpcoming: 'Upcoming',
+  tabSchedule: 'Schedule',
+  refresh: 'Refresh',
+  share: 'Share',
+  nextDepartureLabel: 'next',
+  showMore: 'Show more',
 }
 
 const STRINGS: Record<Locale, AppStrings> = { it: IT, en: EN }

@@ -89,7 +89,6 @@ const props = defineProps<{
   locale?: string
   showCountdown?: boolean
   isPast?: boolean
-  isNext?: boolean
 }>()
 
 const s = computed(() => getStrings(props.locale))

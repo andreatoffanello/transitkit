@@ -13,7 +13,9 @@
     "trip_updates": "https://s3.amazonaws.com/etatransit.gtfs/appalcart.etaspot.net/trip_updates.pb",
     "alerts": "https://s3.amazonaws.com/etatransit.gtfs/appalcart.etaspot.net/alerts.pb"
   },
-  "locale": ["en"],
+  "locale": [
+    "en"
+  ],
   "theme": {
     "primaryColor": "#165F9C",
     "accentColor": "#06845C",
@@ -36,5 +38,500 @@
     "enableNotifications": true
   },
   "exclude_patterns": [],
-  "terminal_overrides": {}
+  "terminal_overrides": {},
+  "contact": {
+    "phone": "828-297-1300",
+    "email": "info@appalcart.com",
+    "tdd": "1-800-735-2962",
+    "address": "305 NC Highway 105 Bypass, Boone, NC 28607",
+    "hours": {
+      "en": "Mon–Fri 8:00 AM – 5:00 PM",
+      "es": "Lun–Vie 8:00 – 17:00",
+      "it": "Lun–Ven 8:00 – 17:00"
+    }
+  },
+  "accessibility": {
+    "title": {
+      "en": "Accessibility on every bus",
+      "es": "Accesibilidad en cada autobús",
+      "it": "Accessibilità su ogni autobus"
+    },
+    "description": {
+      "en": "Every AppalCART bus is wheelchair-accessible. Vehicles are equipped to serve riders with a wide range of mobility needs, and drivers are trained to help where they safely can.",
+      "es": "Todos los autobuses de AppalCART son accesibles para sillas de ruedas. Los vehículos están equipados para atender a personas con diversas necesidades de movilidad, y los conductores están capacitados para ayudar cuando es seguro hacerlo.",
+      "it": "Tutti gli autobus AppalCART sono accessibili alle sedie a rotelle. I veicoli sono attrezzati per servire passeggeri con diverse esigenze di mobilità e i conducenti sono formati per assistere quando possono farlo in sicurezza."
+    },
+    "bullets": [
+      {
+        "en": "Digital destination signs on every bus",
+        "es": "Letreros digitales de destino en cada autobús",
+        "it": "Indicatori digitali di destinazione su ogni autobus"
+      },
+      {
+        "en": "Automatic stop announcements",
+        "es": "Anuncios automáticos de paradas",
+        "it": "Annunci automatici delle fermate"
+      },
+      {
+        "en": "Kneeling suspension — ask the driver to lower the front end",
+        "es": "Suspensión inclinable — pida al conductor que baje la parte delantera",
+        "it": "Sospensione abbassabile — chiedi al conducente di abbassare la parte anteriore"
+      },
+      {
+        "en": "Front wheelchair ramp on every vehicle",
+        "es": "Rampa delantera para silla de ruedas en cada vehículo",
+        "it": "Rampa anteriore per sedia a rotelle su ogni veicolo"
+      },
+      {
+        "en": "Driver assistance available for riders in manual wheelchairs",
+        "es": "Asistencia del conductor disponible para personas en sillas de ruedas manuales",
+        "it": "Assistenza del conducente disponibile per i passeggeri in sedia a rotelle manuale"
+      }
+    ],
+    "moreUrl": "https://www.appalcart.com/accessibility-on-fixed-route"
+  },
+  "services": [
+    {
+      "id": "fixed-route",
+      "icon": "bus",
+      "title": {
+        "en": "Fixed-Route Bus",
+        "es": "Autobús de Ruta Fija",
+        "it": "Autobus di Linea"
+      },
+      "subtitle": {
+        "en": "Free buses across Boone and Watauga County",
+        "es": "Autobuses gratuitos en Boone y el condado de Watauga",
+        "it": "Autobus gratuiti a Boone e nella contea di Watauga"
+      },
+      "description": {
+        "en": "Fare-free bus service connecting the Town of Boone, Appalachian State University, apartment complexes, downtown, and shopping. Schedules follow the ASU academic calendar, with a full schedule during Fall and Spring semesters (including Night Owl routes) and reduced service during Winter and Summer breaks.",
+        "es": "Servicio de autobús gratuito que conecta el pueblo de Boone, Appalachian State University, complejos de apartamentos, el centro y las zonas comerciales. Los horarios siguen el calendario académico de ASU, con servicio completo durante los semestres de otoño y primavera (incluidas las rutas Night Owl) y servicio reducido en los recesos de invierno y verano.",
+        "it": "Servizio di autobus gratuito che collega il centro di Boone, la Appalachian State University, i complessi residenziali, il downtown e le aree commerciali. Gli orari seguono il calendario accademico di ASU, con servizio completo nei semestri autunnale e primaverile (incluse le corse Night Owl) e servizio ridotto durante le pause invernali ed estive."
+      },
+      "audience": {
+        "en": "Anyone. No ticket, no registration — just step on.",
+        "es": "Cualquier persona. Sin boleto ni registro — solo súbase.",
+        "it": "Chiunque. Nessun biglietto, nessuna registrazione — basta salire."
+      },
+      "steps": [
+        {
+          "en": "Wait at a marked bus stop.",
+          "es": "Espere en una parada señalizada.",
+          "it": "Aspetta a una fermata segnalata."
+        },
+        {
+          "en": "Give the driver a hand signal to flag the bus down.",
+          "es": "Haga una señal con la mano al conductor para detener el autobús.",
+          "it": "Fai un cenno con la mano al conducente per fermare l'autobus."
+        },
+        {
+          "en": "Arrive 3–5 minutes before the scheduled time.",
+          "es": "Llegue de 3 a 5 minutos antes de la hora programada.",
+          "it": "Arriva 3–5 minuti prima dell'orario previsto."
+        },
+        {
+          "en": "Pull the cord at least one block before your stop to exit.",
+          "es": "Tire del cordón al menos una cuadra antes de su parada para bajar.",
+          "it": "Tira il cordino almeno un isolato prima della tua fermata per scendere."
+        },
+        {
+          "en": "Never cross the street in front of the bus.",
+          "es": "Nunca cruce la calle por delante del autobús.",
+          "it": "Non attraversare mai la strada davanti all'autobus."
+        }
+      ],
+      "hours": {
+        "en": "Year-round, synced to the ASU academic calendar. No service on New Year's Day, Good Friday, Easter, Independence Day, Thanksgiving and the day after, Christmas Eve, Christmas Day, and the day after Christmas. Limited service on MLK Day and Labor Day.",
+        "es": "Todo el año, según el calendario académico de ASU. No hay servicio el Día de Año Nuevo, Viernes Santo, Pascua, Día de la Independencia, Día de Acción de Gracias y el día siguiente, Nochebuena, Navidad y el día después de Navidad. Servicio limitado el Día de MLK y el Día del Trabajo.",
+        "it": "Tutto l'anno, secondo il calendario accademico di ASU. Nessun servizio a Capodanno, Venerdì Santo, Pasqua, Independence Day, Ringraziamento e il giorno successivo, Vigilia di Natale, Natale e il giorno dopo Natale. Servizio limitato a MLK Day e Labor Day."
+      },
+      "fare": {
+        "en": "Free — courtesy of the Town of Boone, Watauga County, and Appalachian State University.",
+        "es": "Gratis — cortesía del pueblo de Boone, el condado de Watauga y Appalachian State University.",
+        "it": "Gratuito — offerto dal Town of Boone, dalla contea di Watauga e dalla Appalachian State University."
+      },
+      "serviceArea": {
+        "en": "Town of Boone, Appalachian State University campus, and surrounding shopping and residential areas.",
+        "es": "Pueblo de Boone, campus de Appalachian State University y las zonas comerciales y residenciales cercanas.",
+        "it": "Town of Boone, campus della Appalachian State University e aree commerciali e residenziali circostanti."
+      },
+      "notes": [
+        {
+          "en": "Red, Purple, Pop 105, and Wellness District run every 15 minutes.",
+          "es": "Red, Purple, Pop 105 y Wellness District pasan cada 15 minutos.",
+          "it": "Red, Purple, Pop 105 e Wellness District passano ogni 15 minuti."
+        },
+        {
+          "en": "Green and Blue run every 20 minutes.",
+          "es": "Green y Blue pasan cada 20 minutos.",
+          "it": "Green e Blue passano ogni 20 minuti."
+        },
+        {
+          "en": "Gray, Orange, Gold, NC 105 Lot Shuttle, State Farm Shuttle, and Silver run every 30 minutes.",
+          "es": "Gray, Orange, Gold, NC 105 Lot Shuttle, State Farm Shuttle y Silver pasan cada 30 minutos.",
+          "it": "Gray, Orange, Gold, NC 105 Lot Shuttle, State Farm Shuttle e Silver passano ogni 30 minuti."
+        },
+        {
+          "en": "Express and Pink together run every 10 minutes.",
+          "es": "Express y Pink juntos pasan cada 10 minutos.",
+          "it": "Express e Pink insieme passano ogni 10 minuti."
+        },
+        {
+          "en": "Shirt and shoes are required to board.",
+          "es": "Se requiere camisa y zapatos para subir.",
+          "it": "Per salire sono obbligatorie camicia e scarpe."
+        },
+        {
+          "en": "Fold strollers before boarding.",
+          "es": "Pliegue las carriolas antes de subir.",
+          "it": "Piega i passeggini prima di salire."
+        },
+        {
+          "en": "No weapons, no eating or drinking, no tobacco or vaping, no open alcohol.",
+          "es": "Prohibido armas, comer o beber, tabaco o vapeo, y alcohol abierto.",
+          "it": "Vietato armi, mangiare o bere, tabacco o svapo, e alcolici aperti."
+        },
+        {
+          "en": "Small animals only in pet carriers. ADA-defined Service Animals are welcome — Emotional Support Animals do not qualify under the ADA.",
+          "es": "Animales pequeños solo en transportadoras. Los animales de servicio definidos por la ADA son bienvenidos — los animales de apoyo emocional no califican bajo la ADA.",
+          "it": "Animali piccoli solo nei trasportini. Gli animali di servizio definiti dall'ADA sono i benvenuti — gli Emotional Support Animals non sono considerati tali dall'ADA."
+        },
+        {
+          "en": "Every in-town bus has a bike rack on the front — tell the driver when loading or unloading.",
+          "es": "Cada autobús urbano tiene un portabicicletas al frente — avise al conductor al cargar o descargar.",
+          "it": "Ogni autobus urbano ha un portabici frontale — avvisa il conducente quando carichi o scarichi."
+        }
+      ],
+      "cta": {
+        "type": "internal",
+        "value": "transitkit://map",
+        "label": {
+          "en": "See live buses on map",
+          "es": "Ver autobuses en el mapa",
+          "it": "Vedi autobus sulla mappa"
+        }
+      },
+      "links": []
+    },
+    {
+      "id": "paratransit",
+      "icon": "accessibility",
+      "title": {
+        "en": "Paratransit",
+        "es": "Paratránsito",
+        "it": "Paratransit"
+      },
+      "subtitle": {
+        "en": "Shared-ride vans for riders with qualifying disabilities",
+        "es": "Furgonetas compartidas para personas con discapacidades que califican",
+        "it": "Furgoni condivisi per passeggeri con disabilità qualificanti"
+      },
+      "description": {
+        "en": "Wheelchair-accessible, shared-ride van service provided under the Americans with Disabilities Act (ADA). Paratransit gives equal access to riders whose disabilities prevent them from using the fixed-route buses. Eligibility is required and is based on where you live and where you're going.",
+        "es": "Servicio de furgonetas compartidas y accesibles para sillas de ruedas, ofrecido conforme a la Ley de Estadounidenses con Discapacidades (ADA). El paratránsito brinda acceso igualitario a personas cuyas discapacidades les impiden usar los autobuses de ruta fija. Se requiere elegibilidad, basada en dónde vive y a dónde va.",
+        "it": "Servizio di furgoni condivisi accessibili alle sedie a rotelle, fornito ai sensi dell'Americans with Disabilities Act (ADA). Il paratransit garantisce pari accesso ai passeggeri la cui disabilità impedisce loro di usare gli autobus di linea. È richiesta l'idoneità, basata su dove abiti e dove vai."
+      },
+      "audience": {
+        "en": "Riders with qualifying disabilities whose origin and destination both fall within 3/4 mile of a fixed-route bus stop, after passing eligibility.",
+        "es": "Personas con discapacidades que califican, cuyo punto de origen y destino se encuentran dentro de 3/4 de milla de una parada de ruta fija, una vez aprobada la elegibilidad.",
+        "it": "Passeggeri con disabilità qualificanti il cui punto di partenza e destinazione rientrano entrambi entro 3/4 di miglio da una fermata di linea, dopo l'idoneità."
+      },
+      "steps": [
+        {
+          "en": "Call Dispatch at 828-297-1300 to reserve your ride.",
+          "es": "Llame a Dispatch al 828-297-1300 para reservar su viaje.",
+          "it": "Chiama Dispatch al 828-297-1300 per prenotare la corsa."
+        },
+        {
+          "en": "Book at least one day and up to seven days in advance.",
+          "es": "Reserve con al menos un día y hasta siete días de anticipación.",
+          "it": "Prenota con almeno un giorno e fino a sette giorni di anticipo."
+        },
+        {
+          "en": "Be ready 30 minutes before your pickup time.",
+          "es": "Esté listo 30 minutos antes de la hora de recogida.",
+          "it": "Fatti trovare pronto 30 minuti prima dell'orario di ritiro."
+        },
+        {
+          "en": "Drivers wait up to 5 minutes at the door.",
+          "es": "Los conductores esperan hasta 5 minutos en la puerta.",
+          "it": "I conducenti attendono fino a 5 minuti alla porta."
+        },
+        {
+          "en": "For eligibility questions, call the HR/Admin Coordinator at 828-297-1300 ext. 105.",
+          "es": "Para preguntas sobre elegibilidad, llame al Coordinador de RR. HH./Administración al 828-297-1300 ext. 105.",
+          "it": "Per domande sull'idoneità, chiama l'HR/Admin Coordinator al 828-297-1300 int. 105."
+        }
+      ],
+      "hours": {
+        "en": "Same days and hours as the fixed-route bus service.",
+        "es": "Los mismos días y horarios que el servicio de autobús de ruta fija.",
+        "it": "Stessi giorni e orari del servizio di autobus di linea."
+      },
+      "fare": {
+        "en": "Free — AppalCART offers complimentary paratransit.",
+        "es": "Gratis — AppalCART ofrece paratránsito sin costo.",
+        "it": "Gratuito — AppalCART offre paratransit senza costo."
+      },
+      "serviceArea": {
+        "en": "Within 3/4 mile of any fixed-route bus stop. For destinations farther out in Watauga County, see Rural Services.",
+        "es": "Dentro de 3/4 de milla de cualquier parada de ruta fija. Para destinos más lejanos en el condado de Watauga, consulte Rural Services.",
+        "it": "Entro 3/4 di miglio da una fermata di linea. Per destinazioni più lontane nella contea di Watauga, vedi Rural Services."
+      },
+      "notes": [
+        {
+          "en": "Use the eligibility map to confirm your address is in the green zone before applying.",
+          "es": "Use el mapa de elegibilidad para confirmar que su dirección está en la zona verde antes de solicitar.",
+          "it": "Usa la mappa di idoneità per verificare che il tuo indirizzo sia nella zona verde prima di richiedere il servizio."
+        },
+        {
+          "en": "Drivers assist door-to-door when safe, but cannot enter private residences or go past the front door.",
+          "es": "Los conductores ayudan de puerta a puerta cuando es seguro, pero no pueden entrar a residencias privadas ni pasar la puerta principal.",
+          "it": "I conducenti assistono porta-a-porta quando è sicuro, ma non possono entrare in abitazioni private né oltrepassare la porta d'ingresso."
+        },
+        {
+          "en": "Drivers cannot leave the vehicle out of sight, push or pull battery-operated wheelchairs, run errands, or provide personal care.",
+          "es": "Los conductores no pueden dejar el vehículo fuera de vista, empujar o jalar sillas de ruedas eléctricas, hacer mandados ni brindar cuidado personal.",
+          "it": "I conducenti non possono lasciare il veicolo fuori vista, spingere o tirare carrozzine elettriche, fare commissioni o fornire assistenza personale."
+        },
+        {
+          "en": "No eating, drinking, tobacco, vaping, alcohol, or illegal drug use in the vehicle.",
+          "es": "No se permite comer, beber, tabaco, vapeo, alcohol ni drogas ilegales en el vehículo.",
+          "it": "Non è consentito mangiare, bere, fumare, svapare, alcolici o sostanze illegali nel veicolo."
+        },
+        {
+          "en": "Maximum 3 packages per rider — only what you can carry in one trip.",
+          "es": "Máximo 3 paquetes por pasajero — solo lo que pueda cargar en un viaje.",
+          "it": "Massimo 3 pacchi per passeggero — solo ciò che puoi portare in un unico viaggio."
+        },
+        {
+          "en": "Three no-shows in 30 days may lead to a suspension of up to 30 days.",
+          "es": "Tres ausencias en 30 días pueden resultar en una suspensión de hasta 30 días.",
+          "it": "Tre no-show in 30 giorni possono comportare una sospensione fino a 30 giorni."
+        },
+        {
+          "en": "A no-show means canceling less than an hour ahead, refusing the ride at the door, or not being present at pickup.",
+          "es": "Una ausencia significa cancelar con menos de una hora de anticipación, rechazar el viaje en la puerta o no estar presente en la recogida.",
+          "it": "Per no-show si intende cancellare con meno di un'ora di anticipo, rifiutare la corsa alla porta o non presentarsi al ritiro."
+        }
+      ],
+      "cta": {
+        "type": "phone",
+        "label": {
+          "en": "Book a ride",
+          "es": "Reservar viaje",
+          "it": "Prenota una corsa"
+        },
+        "value": "828-297-1300"
+      },
+      "links": [
+        {
+          "label": {
+            "en": "Check the eligibility map",
+            "es": "Consultar el mapa de elegibilidad",
+            "it": "Consulta la mappa di idoneità"
+          },
+          "url": "https://arcg.is/1SzrCq"
+        },
+        {
+          "label": {
+            "en": "Paratransit information and application",
+            "es": "Información y solicitud de paratránsito",
+            "it": "Informazioni e modulo di richiesta paratransit"
+          },
+          "url": "https://www.appalcart.com/paratransit"
+        }
+      ]
+    },
+    {
+      "id": "rural-services",
+      "icon": "map-pin",
+      "title": {
+        "en": "Rural Services",
+        "es": "Servicios Rurales",
+        "it": "Servizi Rurali"
+      },
+      "subtitle": {
+        "en": "Van rides from rural Watauga County into Boone",
+        "es": "Viajes en furgoneta desde el condado rural de Watauga hasta Boone",
+        "it": "Corse in furgone dalla contea di Watauga rurale verso Boone"
+      },
+      "description": {
+        "en": "Van service for riders living in Watauga County outside the Town of Boone. All routes are open to the public, with fare-free rides available for those who qualify through the Project on Aging (POA) or DSS Elderly and Disabled Transportation. Vans connect you to the fixed-route system at the Walmart bus stop in Boone.",
+        "es": "Servicio de furgonetas para residentes del condado de Watauga fuera del pueblo de Boone. Todas las rutas están abiertas al público, con viajes gratuitos para quienes califican a través del Project on Aging (POA) o el servicio de Transporte para Personas Mayores y con Discapacidad del DSS. Las furgonetas lo conectan con la red de ruta fija en la parada de Walmart en Boone.",
+        "it": "Servizio di furgoni per chi vive nella contea di Watauga fuori dal Town of Boone. Tutte le linee sono aperte al pubblico, con corse gratuite per chi ha diritto tramite Project on Aging (POA) o DSS Elderly and Disabled Transportation. I furgoni ti collegano alla rete di linea alla fermata Walmart di Boone."
+      },
+      "audience": {
+        "en": "Any Watauga County resident living outside Boone town limits. Free rides for adults 60+ through POA, and for qualifying riders through DSS.",
+        "es": "Cualquier residente del condado de Watauga que viva fuera de los límites del pueblo de Boone. Viajes gratuitos para adultos de 60+ a través de POA, y para personas que califican a través de DSS.",
+        "it": "Qualsiasi residente della contea di Watauga che viva fuori dai confini del Town of Boone. Corse gratuite per adulti 60+ tramite POA e per chi ha diritto tramite DSS."
+      },
+      "steps": [
+        {
+          "en": "Call Dispatch at 828-297-1300 at least one day in advance.",
+          "es": "Llame a Dispatch al 828-297-1300 con al menos un día de anticipación.",
+          "it": "Chiama Dispatch al 828-297-1300 con almeno un giorno di anticipo."
+        },
+        {
+          "en": "Share your pickup location when you book.",
+          "es": "Comparta su ubicación de recogida al reservar.",
+          "it": "Indica il luogo di ritiro al momento della prenotazione."
+        },
+        {
+          "en": "The van picks you up and drops you at the Walmart bus stop in Boone.",
+          "es": "La furgoneta lo recoge y lo deja en la parada de Walmart en Boone.",
+          "it": "Il furgone ti preleva e ti lascia alla fermata Walmart di Boone."
+        },
+        {
+          "en": "Transfer to the Express or Red fixed-route bus — or to Paratransit — to continue into town.",
+          "es": "Transborde al autobús de ruta fija Express o Red — o a Paratransit — para continuar hacia el centro.",
+          "it": "Cambia sull'autobus di linea Express o Red — oppure su Paratransit — per proseguire in città."
+        },
+        {
+          "en": "For the return trip, catch the bus back to the Walmart stop, where the van will pick you up again.",
+          "es": "Para el regreso, tome el autobús de vuelta a la parada de Walmart, donde la furgoneta lo recogerá de nuevo.",
+          "it": "Per il ritorno, prendi l'autobus fino alla fermata Walmart, dove il furgone ti riprenderà."
+        }
+      ],
+      "hours": {
+        "en": "Morning and Afternoon Rural Service schedules. Times vary with pickup location and passenger load. POA pickup days from L.E. Harrill (Boone): Mon and Wed to Boone/Foscoe/Meat Camp/Todd; Tue and Fri to Boone/Deep Gap/Blowing Rock. POA pickups from Western Watauga Community Center (Cove Creek): Wednesdays only, serving Cove Creek, Vilas, and Sugar Grove.",
+        "es": "Horarios de Servicio Rural de Mañana y Tarde. Las horas varían según la ubicación de recogida y la cantidad de pasajeros. Días de recogida POA desde L.E. Harrill (Boone): Lun y Mié a Boone/Foscoe/Meat Camp/Todd; Mar y Vie a Boone/Deep Gap/Blowing Rock. Recogidas POA desde Western Watauga Community Center (Cove Creek): solo los miércoles, sirviendo Cove Creek, Vilas y Sugar Grove.",
+        "it": "Orari del Servizio Rurale mattutino e pomeridiano. Gli orari variano in base al luogo di ritiro e al numero di passeggeri. Giorni di ritiro POA da L.E. Harrill (Boone): Lun e Mer verso Boone/Foscoe/Meat Camp/Todd; Mar e Ven verso Boone/Deep Gap/Blowing Rock. Ritiri POA dal Western Watauga Community Center (Cove Creek): solo mercoledì, per Cove Creek, Vilas e Sugar Grove."
+      },
+      "fare": {
+        "en": "Free for POA- and DSS-qualifying riders. For general rural riders, see the current fare chart — contact dispatch for details.",
+        "es": "Gratis para pasajeros que califican por POA o DSS. Para pasajeros rurales generales, consulte la tarifa vigente — comuníquese con dispatch para más detalles.",
+        "it": "Gratuito per chi ha diritto tramite POA o DSS. Per gli altri passeggeri rurali, consulta la tariffa in vigore — contatta dispatch per i dettagli."
+      },
+      "serviceArea": {
+        "en": "Watauga County outside the Town of Boone limits. Connects to the Express and Red fixed-route buses at the Walmart stop.",
+        "es": "Condado de Watauga fuera de los límites del pueblo de Boone. Se conecta con los autobuses de ruta fija Express y Red en la parada de Walmart.",
+        "it": "Contea di Watauga fuori dai confini del Town of Boone. Collega agli autobus di linea Express e Red alla fermata Walmart."
+      },
+      "notes": [
+        {
+          "en": "Adults 60+ can register for free POA rides — L.E. Harrill Senior Center (Boone area): 828-265-8090.",
+          "es": "Los adultos de 60+ pueden registrarse para viajes gratuitos de POA — L.E. Harrill Senior Center (área de Boone): 828-265-8090.",
+          "it": "Gli adulti 60+ possono registrarsi per corse POA gratuite — L.E. Harrill Senior Center (area Boone): 828-265-8090."
+        },
+        {
+          "en": "POA registration for the Cove Creek area: Western Watauga Community Center at 828-297-5195.",
+          "es": "Registro de POA para el área de Cove Creek: Western Watauga Community Center al 828-297-5195.",
+          "it": "Registrazione POA per l'area Cove Creek: Western Watauga Community Center al 828-297-5195."
+        },
+        {
+          "en": "DSS Elderly and Disabled Transportation Services: call DSS at 828-265-8100.",
+          "es": "Servicios de Transporte para Personas Mayores y con Discapacidad de DSS: llame a DSS al 828-265-8100.",
+          "it": "Servizi di trasporto DSS per anziani e persone con disabilità: chiama DSS al 828-265-8100."
+        },
+        {
+          "en": "POA rides can include pickup at home, POA center drop-off, medical appointments, errands (pharmacy, bank), and after-lunch grocery trips.",
+          "es": "Los viajes POA pueden incluir recogida en casa, dejada en el centro POA, citas médicas, mandados (farmacia, banco) y compras de supermercado después del almuerzo.",
+          "it": "Le corse POA possono includere ritiro a casa, accompagnamento al centro POA, appuntamenti medici, commissioni (farmacia, banca) e spesa al supermercato dopo pranzo."
+        }
+      ],
+      "cta": {
+        "type": "phone",
+        "label": {
+          "en": "Book a ride",
+          "es": "Reservar viaje",
+          "it": "Prenota una corsa"
+        },
+        "value": "828-297-1300"
+      },
+      "links": [
+        {
+          "label": {
+            "en": "Rural Services details",
+            "es": "Detalles de Servicios Rurales",
+            "it": "Dettagli Servizi Rurali"
+          },
+          "url": "https://www.appalcart.com/rural-services"
+        }
+      ]
+    },
+    {
+      "id": "regional-travel",
+      "icon": "route",
+      "title": {
+        "en": "Regional Travel",
+        "es": "Viajes Regionales",
+        "it": "Viaggi Regionali"
+      },
+      "subtitle": {
+        "en": "Connections beyond the High Country via Sunway Charters",
+        "es": "Conexiones más allá del High Country con Sunway Charters",
+        "it": "Collegamenti oltre l'High Country con Sunway Charters"
+      },
+      "description": {
+        "en": "AppalCART does not operate regional travel itself. For trips beyond the High Country, riders can use Sunway Charters, a third-party operator that runs coach service between Boone and major destinations in central North Carolina.",
+        "es": "AppalCART no opera viajes regionales directamente. Para viajes más allá del High Country, los pasajeros pueden usar Sunway Charters, un operador externo que ofrece servicio de autobús entre Boone y los principales destinos del centro de Carolina del Norte.",
+        "it": "AppalCART non gestisce direttamente i viaggi regionali. Per spostamenti oltre l'High Country, i passeggeri possono utilizzare Sunway Charters, un operatore esterno che collega Boone ai principali centri della Carolina del Nord centrale."
+      },
+      "audience": {
+        "en": "Anyone traveling from Boone to destinations beyond Watauga County.",
+        "es": "Cualquier persona que viaje desde Boone a destinos fuera del condado de Watauga.",
+        "it": "Chiunque viaggi da Boone verso destinazioni oltre la contea di Watauga."
+      },
+      "steps": [
+        {
+          "en": "Visit the Sunway Charters website.",
+          "es": "Visite el sitio web de Sunway Charters.",
+          "it": "Visita il sito di Sunway Charters."
+        },
+        {
+          "en": "Pick your route — Boone to Charlotte or Boone to Greensboro.",
+          "es": "Elija su ruta — Boone a Charlotte o Boone a Greensboro.",
+          "it": "Scegli il percorso — Boone–Charlotte oppure Boone–Greensboro."
+        },
+        {
+          "en": "Buy your ticket online before the trip.",
+          "es": "Compre su boleto en línea antes del viaje.",
+          "it": "Acquista il biglietto online prima del viaggio."
+        }
+      ],
+      "hours": {
+        "en": "Set by Sunway Charters — see their website for current schedules.",
+        "es": "Definidos por Sunway Charters — consulte su sitio web para horarios actualizados.",
+        "it": "Definiti da Sunway Charters — consulta il loro sito per gli orari aggiornati."
+      },
+      "fare": {
+        "en": "Set by Sunway Charters — see their website for pricing.",
+        "es": "Definida por Sunway Charters — consulte su sitio web para los precios.",
+        "it": "Definita da Sunway Charters — consulta il loro sito per i prezzi."
+      },
+      "serviceArea": {
+        "en": "Regional connections to Wilkesboro, Winston-Salem, Greensboro, Lenoir, Gastonia, and Charlotte.",
+        "es": "Conexiones regionales a Wilkesboro, Winston-Salem, Greensboro, Lenoir, Gastonia y Charlotte.",
+        "it": "Collegamenti regionali a Wilkesboro, Winston-Salem, Greensboro, Lenoir, Gastonia e Charlotte."
+      },
+      "notes": [
+        {
+          "en": "AppalCART is not affiliated with Sunway Charters. This information is provided as one travel option.",
+          "es": "AppalCART no está afiliado con Sunway Charters. Esta información se ofrece como una opción de viaje.",
+          "it": "AppalCART non è affiliata con Sunway Charters. Le informazioni sono fornite come una delle opzioni di viaggio disponibili."
+        },
+        {
+          "en": "Two main routes operate: Boone ↔ Charlotte and Boone ↔ Greensboro.",
+          "es": "Operan dos rutas principales: Boone ↔ Charlotte y Boone ↔ Greensboro.",
+          "it": "Sono attive due linee principali: Boone ↔ Charlotte e Boone ↔ Greensboro."
+        }
+      ],
+      "cta": {
+        "type": "url",
+        "label": {
+          "en": "Open Sunway Charters",
+          "es": "Abrir Sunway Charters",
+          "it": "Apri Sunway Charters"
+        },
+        "value": "https://sunwaycharters.com/bus-tickets/"
+      },
+      "links": []
+    }
+  ],
+  "appLinks": {
+    "ios": "https://apps.apple.com/app/id000000000",
+    "android": "https://play.google.com/store/apps/details?id=com.transitkit.appalcart"
+  }
 }

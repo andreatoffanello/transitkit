@@ -15,7 +15,7 @@ export default defineNuxtConfig({
     },
   },
 
-  css: ['~/assets/css/main.css'],
+  css: ['~/assets/css/main.css', 'maplibre-gl/dist/maplibre-gl.css'],
 
   runtimeConfig: {
     public: {

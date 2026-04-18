@@ -1,4 +1,9 @@
 // ---- Operator Config ----
+export interface AppLinks {
+  ios?: string
+  android?: string
+}
+
 export interface OperatorConfig {
   id: string
   name: string
@@ -12,6 +17,7 @@ export interface OperatorConfig {
   store: StoreConfig
   map: MapConfig
   features: FeaturesConfig
+  appLinks?: AppLinks
   contact?: ContactConfig
   fares?: FareInfo
   pointsOfSale?: PointOfSale[]

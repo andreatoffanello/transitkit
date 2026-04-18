@@ -15,7 +15,7 @@
       <!-- Back navigation -->
       <div v-if="!pending && stop" class="px-2 pt-2">
         <NuxtLink
-          :to="fromLine ? `/lines/${fromLine.id}?stop=${stopId}` : '/'"
+          :to="fromLine ? `/lines/${fromLine.id}` : '/'"
           class="inline-flex items-center gap-1.5 text-sm font-medium px-2 py-1.5 rounded-lg transition-opacity active:opacity-60"
           style="color: var(--color-primary)"
         >

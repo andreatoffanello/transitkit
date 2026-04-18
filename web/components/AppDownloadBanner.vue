@@ -61,7 +61,7 @@ const visible = ref(false)
 
 const label = computed(() => {
   const name = props.operatorName
-  return name ? `Scarica ${name}` : 'Scarica app'
+  return 'Scarica app'
 })
 
 onMounted(() => {

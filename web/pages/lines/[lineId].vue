@@ -8,7 +8,7 @@
       <template #action>
         <button
           type="button"
-          :aria-label="s.shareStop"
+          :aria-label="s.share"
           class="w-9 h-9 rounded-xl flex items-center justify-center transition-opacity active:opacity-70"
           style="color: var(--text-secondary)"
           @click="canShare ? shareLine() : copyLink()"

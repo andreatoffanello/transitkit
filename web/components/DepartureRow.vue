@@ -78,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { Bus, TramFront, Train, Ship } from 'lucide-vue-next'
+import { BusFront, TramFront, Train, Ship } from 'lucide-vue-next'
 import type { Departure } from '~/types'
 import { getStrings } from '~/utils/strings'
 import { normalizeHex } from '~/utils/color'
@@ -100,7 +100,7 @@ const transitIcon = computed(() => {
     case 'rail':
     case 'monorail': return Train
     case 'ferry': return Ship
-    default: return Bus
+    default: return BusFront
   }
 })
 

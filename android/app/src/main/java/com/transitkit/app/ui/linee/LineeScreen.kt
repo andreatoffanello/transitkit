@@ -447,7 +447,8 @@ private fun RouteListItem(
     ) {
         com.transitkit.app.ui.components.LineBadge(
             route = route,
-            size = com.transitkit.app.ui.components.LineBadgeSize.Medium,
+            // iOS LinesListView parity: route rows are Large.
+            size = com.transitkit.app.ui.components.LineBadgeSize.Large,
             showTransitIcon = true,
         )
 

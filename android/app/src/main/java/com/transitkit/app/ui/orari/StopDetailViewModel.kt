@@ -52,6 +52,14 @@ class StopDetailViewModel @Inject constructor(
         .map { it[stopId].orEmpty() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /** Resolved human-readable stop name from the schedule store. Available
+     *  once the schedule loads; null until then. Used by the detail top bar
+     *  so deep links that only carry the stopId still render a nice title
+     *  instead of the raw "appalcart_asu_college_st_station" slug. */
+    val resolvedStopName: StateFlow<String?> = scheduleRepository.stops
+        .map { stops -> stops.firstOrNull { it.id == stopId }?.name }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
     private val _loadState = MutableStateFlow<DeparturesState>(DeparturesState.Loading)
     private val _rawDepartures = MutableStateFlow<List<ResolvedDeparture>>(emptyList())
     private val _allDepartures = MutableStateFlow<List<ResolvedDeparture>>(emptyList())

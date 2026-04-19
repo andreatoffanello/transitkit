@@ -1023,7 +1023,8 @@ private fun DepartureRow(
             colorHex = departure.routeColor,
             textColorHex = departure.routeTextColor,
             transitType = departure.transitType,
-            size = com.transitkit.app.ui.components.LineBadgeSize.Small,
+            // iOS parity: departure rows use Large (primary context).
+            size = com.transitkit.app.ui.components.LineBadgeSize.Large,
             showTransitIcon = true,
         )
         Spacer(Modifier.width(8.dp))

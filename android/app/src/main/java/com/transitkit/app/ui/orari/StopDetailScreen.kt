@@ -162,8 +162,14 @@ fun StopDetailScreen(
         topBar = {
             TopAppBar(
                 title = {
+                    // Prefer the resolved station name from the schedule store.
+                    // Falls back to the caller-provided name, then to stopId —
+                    // avoids "appalcart_asu_…" raw IDs showing in the bar when
+                    // the caller forgot to pass a display name (e.g. deep
+                    // links that only carry the id).
+                    val resolvedName = viewModel.resolvedStopName.collectAsStateWithLifecycle().value
                     Text(
-                        text = stopName,
+                        text = resolvedName ?: stopName,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
@@ -1343,7 +1349,8 @@ private fun LineBadgeRow(routes: List<ResolvedDeparture>, modifier: Modifier = M
                 name = route.routeName.take(6),
                 colorHex = route.routeColor,
                 textColorHex = route.routeTextColor,
-                size = com.transitkit.app.ui.components.LineBadgeSize.Small,
+                // iOS parity: stop-detail coincidences use Medium (not Small).
+                size = com.transitkit.app.ui.components.LineBadgeSize.Medium,
             )
         }
         if (uniqueRoutes.size > 8) {

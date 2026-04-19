@@ -93,7 +93,8 @@ fun TripDetailScreen(
                             com.transitkit.app.ui.components.LineBadge(
                                 name = viewModel.routeName,
                                 colorHex = viewModel.routeColor.takeIf { it.isNotBlank() },
-                                size = com.transitkit.app.ui.components.LineBadgeSize.Medium,
+                                // iOS TripDetailView parity: header badge is Large.
+                                size = com.transitkit.app.ui.components.LineBadgeSize.Large,
                             )
                         } else {
                             Box(

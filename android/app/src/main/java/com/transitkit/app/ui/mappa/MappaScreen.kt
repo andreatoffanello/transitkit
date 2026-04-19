@@ -1127,13 +1127,14 @@ private fun VehiclePreviewContent(
             if (route != null) {
                 com.transitkit.app.ui.components.LineBadge(
                     route = route,
-                    size = com.transitkit.app.ui.components.LineBadgeSize.Large,
+                    // iOS VehicleDetailSheet parity: header badge is Medium.
+                    size = com.transitkit.app.ui.components.LineBadgeSize.Medium,
                 )
             } else {
                 com.transitkit.app.ui.components.LineBadge(
                     name = stringResource(R.string.vehicle_label_default),
                     colorHex = null,
-                    size = com.transitkit.app.ui.components.LineBadgeSize.Large,
+                    size = com.transitkit.app.ui.components.LineBadgeSize.Medium,
                 )
             }
             Text(

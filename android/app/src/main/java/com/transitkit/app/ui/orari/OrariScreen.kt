@@ -579,7 +579,8 @@ private fun StaggeredStopCard(
                         com.transitkit.app.ui.components.LineBadge(
                             name = routes[i],
                             colorHex = routeColorHexes.getOrElse(i) { "" },
-                            size = com.transitkit.app.ui.components.LineBadgeSize.Small,
+                            // iOS StopCard parity: line chips on a stop card are Medium.
+                            size = com.transitkit.app.ui.components.LineBadgeSize.Medium,
                         )
                     }
                     if (stop.routeNames.size > 6) {
@@ -916,7 +917,8 @@ private fun RouteListItem(
     ) {
         com.transitkit.app.ui.components.LineBadge(
             route = route,
-            size = com.transitkit.app.ui.components.LineBadgeSize.Medium,
+            // iOS LinesListView parity: route rows are Large.
+            size = com.transitkit.app.ui.components.LineBadgeSize.Large,
             showTransitIcon = true,
         )
 

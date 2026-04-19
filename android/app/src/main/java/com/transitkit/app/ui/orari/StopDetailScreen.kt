@@ -787,12 +787,12 @@ private fun DepartureRow(departure: Departure, isNext: Boolean = false, operator
                     vertical = if (isNext) 14.dp else 10.dp,
                 ),
         ) {
-            // Line number chip
-            LineChip(
-                shortName = departure.routeShortName,
-                color = departure.routeColor ?: "#666666",
-                textColor = departure.routeTextColor ?: "#FFFFFF",
-                transitType = departure.transitType,
+            // Line badge — design-system component (iOS DepartureRow parity).
+            com.transitkit.app.ui.components.LineBadge(
+                name = departure.routeShortName,
+                colorHex = departure.routeColor,
+                textColorHex = departure.routeTextColor,
+                size = com.transitkit.app.ui.components.LineBadgeSize.Large,
             )
 
             Spacer(Modifier.width(12.dp))
@@ -888,44 +888,8 @@ private fun DepartureRow(departure: Departure, isNext: Boolean = false, operator
     }
 }
 
-// ---------------------------------------------------------------------------
-// Line chip
-// ---------------------------------------------------------------------------
-
-@Composable
-private fun LineChip(shortName: String, color: String, textColor: String, transitType: Int = 3) {
-    val bg = if (color.isNotBlank())
-        runCatching { color.toColor() }.getOrElse { TransitTheme.colors.accent }
-    else TransitTheme.colors.accent
-    val fg = if (textColor.isNotBlank())
-        runCatching { textColor.toColor() }.getOrElse { Color.White }
-    else Color.White
-
-    Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(4.dp))
-            .background(bg)
-            .padding(horizontal = 8.dp, vertical = 3.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Icon(
-            painter = painterResource(transitTypeIcon(transitType)),
-            contentDescription = null,
-            tint = fg,
-            modifier = Modifier.size(12.dp),
-        )
-        Text(
-            text = shortName,
-            style = MaterialTheme.typography.labelMedium.copy(
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
-            ),
-            color = fg,
-            maxLines = 1,
-        )
-    }
-}
+// Removed: private `LineChip` composable. All line badges now go through
+// the design-system `com.transitkit.app.ui.components.LineBadge`.
 
 
 private fun transitTypeIcon(type: Int): Int = when (type) {

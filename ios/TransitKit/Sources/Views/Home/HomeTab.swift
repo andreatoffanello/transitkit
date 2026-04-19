@@ -375,8 +375,9 @@ struct HomeTab: View {
 
     private func stopCard(_ stop: ResolvedStop, showLiveBadge: Bool, distanceMeters: Double? = nil) -> some View {
         let departures = store.upcomingDepartures(forStopId: stop.id, limit: 2)
-        let transitTypeIcon: Image = stop.transitTypes.first.map { $0.icon.image }
-            ?? LucideIcon.busFront.image
+        // A stop is represented by a signpost icon regardless of transit type —
+        // the visual metaphor is "the sign at the corner", not the vehicle.
+        let transitTypeIcon: Image = stopPinIcon(transitTypes: stop.transitTypes).image
 
         return VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {

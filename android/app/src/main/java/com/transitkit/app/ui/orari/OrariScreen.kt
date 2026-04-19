@@ -543,7 +543,7 @@ private fun StaggeredStopCard(
             .padding(horizontal = 14.dp, vertical = 14.dp)
             .semantics { contentDescription = "stop_row_${stop.id}" },
     ) {
-        // Transit type icon chip
+        // Stop leading icon — signpost (or mode icon for rail/ferry-only stops).
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -552,7 +552,7 @@ private fun StaggeredStopCard(
                 .background(colors.accent.copy(alpha = 0.10f)),
         ) {
             Icon(
-                painter = painterResource(transitTypeIcon(stop.transitTypes)),
+                painter = painterResource(com.transitkit.app.ui.components.stopIcon(stop.transitTypes)),
                 contentDescription = null,
                 tint = colors.accent,
                 modifier = Modifier.size(18.dp),

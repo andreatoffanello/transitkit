@@ -463,7 +463,8 @@ private fun StopMarkerDetail(accentColor: Color, transitType: Int = 3) {
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            painter = painterResource(transitTypeIcon(transitType)),
+            // Design system: a stop on a map is a signpost, not a vehicle.
+            painter = painterResource(com.transitkit.app.ui.components.stopIcon(listOf(transitType))),
             contentDescription = null,
             tint = Color.White,
             modifier = Modifier.size(16.dp),

@@ -63,19 +63,13 @@ struct FavoritesListView: View {
     private func favoriteRow(_ stop: ResolvedStop) -> some View {
         GlassCard(cornerRadius: 14) {
             HStack(spacing: 12) {
-                // Transit type icon
+                // Stop leading icon — signpost (or mode icon for rail/ferry stops).
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
                         .fill(AppTheme.accent.opacity(0.12))
-                    if let firstType = stop.transitTypes.first {
-                        firstType.icon.image
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(AppTheme.accent)
-                    } else {
-                        LucideIcon.bus.image
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(AppTheme.accent)
-                    }
+                    stopPinIcon(transitTypes: stop.transitTypes).image
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(AppTheme.accent)
                 }
                 .frame(width: 40, height: 40)
 

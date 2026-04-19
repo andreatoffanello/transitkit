@@ -889,13 +889,7 @@ fun FavoriteStopCard(
                     modifier = Modifier.weight(1f),
                 )
                 Icon(
-                    painter = painterResource(when (stop.transitTypes.firstOrNull()) {
-                        0 -> LucideIcons.Train
-                        1 -> LucideIcons.Train
-                        2 -> LucideIcons.Train
-                        4 -> LucideIcons.Ship
-                        else -> LucideIcons.BusFront
-                    }),
+                    painter = painterResource(com.transitkit.app.ui.components.stopIcon(stop.transitTypes)),
                     contentDescription = null,
                     tint = TransitTheme.colors.accent,
                     modifier = Modifier.size(16.dp),
@@ -971,13 +965,7 @@ fun NearbyStopCard(
                     Spacer(Modifier.width(8.dp))
                 }
                 Icon(
-                    painter = painterResource(when (stop.transitTypes.firstOrNull()) {
-                        0 -> LucideIcons.Train
-                        1 -> LucideIcons.Train
-                        2 -> LucideIcons.Train
-                        4 -> LucideIcons.Ship
-                        else -> LucideIcons.BusFront
-                    }),
+                    painter = painterResource(com.transitkit.app.ui.components.stopIcon(stop.transitTypes)),
                     contentDescription = null,
                     tint = TransitTheme.colors.accent,
                     modifier = Modifier.size(16.dp),

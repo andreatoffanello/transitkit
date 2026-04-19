@@ -579,8 +579,9 @@ private fun StaggeredStopCard(
                         com.transitkit.app.ui.components.LineBadge(
                             name = routes[i],
                             colorHex = routeColorHexes.getOrElse(i) { "" },
-                            // iOS StopCard parity: line chips on a stop card are Medium.
-                            size = com.transitkit.app.ui.components.LineBadgeSize.Medium,
+                            // Stop-list rows use Small — dense list, badge is a
+                            // secondary glyph here (not the primary identity).
+                            size = com.transitkit.app.ui.components.LineBadgeSize.Small,
                         )
                     }
                     if (stop.routeNames.size > 6) {

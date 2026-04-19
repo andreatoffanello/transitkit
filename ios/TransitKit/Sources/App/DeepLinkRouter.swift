@@ -28,13 +28,19 @@ final class DeepLinkRouter {
     var pendingUrl: URL? = nil
     /// Stop to show as preview card on the Mappa tab (consumed by MappaTab).
     var pendingMapPreviewStop: ResolvedStop? = nil
+    /// Bare request to switch to the Mappa tab (no pre-selected stop/line).
+    /// Uses a UUID so repeated requests from the same view trigger observers.
+    var pendingMapOpen: UUID? = nil
+    /// Vehicle id to show as preview card on the Mappa tab. Consumed by MappaTab.
+    var pendingMapPreviewVehicleId: String? = nil
 }
 
 // MARK: - Trip Target
 
 /// Bundles the two values TripDetailView needs so they can be pushed
 /// as a single NavigationPath entry.
-struct TripTarget: Hashable {
+struct TripTarget: Hashable, Identifiable {
+    var id: String { departure.routeId + "_" + (departure.tripId ?? "") + "_" + fromStop.id }
     let departure: Departure
     let fromStop: ResolvedStop
 }

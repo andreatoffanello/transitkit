@@ -3,13 +3,18 @@ import SwiftUI
 // MARK: - Stop Annotation View
 
 /// Custom map annotation for a transit stop.
-/// Appearance:
-/// - **far**: compact colored dot (anchor .center)
-/// - **medium/close**: rounded-square pin + downward triangle connector (anchor .bottom)
-///   The triangle tip aligns exactly with the stop coordinate.
-///   Label only appears when `isSelected == true` (on tap).
+/// Appearance depends on `tier`:
+/// - **.city**: hidden (clusters take over — handled by MappaTab).
+/// - **.neighborhood**: compact +-square marker (anchor .center). Route color
+///   if a route is selected, else stop dominant transit-type color. Thin white
+///   outer stroke for legibility. A central white cross (`+`) identifies it as
+///   a transit marker (vs. a POI).
+/// - **.street**: rounded-square pin with transit-type icon + downward triangle
+///   connector (anchor .bottom). Triangle tip aligns with stop coordinate.
+///   Name label appears when `isSelected == true` (on tap).
 struct StopAnnotationView: View {
     let stop: ResolvedStop
+    let tier: MapZoomTier
     let zoomLevel: MapZoomLevel
     let isSelected: Bool
     /// When set (route selected on map), overrides the default transit-type color.
@@ -24,89 +29,89 @@ struct StopAnnotationView: View {
         return .bus
     }
 
-    private var pinColor: Color {
+    /// GTFS-preserving background color: route color when overlayed, else transit-type color.
+    private var pinColorHex: String {
         if let hex = routeColor {
-            return Color(hex: hex.hasPrefix("#") ? hex : "#\(hex)")
+            return hex.hasPrefix("#") ? hex : "#\(hex)"
         }
-        return Color(hex: colorForTransitType(dominantType))
+        return colorForTransitType(dominantType)
     }
 
-    private var iconSize: CGFloat {
-        switch zoomLevel {
-        case .far: 10
-        case .medium: 27
-        case .close: 32
-        }
-    }
+    private var pinColor: Color { Color(hex: pinColorHex) }
 
-    private var symbolSize: CGFloat {
-        switch zoomLevel {
-        case .far: 0
-        case .medium: 11
-        case .close: 13
-        }
+    /// WCAG-contrasting foreground color for the `+` glyph on the +-square marker.
+    private var crossColor: Color {
+        Color(hex: contrastingTextColor(for: pinColorHex))
     }
 
     var body: some View {
-        if zoomLevel == .far {
-            // Compact dot — anchor .center in MappaTab
-            ZStack {
-                Color.clear
-                Circle()
-                    .fill(pinColor)
-                    .frame(width: 10, height: 10)
-                    .overlay(Circle().stroke(.white, lineWidth: 1))
-            }
-            .frame(width: 44, height: 44)
-            .contentShape(Rectangle())
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(stop.name), \(dominantType.displayName)")
-            .accessibilityIdentifier("map_stop_\(stop.id)")
-        } else {
-            // Pin: rounded-square body (visually distinct from circular VehicleAnnotationView)
-            // + downward triangle connector whose tip aligns with anchor .bottom (= coordinate).
+        switch tier {
+        case .city:
+            // Ultra-compact square (movete nasconde a city; noi mostriamo compatto).
+            RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+                .fill(pinColor)
+                .frame(width: 7, height: 7)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+                        .stroke(Color.white, lineWidth: 1)
+                )
+                .frame(width: 20, height: 20)
+                .contentShape(Rectangle())
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(stop.name), \(dominantType.displayName)")
+                .accessibilityIdentifier("map_stop_\(stop.id)")
+
+        case .neighborhood:
+            // Copia movete: 11×11, stroke 1.5pt bianca, hit-target 24×24.
+            RoundedRectangle(cornerRadius: 2, style: .continuous)
+                .fill(pinColor)
+                .frame(width: 11, height: 11)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 2, style: .continuous)
+                        .stroke(Color.white, lineWidth: 1.5)
+                )
+                .frame(width: 24, height: 24)
+                .contentShape(Rectangle())
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(stop.name), \(dominantType.displayName)")
+                .accessibilityIdentifier("map_stop_\(stop.id)")
+
+        case .street:
+            // Copia movete: box 28×28 (36×36 selezionata), radius 7/10, icon 12/16,
+            // stroke bianca 2pt, triangle 8×5 bianco. No name-label (movete parity).
+            let boxSize: CGFloat = isSelected ? 36 : 28
+            let cornerRadius: CGFloat = isSelected ? 10 : 7
+            let iconSize: CGFloat = isSelected ? 16 : 12
+
             VStack(spacing: 0) {
-                // Name label — only when selected, animates in
-                if isSelected {
-                    Text(stop.name)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(Color(.label))
-                        .lineLimit(1)
-                        .fixedSize()
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(Color(.systemBackground).opacity(0.92))
-                        .clipShape(RoundedRectangle(cornerRadius: 5))
-                        .shadow(color: .black.opacity(0.1), radius: 2, y: 1)
-                        .transition(.scale(scale: 0.85, anchor: .bottom).combined(with: .opacity))
-                        .padding(.bottom, 4)
-                }
-
-                // Pin body + triangle — scaled and shadowed as a single unit.
-                // scaleEffect(anchor: .bottom) keeps the triangle tip (= coordinate) fixed.
-                // Shadow applied after composition to avoid rasterisation clipping.
-                VStack(spacing: 0) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: iconSize * 0.3)
-                            .fill(.white)
-                            .frame(width: iconSize, height: iconSize)
-                        RoundedRectangle(cornerRadius: (iconSize - 3) * 0.28)
-                            .fill(pinColor)
-                            .frame(width: iconSize - 3, height: iconSize - 3)
-                        dominantType.icon.sized(symbolSize)
-                            .foregroundStyle(.white)
-                    }
-
-                    // Triangle connector — tip is at anchor .bottom = exact coordinate
-                    DownwardTriangle()
-                        .fill(.white)
-                        .frame(width: 8, height: 5)
-                }
-                .shadow(color: .black.opacity(0.25), radius: 3, y: 2)
-                .scaleEffect(isSelected ? 1.15 : 1.0, anchor: .bottom)
-                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(pinColor)
+                    .frame(width: boxSize, height: boxSize)
+                    .overlay(
+                        Group {
+                            if dominantType == .metro {
+                                Text("M")
+                                    .font(.system(size: iconSize + 2, weight: .bold))
+                                    .foregroundStyle(Color.white)
+                            } else {
+                                stopPinIcon(transitTypes: stop.transitTypes).sized(iconSize)
+                                    .foregroundStyle(Color.white)
+                            }
+                        }
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .stroke(Color.white, lineWidth: 2)
+                    )
+                DownwardTriangle()
+                    .fill(Color.white)
+                    .frame(width: 8, height: 5)
             }
-            .frame(minWidth: 44)
+            .animation(.spring(duration: 0.25), value: isSelected)
+            // Ancoraggio al bottom dell'host 60×60: il triangle tip coincide col
+            // bordo inferiore del frame. TransitMapView usa centerOffset = -30
+            // per mappare quel bordo al coordinate esatto della fermata.
+            .frame(width: 60, height: 60, alignment: .bottom)
             .contentShape(Rectangle())
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("\(stop.name), \(dominantType.displayName)")
@@ -188,7 +193,7 @@ struct StopPreviewCard: View {
                         .frame(width: 28, height: 28)
                         .background(Color(.secondarySystemFill), in: Circle())
                 }
-                .accessibilityLabel("Chiudi preview fermata")
+                .accessibilityLabel(Text(String(localized: "a11y_close_stop_preview")))
                 .accessibilityIdentifier("btn_stop_preview_dismiss")
             }
             .padding(.horizontal, 14)
@@ -233,7 +238,7 @@ struct StopPreviewCard: View {
 
             // CTA
             Button(action: onOpenStop) {
-                Text("Apri fermata")
+                Text(String(localized: "map_open_stop"))
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(AppTheme.accent)
                     .frame(maxWidth: .infinity)
@@ -270,6 +275,48 @@ enum MapZoomLevel: Hashable {
         default:       self = .far
         }
     }
+}
+
+// MARK: - Zoom Tier
+//
+// Three-tier classification used to drive marker rendering intent on the map:
+// city-scale overview, neighborhood mid-zoom, and street-level detail. Unlike
+// `MapZoomLevel` (which only sizes a single marker shape), the tier decides
+// *which* shape to use and which vehicle embellishments (halo, pin-badge) to
+// render.
+//
+// Thresholds mirror the Android MapTier cutoffs (zoom < 12 → city,
+// 12 ≤ zoom < 14 → neighborhood, zoom ≥ 14 → street) translated into
+// MKCoordinateRegion latitudeDelta:
+//   - latDelta >= 0.088        → .city          (zoom < 12, no stops)
+//   - 0.022 <= latDelta < 0.088 → .neighborhood (mid zoom, small squares)
+//   - latDelta < 0.022         → .street        (close zoom, full pins)
+enum MapZoomTier: Hashable {
+    case city
+    case neighborhood
+    case street
+
+    init(latitudeDelta: Double) {
+        switch latitudeDelta {
+        case ..<0.022: self = .street
+        case ..<0.088: self = .neighborhood
+        default:       self = .city
+        }
+    }
+}
+
+/// Stop pin icon: signpost (tab icon) for bus stops and mixed stops.
+/// Only exclusively non-bus stops (tram-only, rail-only, ferry-only, etc.)
+/// show the transit-type icon so the marker communicates the mode at a glance.
+func stopPinIcon(transitTypes: Set<TransitType>) -> LucideIcon {
+    let busTypes: Set<TransitType> = [.bus, .trolleybus]
+    let hasBus = !transitTypes.isDisjoint(with: busTypes) || transitTypes.isEmpty
+    if hasBus { return .signpost }
+    let priority: [TransitType] = [.ferry, .tram, .metro, .rail, .gondola, .funicular, .cable_tram, .monorail]
+    for type in priority {
+        if transitTypes.contains(type) { return type.icon }
+    }
+    return .signpost
 }
 
 // MARK: - Transit Type Color

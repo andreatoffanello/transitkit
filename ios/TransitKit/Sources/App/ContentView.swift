@@ -1,13 +1,18 @@
 import SwiftUI
 
-/// Root tab bar container. Five tabs: Home, Orari, Mappa, Info, Settings.
+/// Root tab bar container. Five tabs: Home, Orari, Linee, Mappa, Servizi.
+/// Settings is accessible as a sheet from Home.
 /// Each tab view manages its own NavigationStack internally.
 struct ContentView: View {
     let config: OperatorConfig
     @Environment(ScheduleStore.self) private var store
     @Environment(VehicleStore.self) private var vehicleStore
+    @Environment(AlertStore.self) private var alertStore
+    @Environment(FavoritesManager.self) private var favoritesManager
     @Environment(DeepLinkRouter.self) private var router
     @State private var selectedTab = 0
+    @State private var toastPresenter = AlertToastPresenter()
+    @State private var toastDetailAlert: GtfsRtAlert?
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -23,7 +28,7 @@ struct ContentView: View {
                 .tag(0)
                 .accessibilityIdentifier("tab_home")
 
-            // MARK: Tab 1 — Orari (Schedules)
+            // MARK: Tab 1 — Orari (Stops)
             OrariTab()
                 .tabItem {
                     Label {
@@ -35,7 +40,19 @@ struct ContentView: View {
                 .tag(1)
                 .accessibilityIdentifier("tab_schedules")
 
-            // MARK: Tab 2 — Mappa (Map)
+            // MARK: Tab 2 — Linee
+            LineeTab()
+                .tabItem {
+                    Label {
+                        Text(String(localized: "tab_lines"))
+                    } icon: {
+                        LucideIcon.route.image
+                    }
+                }
+                .tag(2)
+                .accessibilityIdentifier("tab_lines")
+
+            // MARK: Tab 3 — Mappa
             NavigationStack {
                 MappaTab(config: config)
             }
@@ -46,36 +63,24 @@ struct ContentView: View {
                     LucideIcon.map.image
                 }
             }
-            .tag(2)
+            .tag(3)
             .accessibilityIdentifier("tab_map")
 
-            // MARK: Tab 3 — Info
-            InfoTab()
+            // MARK: Tab 4 — Servizi
+            ServiziTab(config: config)
                 .tabItem {
                     Label {
-                        Text(String(localized: "tab_info"))
+                        Text(String(localized: "tab_services"))
                     } icon: {
                         LucideIcon.info.image
                     }
                 }
-                .tag(3)
-                .accessibilityIdentifier("tab_info")
-
-            // MARK: Tab 4 — Settings
-            SettingsTab()
-                .tabItem {
-                    Label {
-                        Text(String(localized: "tab_settings"))
-                    } icon: {
-                        LucideIcon.settings.image
-                    }
-                }
                 .tag(4)
-                .accessibilityIdentifier("tab_settings")
+                .accessibilityIdentifier("tab_services")
         }
         .environment(\.vehiclePositionsUrl, config.gtfsRt?.vehiclePositionsUrl)
         .onChange(of: router.pendingRoute) { _, route in
-            if route != nil { selectedTab = 1 }
+            if route != nil { selectedTab = 2 }
         }
         .onChange(of: router.pendingStop) { _, stop in
             if stop != nil { selectedTab = 1 }
@@ -84,10 +89,20 @@ struct ContentView: View {
             if trip != nil { selectedTab = 1 }
         }
         .onChange(of: router.pendingMapPreviewStop) { _, stop in
-            if stop != nil { selectedTab = 2 }
+            if stop != nil { selectedTab = 3 }
+        }
+        .onChange(of: router.pendingMapPreviewVehicleId) { _, vid in
+            if vid != nil { selectedTab = 3 }
+        }
+        .onChange(of: router.pendingMapOpen) { _, id in
+            if id != nil {
+                selectedTab = 3
+                router.pendingMapOpen = nil
+            }
         }
         .onAppear {
-            if router.pendingMapPreviewStop != nil { selectedTab = 2 }
+            if router.pendingMapPreviewStop != nil { selectedTab = 3 }
+            if router.pendingMapPreviewVehicleId != nil { selectedTab = 3 }
         }
         .toolbarBackground(.ultraThinMaterial, for: .tabBar)
         .modifier(TabBarVisibilityModifier())
@@ -96,14 +111,45 @@ struct ContentView: View {
         .onChange(of: selectedTab) { _, _ in
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
         }
+        .onChange(of: alertStore.activeAlerts.map(\.id)) { _, _ in
+            evaluateNewAlerts()
+        }
+        .overlay(alignment: .top) {
+            if let alert = toastPresenter.pendingAlert {
+                AlertToastView(
+                    alert: alert,
+                    onTap: {
+                        toastDetailAlert = alert
+                        toastPresenter.dismiss()
+                    },
+                    onDismiss: { toastPresenter.dismiss() }
+                )
+                .padding(.horizontal, 12)
+                .padding(.top, 8)
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .animation(.spring(response: 0.35, dampingFraction: 0.85), value: toastPresenter.pendingAlert?.id)
+            }
+        }
+        .sheet(item: $toastDetailAlert) { alert in
+            NavigationStack {
+                AlertDetailView(alert: alert)
+            }
+        }
+    }
+
+    /// On every alert feed refresh, enqueue a toast for the first newly-active
+    /// alert that touches a favorite stop. Dedup is handled by the presenter.
+    private func evaluateNewAlerts() {
+        let previouslyActive = alertStore.previouslyActiveIds
+        let favorites = Set(favoritesManager.favoriteStopIds)
+        guard !favorites.isEmpty else { return }
+        let newAlerts = alertStore.activeAlerts.filter { !previouslyActive.contains($0.id) }
+        toastPresenter.consider(alerts: newAlerts, favoriteStopIds: favorites)
     }
 }
 
 // MARK: - Tab Bar Glass Visibility (iOS 18+)
 
-/// Forces the tab bar background to always be visible.
-/// On iOS 18+ uses `toolbarBackgroundVisibility(.visible)`;
-/// on older versions the `.toolbarBackground(.ultraThinMaterial)` alone is sufficient.
 private struct TabBarVisibilityModifier: ViewModifier {
     func body(content: Content) -> some View {
         if #available(iOS 18.0, *) {
@@ -116,8 +162,6 @@ private struct TabBarVisibilityModifier: ViewModifier {
 
 // MARK: - Tab Bar Appearance
 
-/// Configures the native tab bar appearance with a subtle top separator.
-/// Selected item uses neutral .label color — accent is reserved for buttons/links only.
 private struct TabBarAppearanceModifier: ViewModifier {
     func body(content: Content) -> some View {
         content.onAppear {
@@ -125,7 +169,6 @@ private struct TabBarAppearanceModifier: ViewModifier {
             appearance.configureWithDefaultBackground()
             appearance.shadowColor = UIColor.separator
 
-            // Neutral chrome: selected item uses .label, inactive uses .secondaryLabel
             let item = UITabBarItemAppearance()
             item.selected.iconColor = .label
             item.selected.titleTextAttributes = [.foregroundColor: UIColor.label]
@@ -139,7 +182,6 @@ private struct TabBarAppearanceModifier: ViewModifier {
             UITabBar.appearance().standardAppearance = appearance
             UITabBar.appearance().tintColor = .label
 
-            // Nav bar back button and toolbar items use neutral color
             UINavigationBar.appearance().tintColor = .label
         }
     }

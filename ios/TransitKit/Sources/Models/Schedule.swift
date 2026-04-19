@@ -75,6 +75,7 @@ struct APIStop: Codable, Identifiable, Hashable {
     let lng: Double
     let platformCode: String?
     let dockLetter: String?
+    let gtfsStopIds: [String]?
     let departures: [APIDeparture]
 }
 
@@ -179,7 +180,7 @@ enum TransitType: String, Codable, CaseIterable {
 
     var icon: LucideIcon {
         switch self {
-        case .bus, .trolleybus:             .bus
+        case .bus, .trolleybus:             .busFront
         case .tram, .rail, .monorail:       .train
         case .metro:                        .train
         case .ferry:                        .ship

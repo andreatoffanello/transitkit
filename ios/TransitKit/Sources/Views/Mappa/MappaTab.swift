@@ -7,10 +7,14 @@ import MapKit
 ///
 /// Features:
 /// - Initial center and zoom from `OperatorConfig.map`
-/// - Stop annotations with transit type icons (clustered at far zoom)
-/// - Tap annotation to show bottom sheet with next departures
-/// - Optional route polyline overlay when a line is selected
-/// - User location button (when geolocation is enabled)
+/// - Stop annotations with transit type icons
+/// - Tap annotation to show floating preview card with next departures
+/// - Route polyline overlay when a line is selected
+/// - Live GTFS-RT vehicles with directional bearing
+/// - Search pill at top that opens the line picker sheet
+///
+/// No clustering (movete parity 2026-04-17): at `.city` tier the map shows nothing,
+/// at `.neighborhood` only +-square stop markers, at `.street` full pins + vehicles.
 struct MappaTab: View {
     let config: OperatorConfig
     @Environment(ScheduleStore.self) private var store
@@ -24,18 +28,11 @@ struct MappaTab: View {
     @State private var mapReady = false
     @State private var cameraTask: Task<Void, Never>?
 
-    /// Current map zoom level tracked from camera changes (higher = more zoomed in).
-    @State private var mapZoomLevel: Double = 10.0
-
-    /// Zoom threshold below which cluster mode activates (zoom < threshold → clusters).
-    private let clusterZoomThreshold: Double = 12.0
-
     // MARK: Rendered annotations (computed async off-main, never in body)
-    @State private var renderedClusters: [StopCluster] = []
     @State private var renderedStops: [ResolvedStop] = []
     private let maxIndividualAnnotations = 250
 
-    /// Background task for annotation filtering/clustering — cancelled on each camera/data change.
+    /// Background task for annotation filtering — cancelled on each camera/data change.
     @State private var annotationUpdateTask: Task<Void, Never>?
 
     // MARK: Route polyline cache
@@ -67,6 +64,8 @@ struct MappaTab: View {
         var id: String { vehicle.id }
     }
     @State private var selectedVehicle: VehicleSelection?
+    /// When non-nil, presents TripDetailView as a sheet (opened via the vehicle card).
+    @State private var tripSheetTarget: TripTarget?
 
     // MARK: Vehicle display
     /// Smoothly-animated vehicle list — updated with withAnimation on each feed refresh
@@ -100,153 +99,61 @@ struct MappaTab: View {
             // Full-bleed map — extends under status bar and lateral edges
             mapContent
 
-            // MARK: Compact controls — two independent ZStack layers so controls
-            // sit at vertical center-right and the line chip stays bottom-left.
+            // Search pill at top — centered horizontally, below status bar.
+            // Tap opens the line picker sheet. Not shown while a route is active
+            // (the active-line chip below takes over) nor in fullscreen mode.
+            if !isExpanded && selectedRoute == nil {
+                VStack {
+                    searchPill
+                        .padding(.top, 8)
+                    Spacer()
+                }
+            }
+
+            // Active-line chip (top-left) when a route is selected
+            if !isExpanded, let route = selectedRoute {
+                VStack {
+                    HStack {
+                        // Outer paddings reduced by 8pt to compensate for the
+                        // 8pt hit-slop added inside `activeRouteChip` — the
+                        // visible chip stays in the same screen position.
+                        activeRouteChip(route)
+                            .padding(.leading, 8)
+                            .padding(.top, 0)
+                        Spacer()
+                    }
+                    Spacer()
+                }
+            }
+
+            // MARK: Compact controls — centered vertically on right edge
             if !isExpanded {
-                // Controls — vertically centered on the right
                 HStack {
                     Spacer()
                     mapControls
-                }
-
-                // Line selector / active line chip — bottom-left
-                VStack {
-                    Spacer()
-                    HStack {
-                        if let route = selectedRoute {
-                            // Active line chip with X button
-                            Button {
-                                selectedRoute = nil
-                                selectedDirectionId = nil
-                                isFollowingVehicle = false
-                                routeSelectedByVehicle = false
-                            } label: {
-                                HStack(spacing: 8) {
-                                    LineBadge(route: route, size: .medium)
-                                    Text(route.longName ?? route.name)
-                                        .font(.caption.weight(.semibold))
-                                        .foregroundStyle(.primary)
-                                        .lineLimit(1)
-                                    if vehicleStore.liveCount(forRouteId: route.id) > 0 {
-                                        HStack(spacing: 3) {
-                                            Circle().fill(AppTheme.realtimeGreen).frame(width: 6, height: 6)
-                                            Text("\(vehicleStore.liveCount(forRouteId: route.id))")
-                                                .font(.caption2.weight(.semibold))
-                                                .foregroundStyle(.secondary)
-                                        }
-                                    }
-                                    Image(systemName: "xmark")
-                                        .font(.caption2.weight(.bold))
-                                        .foregroundStyle(.secondary)
-                                }
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(.regularMaterial)
-                                .clipShape(Capsule())
-                                .overlay(Capsule().stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
-                                .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
-                            }
-                            .buttonStyle(.plain)
-                        } else {
-                            // "Scegli linea" button
-                            Button {
-                                showLinePicker = true
-                            } label: {
-                                HStack(spacing: 6) {
-                                    LucideIcon.radio.sized(13)
-                                    Text("Linee")
-                                        .font(.caption.weight(.semibold))
-                                }
-                                .foregroundStyle(.primary)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(.regularMaterial)
-                                .clipShape(Capsule())
-                                .overlay(Capsule().stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
-                                .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                        Spacer()
-                    }
-                    .padding(.leading, 16)
-                    .padding(.bottom, 16)
                 }
             }
 
             // MARK: Expanded controls (right + close bottom-center)
             if isExpanded {
                 expandedControls
-                VStack {
-                    Spacer()
-                    HStack {
-                        if let route = selectedRoute {
-                            // Active line chip with X button
-                            Button {
-                                selectedRoute = nil
-                                selectedDirectionId = nil
-                                isFollowingVehicle = false
-                                routeSelectedByVehicle = false
-                            } label: {
-                                HStack(spacing: 8) {
-                                    LineBadge(route: route, size: .medium)
-                                    Text(route.longName ?? route.name)
-                                        .font(.caption.weight(.semibold))
-                                        .foregroundStyle(.primary)
-                                        .lineLimit(1)
-                                    if vehicleStore.liveCount(forRouteId: route.id) > 0 {
-                                        HStack(spacing: 3) {
-                                            Circle().fill(AppTheme.realtimeGreen).frame(width: 6, height: 6)
-                                            Text("\(vehicleStore.liveCount(forRouteId: route.id))")
-                                                .font(.caption2.weight(.semibold))
-                                                .foregroundStyle(.secondary)
-                                        }
-                                    }
-                                    Image(systemName: "xmark")
-                                        .font(.caption2.weight(.bold))
-                                        .foregroundStyle(.secondary)
-                                }
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(.regularMaterial)
-                                .clipShape(Capsule())
-                                .overlay(Capsule().stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
-                                .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
-                            }
-                            .buttonStyle(.plain)
-                        } else {
-                            // "Scegli linea" button
-                            Button {
-                                showLinePicker = true
-                            } label: {
-                                HStack(spacing: 6) {
-                                    LucideIcon.radio.sized(13)
-                                    Text("Linee")
-                                        .font(.caption.weight(.semibold))
-                                }
-                                .foregroundStyle(.primary)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(.regularMaterial)
-                                .clipShape(Capsule())
-                                .overlay(Capsule().stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
-                                .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                        Spacer()
-                    }
-                    .padding(.leading, 16)
-                    .padding(.bottom, 100)
-                }
             }
-            // MARK: Vehicle card overlay
+
+            // MARK: Vehicle card overlay — floating (margins + shadow)
             if let selection = selectedVehicle {
                 VStack {
                     Spacer()
                     VehicleDetailSheet(
                         vehicle: selection.vehicle,
                         route: selection.route,
+                        isFollowing: isFollowingVehicle,
+                        onToggleFollow: {
+                            isFollowingVehicle.toggle()
+                            if isFollowingVehicle { followSelectedVehicleIfNeeded() }
+                        },
+                        onOpenTrip: {
+                            tripSheetTarget = makeTripTarget(for: selection)
+                        },
                         onDismiss: {
                             isFollowingVehicle = false
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
@@ -267,7 +174,7 @@ struct MappaTab: View {
                 .ignoresSafeArea(edges: .bottom)
             }
 
-            // MARK: Stop preview card overlay
+            // MARK: Stop preview card overlay — floating
             if let stop = selectedStop, selectedVehicle == nil {
                 VStack {
                     Spacer()
@@ -318,6 +225,32 @@ struct MappaTab: View {
                 span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
             )
         }
+        .task(id: router.pendingMapPreviewVehicleId) {
+            guard let vid = router.pendingMapPreviewVehicleId else { return }
+            router.pendingMapPreviewVehicleId = nil
+            // Wait up to 3s for the vehicle feed to contain the requested id
+            // (covers the cold-start path where MappaTab mounts before the feed lands).
+            for _ in 0..<30 {
+                if vehicleStore.vehicles.contains(where: { $0.id == vid }) { break }
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+            guard let vehicle = vehicleStore.vehicles.first(where: { $0.id == vid }) else { return }
+            let resolvedRouteId = vehicle.routeId.isEmpty
+                ? (store.routeIdByTripId[vehicle.tripId] ?? "")
+                : vehicle.routeId
+            let route = store.route(forId: resolvedRouteId)
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                selectedStop = nil
+                selectedVehicle = VehicleSelection(vehicle: vehicle, route: route)
+            }
+            mapRegion = MKCoordinateRegion(
+                center: CLLocationCoordinate2D(
+                    latitude: Double(vehicle.latitude),
+                    longitude: Double(vehicle.longitude)
+                ),
+                span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
+            )
+        }
         .onChange(of: mapReady) { _, ready in
             guard ready else { return }
             updateAnnotations()
@@ -339,36 +272,143 @@ struct MappaTab: View {
         .onChange(of: vehicleStore.lastFetchedAt) { _, _ in
             refreshDisplayedVehicles()
             followSelectedVehicleIfNeeded()
+            refreshSelectedVehicle()
         }
         .accessibilityIdentifier("mappa_tab")
+        .sheet(item: $tripSheetTarget) { target in
+            NavigationStack {
+                TripDetailView(departure: target.departure, fromStop: target.fromStop)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button(String(localized: "action_chiudi")) {
+                                tripSheetTarget = nil
+                            }
+                        }
+                    }
+            }
+        }
+    }
+
+    // MARK: - Trip sheet helper
+
+    /// Builds a TripTarget from a selected vehicle, resolving the scheduled
+    /// departure + origin stop from the ScheduleStore. Falls back to a stub
+    /// Departure when exact schedule match isn't found so the sheet still
+    /// opens (the view gracefully handles unknown stop timings).
+    private func makeTripTarget(for selection: VehicleSelection) -> TripTarget? {
+        let tripId = selection.vehicle.tripId
+        let route = selection.route
+        // Try to match a scheduled departure by tripId — pick the first one.
+        let apiDep: APIDeparture? = store.scheduleResponse?.stops
+            .lazy
+            .flatMap(\.departures)
+            .first(where: { $0.tripId == tripId })
+        guard let apiDep else { return nil }
+        let dep = Departure(from: apiDep, route: route)
+        // Pick the current stop as origin when available; otherwise use the
+        // vehicle's nearest stop on the map or the first stop of any direction.
+        let currentStopId = selection.vehicle.currentStopId
+        let origin: ResolvedStop? = currentStopId.isEmpty
+            ? store.stops.first
+            : store.stop(forId: currentStopId)
+        guard let origin else { return nil }
+        return TripTarget(departure: dep, fromStop: origin)
+    }
+
+    // MARK: - Search Pill
+
+    private var searchPill: some View {
+        Button {
+            showLinePicker = true
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(.secondary)
+                Text(String(localized: "map_search_placeholder"))
+                    .font(.system(size: 15))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .frame(maxWidth: 360)
+            .background(.regularMaterial, in: Capsule())
+            .overlay(Capsule().stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
+            .shadow(color: .black.opacity(0.18), radius: 8, y: 3)
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, 24)
+        .accessibilityIdentifier("btn_map_search_pill")
+        .accessibilityLabel(Text(String(localized: "a11y_search_line_or_stop")))
+    }
+
+    // MARK: - Active Route Chip
+
+    private func activeRouteChip(_ route: APIRoute) -> some View {
+        Button {
+            selectedRoute = nil
+            selectedDirectionId = nil
+            isFollowingVehicle = false
+            routeSelectedByVehicle = false
+        } label: {
+            HStack(spacing: 8) {
+                LineBadge(route: route, size: .medium)
+                if vehicleStore.liveCount(forRouteId: route.id) > 0 {
+                    HStack(spacing: 3) {
+                        Circle().fill(AppTheme.realtimeGreen).frame(width: 6, height: 6)
+                        Text("\(vehicleStore.liveCount(forRouteId: route.id))")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Image(systemName: "xmark")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 18, height: 18)
+                    .background(Color.primary.opacity(0.08), in: Circle())
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(.regularMaterial, in: Capsule())
+            .overlay(Capsule().stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
+            .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
+            // Hit-slop: expand tappable surface around the chip without
+            // enlarging the visual pill. Guarantees a >=44x44pt target.
+            .padding(8)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("btn_map_clear_route")
+        .accessibilityLabel(Text(String(localized: "a11y_remove_selected_line")))
     }
 
     // MARK: - Map Content
 
-    // MARK: - Map Content (UIViewRepresentable wrapping MKMapView)
-    //
-    // Uses a native MKMapView via TransitMapView so we can set MKAnnotationView
-    // zPriority/displayPriority (not exposed on SwiftUI's Annotation). Vehicles
-    // are pinned to .max zPriority so they always render above stops and polylines.
+    /// Current zoom tier derived from the live region span. `.city` renders nothing
+    /// (clean high-zoom view — no clusters, no pins, no vehicles). `.neighborhood`
+    /// shows stop +-square markers. `.street` shows full pin stops + live vehicles.
+    private var currentTier: MapZoomTier {
+        MapZoomTier(latitudeDelta: mapRegion.span.latitudeDelta)
+    }
 
     private var mapContent: some View {
         TransitMapView(
             region: $mapRegion,
-            clusters: mapZoomLevel < clusterZoomThreshold ? renderedClusters : [],
-            stops: mapZoomLevel < clusterZoomThreshold ? [] : renderedStops,
+            stops: currentTier == .city ? [] : renderedStops,
             vehicles: displayedVehicles,
             polylines: cachedRoutePolylines,
             zoomLevel: zoomLevel,
+            tier: currentTier,
             selectedStopId: selectedStop?.id,
+            selectedVehicleId: selectedVehicle?.vehicle.id,
             selectedRouteColor: selectedRoute?.color,
             showsUserLocation: config.features.enableGeolocation,
             routeIdByTripId: store.routeIdByTripId,
             routeLookup: { store.route(forId: $0) },
             transitTypeForRoute: { route in
                 route.map { TransitType(gtfsRouteType: $0.transitType) } ?? .bus
-            },
-            onClusterTap: { cluster in
-                zoomToFit(stops: cluster.stops)
             },
             onStopTap: { stop in
                 isFollowingVehicle = false
@@ -420,8 +460,6 @@ struct MappaTab: View {
                     let newZoom = MapZoomLevel(latitudeDelta: region.span.latitudeDelta)
                     if newZoom != zoomLevel { zoomLevel = newZoom }
                     visibleRegion = region
-                    let span = region.span.latitudeDelta
-                    mapZoomLevel = log2(360.0 / max(span, 0.000001))
                     updateAnnotations()
                     refreshDisplayedVehicles()
                 }
@@ -499,7 +537,7 @@ struct MappaTab: View {
                     .overlay(Circle().stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
                     .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
             }
-            .accessibilityLabel("Espandi mappa")
+            .accessibilityLabel(Text(String(localized: "a11y_expand_map")))
             .accessibilityIdentifier("btn_map_expand")
         }
         .padding(.trailing, 16)
@@ -570,7 +608,7 @@ struct MappaTab: View {
                         .clipShape(Circle())
                         .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
                 }
-                .accessibilityLabel("Chiudi mappa")
+                .accessibilityLabel(Text(String(localized: "a11y_close_map")))
                 .accessibilityIdentifier("btn_map_collapse")
                 .padding(.bottom, 44)
             }
@@ -582,9 +620,7 @@ struct MappaTab: View {
     /// Schedules an async annotation update, cancelling any in-flight computation.
     ///
     /// Captures all required state on the main thread, then dispatches the heavy
-    /// filter + cluster work to a background thread, writing results back on main.
-    /// Eliminates the synchronous O(n) blocking that previously ran every 150 ms
-    /// during continuous camera movement.
+    /// filter work to a background thread, writing results back on main.
     private func updateAnnotations() {
         guard mapReady else { return }
 
@@ -596,14 +632,17 @@ struct MappaTab: View {
             allStops = store.stops
         }
         let region = visibleRegion
-        let zoom = mapZoomLevel
-        let threshold = clusterZoomThreshold
+        let latDelta = region?.span.latitudeDelta ?? mapRegion.span.latitudeDelta
+        let tier = MapZoomTier(latitudeDelta: latDelta)
         let maxAnnot = maxIndividualAnnotations
         let hasRoute = selectedRoute != nil
 
         annotationUpdateTask?.cancel()
         annotationUpdateTask = Task {
-            let (clusters, stops) = await Task.detached(priority: .userInitiated) {
+            let stops = await Task.detached(priority: .userInitiated) {
+                // movete parity: stops visible at every tier. At .city they render
+                // as ultra-compact squares so the user still sees the network shape.
+
                 // Viewport filter (skipped when a route is selected — already pre-filtered).
                 let visible: [ResolvedStop]
                 if hasRoute {
@@ -622,46 +661,11 @@ struct MappaTab: View {
                     visible = allStops
                 }
 
-                if zoom < threshold {
-                    return (MappaTab.buildClusters(from: visible, zoom: zoom), [ResolvedStop]())
-                } else {
-                    return ([StopCluster](), Array(visible.prefix(maxAnnot)))
-                }
+                return Array(visible.prefix(maxAnnot))
             }.value
 
             guard !Task.isCancelled else { return }
-            renderedClusters = clusters
             renderedStops = stops
-        }
-    }
-
-    // MARK: - Clustering
-
-    /// Bins stops into coordinate-grid clusters.
-    ///
-    /// Static and nonisolated so it can be called from `Task.detached` without
-    /// an actor hop. Uses a coarser bin at very far zoom (precision 1 ≈ ~11 km)
-    /// and a finer bin at medium-far zoom (precision 2 ≈ ~1 km).
-    nonisolated private static func buildClusters(from stops: [ResolvedStop], zoom: Double) -> [StopCluster] {
-        let precision: Double = zoom < 10 ? 1.0 : 2.0
-        let scale = pow(10.0, precision)
-        var bins: [String: [ResolvedStop]] = [:]
-        for stop in stops {
-            let latKey = (stop.lat * scale).rounded() / scale
-            let lngKey = (stop.lng * scale).rounded() / scale
-            let key = "\(latKey),\(lngKey)"
-            bins[key, default: []].append(stop)
-        }
-        return bins.map { key, members in
-            let avgLat = members.map(\.lat).reduce(0, +) / Double(members.count)
-            let avgLng = members.map(\.lng).reduce(0, +) / Double(members.count)
-            return StopCluster(
-                id: "cluster_\(key)",
-                centerLat: avgLat,
-                centerLng: avgLng,
-                count: members.count,
-                stops: members
-            )
         }
     }
 
@@ -725,26 +729,6 @@ struct MappaTab: View {
         }
     }
 
-    /// Animates the map to fit all stops in a cluster, making them individually tappable.
-    private func zoomToFit(stops: [ResolvedStop]) {
-        guard !stops.isEmpty else { return }
-        let lats = stops.map(\.lat)
-        let lngs = stops.map(\.lng)
-        let minLat = lats.min()!
-        let maxLat = lats.max()!
-        let minLng = lngs.min()!
-        let maxLng = lngs.max()!
-        let center = CLLocationCoordinate2D(
-            latitude: (minLat + maxLat) / 2,
-            longitude: (minLng + maxLng) / 2
-        )
-        let span = MKCoordinateSpan(
-            latitudeDelta: (maxLat - minLat) * 1.5 + 0.005,
-            longitudeDelta: (maxLng - minLng) * 1.5 + 0.005
-        )
-        mapRegion = MKCoordinateRegion(center: center, span: span)
-    }
-
     // MARK: - Helpers
 
     /// Converts a GTFS-style zoom level (roughly Google Maps zoom 0-20) to a MapKit span.
@@ -783,24 +767,38 @@ struct MappaTab: View {
     /// Computes which vehicles to show and updates displayedVehicles.
     /// - Route selected: all vehicles for that route regardless of zoom/viewport.
     /// - No route: vehicles in viewport at street-level zoom only.
-    /// - animated: true only on feed refresh (smooth coordinate transitions);
-    ///   false on camera change (instant, avoids chained animations that inflate duration).
+    ///
+    /// Tier is derived from `visibleRegion` (freshest, updated synchronously in
+    /// `onRegionChange`) with fallback to `mapRegion`.
     private func refreshDisplayedVehicles() {
+        let effectiveRegion = visibleRegion ?? mapRegion
+        let effectiveTier = MapZoomTier(latitudeDelta: effectiveRegion.span.latitudeDelta)
         let updated: [GtfsRtVehicle]
         if let route = selectedRoute {
+            // Route-selected: ignore tier/viewport so vehicle follow keeps working
+            // when the user zooms out to see the whole line.
             updated = vehicleStore.vehicles(forRouteId: route.id)
-        } else if mapZoomLevel >= clusterZoomThreshold, let region = visibleRegion {
+        } else {
+            // movete parity: vehicles visible at every tier as plain GTFS-colored dots;
+            // shape and badge switch come from VehicleAnnotationView's tier logic.
+            let region = effectiveRegion
             let margin = region.span.latitudeDelta * 0.5
             let minLat = region.center.latitude - region.span.latitudeDelta / 2 - margin
             let maxLat = region.center.latitude + region.span.latitudeDelta / 2 + margin
             let minLng = region.center.longitude - region.span.longitudeDelta / 2 - margin
             let maxLng = region.center.longitude + region.span.longitudeDelta / 2 + margin
-            updated = vehicleStore.vehicles.filter {
+            let inViewport = vehicleStore.vehicles.filter {
                 let lat = Double($0.latitude), lng = Double($0.longitude)
                 return lat >= minLat && lat <= maxLat && lng >= minLng && lng <= maxLng
             }
-        } else {
-            updated = []
+            // Cap harder at wider zooms to avoid dogpiling at city overview.
+            let cap: Int
+            switch effectiveTier {
+            case .city:         cap = 120
+            case .neighborhood: cap = 90
+            case .street:       cap = 60
+            }
+            updated = Array(inViewport.prefix(cap))
         }
         guard updated != displayedVehicles else { return }
         displayedVehicles = updated
@@ -823,5 +821,20 @@ struct MappaTab: View {
             ),
             span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
         )
+    }
+
+    /// Rebinds the open vehicle card to the latest GtfsRtVehicle snapshot after
+    /// a feed refresh so position, currentStopId, status and timestamp stay
+    /// current. If the vehicle dropped out of the feed (trip finished, block
+    /// transition) the selection is cleared.
+    private func refreshSelectedVehicle() {
+        guard let current = selectedVehicle else { return }
+        if let updated = vehicleStore.vehicles.first(where: { $0.id == current.vehicle.id }) {
+            if updated != current.vehicle {
+                selectedVehicle = VehicleSelection(vehicle: updated, route: current.route)
+            }
+        } else {
+            selectedVehicle = nil
+        }
     }
 }

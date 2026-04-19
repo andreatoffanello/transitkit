@@ -9,6 +9,7 @@ struct TransitKitApp: App {
     @State private var searchHistoryStore: SearchHistoryStore?
     @State private var locationManager = LocationManager()
     @State private var vehicleStore: VehicleStore = VehicleStore(vehiclePositionsUrl: nil)
+    @State private var alertStore: AlertStore = AlertStore()
     @State private var operatorConfig: OperatorConfig?
     @State private var loadingConfig: OperatorConfig?
     @State private var configError: String?
@@ -33,6 +34,7 @@ struct TransitKitApp: App {
                         .environment(searchHistoryStore)
                         .environment(locationManager)
                         .environment(vehicleStore)
+                        .environment(alertStore)
                         .environment(router)
                         .tint(AppTheme.accent)
                 } else if let configError {
@@ -84,12 +86,19 @@ struct TransitKitApp: App {
             router.openScheduleForStop = parts.count >= 2 && parts[1] == "schedule" ? stop.id : nil
             router.pendingStop = stop
 
-        // transitkit://map/stop/<stopId>  → Mappa tab + preview card
+        // transitkit://map/stop/<stopId>   → Mappa tab + stop preview card
+        // transitkit://map/vehicle/<vehicleId> → Mappa tab + vehicle preview card
         case "map":
-            guard parts.count >= 2, parts[0] == "stop",
-                  let stop = store.stops.first(where: { $0.id == parts[1] })
-            else { return }
-            router.pendingMapPreviewStop = stop
+            guard parts.count >= 2 else { return }
+            switch parts[0] {
+            case "stop":
+                if let stop = store.stops.first(where: { $0.id == parts[1] }) {
+                    router.pendingMapPreviewStop = stop
+                }
+            case "vehicle":
+                router.pendingMapPreviewVehicleId = parts[1]
+            default: break
+            }
 
         // transitkit://trip/<stopId>/<routeId>/<time>   (time = "HH:MM")
         case "trip":
@@ -127,6 +136,7 @@ struct TransitKitApp: App {
                 tripUpdatesUrl: config.gtfsRt?.tripUpdatesUrl,
                 routeIdByTripId: scheduleStore.routeIdByTripId
             )
+            alertStore.configure(serviceAlertsUrl: config.gtfsRt?.serviceAlertsUrl)
             if let pending = router.pendingUrl {
                 router.pendingUrl = nil
                 resolve(url: pending, store: scheduleStore)

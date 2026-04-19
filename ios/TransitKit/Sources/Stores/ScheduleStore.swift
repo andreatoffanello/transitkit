@@ -19,6 +19,11 @@ class ScheduleStore {
     private(set) var scheduleResponse: ScheduleResponse?
     private var routeById: [String: APIRoute] = [:]
     private var stopById: [String: ResolvedStop] = [:]
+    /// Secondary index mapping original GTFS stop_ids (from the feed's
+    /// VehiclePosition.stop_id and TripUpdate.stop_id) back to the
+    /// aggregated station. Multiple pontili (GTFS stop_ids) point to the
+    /// same ResolvedStop.
+    private var stopByGtfsId: [String: ResolvedStop] = [:]
     private(set) var routeStopSequences: [String: String] = [:]
     private(set) var tripIdsByRouteId: [String: Set<String>] = [:]
     private(set) var routeIdByTripId: [String: String] = [:]
@@ -26,7 +31,7 @@ class ScheduleStore {
     private var loader: ScheduleLoader
     private(set) var apiUrl: String?
     private var operatorConfig: OperatorConfig? = nil
-    private var operatorTimezone: TimeZone = .current
+    private(set) var operatorTimezone: TimeZone = .current
 
     init(operatorId: String, apiUrl: String? = nil) {
         self.apiUrl = apiUrl
@@ -100,11 +105,19 @@ class ScheduleStore {
                 lng: apiStop.lng,
                 lineNames: lineNames,
                 transitTypes: transitTypes.isEmpty ? [.bus] : transitTypes,
-                docks: []
+                docks: [],
+                gtfsStopIds: apiStop.gtfsStopIds ?? []
             )
         }
 
         stopById = Dictionary(uniqueKeysWithValues: stops.map { ($0.id, $0) })
+        var gtfsIndex: [String: ResolvedStop] = [:]
+        for stop in stops {
+            for gtfsId in stop.gtfsStopIds {
+                gtfsIndex[gtfsId] = stop
+            }
+        }
+        stopByGtfsId = gtfsIndex
 
         routeStopSequences = Dictionary(uniqueKeysWithValues: routes.compactMap { route in
             guard let dir = route.directions.first else { return nil }
@@ -169,7 +182,24 @@ class ScheduleStore {
                 merged.append(contentsOf: deps)
             }
         }
-        return merged.sorted { $0.minutesFromMidnight < $1.minutesFromMidnight }
+        let sorted = merged.sorted { $0.minutesFromMidnight < $1.minutesFromMidnight }
+        // Dedup: GTFS feeds often expose multiple trip_ids that collapse to the
+        // same scheduled run (overlapping service calendars, imported mirrors,
+        // etc. AppalCART has up to 7 duplicates per time slot). Keep the first
+        // occurrence of each (time, route, headsign) tuple — this preserves
+        // legitimate branching at the same minute (e.g. A → X and A → Y) while
+        // killing exact duplicates.
+        var seen: Set<String> = []
+        seen.reserveCapacity(sorted.count)
+        var deduped: [Departure] = []
+        deduped.reserveCapacity(sorted.count)
+        for dep in sorted {
+            let key = "\(dep.time)|\(dep.routeId)|\(dep.headsign)"
+            if seen.insert(key).inserted {
+                deduped.append(dep)
+            }
+        }
+        return deduped
     }
 
     func upcomingDepartures(forStopId stopId: String, limit: Int = 10) -> [Departure] {
@@ -193,7 +223,7 @@ class ScheduleStore {
     }
 
     func stop(forId stopId: String) -> ResolvedStop? {
-        stopById[stopId]
+        stopById[stopId] ?? stopByGtfsId[stopId]
     }
 
     func stopsForRoute(_ routeId: String, directionId: Int) -> [ResolvedStop] {
@@ -277,6 +307,9 @@ struct ResolvedStop: Identifiable, Hashable {
     let lineNames: [String]
     let transitTypes: Set<TransitType>
     let docks: [APIDock]
+    /// Original GTFS stop_ids aggregated under this station. Used to match
+    /// GTFS-RT VehiclePosition.stop_id back to our synthetic station id.
+    let gtfsStopIds: [String]
 
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
     static func == (lhs: ResolvedStop, rhs: ResolvedStop) -> Bool { lhs.id == rhs.id }

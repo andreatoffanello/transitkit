@@ -6,26 +6,42 @@ struct TripDetailView: View {
     let departure: Departure
     let fromStop: ResolvedStop
     @Environment(ScheduleStore.self) private var store
-    @State private var tripDetail: TripDetail? = nil
-    @State private var isLoadingTrip = false
+    @Environment(VehicleStore.self) private var vehicleStore
 
-    /// Resolves trip stops from the loaded TripDetail, preferring store-cached
-    /// ResolvedStop for richer coincidence/dock data where available.
-    private var tripStops: [ResolvedStop]? {
-        guard let detail = tripDetail else { return nil }
-        let sorted = detail.stopTimes.sorted { $0.stopSequence < $1.stopSequence }
-        return sorted.map { st in
-            store.stops.first(where: { $0.id == st.stopId })
-                ?? ResolvedStop(
-                    id: st.stopId,
-                    name: st.stopName,
-                    lat: st.stopLat,
-                    lng: st.stopLng,
-                    lineNames: [],
-                    transitTypes: [.bus],
-                    docks: []
-                )
+    /// One row in the trip timeline: the resolved stop + its scheduled
+    /// departure time at this trip (e.g. "16:45"). Stops are ordered by
+    /// time, which mirrors physical stop_sequence for any non-loop GTFS trip.
+    struct TripStopRow: Identifiable {
+        let stop: ResolvedStop
+        let timeHHmm: String
+        var id: String { stop.id + "_" + timeHHmm }
+    }
+
+    /// Reconstructs the trip's stop sequence + per-stop scheduled times by
+    /// scanning the CDN schedule JSON for every stop that publishes a
+    /// departure with this `tripId`. No runtime API call — fully offline
+    /// from the once-loaded schedule cache. Cheap: ~N stops × a few
+    /// departures each.
+    private var tripRows: [TripStopRow]? {
+        guard let tripId = departure.tripId, !tripId.isEmpty,
+              let schedule = store.scheduleResponse else { return nil }
+        let entries = schedule.stops.compactMap { apiStop -> (stationId: String, rawTime: String)? in
+            guard let dep = apiStop.departures.first(where: { $0.tripId == tripId })
+            else { return nil }
+            return (apiStop.id, dep.departureTime)
         }
+        guard !entries.isEmpty else { return nil }
+        let sorted = entries.sorted { $0.rawTime < $1.rawTime }
+        return sorted.compactMap { entry in
+            guard let stop = store.stop(forId: entry.stationId) else { return nil }
+            // "HH:MM:SS" → "HH:MM"
+            let hhmm = String(entry.rawTime.prefix(5))
+            return TripStopRow(stop: stop, timeHHmm: hhmm)
+        }
+    }
+
+    private var tripStops: [ResolvedStop]? {
+        tripRows?.map(\.stop)
     }
 
     private var lineColor: Color {
@@ -33,9 +49,29 @@ struct TripDetailView: View {
         return isVeryLight(c) ? .blue : c
     }
 
+    /// Live vehicle serving this trip (if still in feed). Drives the "Ora"
+    /// highlight so the timeline tracks the bus as it progresses — not frozen
+    /// to whatever stop the sheet was opened from.
+    private var liveVehicle: GtfsRtVehicle? {
+        guard let tripId = departure.tripId, !tripId.isEmpty else { return nil }
+        return vehicleStore.vehicle(forTripId: tripId)
+    }
+
     private var originIndex: Int {
-        guard let stops = tripStops else { return 0 }
-        return stops.firstIndex(where: { $0.id == fromStop.id }) ?? 0
+        guard let rows = tripRows else { return 0 }
+        // 1) Prefer the live vehicle's current stop — moves as the bus does.
+        //    Match against both the synthetic station id AND the native GTFS
+        //    stop_ids aggregated under it (RT feeds always use the latter).
+        if let vehicle = liveVehicle, !vehicle.currentStopId.isEmpty {
+            if let idx = rows.firstIndex(where: { row in
+                row.stop.id == vehicle.currentStopId ||
+                row.stop.gtfsStopIds.contains(vehicle.currentStopId)
+            }) {
+                return idx
+            }
+        }
+        // 2) Fallback: the stop the sheet was opened from.
+        return rows.firstIndex(where: { $0.stop.id == fromStop.id }) ?? 0
     }
 
     // MARK: - Body
@@ -45,13 +81,8 @@ struct TripDetailView: View {
             VStack(spacing: 0) {
                 tripHeader
 
-                if let stops = tripStops, !stops.isEmpty {
-                    stopsTimeline(stops: stops)
-                } else if isLoadingTrip {
-                    ProgressView()
-                        .tint(AppTheme.accent)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 40)
+                if let rows = tripRows, !rows.isEmpty {
+                    stopsTimeline(rows: rows)
                 } else {
                     VStack(spacing: 8) {
                         LucideIcon.alertTriangle.sized(28)
@@ -74,19 +105,6 @@ struct TripDetailView: View {
         .toolbar(.hidden, for: .tabBar)
         .navigationDestination(for: ResolvedStop.self) { stop in
             StopDetailView(stop: stop)
-        }
-        .task {
-            // NOTE: Trip detail endpoint was part of the Vercel API that is being retired.
-            // This call will gracefully fail (returning nil) once the Vercel deployment
-            // is updated without the API functions. The view handles nil tripDetail by
-            // showing the static schedule data from the CDN.
-            guard let tripId = departure.tripId, !tripId.isEmpty,
-                  let apiUrl = store.apiUrl,
-                  let client = try? APIClient(apiUrl: apiUrl)
-            else { return }
-            isLoadingTrip = true
-            tripDetail = try? await client.fetchTrip(tripId: tripId)
-            isLoadingTrip = false
         }
     }
 
@@ -128,7 +146,7 @@ struct TripDetailView: View {
 
     // MARK: - Timeline
 
-    private func stopsTimeline(stops: [ResolvedStop]) -> some View {
+    private func stopsTimeline(rows: [TripStopRow]) -> some View {
         let origin = originIndex
 
         return ScrollViewReader { proxy in
@@ -137,29 +155,30 @@ struct TripDetailView: View {
                     .padding(.horizontal, 20)
                     .padding(.bottom, 4)
 
-                ForEach(Array(stops.enumerated()), id: \.element.id) { index, stop in
-                    let isTerminal = index == 0 || index == stops.count - 1
+                ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
+                    let isTerminal = index == 0 || index == rows.count - 1
                     let isOrigin = index == origin
                     let isPast = index < origin
                     let dotSize: CGFloat = isOrigin ? 14 : (isTerminal ? 12 : 8)
 
                     timelineRow(
-                        stop: stop,
+                        stop: row.stop,
+                        timeHHmm: row.timeHHmm,
                         index: index,
-                        totalStops: stops.count,
+                        totalStops: rows.count,
                         origin: origin,
                         isTerminal: isTerminal,
                         isOrigin: isOrigin,
                         isPast: isPast,
                         dotSize: dotSize
                     )
-                    .id(stop.id)
+                    .id(row.id)
                 }
             }
             .onAppear {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                     withAnimation(.easeInOut(duration: 0.3)) {
-                        proxy.scrollTo(stops[min(origin, stops.count - 1)].id, anchor: .center)
+                        proxy.scrollTo(rows[min(origin, rows.count - 1)].id, anchor: .center)
                     }
                 }
             }
@@ -171,6 +190,7 @@ struct TripDetailView: View {
     @ViewBuilder
     private func timelineRow(
         stop: ResolvedStop,
+        timeHHmm: String,
         index: Int,
         totalStops: Int,
         origin: Int,
@@ -217,7 +237,7 @@ struct TripDetailView: View {
                         .lineLimit(1)
 
                     if isOrigin {
-                        Text("Now")
+                        Text(String(localized: "time_now"))
                             .font(.system(size: 10, weight: .bold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 5)
@@ -253,6 +273,16 @@ struct TripDetailView: View {
             }
 
             Spacer(minLength: 6)
+
+            // Scheduled time at this stop (HH:mm). Dimmed for past stops,
+            // accent-colored on the origin to echo the "Ora" pill.
+            Text(timeHHmm)
+                .font(.system(size: 13, weight: isOrigin ? .semibold : .medium, design: .monospaced))
+                .foregroundStyle(
+                    isPast ? AppTheme.textTertiary
+                        : isOrigin ? lineColor
+                        : AppTheme.textSecondary
+                )
 
             // Dock if available
             if let dock = stop.docks.first {

@@ -966,6 +966,10 @@ def build_ios_json(
             "lng": station["lng"],
             "platformCode": None,
             "dockLetter": dock_letter,
+            # Original GTFS stop_ids aggregated under this station. Enables
+            # matching GTFS-RT VehiclePosition.stop_id back to our synthetic
+            # station id, since RT feeds always reference native GTFS ids.
+            "gtfsStopIds": pontili,
             "departures": all_deps,
         })
 

@@ -1,6 +1,5 @@
 {
   "id": "appalcart",
-  "apiUrl": "https://transitkit-engine.vercel.app/api",
   "cdnUrl": "https://andreatoffanello.github.io/transitkit",
   "name": "AppalCART",
   "fullName": "Appalachian District Transportation Authority",
@@ -14,9 +13,7 @@
     "trip_updates": "https://s3.amazonaws.com/etatransit.gtfs/appalcart.etaspot.net/trip_updates.pb",
     "alerts": "https://s3.amazonaws.com/etatransit.gtfs/appalcart.etaspot.net/alerts.pb"
   },
-  "locale": [
-    "en"
-  ],
+  "locale": ["en"],
   "theme": {
     "primaryColor": "#165F9C",
     "accentColor": "#06845C",

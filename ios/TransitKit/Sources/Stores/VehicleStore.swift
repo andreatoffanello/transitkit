@@ -24,6 +24,8 @@ final class VehicleStore {
     private var routeIdByTripId: [String: String] = [:]
     /// Trip → delay in seconds (positive = late, negative = early) from TripUpdate feed.
     private var delayByTripId: [String: Int32] = [:]
+    /// Trip → per-stop arrival epoch seconds (when the feed publishes them).
+    private var arrivalsByTripId: [String: [String: UInt64]] = [:]
 
     init(vehiclePositionsUrl: String? = nil) {
         self.vehiclePositionsUrl = vehiclePositionsUrl
@@ -83,13 +85,22 @@ final class VehicleStore {
         delayByTripId[tripId]
     }
 
+    /// Predicted arrival time for a stop on a given trip, or nil if the feed
+    /// does not publish per-stop ETAs. Matches either the synthetic station id
+    /// or an original GTFS stop_id (the RT feed always uses the latter).
+    func arrival(forTripId tripId: String, stopId: String) -> Date? {
+        guard let map = arrivalsByTripId[tripId] else { return nil }
+        if let t = map[stopId] { return Date(timeIntervalSince1970: TimeInterval(t)) }
+        return nil
+    }
+
     // MARK: - Fetch
 
     private func fetch() async {
         async let vehicles = fetchVehiclePositions()
-        async let delays = fetchTripDelays()
-        let (v, d) = await (vehicles, delays)
-        apply(v, delays: d)
+        async let updates  = fetchTripUpdates()
+        let (v, u) = await (vehicles, updates)
+        apply(v, updates: u)
     }
 
     private func fetchVehiclePositions() async -> [GtfsRtVehicle] {
@@ -103,23 +114,29 @@ final class VehicleStore {
         }
     }
 
-    private func fetchTripDelays() async -> [String: Int32] {
+    private func fetchTripUpdates() async -> [String: GtfsRtTripDelay] {
         guard let urlString = tripUpdatesUrl,
               let url = URL(string: urlString) else { return [:] }
         do {
             let (data, _) = try await URLSession.shared.data(from: url)
-            return decodeGtfsRtTripDelays(from: data)
+            return decodeGtfsRtTripUpdates(from: data)
         } catch {
             return [:]
         }
     }
 
-    private func apply(_ all: [GtfsRtVehicle], delays: [String: Int32]) {
+    private func apply(_ all: [GtfsRtVehicle], updates: [String: GtfsRtTripDelay]) {
         vehicles = all
         lastFetchedAt = Date()
-        delayByTripId = delays
+        delayByTripId = updates.mapValues { $0.delay }
+        arrivalsByTripId = updates.mapValues { $0.arrivalByStopId }
 
-        vehicleByTripId = Dictionary(uniqueKeysWithValues: all.map { ($0.tripId, $0) })
+        // Feeds occasionally emit duplicate or empty trip_ids (vehicle swaps, block
+        // transitions). Skip empties and keep the most recently seen entry on collisions.
+        vehicleByTripId = Dictionary(
+            all.lazy.filter { !$0.tripId.isEmpty }.map { ($0.tripId, $0) },
+            uniquingKeysWith: { _, new in new }
+        )
 
         // Build route index — many feeds set routeId="" and only populate tripId.
         // Fall back to routeIdByTripId (from ScheduleStore) in that case.

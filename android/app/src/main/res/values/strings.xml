@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">TransitKit</string>
+
+    <!-- Tab bar labels -->
+    <string name="tab_home">Home</string>
+    <string name="tab_orari">Schedules</string>
+    <string name="tab_linee">Routes</string>
+    <string name="tab_mappa">Map</string>
+    <string name="tab_servizi">Services</string>
+    <string name="tab_info">Info</string>
+    <string name="tab_settings">Settings</string>
+
+    <!-- Servizi — screen titles and sections -->
+    <string name="services_title">Services</string>
+    <string name="services_tagline">Everything in one place</string>
+    <string name="services_section_title">SERVICES</string>
+    <string name="services_section_fares">FARES</string>
+    <string name="services_section_accessibility">ACCESSIBILITY</string>
+    <string name="services_section_contact">CONTACT</string>
+    <string name="services_section_operator">ABOUT</string>
+    <string name="services_label_audience">Who it\'s for</string>
+    <string name="services_label_how">How to use it</string>
+    <string name="services_label_hours">Hours</string>
+    <string name="services_label_fare">Fare</string>
+    <string name="services_label_area">Service area</string>
+    <string name="services_label_notes">Good to know</string>
+    <string name="services_label_links">Links</string>
+    <string name="services_label_office_hours">Office hours</string>
+    <string name="services_label_address">Address</string>
+    <string name="cd_impostazioni">Settings</string>
+    <string name="services_label_tdd">TDD — Telecommunications for the hearing-impaired</string>
+    <string name="services_label_questions">Questions? Call %1$s</string>
+    <string name="services_fare_free">Fare-free service</string>
+    <string name="services_fare_from">From %1$s</string>
+    <string name="services_about_operator_fmt">About %1$s</string>
+    <string name="services_learn_more">Learn more</string>
+
+    <!-- Home — section headers -->
+    <string name="section_le_mie_fermate">MY STOPS</string>
+    <string name="section_preferiti">FAVORITES</string>
+    <string name="section_linee_principali">MAIN ROUTES</string>
+    <string name="section_vicino_a_te">NEARBY</string>
+    <string name="section_accesso_rapido">QUICK ACCESS</string>
+
+    <!-- Home — search bar -->
+    <string name="search_placeholder_home">Search stops or routes…</string>
+    <string name="search_placeholder_home_dots">Search stops or routes...</string>
+
+    <!-- Home — quick access labels -->
+    <string name="quick_label_orari">Schedules</string>
+    <string name="quick_label_mappa">Map</string>
+    <string name="quick_label_info">Info</string>
+
+    <!-- Home — quick access subtitles -->
+    <string name="quick_orari_subtitle">Find a stop</string>
+    <string name="quick_mappa_subtitle">Explore the map</string>
+    <string name="quick_info_subtitle">Information</string>
+
+    <!-- Home — empty favorites state -->
+    <string name="empty_favorites_title">Find your stop</string>
+    <string name="empty_favorites_body">Search stops and save them to favorites to keep schedules within reach.</string>
+    <string name="empty_favorites_cta">Browse stops and routes</string>
+
+    <!-- Home — stop cards -->
+    <string name="no_departures">No departures</string>
+    <string name="cd_fermata_preferita">Favorite stop: %1$s. %2$s.</string>
+    <string name="cd_fermata_vicina">Nearby stop: %1$s, %2$s.</string>
+    <string name="cd_salva_fermata">Save stop</string>
+
+    <!-- Orari — search placeholders -->
+    <string name="search_placeholder_stops">Search stops…</string>
+    <string name="search_placeholder_lines">Search routes…</string>
+    <string name="search_clear">Clear search</string>
+
+    <!-- Orari — tab labels -->
+    <string name="orari_tab_fermate">Stops</string>
+    <string name="orari_tab_linee">Routes</string>
+
+    <!-- Orari — filter chips -->
+    <string name="filter_all">All</string>
+
+    <!-- Orari — transit type labels -->
+    <string name="transit_type_tram">Tram</string>
+    <string name="transit_type_metro">Metro</string>
+    <string name="transit_type_treno">Train</string>
+    <string name="transit_type_bus">Bus</string>
+    <string name="transit_type_ferry">Ferry</string>
+    <string name="transit_type_metropolitana">Subway</string>
+    <string name="transit_type_traghetto">Ferry</string>
+    <string name="transit_type_unknown">Type %d</string>
+
+    <!-- Orari — section headers -->
+    <string name="section_recenti">Recent</string>
+    <string name="section_tutte_fermate">All stops</string>
+    <string name="section_tutte_linee">All routes</string>
+
+    <!-- Orari — empty states -->
+    <string name="no_stop_found_prefix">No stops found for \"</string>
+    <string name="empty_stops_query">No stops found for \"%s\"</string>
+    <string name="no_lines_available">No routes available</string>
+
+    <!-- Common UI verbs -->
+    <string name="action_chiudi">Close</string>
+    <string name="action_conferma">Confirm</string>
+    <string name="action_mostra_altri">Show more</string>
+    <string name="action_riprova">Try again</string>
+
+    <!-- Common accessibility labels -->
+    <string name="cd_indietro">Back</string>
+    <string name="cd_apri_in_maps">Open in Maps</string>
+    <string name="cd_rimuovi_preferiti">Remove from favorites</string>
+
+    <!-- StopDetailScreen -->
+    <string name="prossime_partenze">Upcoming departures</string>
+    <string name="label_oggi">Today</string>
+    <string name="mostra_altri_partenze">Show %1$d more</string>
+    <string name="orario_completo">Full schedule</string>
+    <string name="label_prossima">next</string>
+    <string name="label_adesso">now</string>
+    <string name="label_ritardo_min">+%1$d min</string>
+    <string name="nessuna_partenza_oggi">No departures today</string>
+    <string name="partenze_non_disponibili">Departures unavailable</string>
+    <string name="controlla_connessione">Check your connection and try again.</string>
+
+    <!-- StopDetailScreen — day group labels for full-schedule sheet -->
+    <string name="day_group_feriali">Weekdays</string>
+    <string name="day_group_sabato">Saturday</string>
+    <string name="day_group_festivi">Holidays</string>
+    <string name="day_group_weekend">Weekend</string>
+    <string name="day_group_ogni_giorno">Every day</string>
+    <string name="action_meno">Less</string>
+
+    <!-- LineDetailScreen -->
+    <string name="sequenza_fermate_non_disponibile">Stop sequence unavailable</string>
+    <string name="direzione_numero">Direction %1$d</string>
+    <string name="fermate_servite">Stops served</string>
+    <string name="stop_count_fermate">%1$d stops</string>
+    <string name="live_count">%1$d live</string>
+    <string name="label_coincidenza">Transfer</string>
+
+    <!-- Info — section headers -->
+    <string name="info_section_tariffe">Fares</string>
+    <string name="info_section_punti_vendita">Points of sale</string>
+    <string name="info_section_operatore">Operator</string>
+    <string name="info_section_dati">Data</string>
+
+    <!-- Info — fare card -->
+    <string name="info_altre_tariffe">%d more fares…</string>
+    <string name="info_acquista_online">Buy online</string>
+
+    <!-- Info — data card -->
+    <string name="info_ultimo_aggiornamento">Last updated</string>
+    <string name="info_sorgente_dati">Data source</string>
+
+    <!-- Info — FareInfoScreen column headers -->
+    <string name="fare_col_tipo">Type</string>
+    <string name="fare_col_prezzo">Price</string>
+
+    <!-- Info — OperatorInfoScreen link labels -->
+    <string name="info_link_sito_web">Website</string>
+    <string name="info_link_telefono">Phone</string>
+    <string name="info_link_email">Email</string>
+    <string name="info_link_privacy">Privacy Policy</string>
+    <string name="info_dati_trasporto">Transit data</string>
+    <string name="info_dati_descrizione">Schedule and stop data are provided by the operator in open GTFS format.</string>
+
+    <string name="info_powered_by">Powered by TransitKit</string>
+
+    <!-- About screen -->
+    <string name="about_title">About</string>
+    <string name="about_sviluppato_con">Built with</string>
+    <string name="about_transitkit">TransitKit</string>
+    <string name="about_sito_web">Website</string>
+    <string name="about_privacy_policy">Privacy policy</string>
+    <string name="about_licenze_open_source">Open-source licenses</string>
+    <string name="about_licenze_body">This app uses open-source libraries. Source code and licenses are available in the project documentation.</string>
+
+    <!-- Settings — title and section headers -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_section_preferiti">Favorites</string>
+    <string name="settings_section_notifiche">Notifications</string>
+    <string name="settings_section_lingua">Language</string>
+    <string name="settings_section_info">Info</string>
+
+    <!-- Settings — favorites -->
+    <string name="settings_fermate_salvate_one">1 saved stop</string>
+    <string name="settings_fermate_salvate_other">%d saved stops</string>
+    <string name="settings_nessuno_salvato">None saved</string>
+
+    <!-- Settings — notifications -->
+    <string name="settings_notifiche_desc">Get alerts for your favorite stops.</string>
+
+    <!-- Settings — language -->
+    <string name="settings_lingua_desc">Change it in System Settings → Apps → TransitKit.</string>
+
+    <!-- Settings — app info -->
+    <string name="settings_info_su">About %s</string>
+    <string name="settings_versione">Version</string>
+
+    <!-- Settings — accessibility -->
+    <string name="cd_fermata_salvata">Saved stop: %s</string>
+    <string name="cd_rimuovi_fermata">Remove stop %s</string>
+
+    <!-- Mappa — dev/config error -->
+    <string name="mappa_api_key_missing">Set MAPS_API_KEY in local.properties to enable the map.</string>
+
+    <!-- Mappa — filter pill -->
+    <string name="filter_all_linee">All</string>
+
+    <!-- Mappa — FAB accessibility -->
+    <string name="cd_vista_predefinita">Default view</string>
+    <string name="cd_centra_mappa">Center map</string>
+    <string name="cd_fermate_raggruppate">%d stops clustered</string>
+    <string name="cd_vista_3d">3D view</string>
+    <string name="cd_vista_2d">2D view</string>
+
+    <!-- Mappa — line picker pill + sheet -->
+    <string name="mappa_cerca_linea">Search route</string>
+    <string name="mappa_line_picker_title">Search route</string>
+    <string name="mappa_line_picker_placeholder">Route name or number…</string>
+    <string name="mappa_line_picker_section_metro">METRO</string>
+    <string name="mappa_line_picker_section_tram">TRAM</string>
+    <string name="mappa_line_picker_section_rail">RAIL</string>
+    <string name="mappa_line_picker_section_bus">BUS</string>
+    <string name="mappa_line_picker_section_ferry">FERRY</string>
+    <string name="mappa_line_picker_section_other">OTHER</string>
+    <string name="mappa_rimuovi_overlay">Remove overlay</string>
+
+    <!-- Mappa — stop sheet -->
+    <string name="mappa_nessuna_partenza">No departures in the next few hours</string>
+    <string name="mappa_vedi_orari">View schedule</string>
+    <string name="mappa_apri_maps">Open in Maps</string>
+
+    <!-- Mappa — vehicle sheet -->
+    <string name="mappa_veicolo_live">Live vehicle</string>
+    <string name="mappa_live">Live</string>
+    <string name="mappa_in_ritardo">%d min late</string>
+    <string name="mappa_in_anticipo">%d min early</string>
+    <string name="mappa_in_orario">On time</string>
+    <string name="vehicle_status_fermo">Stopped</string>
+    <string name="vehicle_status_in_arrivo">Approaching</string>
+    <string name="vehicle_status_in_transito">In transit</string>
+
+    <!-- StopDetailScreen — map app picker -->
+    <string name="apri_in_mappe">Open in\u2026</string>
+    <string name="mappa_app_google">Google Maps</string>
+    <string name="mappa_app_waze">Waze</string>
+    <string name="mappa_app_mappe">Maps</string>
+    <string name="annulla">Cancel</string>
+
+    <!-- StopDetailScreen — filter empty state -->
+    <string name="nessuna_partenza_per_linea">No departures for route %s</string>
+    <string name="rimuovi_filtro">Clear filter</string>
+
+    <!-- HomeScreen — nearby location prompt -->
+    <string name="nearby_enable_title">Stops near you</string>
+    <string name="nearby_enable_subtitle">Turn on location to see nearby stops.</string>
+
+    <!-- HomeScreen — time-of-day greetings -->
+    <string name="home_greeting_morning">Good morning</string>
+    <string name="home_greeting_afternoon">Good afternoon</string>
+    <string name="home_greeting_evening">Good evening</string>
+
+    <!-- OrariScreen — search results count -->
+    <plurals name="fermate_trovate">
+        <item quantity="one">%d stop found</item>
+        <item quantity="other">%d stops found</item>
+    </plurals>
+    <plurals name="linee_trovate">
+        <item quantity="one">%d route found</item>
+        <item quantity="other">%d routes found</item>
+    </plurals>
+
+    <!-- TripDetailScreen — error states -->
+    <string name="trip_error_no_stops">No stops found for this trip.</string>
+    <string name="trip_error_load_failed">Couldn\'t load this trip.</string>
+
+    <!-- TripDetailScreen — fallback title and current-stop badge -->
+    <string name="trip_detail_title_fallback">Trip details</string>
+    <string name="trip_stop_attuale">Now</string>
+    <string name="cd_indietro_trip">Back</string>
+
+    <!-- MappaScreen — vehicle marker fallback label -->
+    <string name="vehicle_label_default">Bus</string>
+
+    <!-- Service alerts -->
+    <string name="alerts_banner_one">1 active alert</string>
+    <string name="alerts_banner_many">%1$d active alerts</string>
+    <string name="alerts_title">Service alerts</string>
+    <string name="alerts_empty_title">All clear</string>
+    <string name="alerts_empty_subtitle">No active alerts right now.</string>
+    <string name="alerts_affected_routes">Affected lines</string>
+    <string name="alerts_affected_stops">Affected stops</string>
+    <string name="alerts_affected_routes_count">%1$d lines</string>
+    <string name="alerts_affected_stops_count">%1$d stops</string>
+    <string name="alerts_read_more">More info</string>
+    <string name="alert_no_description">No additional details.</string>
+    <string name="alert_effect_no_service">No service</string>
+    <string name="alert_effect_reduced_service">Reduced service</string>
+    <string name="alert_effect_delays">Significant delays</string>
+    <string name="alert_effect_detour">Detour</string>
+    <string name="alert_effect_stop_moved">Stop moved</string>
+    <string name="alert_effect_additional">Additional service</string>
+    <string name="alert_effect_modified">Modified service</string>
+    <string name="alert_effect_accessibility">Accessibility issue</string>
+    <string name="alert_severity_severe">Severe</string>
+    <string name="alert_severity_warning">Warning</string>
+    <string name="alert_severity_info">Info</string>
+    <string name="alert_severity_advisory">Advisory</string>
+
+    <!-- Distance formatting -->
+    <string name="distance_meters">%1$d m</string>
+    <string name="distance_kilometers">%1$s km</string>
+
+    <!-- Nearby stops — location permission denied -->
+    <string name="nearby_denied_title">Location turned off</string>
+    <string name="nearby_denied_subtitle">Enable it in Settings to see nearby stops</string>
+
+    <!-- Common actions -->
+    <string name="action_close">Close</string>
+
+    <!-- Stop detail — alerts section -->
+    <string name="stop_detail_alerts_section">Service alerts</string>
+
+    <!-- Alert toast -->
+    <string name="alerts_toast_kicker">New alert</string>
+
+    <!-- Line detail -->
+    <string name="open_in_map">Open in map</string>
+
+    <!-- Vehicle card — status-aware stop row -->
+    <string name="vehicle_next_stop">Next stop:</string>
+    <string name="vehicle_stopped_at">Stopped at:</string>
+    <string name="vehicle_incoming_at">Arriving at:</string>
+    <string name="vehicle_updated_sec">Updated %1$d sec ago</string>
+    <string name="vehicle_updated_min">Updated %1$d min ago</string>
+    <string name="vehicle_accessible">Wheelchair accessible</string>
+
+    <!-- Vehicle card — occupancy badges -->
+    <string name="occupancy_seats_available">Seats available</string>
+    <string name="occupancy_few_seats">Few seats</string>
+    <string name="occupancy_standing_only">Standing only</string>
+    <string name="occupancy_full">Full</string>
+    <string name="occupancy_not_boarding">Not boarding</string>
+
+    <!-- Vehicle card — action buttons -->
+    <string name="vehicle_follow">Follow vehicle</string>
+    <string name="vehicle_unfollow">Stop following</string>
+    <string name="vehicle_open_trip">Open trip</string>
+</resources>

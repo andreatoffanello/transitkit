@@ -35,3 +35,16 @@ __pycache__/
 
 # Git worktrees
 .worktrees/
+
+# Claude / MCP tooling caches
+.claude/
+.playwright-mcp/
+
+# UX review screenshot artifacts (local)
+ux-review-*.png
+
+# Secrets — NEVER commit
+android/local.properties
+android/app/src/main/res/values/secrets.xml
+*.keystore
+*.jks

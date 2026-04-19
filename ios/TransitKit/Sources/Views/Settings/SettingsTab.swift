@@ -24,6 +24,13 @@ struct SettingsTab: View {
         NavigationStack {
             List {
                 if let config {
+                    // MARK: Operator Brand Card
+                    Section {
+                        operatorCard(config: config)
+                    }
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+
                     // MARK: Favorites
                     if config.features.enableFavorites {
                         Section {
@@ -112,6 +119,54 @@ struct SettingsTab: View {
             .background(AppTheme.background.ignoresSafeArea())
             .navigationTitle(String(localized: "tab_settings"))
             .navigationBarTitleDisplayMode(.large)
+        }
+    }
+
+    // MARK: - Operator Brand Card
+
+    private func operatorCard(config: OperatorConfig) -> some View {
+        HStack(spacing: 12) {
+            ZStack {
+                LinearGradient(
+                    colors: [
+                        Color(hex: "06845C"),
+                        Color(hex: "165F9C")
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                Text(initials(for: config.name))
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.white)
+            }
+            .frame(width: 48, height: 48)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(config.name)
+                    .font(.headline)
+                    .fontWeight(.bold)
+                    .foregroundStyle(AppTheme.textPrimary)
+                Text(config.region)
+                    .font(.subheadline)
+                    .foregroundStyle(AppTheme.textSecondary)
+            }
+
+            Spacer()
+        }
+        .padding(16)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+    }
+
+    private func initials(for name: String) -> String {
+        let words = name.split(separator: " ").filter { !$0.isEmpty }
+        switch words.count {
+        case 0: return "?"
+        case 1: return String(words[0].prefix(2)).uppercased()
+        default: return "\(words[0].prefix(1))\(words[1].prefix(1))".uppercased()
         }
     }
 

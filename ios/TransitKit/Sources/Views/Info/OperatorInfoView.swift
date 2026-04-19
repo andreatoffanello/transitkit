@@ -18,7 +18,7 @@ struct OperatorInfoView: View {
                             .fill(AppTheme.primary.opacity(0.12))
                             .frame(width: 64, height: 64)
                             .overlay(
-                                LucideIcon.bus.image
+                                LucideIcon.busFront.image
                                     .font(.title2)
                                     .foregroundStyle(AppTheme.primary)
                             )
@@ -153,6 +153,7 @@ struct OperatorInfoView: View {
         .background(AppTheme.background.ignoresSafeArea())
         .navigationTitle(String(localized: "nav_title_operator"))
         .navigationBarTitleDisplayMode(.large)
+        .toolbar(.hidden, for: .tabBar)
     }
 
     // MARK: - Link Row

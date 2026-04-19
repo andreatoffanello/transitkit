@@ -1,5 +1,26 @@
 # transit-engine / TransitKit
 
+
+## IDENTIFICATIVI PROGETTO (pinned — non toccare senza aggiornare la macchina)
+
+- Scheme: `TransitKit`
+- Bundle ID: `com.transitkit.{OPERATOR_ID}` (white-label: es. `com.transitkit.appalcart`)
+- iOS xcodeproj: `ios/TransitKit.xcodeproj`
+- UDID simulatore iOS 18: `4302AFD9-496E-4586-A5D0-D6BAC735FFFD` (`transitkit-dev`, iPhone 16 Pro)
+- Location simulatore: `41.9009,12.5017` (Roma — Termini) — applicata automaticamente post-boot
+- AVD Android: `transitkit-dev` (Pixel 6, API 34 — white-label: es. com.transitkit.appalcart)
+- Package Android: `com.transitkit.{OPERATOR_ID}`
+
+**Regole ferree:**
+- MAI lanciare/installare app su simulatori diversi da `transitkit-dev`.
+- MAI usare `booted` come target simctl — sempre `$UDID`.
+- Il Bundle ID cambia per operatore: verificare sempre `{OPERATOR_ID}` prima di `simctl launch`.
+- MAI lanciare/installare app su emulatori Android diversi da `transitkit-dev`.
+- MAI usare `adb` senza `-s <serial>` esplicito — su più emulatori ambiguo.
+- MAI usare `emulator -avd <name>` con `<name>` diverso dall'AVD pinned del progetto.
+
+---
+
 ## REGOLE AGENTE — OBBLIGATORIE
 
 Queste regole hanno priorità su qualsiasi skill o plugin caricato nella sessione.
@@ -79,7 +100,9 @@ Framework iOS white-label per app di trasporto pubblico.
 - Bundle ID: `com.transitkit.{OPERATOR_ID}` — es. `com.transitkit.appalcart`
 - Build con OPERATOR_ID: `xcodebuild ... OPERATOR_ID=appalcart`
 
-## SIMULATORE DI RIFERIMENTO
+## SIMULATORI DI RIFERIMENTO
+
+### iOS
 
 | Ruolo | Nome progetto | Modello | iOS |
 |-------|--------------|---------|-----|
@@ -93,13 +116,37 @@ bash scripts/setup-dev.sh
 xcrun simctl create "transitkit-dev" "com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro" "com.apple.CoreSimulator.SimRuntime.iOS-18-5"
 
 # Lookup UDID
-UDID=$(xcrun simctl list devices | grep "transitkit-dev" | grep -oE '[A-F0-9-]{36}' | head -1)
+UDID="4302AFD9-496E-4586-A5D0-D6BAC735FFFD"   # transitkit-dev (pinned — evita ambiguità con cloni omonimi)
 ```
+
+### Android
+
+| Ruolo | AVD name | Device | API |
+|-------|----------|--------|-----|
+| Principale | `transitkit-dev` | Pixel 6 | 34 |
+
+```bash
+# Crea AVD (una volta per Mac)
+JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
+avdmanager create avd --name "transitkit-dev" --device "pixel_6" \
+  --package "system-images;android-34;google_apis;arm64-v8a" --sdcard "512M"
+
+# Avvia emulatore
+/Users/andreatoffanello/Library/Android/sdk/emulator/emulator -avd transitkit-dev -no-snapshot-load -no-audio &
+
+# Lookup serial (usare QUESTO — non altri emulator-XXXX)
+ADB=/Users/andreatoffanello/Library/Android/sdk/platform-tools/adb
+ANDROID_SERIAL=$($ADB devices | grep emulator | awk '{print $1}' | while read s; do
+  $ADB -s $s emu avd name 2>/dev/null | grep -q "transitkit-dev" && echo $s && break
+done)
+```
+
+**NEVER** usare altri emulatori (DoVe_Pixel6, alilaguna-android, movete-android) — appartengono ad altri progetti.
 
 ## BUILD
 
 ```bash
-UDID=$(xcrun simctl list devices | grep "transitkit-dev" | grep -oE '[A-F0-9-]{36}' | head -1)
+UDID="4302AFD9-496E-4586-A5D0-D6BAC735FFFD"   # transitkit-dev (pinned — evita ambiguità con cloni omonimi)
 xcodebuild -project ios/TransitKit.xcodeproj -scheme TransitKit \
   -sdk iphonesimulator \
   -destination "platform=iOS Simulator,id=$UDID" \

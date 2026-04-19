@@ -25,7 +25,7 @@ struct AboutView: View {
                             .fill(AppTheme.primary.opacity(0.15))
                             .frame(width: 80, height: 80)
                             .overlay(
-                                LucideIcon.bus.sized(32)
+                                LucideIcon.busFront.sized(32)
                                     .foregroundStyle(AppTheme.primary)
                             )
 

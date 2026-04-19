@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { Home, Route, Map, Settings } from 'lucide-vue-next'
+import { Home, Route, Map, Info, Settings } from 'lucide-vue-next'
 import type { Component } from 'vue'
 
 interface Tab {
@@ -59,12 +59,16 @@ const ALL_TABS: Tab[] = [
   { path: '/', label: 'Home', icon: Home },
   { path: '/lines', label: 'Linee', icon: Route },
   { path: '/map', label: 'Mappa', icon: Map, feature: 'enableMap' },
+  { path: '/info', label: 'Info', icon: Info, feature: 'enableInfo' },
   { path: '/settings', label: 'Impostazioni', icon: Settings },
 ]
 
 const visibleTabs = computed(() =>
   ALL_TABS.filter(tab => {
     if (!tab.feature) return true
+    if (tab.feature === 'enableInfo') {
+      return (config.value?.features as unknown as Record<string, boolean>)?.['enableInfo'] !== false
+    }
     return (config.value?.features as unknown as Record<string, boolean>)?.[tab.feature] ?? false
   })
 )

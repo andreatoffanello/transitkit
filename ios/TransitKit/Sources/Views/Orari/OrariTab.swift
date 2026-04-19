@@ -1,45 +1,29 @@
 import SwiftUI
 
-/// Main tab container for the Orari (Schedules) tab.
-/// Provides a segmented control (Stops / Lines), search bar, and transit type filter chips.
+/// Tab container for Orari (Schedules) — fermate only.
+/// Lines are now in the dedicated LineeTab.
 struct OrariTab: View {
     @Environment(ScheduleStore.self) private var store
     @Environment(SearchHistoryStore.self) private var searchHistoryStore
     @Environment(DeepLinkRouter.self) private var router
-    @State private var segment: OrariSegment = .stops
     @State private var searchQuery = ""
     @State private var selectedTransitType: TransitType?
     @State private var path = NavigationPath()
 
-    enum OrariSegment: String, CaseIterable {
-        case stops
-        case lines
-
-        var label: String {
-            switch self {
-            case .stops: String(localized: "segment_stops")
-            case .lines: String(localized: "segment_lines")
-            }
-        }
-    }
-
     // MARK: - Available transit types (auto-populated from data)
 
     private var availableTransitTypes: [TransitType] {
-        let types = Set(store.routes.map { TransitType(gtfsRouteType: $0.transitType) })
+        let types = Set(store.stops.flatMap { $0.transitTypes })
         return TransitType.allCases.filter { types.contains($0) }
     }
 
     var body: some View {
         NavigationStack(path: $path) {
             VStack(spacing: 0) {
-                // Segmented picker
-                segmentedBar
-
                 // Search bar
                 searchBar
 
-                // Transit type filter chips — only meaningful when multiple types are present
+                // Transit type filter chips
                 if availableTransitTypes.count > 1 {
                     filterChips
                 }
@@ -57,23 +41,12 @@ struct OrariTab: View {
                         .padding(.vertical, 4)
                 }
 
-                // Content
-                Group {
-                    switch segment {
-                    case .stops:
-                        StopsListView(
-                            searchQuery: searchQuery,
-                            transitTypeFilter: selectedTransitType,
-                            recentIds: searchHistoryStore.recentStopIds
-                        )
-                    case .lines:
-                        LinesListView(
-                            searchQuery: searchQuery,
-                            transitTypeFilter: selectedTransitType,
-                            recentIds: searchHistoryStore.recentLineIds
-                        )
-                    }
-                }
+                // Stops list
+                StopsListView(
+                    searchQuery: searchQuery,
+                    transitTypeFilter: selectedTransitType,
+                    recentIds: searchHistoryStore.recentStopIds
+                )
                 .frame(maxHeight: .infinity)
             }
             .background(AppTheme.background.ignoresSafeArea())
@@ -82,10 +55,6 @@ struct OrariTab: View {
             .navigationDestination(for: ResolvedStop.self) { stop in
                 let _ = searchHistoryStore.recordStop(stop.id)
                 StopDetailView(stop: stop)
-            }
-            .navigationDestination(for: APIRoute.self) { route in
-                let _ = searchHistoryStore.recordLine(route.id)
-                LineDetailView(route: route)
             }
             .navigationDestination(for: TripTarget.self) { target in
                 TripDetailView(departure: target.departure, fromStop: target.fromStop)
@@ -96,30 +65,24 @@ struct OrariTab: View {
                 }
             }
             .onAppear { consumePending() }
-            .onChange(of: router.pendingRoute) { _, _ in consumePending() }
             .onChange(of: router.pendingStop) { _, _ in consumePending() }
             .onChange(of: router.pendingTrip) { _, _ in consumePending() }
-            .onChange(of: segment) { _, _ in
-                searchQuery = ""
-                selectedTransitType = nil
-            }
         }
     }
 
-    // MARK: - Segmented Bar
+    // MARK: - Deep Link
 
-    private var segmentedBar: some View {
-        Picker(String(localized: "tab_schedules"), selection: $segment) {
-            ForEach(OrariSegment.allCases, id: \.self) { seg in
-                Text(seg.label).tag(seg)
-            }
+    private func consumePending() {
+        if let stop = router.pendingStop {
+            router.pendingStop = nil
+            path = NavigationPath()
+            path.append(stop)
+        } else if let trip = router.pendingTrip {
+            router.pendingTrip = nil
+            path = NavigationPath()
+            path.append(trip.fromStop)
+            path.append(trip)
         }
-        .pickerStyle(.segmented)
-        .accessibilityIdentifier("segment_picker")
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(.ultraThinMaterial)
-        .background(AppTheme.glassFill)
     }
 
     // MARK: - Search Bar
@@ -130,9 +93,7 @@ struct OrariTab: View {
                 .foregroundStyle(AppTheme.textTertiary)
 
             TextField(
-                segment == .stops
-                    ? String(localized: "search_stop_placeholder")
-                    : String(localized: "search_line_placeholder"),
+                String(localized: "search_stop_placeholder"),
                 text: $searchQuery
             )
             .font(.system(.subheadline))
@@ -159,30 +120,7 @@ struct OrariTab: View {
                 .stroke(AppTheme.glassBorder, lineWidth: 1)
         )
         .padding(.horizontal, 16)
-        .padding(.bottom, 8)
-    }
-
-    // MARK: - Deep Link
-
-    private func consumePending() {
-        if let route = router.pendingRoute {
-            router.pendingRoute = nil
-            path = NavigationPath()
-            segment = .lines
-            path.append(route)
-            // router.autoOpenMap is left as-is; LineDetailView.onAppear handles it
-        } else if let stop = router.pendingStop {
-            router.pendingStop = nil
-            path = NavigationPath()
-            segment = .stops
-            path.append(stop)
-        } else if let trip = router.pendingTrip {
-            router.pendingTrip = nil
-            path = NavigationPath()
-            segment = .stops
-            path.append(trip.fromStop)
-            path.append(trip)
-        }
+        .padding(.vertical, 10)
     }
 
     // MARK: - Filter Chips
@@ -190,7 +128,6 @@ struct OrariTab: View {
     private var filterChips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                // "All" chip
                 FilterChip(
                     label: String(localized: "filter_all"),
                     isSelected: selectedTransitType == nil
@@ -219,4 +156,3 @@ struct OrariTab: View {
         }
     }
 }
-

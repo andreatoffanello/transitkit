@@ -134,5 +134,6 @@ struct FareInfoView: View {
         .background(AppTheme.background.ignoresSafeArea())
         .navigationTitle(String(localized: "nav_title_fares"))
         .navigationBarTitleDisplayMode(.large)
+        .toolbar(.hidden, for: .tabBar)
     }
 }

@@ -7,6 +7,9 @@ import MapKit
 // annotation z-ordering (MKAnnotationView.zPriority + displayPriority) which
 // SwiftUI's `Map` + `Annotation` APIs don't expose. Vehicles are pinned above
 // stops regardless of MapKit's default latitude-based annotation ordering.
+//
+// Clustering removed (2026-04-17): movete parity. At `.city` tier the map
+// renders nothing; the user sees clean tiles until they zoom in.
 
 struct TransitMapView: UIViewRepresentable {
 
@@ -14,14 +17,15 @@ struct TransitMapView: UIViewRepresentable {
     @Binding var region: MKCoordinateRegion
 
     // MARK: Data
-    let clusters: [StopCluster]
     let stops: [ResolvedStop]
     let vehicles: [GtfsRtVehicle]
     let polylines: [CachedPolyline]
 
     // MARK: Config
     let zoomLevel: MapZoomLevel
+    let tier: MapZoomTier
     let selectedStopId: String?
+    let selectedVehicleId: String?
     let selectedRouteColor: String?
     let showsUserLocation: Bool
     let routeIdByTripId: [String: String]
@@ -29,7 +33,6 @@ struct TransitMapView: UIViewRepresentable {
     let transitTypeForRoute: (APIRoute?) -> TransitType
 
     // MARK: Callbacks
-    var onClusterTap: (StopCluster) -> Void
     var onStopTap: (ResolvedStop) -> Void
     var onVehicleTap: (GtfsRtVehicle) -> Void
     var onRegionChange: (MKCoordinateRegion) -> Void
@@ -62,7 +65,7 @@ struct TransitMapView: UIViewRepresentable {
         // Sync annotations (disable implicit CA animations so coordinate updates snap).
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        coord.syncAnnotations(mapView: uiView, clusters: clusters, stops: stops, vehicles: vehicles)
+        coord.syncAnnotations(mapView: uiView, stops: stops, vehicles: vehicles)
         coord.syncOverlays(mapView: uiView, polylines: polylines)
         CATransaction.commit()
 
@@ -89,41 +92,86 @@ struct TransitMapView: UIViewRepresentable {
         var isUpdatingFromBinding = false
         var isUpdatingFromMap = false
 
-        var clusterAnnotations: [String: ClusterMKAnnotation] = [:]
         var stopAnnotations: [String: StopMKAnnotation] = [:]
         var vehicleAnnotations: [String: VehicleMKAnnotation] = [:]
         var polylineOverlays: [Int: MKPolyline] = [:]
 
+        // Display link unico che anima tutti i veicoli con animazione pendente.
+        // Si pausa automaticamente quando nessun veicolo è in transito.
+        private nonisolated(unsafe) var displayLink: CADisplayLink?
+
         init(parent: TransitMapView) {
             self.parent = parent
+            super.init()
+            let link = CADisplayLink(target: self, selector: #selector(tickVehicleAnimations))
+            link.preferredFrameRateRange = CAFrameRateRange(minimum: 30, maximum: 60, preferred: 60)
+            link.add(to: .main, forMode: .common)
+            link.isPaused = true
+            self.displayLink = link
+        }
+
+        deinit {
+            displayLink?.invalidate()
+        }
+
+        // MARK: Vehicle tween
+
+        /// Programma un tween lineare da `current` a `target`. Se un'animazione è
+        /// già in corso, la ripiglia dal valore corrente (no salti) e azzera il
+        /// timer verso il nuovo target.
+        private func scheduleVehicleTween(_ ann: VehicleMKAnnotation,
+                                          to target: CLLocationCoordinate2D) {
+            let fromCoord = ann.coordinate
+            // Skip se il delta è sotto il rumore GPS (~1m) — evita animazioni pigre.
+            let dLat = abs(fromCoord.latitude - target.latitude)
+            let dLng = abs(fromCoord.longitude - target.longitude)
+            if dLat < 0.00001 && dLng < 0.00001 {
+                ann.coordinate = target
+                ann.animationFrom = nil
+                ann.animationTo = nil
+                return
+            }
+            ann.animationFrom = fromCoord
+            ann.animationTo = target
+            ann.animationStart = CACurrentMediaTime()
+            // Durata base 1.0s; per salti grandi (GPS ricalibration, veicolo
+            // appena entrato in viewport) mantieni una cadenza coerente fino a 2s
+            // così distanze lunghe non sembrano teleport accelerati.
+            let metersPerDegLat = 111_000.0
+            let distance = sqrt((dLat * metersPerDegLat) * (dLat * metersPerDegLat)
+                              + (dLng * metersPerDegLat * 0.8) * (dLng * metersPerDegLat * 0.8))
+            ann.animationDuration = min(1.0, max(0.3, distance / 120.0))
+            displayLink?.isPaused = false
+        }
+
+        @objc private func tickVehicleAnimations() {
+            let now = CACurrentMediaTime()
+            var anyActive = false
+            for ann in vehicleAnnotations.values {
+                guard let from = ann.animationFrom, let to = ann.animationTo else { continue }
+                let t = (now - ann.animationStart) / ann.animationDuration
+                if t >= 1.0 {
+                    ann.coordinate = to
+                    ann.animationFrom = nil
+                    ann.animationTo = nil
+                    continue
+                }
+                anyActive = true
+                // Interpolazione lineare su lat/lng — stile movete "breve movimento
+                // lineare". Ease-in-out sembrerebbe più sofisticato ma falsa la
+                // percezione di velocità del veicolo reale.
+                let lat = from.latitude + (to.latitude - from.latitude) * t
+                let lng = from.longitude + (to.longitude - from.longitude) * t
+                ann.coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lng)
+            }
+            if !anyActive { displayLink?.isPaused = true }
         }
 
         // MARK: Annotation sync
 
         func syncAnnotations(mapView: MKMapView,
-                              clusters: [StopCluster],
                               stops: [ResolvedStop],
                               vehicles: [GtfsRtVehicle]) {
-            // Clusters
-            let clusterIds = Set(clusters.map(\.id))
-            for (id, ann) in clusterAnnotations where !clusterIds.contains(id) {
-                mapView.removeAnnotation(ann)
-                clusterAnnotations.removeValue(forKey: id)
-            }
-            for cluster in clusters {
-                if let ann = clusterAnnotations[cluster.id] {
-                    let newCoord = CLLocationCoordinate2D(latitude: cluster.centerLat, longitude: cluster.centerLng)
-                    if ann.coordinate.latitude != newCoord.latitude || ann.coordinate.longitude != newCoord.longitude {
-                        ann.coordinate = newCoord
-                    }
-                    ann.cluster = cluster
-                } else {
-                    let ann = ClusterMKAnnotation(cluster: cluster)
-                    clusterAnnotations[cluster.id] = ann
-                    mapView.addAnnotation(ann)
-                }
-            }
-
             // Stops
             let stopIds = Set(stops.map(\.id))
             for (id, ann) in stopAnnotations where !stopIds.contains(id) {
@@ -157,10 +205,13 @@ struct TransitMapView: UIViewRepresentable {
                 )
                 if let ann = vehicleAnnotations[vehicle.id] {
                     if ann.coordinate.latitude != newCoord.latitude || ann.coordinate.longitude != newCoord.longitude {
-                        ann.coordinate = newCoord
+                        scheduleVehicleTween(ann, to: newCoord)
                     }
                     ann.vehicle = vehicle
                 } else {
+                    // Primo spawn in viewport: nessuna animazione, il pin appare
+                    // direttamente sul coordinate corrente (evita un wipe-in da un
+                    // punto arbitrario).
                     let ann = VehicleMKAnnotation(vehicle: vehicle)
                     vehicleAnnotations[vehicle.id] = ann
                     mapView.addAnnotation(ann)
@@ -187,6 +238,7 @@ struct TransitMapView: UIViewRepresentable {
             for (_, ann) in stopAnnotations {
                 if let view = mapView.view(for: ann) as? StopAnnotationHost {
                     view.configure(with: ann.stop,
+                                   tier: parent.tier,
                                    zoomLevel: parent.zoomLevel,
                                    isSelected: parent.selectedStopId == ann.stop.id,
                                    routeColor: parent.selectedRouteColor)
@@ -202,7 +254,10 @@ struct TransitMapView: UIViewRepresentable {
                     let effectiveColor = route?.color ?? parent.selectedRouteColor
                     view.configure(with: ann.vehicle,
                                    routeColor: effectiveColor,
-                                   transitType: transitType)
+                                   transitType: transitType,
+                                   tier: parent.tier,
+                                   route: route,
+                                   isSelected: parent.selectedVehicleId == ann.vehicle.id)
                 }
             }
         }
@@ -212,21 +267,12 @@ struct TransitMapView: UIViewRepresentable {
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
             if annotation is MKUserLocation { return nil }
 
-            if let cluster = annotation as? ClusterMKAnnotation {
-                let view = (mapView.dequeueReusableAnnotationView(withIdentifier: "cluster") as? ClusterAnnotationHost)
-                    ?? ClusterAnnotationHost(annotation: cluster, reuseIdentifier: "cluster")
-                view.annotation = cluster
-                view.configure(with: cluster.cluster)
-                view.displayPriority = .required
-                view.zPriority = MKAnnotationViewZPriority(rawValue: 500)
-                return view
-            }
-
             if let stopAnn = annotation as? StopMKAnnotation {
                 let view = (mapView.dequeueReusableAnnotationView(withIdentifier: "stop") as? StopAnnotationHost)
                     ?? StopAnnotationHost(annotation: stopAnn, reuseIdentifier: "stop")
                 view.annotation = stopAnn
                 view.configure(with: stopAnn.stop,
+                               tier: parent.tier,
                                zoomLevel: parent.zoomLevel,
                                isSelected: parent.selectedStopId == stopAnn.stop.id,
                                routeColor: parent.selectedRouteColor)
@@ -247,7 +293,10 @@ struct TransitMapView: UIViewRepresentable {
                 let effectiveColor = route?.color ?? parent.selectedRouteColor
                 view.configure(with: vehicleAnn.vehicle,
                                routeColor: effectiveColor,
-                               transitType: transitType)
+                               transitType: transitType,
+                               tier: parent.tier,
+                               route: route,
+                               isSelected: parent.selectedVehicleId == vehicleAnn.vehicle.id)
                 view.displayPriority = .required
                 view.zPriority = .max
                 return view
@@ -270,9 +319,7 @@ struct TransitMapView: UIViewRepresentable {
 
         func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
             mapView.deselectAnnotation(view.annotation, animated: false)
-            if let cluster = view.annotation as? ClusterMKAnnotation {
-                parent.onClusterTap(cluster.cluster)
-            } else if let stopAnn = view.annotation as? StopMKAnnotation {
+            if let stopAnn = view.annotation as? StopMKAnnotation {
                 parent.onStopTap(stopAnn.stop)
             } else if let vehicleAnn = view.annotation as? VehicleMKAnnotation {
                 parent.onVehicleTap(vehicleAnn.vehicle)
@@ -291,15 +338,6 @@ struct TransitMapView: UIViewRepresentable {
 
 // MARK: - Custom MKAnnotation classes
 
-final class ClusterMKAnnotation: NSObject, MKAnnotation {
-    var cluster: StopCluster
-    @objc dynamic var coordinate: CLLocationCoordinate2D
-    init(cluster: StopCluster) {
-        self.cluster = cluster
-        self.coordinate = CLLocationCoordinate2D(latitude: cluster.centerLat, longitude: cluster.centerLng)
-    }
-}
-
 final class StopMKAnnotation: NSObject, MKAnnotation {
     var stop: ResolvedStop
     @objc dynamic var coordinate: CLLocationCoordinate2D
@@ -312,6 +350,15 @@ final class StopMKAnnotation: NSObject, MKAnnotation {
 final class VehicleMKAnnotation: NSObject, MKAnnotation {
     var vehicle: GtfsRtVehicle
     @objc dynamic var coordinate: CLLocationCoordinate2D
+
+    // Tween lineare tra due update GTFS-RT. Il Coordinator's CADisplayLink
+    // interpola `coordinate` frame-by-frame da `animationFrom` → `animationTo`
+    // sulla durata `animationDuration`, così il marker scivola invece di saltare.
+    var animationFrom: CLLocationCoordinate2D?
+    var animationTo: CLLocationCoordinate2D?
+    var animationStart: CFTimeInterval = 0
+    var animationDuration: CFTimeInterval = 1.0
+
     init(vehicle: GtfsRtVehicle) {
         self.vehicle = vehicle
         self.coordinate = CLLocationCoordinate2D(
@@ -319,36 +366,11 @@ final class VehicleMKAnnotation: NSObject, MKAnnotation {
             longitude: Double(vehicle.longitude)
         )
     }
+
+    var isAnimating: Bool { animationTo != nil }
 }
 
 // MARK: - Annotation host views (UIKit wrapping SwiftUI)
-
-final class ClusterAnnotationHost: MKAnnotationView {
-    private var hosting: UIHostingController<ClusterAnnotationView>?
-
-    override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
-        super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
-        frame = CGRect(x: 0, y: 0, width: 44, height: 44)
-        backgroundColor = .clear
-        centerOffset = .zero
-    }
-
-    required init?(coder: NSCoder) { fatalError() }
-
-    func configure(with cluster: StopCluster) {
-        let view = ClusterAnnotationView(count: cluster.count)
-        if let hc = hosting {
-            hc.rootView = view
-        } else {
-            let hc = UIHostingController(rootView: view)
-            hc.view.backgroundColor = .clear
-            hc.view.frame = bounds
-            hc.view.isUserInteractionEnabled = false
-            addSubview(hc.view)
-            hosting = hc
-        }
-    }
-}
 
 final class StopAnnotationHost: MKAnnotationView {
     private var hosting: UIHostingController<StopAnnotationView>?
@@ -357,16 +379,19 @@ final class StopAnnotationHost: MKAnnotationView {
         super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
         frame = CGRect(x: 0, y: 0, width: 60, height: 60)
         backgroundColor = .clear
+        clipsToBounds = false
     }
 
     required init?(coder: NSCoder) { fatalError() }
 
     func configure(with stop: ResolvedStop,
+                   tier: MapZoomTier,
                    zoomLevel: MapZoomLevel,
                    isSelected: Bool,
                    routeColor: String?) {
         let view = StopAnnotationView(
             stop: stop,
+            tier: tier,
             zoomLevel: zoomLevel,
             isSelected: isSelected,
             routeColor: routeColor
@@ -378,11 +403,23 @@ final class StopAnnotationHost: MKAnnotationView {
             hc.view.backgroundColor = .clear
             hc.view.frame = bounds
             hc.view.isUserInteractionEnabled = false
+            hc.view.clipsToBounds = false
             addSubview(hc.view)
             hosting = hc
         }
-        // Anchor: .far uses center; otherwise bottom (triangle tip at coord).
-        centerOffset = zoomLevel == .far ? .zero : CGPoint(x: 0, y: -22)
+        // Anchor mapping:
+        // - .city / .neighborhood: square marker is centered inside the host,
+        //   so host-center at coordinate is correct → zero offset.
+        // - .street: the SwiftUI content bottom-aligns inside a 60pt-tall host
+        //   (triangle tip at host's bottom edge). We shift the host up by half
+        //   its height so the bottom edge — and therefore the tip — lands on the
+        //   coordinate regardless of label visibility.
+        switch tier {
+        case .city, .neighborhood:
+            centerOffset = .zero
+        case .street:
+            centerOffset = CGPoint(x: 0, y: -bounds.height / 2)
+        }
     }
 }
 
@@ -391,20 +428,31 @@ final class VehicleAnnotationHost: MKAnnotationView {
 
     override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
         super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
-        frame = CGRect(x: 0, y: 0, width: 60, height: 60)
+        // Oversized host so the pin-badge (~30pt tall) floating above the dot
+        // isn't clipped. MKAnnotationView anchors by center — the dot stays at
+        // the geometric center of the SwiftUI view, so the annotation's
+        // `coordinate` still resolves to the dot center.
+        frame = CGRect(x: 0, y: 0, width: 100, height: 100)
         backgroundColor = .clear
         centerOffset = .zero
+        clipsToBounds = false
     }
 
     required init?(coder: NSCoder) { fatalError() }
 
     func configure(with vehicle: GtfsRtVehicle,
                    routeColor: String?,
-                   transitType: TransitType) {
+                   transitType: TransitType,
+                   tier: MapZoomTier,
+                   route: APIRoute?,
+                   isSelected: Bool) {
         let view = VehicleAnnotationView(
             vehicle: vehicle,
             routeColor: routeColor,
-            transitType: transitType
+            transitType: transitType,
+            tier: tier,
+            route: route,
+            isSelected: isSelected
         )
         if let hc = hosting {
             hc.rootView = view
@@ -413,6 +461,7 @@ final class VehicleAnnotationHost: MKAnnotationView {
             hc.view.backgroundColor = .clear
             hc.view.frame = bounds
             hc.view.isUserInteractionEnabled = false
+            hc.view.clipsToBounds = false
             addSubview(hc.view)
             hosting = hc
         }

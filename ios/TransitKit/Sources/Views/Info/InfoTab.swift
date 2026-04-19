@@ -1,274 +1,361 @@
 import SwiftUI
 
-// MARK: - InfoTab
+// MARK: - ServiziTab (Services index)
 
-/// Main tab for ticket/fare information, points of sale, and operator details.
-/// Content is driven entirely by `OperatorConfig` — no hardcoded operator names.
-struct InfoTab: View {
-    @Environment(ScheduleStore.self) private var store
-
-    private var config: OperatorConfig? {
-        try? ConfigLoader.load()
-    }
+/// Top-level index for the Services tab.
+/// Groups the operator's services, fares, accessibility, and contact entries
+/// in a single browsable list. Tapping any card navigates to its detail view.
+struct ServiziTab: View {
+    let config: OperatorConfig
 
     var body: some View {
         NavigationStack {
-            if let config {
-                scrollContent(config)
-            } else {
-                Text(String(localized: "error_loading"))
-                    .foregroundStyle(AppTheme.textSecondary)
+            ScrollView {
+                LazyVStack(spacing: 20) {
+                    servicesSection(config: config)
+                    operatorCard(config: config)
+                    faresSection(config: config)
+                    accessibilitySection(config: config)
+                    contactSection(config: config)
+                    Spacer(minLength: 40)
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
             }
+            .background(AppTheme.background.ignoresSafeArea())
+            .navigationTitle(String(localized: "services_title"))
+            .navigationBarTitleDisplayMode(.large)
         }
     }
 
-    private func scrollContent(_ config: OperatorConfig) -> some View {
-        ScrollView {
-            VStack(spacing: 20) {
+    // MARK: Services section
 
-                // MARK: Tickets & Fares
-                if let fares = config.fares, !fares.types.isEmpty {
-                    sectionHeader(
-                        title: String(localized: "info_section_fares"),
-                        lucideIcon: .ticket
-                    )
+    @ViewBuilder
+    private func servicesSection(config: OperatorConfig) -> some View {
+        if let services = config.services, !services.isEmpty {
+            sectionHeader(String(localized: "services_section_title"))
+            VStack(spacing: 12) {
+                ForEach(services) { service in
                     NavigationLink {
-                        FareInfoView(fares: fares, operatorUrl: config.url)
+                        ServiceDetailView(service: service, phone: config.contact?.phone)
                     } label: {
-                        faresSummaryCard(fares)
+                        ServiceRowCard(service: service)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(PressableCardStyle())
+                    .accessibilityIdentifier("service_row_\(service.id)")
                 }
-
-                // MARK: Points of Sale
-                if let pos = config.pointsOfSale, !pos.isEmpty {
-                    sectionHeader(
-                        title: String(localized: "info_section_points_of_sale"),
-                        lucideIcon: .mapPin
-                    )
-                    pointsOfSaleCard(pos)
-                }
-
-                // MARK: Operator Info
-                sectionHeader(
-                    title: String(localized: "info_section_operator"),
-                    lucideIcon: .info
-                )
-                NavigationLink {
-                    OperatorInfoView(config: config)
-                } label: {
-                    operatorCard(config)
-                }
-                .buttonStyle(.plain)
-
-                // MARK: Data Info
-                sectionHeader(
-                    title: String(localized: "info_section_data"),
-                    lucideIcon: .list
-                )
-                dataInfoCard
-
-                Spacer(minLength: 32)
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
         }
-        .background(AppTheme.background.ignoresSafeArea())
-        .navigationTitle(String(localized: "tab_info"))
-        .navigationBarTitleDisplayMode(.large)
     }
 
-    // MARK: - Section Header
+    // MARK: Fares section
 
-    private func sectionHeader(title: String, lucideIcon: LucideIcon? = nil) -> some View {
-        HStack(spacing: 8) {
-            if let lucideIcon {
-                lucideIcon.image
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(AppTheme.accent)
+    @ViewBuilder
+    private func faresSection(config: OperatorConfig) -> some View {
+        if let fares = config.fares {
+            sectionHeader(String(localized: "services_section_fares"))
+            NavigationLink {
+                FareInfoView(fares: fares, operatorUrl: config.url)
+            } label: {
+                summaryCard(
+                    icon: .ticket,
+                    title: String(localized: "services_section_fares"),
+                    subtitle: faresSummary(fares)
+                )
             }
-            Text(title)
-                .font(.headline)
-                .foregroundStyle(AppTheme.textPrimary)
+            .buttonStyle(PressableCardStyle())
+            .accessibilityIdentifier("service_row_fares")
+        }
+    }
+
+    private func faresSummary(_ fares: FareInfo) -> String {
+        let freeTokens: Set<String> = ["free", "gratis", "gratuito", "$0", "$0.00"]
+        let isFree = fares.types.allSatisfy { t in
+            freeTokens.contains(t.price.trimmingCharacters(in: .whitespaces).lowercased())
+        }
+        if isFree {
+            return String(localized: "services_fare_free")
+        }
+        // Find minimum numeric fare
+        let numeric = fares.types.compactMap { t -> (String, Double)? in
+            let cleaned = t.price.replacingOccurrences(of: "$", with: "")
+                .trimmingCharacters(in: .whitespaces)
+            return Double(cleaned).map { (t.price, $0) }
+        }
+        if let min = numeric.min(by: { $0.1 < $1.1 }) {
+            return String(format: String(localized: "services_fare_from %@"), min.0)
+        }
+        return fares.types.first?.price ?? ""
+    }
+
+    // MARK: Accessibility section
+
+    @ViewBuilder
+    private func accessibilitySection(config: OperatorConfig) -> some View {
+        if let accessibility = config.accessibility {
+            sectionHeader(String(localized: "services_section_accessibility"))
+            NavigationLink {
+                AccessibilityInfoView(info: accessibility)
+            } label: {
+                summaryCard(
+                    icon: .accessibility,
+                    title: accessibility.title.resolved(),
+                    subtitle: accessibility.description.resolved()
+                )
+            }
+            .buttonStyle(PressableCardStyle())
+            .accessibilityIdentifier("service_row_accessibility")
+        }
+    }
+
+    // MARK: Contact section
+
+    /// Single-row entry card. Tapping opens the full `ContactInfoView`
+    /// where phone / email / TDD / address / hours are presented in full.
+    /// The index row itself shows only the section title + a compact preview
+    /// of the primary channels to avoid duplicating detail content.
+    @ViewBuilder
+    private func contactSection(config: OperatorConfig) -> some View {
+        if let contact = config.contact {
+            sectionHeader(String(localized: "services_section_contact"))
+            NavigationLink {
+                ContactInfoView(contact: contact)
+            } label: {
+                contactSummaryRow(contact: contact)
+            }
+            .buttonStyle(PressableCardStyle())
+            .accessibilityIdentifier("service_row_contact")
+        }
+    }
+
+    private func contactSummaryRow(contact: OperatorConfig.ContactConfig) -> some View {
+        GlassCard(cornerRadius: 16) {
+            HStack(spacing: 14) {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(AppTheme.accent.opacity(0.14))
+                    .frame(width: 40, height: 40)
+                    .overlay(
+                        LucideIcon.phone.sized(20)
+                            .foregroundStyle(AppTheme.accent)
+                    )
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(String(localized: "services_section_contact"))
+                        .font(.headline)
+                        .foregroundStyle(AppTheme.textPrimary)
+                        .lineLimit(1)
+                    Text(contactPreview(contact: contact))
+                        .font(.footnote)
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+                Spacer(minLength: 0)
+                LucideIcon.chevronRight.sized(18)
+                    .foregroundStyle(AppTheme.textTertiary)
+            }
+            .padding(.horizontal, 12)
+            .frame(height: 56)
+        }
+    }
+
+    /// Primary-channel preview line: phone + email, separated by middle dot.
+    /// Trimmed to the subset present; middle-ellipsis kicks in via the row.
+    private func contactPreview(contact: OperatorConfig.ContactConfig) -> String {
+        [contact.phone, contact.email]
+            .compactMap { $0 }
+            .joined(separator: " • ")
+    }
+
+    // MARK: Operator card
+
+    /// Standalone about-operator card (no section header). Sits directly
+    /// beneath the services list so users quickly see whose services they're
+    /// looking at without the redundant top "tagline" header card.
+    private func operatorCard(config: OperatorConfig) -> some View {
+        NavigationLink {
+            OperatorInfoView(config: config)
+        } label: {
+            GlassCard(cornerRadius: 16) {
+                HStack(spacing: 14) {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(AppTheme.accent)
+                        .frame(width: 48, height: 48)
+                        .overlay(
+                            LucideIcon.busFront.sized(22)
+                                .foregroundStyle(.white)
+                        )
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(config.fullName)
+                            .font(.headline)
+                            .foregroundStyle(AppTheme.textPrimary)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(operatorSubtitle(config: config))
+                            .font(.subheadline)
+                            .foregroundStyle(AppTheme.textSecondary)
+                            .lineLimit(1)
+                    }
+                    Spacer(minLength: 0)
+                    LucideIcon.chevronRight.sized(18)
+                        .foregroundStyle(AppTheme.textTertiary)
+                }
+                .padding(16)
+            }
+        }
+        .buttonStyle(PressableCardStyle())
+        .accessibilityIdentifier("service_row_operator")
+    }
+
+    /// Subtitle for the operator card: prefers an explicit region/city, falls
+    /// back to the services tagline so the row never reads with a blank line.
+    private func operatorSubtitle(config: OperatorConfig) -> String {
+        if let region = extractRegion(from: config.contact?.address), !region.isEmpty {
+            return region
+        }
+        return String(localized: "services_tagline")
+    }
+
+    /// Grab a short, human-readable region hint from a full address (the
+    /// last comma-separated component, e.g. "Boone, NC" → "Boone, NC").
+    /// Falls back to the full string if no split is possible.
+    private func extractRegion(from address: String?) -> String? {
+        guard let address else { return nil }
+        let parts = address.split(separator: ",").map {
+            $0.trimmingCharacters(in: .whitespaces)
+        }
+        if parts.count >= 2 {
+            return parts.suffix(2).joined(separator: ", ")
+        }
+        return parts.first
+    }
+
+    // MARK: Shared building blocks
+
+    private func sectionHeader(_ title: String) -> some View {
+        HStack {
+            Text(title.uppercased())
+                .font(.caption.weight(.semibold))
+                .kerning(0.6)
+                .foregroundStyle(AppTheme.textTertiary)
             Spacer()
         }
+        .padding(.horizontal, 4)
         .padding(.top, 8)
     }
 
-    // MARK: - Fares Summary Card
-
-    private func faresSummaryCard(_ fares: FareInfo) -> some View {
-        GlassCard(cornerRadius: 16) {
-            VStack(alignment: .leading, spacing: 12) {
-                // Show first 3 fare types as preview
-                ForEach(Array(fares.types.prefix(3).enumerated()), id: \.element.id) { index, fare in
-                    HStack {
-                        Text(fare.name)
-                            .font(.subheadline)
-                            .foregroundStyle(AppTheme.textPrimary)
-                        Spacer()
-                        Text(fare.price)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(AppTheme.accent)
-                    }
-                    if index < min(fares.types.count, 3) - 1 {
-                        Rectangle()
-                            .fill(AppTheme.separatorLine)
-                            .frame(height: 0.5)
-                    }
-                }
-
-                if fares.types.count > 3 {
-                    HStack {
-                        Spacer()
-                        Text(String(localized: "info_see_all_fares"))
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(AppTheme.accent)
-                        LucideIcon.chevronRight.image
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(AppTheme.accent)
-                    }
-                }
-            }
-            .padding(16)
-        }
-    }
-
-    // MARK: - Points of Sale Card
-
-    private func pointsOfSaleCard(_ locations: [PointOfSale]) -> some View {
-        GlassCard(cornerRadius: 16) {
-            VStack(alignment: .leading, spacing: 0) {
-                ForEach(Array(locations.enumerated()), id: \.element.id) { index, location in
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(spacing: 10) {
-                            LucideIcon.mapPin.image
-                                .font(.body)
-                                .foregroundStyle(AppTheme.accent)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(location.name)
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundStyle(AppTheme.textPrimary)
-                                if let address = location.address {
-                                    Text(address)
-                                        .font(.caption)
-                                        .foregroundStyle(AppTheme.textSecondary)
-                                }
-                                if let hours = location.hours {
-                                    Text(hours)
-                                        .font(.caption)
-                                        .foregroundStyle(AppTheme.textTertiary)
-                                }
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-
-                    if index < locations.count - 1 {
-                        Rectangle()
-                            .fill(AppTheme.separatorLine)
-                            .frame(height: 0.5)
-                            .padding(.leading, 42)
-                    }
-                }
-            }
-        }
-    }
-
-    // MARK: - Operator Card
-
-    private func operatorCard(_ config: OperatorConfig) -> some View {
+    private func summaryCard(icon: LucideIcon, title: String, subtitle: String) -> some View {
         GlassCard(cornerRadius: 16) {
             HStack(spacing: 14) {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(AppTheme.primary.opacity(0.12))
-                    .frame(width: 44, height: 44)
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(AppTheme.accent.opacity(0.14))
+                    .frame(width: 48, height: 48)
                     .overlay(
-                        LucideIcon.bus.image
-                            .font(.body)
-                            .foregroundStyle(AppTheme.primary)
+                        icon.sized(22)
+                            .foregroundStyle(AppTheme.accent)
                     )
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(config.name)
-                        .font(.subheadline.weight(.semibold))
+                    Text(title)
+                        .font(.headline)
                         .foregroundStyle(AppTheme.textPrimary)
-                    Text(config.fullName)
-                        .font(.caption)
+                        .lineLimit(1)
+                    Text(subtitle)
+                        .font(.subheadline)
                         .foregroundStyle(AppTheme.textSecondary)
                         .lineLimit(2)
+                        .multilineTextAlignment(.leading)
                 }
-                Spacer()
-                LucideIcon.chevronRight.image
-                    .font(.caption.weight(.semibold))
+                Spacer(minLength: 0)
+                LucideIcon.chevronRight.sized(18)
                     .foregroundStyle(AppTheme.textTertiary)
             }
             .padding(16)
         }
     }
 
-    // MARK: - Date Formatting Helpers
+}
 
-    /// Formats ISO8601 datetime string (e.g. "2026-04-01T20:42:52Z") to locale date.
-    private func formatISO8601Date(_ raw: String) -> String {
-        let iso = ISO8601DateFormatter()
-        iso.formatOptions = [.withInternetDateTime]
-        if let date = iso.date(from: raw) {
-            return date.formatted(date: .abbreviated, time: .omitted)
-        }
-        // Fallback: strip the time portion for display
-        return String(raw.prefix(10))
-    }
+// MARK: - ServiceRowCard
 
-    /// Formats GTFS compact date (YYYYMMDD) to locale date.
-    private func formatGTFSDate(_ raw: String) -> String {
-        let fmt = DateFormatter()
-        fmt.dateFormat = "yyyyMMdd"
-        if let date = fmt.date(from: raw) {
-            return date.formatted(date: .abbreviated, time: .omitted)
-        }
-        return raw
-    }
+/// Tappable list card: icon badge + title + subtitle + chevron.
+/// Used as the label for each service's NavigationLink.
+private struct ServiceRowCard: View {
+    let service: ServiceInfo
 
-    // MARK: - Data Info Card
-
-    private var dataInfoCard: some View {
+    var body: some View {
         GlassCard(cornerRadius: 16) {
-            VStack(alignment: .leading, spacing: 12) {
-                if let lastUpdated = store.lastUpdated {
-                    dataRow(
-                        label: String(localized: "info_data_last_updated"),
-                        value: formatISO8601Date(lastUpdated),
-                        icon: .clock
+            HStack(spacing: 14) {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(AppTheme.accent.opacity(0.14))
+                    .frame(width: 48, height: 48)
+                    .overlay(
+                        ServiceIcon(key: service.icon)
+                            .sized(22)
+                            .foregroundStyle(AppTheme.accent)
                     )
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(service.title.resolved())
+                        .font(.headline)
+                        .foregroundStyle(AppTheme.textPrimary)
+                        .lineLimit(1)
+                    Text(service.subtitle.resolved())
+                        .font(.subheadline)
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
                 }
-                // validUntil not available in new API response
-                Rectangle()
-                    .fill(AppTheme.separatorLine)
-                    .frame(height: 0.5)
-                dataRow(
-                    label: String(localized: "info_data_source"),
-                    value: "GTFS",
-                    icon: .table
-                )
+                Spacer(minLength: 0)
+                LucideIcon.chevronRight.sized(18)
+                    .foregroundStyle(AppTheme.textTertiary)
             }
             .padding(16)
         }
     }
+}
 
-    private func dataRow(label: String, value: String, icon: LucideIcon) -> some View {
-        HStack(spacing: 10) {
-            icon.image
-                .font(.caption)
-                .foregroundStyle(AppTheme.textTertiary)
-                .frame(width: 20)
-            Text(label)
-                .font(.caption)
-                .foregroundStyle(AppTheme.textSecondary)
-            Spacer()
-            Text(value)
-                .font(.caption.weight(.medium))
-                .foregroundStyle(AppTheme.textPrimary)
+// MARK: - ServiceIcon
+
+/// Maps a string key from config JSON to the correct `LucideIcon` asset,
+/// falling back to `.info` for unknown keys.
+struct ServiceIcon {
+    let key: String
+
+    private var icon: LucideIcon {
+        switch key {
+        case "bus": return .bus
+        case "bus-front": return .busFront
+        case "accessibility": return .accessibility
+        case "map-pin": return .mapPin
+        case "map": return .map
+        case "route": return .route
+        case "ticket": return .ticket
+        case "compass": return .compass
+        case "users": return .users
+        case "phone": return .phone
+        case "globe": return .globe
+        case "clock": return .clock
+        case "navigation": return .navigation
+        default: return .info
         }
+    }
+
+    func sized(_ pt: CGFloat) -> some View {
+        icon.sized(pt)
+    }
+
+    var image: Image { icon.image }
+}
+
+// MARK: - PressableCardStyle
+
+/// Button style for navigation rows built from `GlassCard`.
+/// Provides a subtle press-state scale + opacity shift for tactile feedback.
+struct PressableCardStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .contentShape(Rectangle())
+            .scaleEffect(configuration.isPressed ? 0.985 : 1.0)
+            .opacity(configuration.isPressed ? 0.92 : 1.0)
+            .animation(.spring(response: 0.28, dampingFraction: 0.78), value: configuration.isPressed)
     }
 }

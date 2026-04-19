@@ -26,6 +26,8 @@ struct OperatorConfig: Codable {
     let privacyUrl: String?
     let gtfsRt: GtfsRtConfig?
     let headsignMap: [String: String]?
+    let services: [ServiceInfo]?
+    let accessibility: AccessibilityInfo?
 
     struct ThemeConfig: Codable {
         let primaryColor: String
@@ -79,6 +81,9 @@ struct OperatorConfig: Codable {
     struct ContactConfig: Codable {
         let phone: String?
         let email: String?
+        let tdd: String?
+        let address: String?
+        let hours: LocalizedText?
     }
 
     struct GtfsRtConfig: Codable {
@@ -91,9 +96,68 @@ struct OperatorConfig: Codable {
         enum CodingKeys: String, CodingKey {
             case vehiclePositionsUrl = "vehiclePositions"   // JSON: "vehicle_positions"
             case tripUpdatesUrl = "tripUpdates"             // JSON: "trip_updates"
-            case serviceAlertsUrl = "serviceAlerts"         // JSON: "service_alerts"
+            case serviceAlertsUrl = "alerts"                // JSON: "alerts"
         }
     }
+}
+
+// MARK: - Localized Text
+
+/// A multilingual string dictionary keyed by 2-letter language code, e.g. `["en": "Hi", "es": "Hola"]`.
+/// Resolver picks the best match for the current UI locale.
+typealias LocalizedText = [String: String]
+
+extension Dictionary where Key == String, Value == String {
+    /// Resolve the best string for the current UI locale with fallback chain:
+    /// requested language → English → first available.
+    func resolved() -> String {
+        let requested = String((Locale.preferredLanguages.first ?? "en").prefix(2))
+        return self[requested] ?? self["en"] ?? self.values.first ?? ""
+    }
+}
+
+// MARK: - Services
+
+/// A single service offered by the operator (fixed route, paratransit, regional, etc.).
+/// All text fields are multilingual — use `.resolved()` to fetch the best-matched string.
+struct ServiceInfo: Codable, Identifiable {
+    let id: String
+    let icon: String
+    let title: LocalizedText
+    let subtitle: LocalizedText
+    let description: LocalizedText
+    let audience: LocalizedText?
+    let steps: [LocalizedText]?
+    let hours: LocalizedText?
+    let fare: LocalizedText?
+    let serviceArea: LocalizedText?
+    let notes: [LocalizedText]?
+    let cta: ServiceCTA?
+    let links: [ServiceLink]?
+}
+
+/// Primary call-to-action for a service. `type` is either `"phone"` or `"url"`.
+struct ServiceCTA: Codable {
+    let type: String
+    let label: LocalizedText
+    let value: String
+}
+
+/// Secondary link shown at the bottom of a service detail view.
+struct ServiceLink: Codable, Identifiable {
+    var id: String { url }
+    let label: LocalizedText
+    let url: String
+}
+
+// MARK: - Accessibility
+
+/// Operator-wide accessibility statement.
+struct AccessibilityInfo: Codable {
+    let title: LocalizedText
+    let description: LocalizedText
+    let bullets: [LocalizedText]
+    let moreUrl: String?
 }
 
 // MARK: - Fare Info

@@ -91,7 +91,7 @@ struct LineMapView: View {
             }
             .padding(.top, 56)
             .padding(.leading, 16)
-            .accessibilityLabel("Chiudi mappa")
+            .accessibilityLabel(Text(String(localized: "a11y_close_map")))
             .accessibilityIdentifier("btn_linemap_close")
 
             // Top-right: line identity + optional live badge — stacked vertically
@@ -302,7 +302,7 @@ private struct FullVehiclePin: View {
         }
         .frame(width: Self.size, height: Self.size)
         .drawingGroup()
-        .accessibilityLabel("\(routeName) in transito")
+        .accessibilityLabel(Text(String(format: String(localized: "a11y_vehicle_in_transit"), routeName)))
         .accessibilityIdentifier("vehicle_\(routeName)")
     }
 }

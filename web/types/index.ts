@@ -1,9 +1,4 @@
 // ---- Operator Config ----
-export interface AppLinks {
-  ios?: string
-  android?: string
-}
-
 export interface OperatorConfig {
   id: string
   name: string
@@ -17,13 +12,14 @@ export interface OperatorConfig {
   store: StoreConfig
   map: MapConfig
   features: FeaturesConfig
-  appLinks?: AppLinks
   contact?: ContactConfig
   fares?: FareInfo
   pointsOfSale?: PointOfSale[]
   privacyUrl?: string
   gtfsRt?: GtfsRtConfig
   headsignMap?: Record<string, string>
+  services?: OperatorService[]
+  accessibility?: AccessibilityInfo
 }
 
 export interface ThemeConfig {
@@ -50,6 +46,7 @@ export interface FeaturesConfig {
   enableGeolocation: boolean
   enableFavorites: boolean
   enableNotifications: boolean
+  enableInfo?: boolean
 }
 
 export interface ContactConfig {
@@ -79,6 +76,37 @@ export interface PointOfSale {
   name: string
   address?: string
   hours?: string
+}
+
+export interface MultiLangString { [locale: string]: string }
+
+export interface ServiceCta {
+  type: 'internal' | 'phone' | 'url'
+  value: string
+  label: MultiLangString
+}
+
+export interface OperatorService {
+  id: string
+  icon: string
+  title: MultiLangString
+  subtitle: MultiLangString
+  description?: MultiLangString
+  audience?: MultiLangString
+  steps?: MultiLangString[]
+  hours?: MultiLangString
+  fare?: MultiLangString
+  serviceArea?: MultiLangString
+  notes?: MultiLangString[]
+  cta?: ServiceCta
+  links?: Array<{ label: MultiLangString; url: string }>
+}
+
+export interface AccessibilityInfo {
+  title: MultiLangString
+  description: MultiLangString
+  bullets: MultiLangString[]
+  moreUrl?: string
 }
 
 // ---- Schedule Data ----

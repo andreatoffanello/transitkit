@@ -5,7 +5,8 @@ import SwiftUI
 /// stored as template images in the asset catalog for tinting via `.foregroundStyle()`.
 enum LucideIcon: String, CaseIterable {
     // Transport
-    case bus = "lucide-bus-front"
+    case bus = "lucide-bus"
+    case busFront = "lucide-bus-front"
     case train = "lucide-train"
     case ship = "lucide-ship"
     case cableCar = "lucide-cable-car"
@@ -22,6 +23,8 @@ enum LucideIcon: String, CaseIterable {
     case map = "lucide-map"
     case navigation = "lucide-navigation"
     case crosshair = "lucide-crosshair"
+    case signpost = "lucide-signpost"
+    case route = "lucide-route"
     case globe = "lucide-globe"
     case externalLink = "lucide-external-link"
     case maximize2 = "lucide-maximize-2"
@@ -53,6 +56,11 @@ enum LucideIcon: String, CaseIterable {
     case table = "lucide-table"
     case phone = "lucide-phone"
     case mail = "lucide-mail"
+    case accessibility = "lucide-accessibility"
+    case compass = "lucide-compass"
+    case users = "lucide-users"
+    case listOrdered = "lucide-list-ordered"
+    case headphones = "lucide-headphones"
 
     /// SwiftUI Image view with template rendering mode for tinting.
     var image: Image {

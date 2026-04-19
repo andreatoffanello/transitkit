@@ -736,7 +736,6 @@ private fun DepartureRow(departure: Departure, isNext: Boolean = false, operator
     val colors = TransitTheme.colors
     val displayTime = departure.realtimeDepartureTime ?: departure.departureTime
     val hasDelay = (departure.delay ?: 0) > 0
-    val countdown = minutesUntil(displayTime, operatorTimezone)
 
     Column(
         modifier = Modifier
@@ -816,101 +815,57 @@ private fun DepartureRow(departure: Departure, isNext: Boolean = false, operator
 
             Spacer(Modifier.width(8.dp))
 
-            // Time + realtime indicators
-            Column(horizontalAlignment = Alignment.End) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Realtime live badge — pulsing outer ring + solid inner dot (parity iOS LiveBadge)
-                    if (departure.isRealtime) {
-                        val realtimePulse = rememberInfiniteTransition(label = "realtimePulse")
-                        val pulseScale by realtimePulse.animateFloat(
-                            initialValue = 1f,
-                            targetValue = 1.6f,
-                            animationSpec = infiniteRepeatable(
-                                animation = tween(1200, easing = FastOutSlowInEasing),
-                                repeatMode = RepeatMode.Restart,
-                            ),
-                            label = "pulseScale",
-                        )
-                        val pulseAlpha by realtimePulse.animateFloat(
-                            initialValue = 0.3f,
-                            targetValue = 0f,
-                            animationSpec = infiniteRepeatable(
-                                animation = tween(1200, easing = FastOutSlowInEasing),
-                                repeatMode = RepeatMode.Restart,
-                            ),
-                            label = "pulseAlpha",
-                        )
-                        Box(
-                            modifier = Modifier.size(14.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            // Expanding outer ring
-                            Box(
-                                modifier = Modifier
-                                    .size(14.dp)
-                                    .scale(pulseScale)
-                                    .background(colors.realtimeGreen.copy(alpha = pulseAlpha), CircleShape),
-                            )
-                            // Inner solid dot
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .background(colors.realtimeGreen, CircleShape),
-                            )
-                        }
-                        Spacer(Modifier.width(4.dp))
-                    }
-                    Text(
-                        text = formatTime(displayTime),
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            fontFeatureSettings = "tnum",
-                        ),
-                        color = if (isNext) colors.accent else colors.textPrimary,
+            // Realtime live indicator (pulsing ring) stays inline — it's a
+            // freshness badge, not part of the time glyph.
+            if (departure.isRealtime) {
+                val realtimePulse = rememberInfiniteTransition(label = "realtimePulse")
+                val pulseScale by realtimePulse.animateFloat(
+                    initialValue = 1f,
+                    targetValue = 1.6f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(1200, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Restart,
+                    ),
+                    label = "pulseScale",
+                )
+                val pulseAlpha by realtimePulse.animateFloat(
+                    initialValue = 0.3f,
+                    targetValue = 0f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(1200, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Restart,
+                    ),
+                    label = "pulseAlpha",
+                )
+                Box(
+                    modifier = Modifier.size(14.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(14.dp)
+                            .scale(pulseScale)
+                            .background(colors.realtimeGreen.copy(alpha = pulseAlpha), CircleShape),
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .background(colors.realtimeGreen, CircleShape),
                     )
                 }
-                if (countdown != null) {
-                    if (countdown == 0) {
-                        val infiniteTransition = rememberInfiniteTransition(label = "departing")
-                        val pulseAlpha by infiniteTransition.animateFloat(
-                            initialValue = 1f,
-                            targetValue = 0.3f,
-                            animationSpec = infiniteRepeatable(
-                                animation = tween(700, easing = FastOutSlowInEasing),
-                                repeatMode = RepeatMode.Reverse,
-                            ),
-                            label = "pulse",
-                        )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(7.dp)
-                                    .alpha(pulseAlpha)
-                                    .background(colors.realtimeGreen, CircleShape),
-                            )
-                            Text(
-                                text = stringResource(R.string.label_adesso),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = colors.realtimeGreen,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                        }
-                    } else {
-                        val countdownColor = when {
-                            countdown <= 5 -> colors.realtimeGreen
-                            isNext -> colors.accent
-                            else -> colors.textSecondary
-                        }
-                        Text(
-                            text = "${countdown}'",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = countdownColor,
-                        )
-                    }
-                }
+                Spacer(Modifier.width(6.dp))
+            }
+
+            // Canonical stacked time display: minutes (top) / HH:mm (bottom).
+            Column(horizontalAlignment = Alignment.End) {
+                val timeState = com.transitkit.app.ui.components.departureTimeState(
+                    displayTime,
+                    operatorTimezone,
+                )
+                com.transitkit.app.ui.components.TimeDisplay(
+                    state = timeState,
+                    isEmphasis = isNext,
+                )
                 if (hasDelay) {
                     val delayMin = (departure.delay ?: 0) / 60
                     Text(

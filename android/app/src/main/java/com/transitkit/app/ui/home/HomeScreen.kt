@@ -292,6 +292,7 @@ private fun FavoriteStopsSection(
                     stop = stop,
                     departures = favoriteDepartures[stop.id] ?: emptyList(),
                     liveTripIds = liveTripIds,
+                    operatorTimezone = viewModel.operatorConfig.timezone,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                     onClick = { onNavigateToStop(stop.id, stop.name) },
                 )
@@ -391,6 +392,7 @@ private fun NearbyStopsSection(
                     departures = favoriteDepartures[stop.id]?.take(2) ?: emptyList(),
                     liveTripIds = liveTripIds,
                     distanceMeters = distanceMeters,
+                    operatorTimezone = viewModel.operatorConfig.timezone,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                     onClick = { onNavigateToStop(stop.id, stop.name) },
                 )
@@ -857,6 +859,7 @@ fun FavoriteStopCard(
     departures: List<Departure>,
     liveTripIds: Set<String> = emptySet(),
     modifier: Modifier = Modifier,
+    operatorTimezone: String = "UTC",
     onClick: () -> Unit = {},
 ) {
     val haptic = LocalHapticFeedback.current
@@ -924,6 +927,7 @@ fun NearbyStopCard(
     liveTripIds: Set<String> = emptySet(),
     distanceMeters: Double? = null,
     modifier: Modifier = Modifier,
+    operatorTimezone: String = "UTC",
     onClick: () -> Unit = {},
 ) {
     val haptic = LocalHapticFeedback.current
@@ -979,8 +983,11 @@ fun NearbyStopCard(
                     color = TransitTheme.colors.textTertiary,
                 )
             } else {
+                val tz = operatorTimezone
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    departures.forEach { DepartureRow(it, isLive = liveTripIds.contains(it.tripId)) }
+                    departures.forEach {
+                        DepartureRow(it, isLive = liveTripIds.contains(it.tripId), operatorTimezone = tz)
+                    }
                 }
             }
         }
@@ -988,16 +995,14 @@ fun NearbyStopCard(
 }
 
 @Composable
-private fun DepartureRow(departure: Departure, isLive: Boolean = false) {
+private fun DepartureRow(
+    departure: Departure,
+    isLive: Boolean = false,
+    operatorTimezone: String = "UTC",
+) {
     val colors = TransitTheme.colors
-    val routeColor = departure.routeColor
-        ?.takeIf { it.isNotBlank() }
-        ?.let { runCatching { "#$it".toColor() }.getOrNull() }
-        ?: colors.accent
-    val routeTextColor = departure.routeTextColor
-        ?.takeIf { it.isNotBlank() }
-        ?.let { runCatching { "#${departure.routeTextColor}".toColor() }.getOrNull() }
-        ?: Color.White
+    val rawTime = departure.realtimeDepartureTime ?: departure.departureTime
+    val timeState = com.transitkit.app.ui.components.departureTimeState(rawTime, operatorTimezone)
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -1032,16 +1037,8 @@ private fun DepartureRow(departure: Departure, isLive: Boolean = false) {
             modifier = Modifier.weight(1f),
         )
         Spacer(Modifier.width(8.dp))
-        // Orario
-        Text(
-            text = departure.realtimeDepartureTime?.take(5) ?: departure.departureTime.take(5),
-            style = MaterialTheme.typography.labelMedium.copy(
-                fontWeight = FontWeight.SemiBold,
-                fontFeatureSettings = "tnum",
-            ),
-            color = colors.textPrimary,
-        )
-        // Dot realtime
+        // Canonical stacked time display: minutes (top) / HH:mm (bottom).
+        com.transitkit.app.ui.components.TimeDisplay(state = timeState)
         if (departure.isRealtime) {
             Spacer(Modifier.width(5.dp))
             Box(

@@ -763,21 +763,8 @@ private fun DepartureRow(departure: Departure, isNext: Boolean = false, operator
                 }
             },
     ) {
-        if (isNext) {
-            Box(
-                modifier = Modifier
-                    .padding(start = 16.dp, top = 8.dp)
-                    .background(colors.accent, RoundedCornerShape(4.dp))
-                    .padding(horizontal = 6.dp, vertical = 2.dp),
-            ) {
-                Text(
-                    text = stringResource(R.string.label_prossima),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-        }
+        // "Prossima" badge removed — position-in-list (first row) already
+        // communicates that the departure is the next one.
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier

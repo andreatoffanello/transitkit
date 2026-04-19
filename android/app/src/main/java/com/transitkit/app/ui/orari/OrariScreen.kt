@@ -618,35 +618,8 @@ private fun StaggeredStopCard(
     }
 }
 
-// ---------------------------------------------------------------------------
-// Route chip
-// ---------------------------------------------------------------------------
-
-@Composable
-private fun RouteChip(routeName: String, color: Color = TransitTheme.colors.accent) {
-    val fg = routeBadgeContrast(color)
-    Box(
-        modifier = Modifier
-            .background(color, RoundedCornerShape(4.dp))
-            .padding(horizontal = 6.dp, vertical = 2.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = routeName,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold,
-            color = fg,
-            maxLines = 1,
-        )
-    }
-}
-
-/** WCAG relative-luminance-based foreground picker for GTFS route badge backgrounds. */
-private fun routeBadgeContrast(bg: Color): Color {
-    fun lin(c: Float): Float = if (c <= 0.03928f) c / 12.92f else Math.pow(((c + 0.055f) / 1.055f).toDouble(), 2.4).toFloat()
-    val l = 0.2126f * lin(bg.red) + 0.7152f * lin(bg.green) + 0.0722f * lin(bg.blue)
-    return if (l < 0.5f) Color.White else Color(0xFF111827)
-}
+// Removed: private `RouteChip` + `routeBadgeContrast`. Dead code — all line
+// badges go through the design-system `com.transitkit.app.ui.components.LineBadge`.
 
 // ---------------------------------------------------------------------------
 // Lines tab

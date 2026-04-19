@@ -49,16 +49,10 @@ struct DepartureRow: View {
             // Line badge
             LineBadge(departure: departure, size: .large)
 
-            // Destination sequence (marquee) or headsign fallback
+            // Destination sequence (marquee) or headsign fallback.
+            // "Next departure" badge removed — position-in-list already
+            // communicates that the first row is the next one.
             VStack(alignment: .leading, spacing: 3) {
-                if isFirst {
-                    Text(String(localized: "label_next_departure"))
-                        .font(.caption2.weight(.semibold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color(hex: "06845C"), in: RoundedRectangle(cornerRadius: 4))
-                }
                 let sequence: String? = {
                     if let s = scheduleStore.routeStopSequences[departure.routeId], !s.isEmpty { return s }
                     return nil

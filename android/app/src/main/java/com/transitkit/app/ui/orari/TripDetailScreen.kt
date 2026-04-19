@@ -89,22 +89,12 @@ fun TripDetailScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        // LineBadge: colored pill with route name, or fallback dot
                         if (viewModel.routeName.isNotBlank()) {
-                            Box(
-                                modifier = Modifier
-                                    .background(lineColor, RoundedCornerShape(6.dp))
-                                    .padding(horizontal = 8.dp, vertical = 3.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text(
-                                    text = viewModel.routeName,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
-                                    maxLines = 1,
-                                )
-                            }
+                            com.transitkit.app.ui.components.LineBadge(
+                                name = viewModel.routeName,
+                                colorHex = viewModel.routeColor.takeIf { it.isNotBlank() },
+                                size = com.transitkit.app.ui.components.LineBadgeSize.Medium,
+                            )
                         } else {
                             Box(
                                 modifier = Modifier

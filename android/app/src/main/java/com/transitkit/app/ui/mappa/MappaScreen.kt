@@ -1124,17 +1124,16 @@ private fun VehiclePreviewContent(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .background(vehicleColor, RoundedCornerShape(8.dp)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = route?.name?.take(4) ?: stringResource(R.string.vehicle_label_default),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
+            if (route != null) {
+                com.transitkit.app.ui.components.LineBadge(
+                    route = route,
+                    size = com.transitkit.app.ui.components.LineBadgeSize.Large,
+                )
+            } else {
+                com.transitkit.app.ui.components.LineBadge(
+                    name = stringResource(R.string.vehicle_label_default),
+                    colorHex = null,
+                    size = com.transitkit.app.ui.components.LineBadgeSize.Large,
                 )
             }
             Text(

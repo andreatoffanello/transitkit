@@ -1,86 +1,230 @@
 import SwiftUI
 
-// MARK: - Badge Size
+// MARK: - LineBadge
+//
+// Single source of truth for line badges across the app. Every place that
+// renders a GTFS line identifier — departure rows, line lists, stop
+// coincidences, headers, filter chips, vehicle cards, trip details —
+// goes through this component.
+//
+// Map annotations (VehicleAnnotationView, StopAnnotationView) are NOT in
+// scope: those use custom shapes (dots, pins with halos) that aren't
+// badges. Keep them as-is.
+//
+// Design is mono-operator. The "operator logo circle" variant from
+// movete is intentionally omitted — every TransitKit install serves a
+// single agency, so it would always be redundant. The API keeps
+// `showTransitIcon` so multi-modal operators (bus + rail + ferry) can
+// opt in to an icon chip.
 
-/// Size presets for the line badge.
-/// - `big`: primary contexts — departure rows and lines list (13pt, shows transit icon)
-/// - `medium`: secondary contexts — stop badge lists, coincidences, headers (11pt, no icon)
-enum BadgeSize {
-    case big    // departure rows, lines list, trip headers
-    case medium // stop badge lists, coincidences, stop headers
+/// Size preset — drives font, padding, min width, corner radius and icon size.
+enum LineBadgeSize {
+    case small   // coincidences, filter chips, dense lists
+    case medium  // cards, sheet headers, secondary rows
+    case large   // departure rows, line lists, trip headers
 
     var fontSize: CGFloat {
         switch self {
-        case .big:    13
-        case .medium: 11
+        case .small:  11
+        case .medium: 13
+        case .large:  15
         }
     }
 
     var iconSize: CGFloat {
         switch self {
-        case .big:    16
-        case .medium: 12
+        case .small:  12
+        case .medium: 14
+        case .large:  16
         }
     }
 
     var hPadding: CGFloat {
         switch self {
-        case .big:    10
-        case .medium: 6
+        case .small:  6
+        case .medium: 8
+        case .large:  10
         }
     }
 
     var vPadding: CGFloat {
         switch self {
-        case .big:    5
-        case .medium: 3
+        case .small:  3
+        case .medium: 4
+        case .large:  5
+        }
+    }
+
+    var minWidth: CGFloat {
+        switch self {
+        case .small:  24
+        case .medium: 32
+        case .large:  40
+        }
+    }
+
+    var cornerRadius: CGFloat {
+        switch self {
+        case .small:  4
+        case .medium: 6
+        case .large:  6
         }
     }
 
     var spacing: CGFloat {
         switch self {
-        case .big:    4
-        case .medium: 3
+        case .small:  3
+        case .medium: 5
+        case .large:  6
         }
     }
-
-    /// Show transit type icon only on big size; medium relies on color alone.
-    var showIcon: Bool { self == .big }
 }
 
-// MARK: - LineBadge
-
 /// Pill-shaped badge showing a transit line name with GTFS route color.
-/// Handles GTFS color theming and WCAG 4.5:1 text legibility automatically.
 ///
-/// Usage:
 /// ```swift
-/// LineBadge(departure: dep, size: .big)
-/// LineBadge(lineName: "BRT", color: "#c1cd23", textColor: "#000000", transitType: .bus, size: .medium)
+/// // Departure / route convenience — pulls color + text + transitType
+/// LineBadge(departure: dep, size: .large)
+/// LineBadge(route: apiRoute, size: .medium)
+///
+/// // Low-level — explicit color strings (no Route/Departure handy)
+/// LineBadge(name: "R", color: "#AD2B3C", textColor: nil, transitType: .bus)
+///
+/// // Opt-in transit icon (bus/tram/rail/ferry)
+/// LineBadge(route: apiRoute, size: .large, showTransitIcon: true)
 /// ```
 struct LineBadge: View {
-    let lineName: String
-    let color: String      // hex background, e.g. "#FF6600"
-    let textColor: String  // hex foreground, e.g. "#FFFFFF"
-    let transitType: TransitType
-    var size: BadgeSize = .medium
+    let name: String
+    /// GTFS background color as hex (e.g. "#AD2B3C").
+    let color: String
+    /// GTFS text color as hex, or nil to auto-derive by WCAG luminance.
+    let textColor: String?
+    /// Optional transit type for the icon chip. Ignored when `showTransitIcon=false`.
+    let transitType: TransitType?
+    var size: LineBadgeSize = .medium
+    var showTransitIcon: Bool = false
 
-    /// Convenience init from a Departure model.
-    init(departure: Departure, size: BadgeSize = .big) {
-        self.lineName = departure.lineName
+    // MARK: - Inits
+
+    /// Convenience from a `Departure`. Defaults to `.large` (primary context).
+    init(departure: Departure, size: LineBadgeSize = .large, showTransitIcon: Bool = false) {
+        self.name = departure.lineName
         self.color = departure.color
-        self.textColor = LineBadge.resolvedTextColor(departure.textColor, background: departure.color)
+        self.textColor = departure.textColor
         self.transitType = departure.transitType
         self.size = size
+        self.showTransitIcon = showTransitIcon
     }
 
-    /// Convenience init from a Route model.
-    init(route: APIRoute, size: BadgeSize = .big) {
-        self.lineName = route.name
+    /// Convenience from an `APIRoute`. Defaults to `.large`.
+    init(route: APIRoute, size: LineBadgeSize = .large, showTransitIcon: Bool = false) {
+        self.name = route.name
         self.color = route.color ?? "#000000"
-        self.textColor = LineBadge.resolvedTextColor(route.textColor ?? "#FFFFFF", background: route.color ?? "#000000")
+        self.textColor = route.textColor
         self.transitType = route.resolvedTransitType
         self.size = size
+        self.showTransitIcon = showTransitIcon
+    }
+
+    /// Low-level init for contexts without a Route/Departure model.
+    /// Pass `textColor: nil` to auto-derive by WCAG luminance.
+    init(
+        name: String,
+        color: String,
+        textColor: String? = nil,
+        transitType: TransitType? = nil,
+        size: LineBadgeSize = .medium,
+        showTransitIcon: Bool = false
+    ) {
+        self.name = name
+        self.color = color
+        self.textColor = textColor
+        self.transitType = transitType
+        self.size = size
+        self.showTransitIcon = showTransitIcon
+    }
+
+    // MARK: - Body
+
+    var body: some View {
+        HStack(spacing: size.spacing) {
+            if showTransitIcon, let type = transitType {
+                type.icon.sized(size.iconSize)
+                    .foregroundStyle(fgColor)
+            }
+            Text(name)
+                .font(.system(size: size.fontSize, weight: .bold))
+                .foregroundStyle(fgColor)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+        }
+        .padding(.horizontal, size.hPadding)
+        .padding(.vertical, size.vPadding)
+        .frame(minWidth: size.minWidth)
+        .background(bgColor, in: RoundedRectangle(cornerRadius: size.cornerRadius, style: .continuous))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(String(format: NSLocalizedString("line_badge_a11y", comment: ""), name))
+    }
+
+    // MARK: - Color resolution
+
+    private var bgColor: Color { Color(hex: color) }
+    private var fgColor: Color { Color(hex: Self.resolvedTextColor(textColor, background: color)) }
+
+    /// Text color rules:
+    /// - `nil`, empty, or WCAG-sentinel values ("000000"/"FFFFFF") → always
+    ///   compute by luminance (GTFS feeds often fill these as placeholders).
+    /// - Any other provided value is kept only if it passes WCAG 4.5:1 against
+    ///   the background. Otherwise fall back to the computed contrast color.
+    private static func resolvedTextColor(_ textColor: String?, background: String) -> String {
+        let sentinels: Set<String> = ["", "#", "000000", "FFFFFF", "#000000", "#FFFFFF"]
+        guard let textColor, !sentinels.contains(textColor) else {
+            return contrastingTextColor(for: background)
+        }
+        let candidate = textColor.hasPrefix("#") ? textColor : "#\(textColor)"
+        let bg = background.hasPrefix("#") ? background : "#\(background)"
+        func lum(_ hex: String) -> Double {
+            func lin(_ c: Double) -> Double { c <= 0.04045 ? c/12.92 : pow((c+0.055)/1.055, 2.4) }
+            let h = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+            var v: UInt64 = 0; Scanner(string: h).scanHexInt64(&v)
+            guard h.count == 6 else { return 0 }
+            return 0.2126*lin(Double((v>>16)&0xFF)/255)
+                 + 0.7152*lin(Double((v>>8)&0xFF)/255)
+                 + 0.0722*lin(Double(v&0xFF)/255)
+        }
+        let Lbg = lum(bg); let Lfg = lum(candidate)
+        let ratio = Lbg > Lfg ? (Lbg+0.05)/(Lfg+0.05) : (Lfg+0.05)/(Lbg+0.05)
+        return ratio >= 4.5 ? candidate : contrastingTextColor(for: background)
+    }
+}
+
+// MARK: - Legacy shim
+//
+// Existing call sites use `BadgeSize.big` / `BadgeSize.medium`. Keep the old
+// names alive as type aliases + computed `size` to avoid a noisy migration
+// churn. New code should use `LineBadgeSize.{small, medium, large}` directly.
+
+enum BadgeSize {
+    case big     // deprecated → maps to .large
+    case medium  // deprecated → maps to .medium
+
+    var newSize: LineBadgeSize {
+        switch self {
+        case .big:    return .large
+        case .medium: return .medium
+        }
+    }
+}
+
+extension LineBadge {
+    /// Legacy overload — keeps existing `LineBadge(departure:size:)` callers
+    /// with the old `BadgeSize` enum compiling.
+    init(departure: Departure, size: BadgeSize) {
+        self.init(departure: departure, size: size.newSize)
+    }
+
+    init(route: APIRoute, size: BadgeSize) {
+        self.init(route: route, size: size.newSize)
     }
 
     init(
@@ -90,56 +234,12 @@ struct LineBadge: View {
         transitType: TransitType,
         size: BadgeSize = .medium
     ) {
-        self.lineName = lineName
-        self.color = color
-        self.textColor = LineBadge.resolvedTextColor(textColor, background: color)
-        self.transitType = transitType
-        self.size = size
-    }
-
-    /// Returns a contrast-safe text color. Sentinel/generic values are always resolved
-    /// via WCAG luminance. Custom colors are kept only when they pass the WCAG 4.5:1
-    /// contrast ratio against the badge background; otherwise the computed contrast is used.
-    private static func resolvedTextColor(_ textColor: String, background: String) -> String {
-        let sentinels: Set<String> = ["", "#", "000000", "FFFFFF", "#000000", "#FFFFFF"]
-        // For sentinel/generic values, always compute WCAG contrast
-        if sentinels.contains(textColor) {
-            return contrastingTextColor(for: background)
-        }
-        // For custom colors, verify WCAG 4.5:1 — if it fails, override with computed contrast
-        let candidate = textColor.hasPrefix("#") ? textColor : "#\(textColor)"
-        let bg = background.hasPrefix("#") ? background : "#\(background)"
-        func lum(_ hex: String) -> Double {
-            func lin(_ c: Double) -> Double { c <= 0.04045 ? c/12.92 : pow((c+0.055)/1.055, 2.4) }
-            let h = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-            var v: UInt64 = 0; Scanner(string: h).scanHexInt64(&v)
-            guard h.count == 6 else { return 0 }
-            return 0.2126*lin(Double((v>>16)&0xFF)/255) + 0.7152*lin(Double((v>>8)&0xFF)/255) + 0.0722*lin(Double(v&0xFF)/255)
-        }
-        let Lbg = lum(bg); let Lfg = lum(candidate)
-        let ratio = Lbg > Lfg ? (Lbg+0.05)/(Lfg+0.05) : (Lfg+0.05)/(Lbg+0.05)
-        return ratio >= 4.5 ? candidate : contrastingTextColor(for: background)
-    }
-
-    private var bgColor: Color { Color(hex: color) }
-    private var fgColor: Color { Color(hex: textColor) }
-
-    var body: some View {
-        HStack(spacing: size.spacing) {
-            if size.showIcon {
-                transitType.icon.sized(size.iconSize)
-                    .foregroundStyle(fgColor)
-            }
-            Text(lineName)
-                .font(.system(size: size.fontSize, weight: .bold))
-                .foregroundStyle(fgColor)
-                .lineLimit(1)
-                .fixedSize(horizontal: true, vertical: false)
-        }
-        .padding(.horizontal, size.hPadding)
-        .padding(.vertical, size.vPadding)
-        .background(bgColor, in: RoundedRectangle(cornerRadius: 4))
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(String(format: NSLocalizedString("line_badge_a11y", comment: ""), lineName))
+        self.init(
+            name: lineName,
+            color: color,
+            textColor: textColor,
+            transitType: transitType,
+            size: size.newSize
+        )
     }
 }

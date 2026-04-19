@@ -112,7 +112,7 @@ struct TripDetailView: View {
 
     private var tripHeader: some View {
         HStack(spacing: 12) {
-            LineBadge(departure: departure, size: .big)
+            LineBadge(departure: departure, size: .large)
 
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 5) {
@@ -256,7 +256,7 @@ struct TripDetailView: View {
                         ForEach(otherLines.prefix(4), id: \.self) { name in
                             let r = store.routes.first { $0.name == name }
                             LineBadge(
-                                lineName: name,
+                                name: name,
                                 color: r.flatMap(\.color) ?? "#666666",
                                 textColor: r.flatMap(\.textColor) ?? "#FFFFFF",
                                 transitType: r.map { TransitType(gtfsRouteType: $0.transitType) } ?? .bus,

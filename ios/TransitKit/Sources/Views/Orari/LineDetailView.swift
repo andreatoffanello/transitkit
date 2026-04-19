@@ -5,6 +5,7 @@ struct LineDetailView: View {
     let route: APIRoute
     @Environment(ScheduleStore.self) private var store
     @Environment(VehicleStore.self) private var vehicleStore
+    @Environment(AlertStore.self) private var alertStore
     @Environment(DeepLinkRouter.self) private var router
     @State private var selectedDirectionId: Int = 0
     @State private var showLineMap = false
@@ -35,6 +36,9 @@ struct LineDetailView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     // Header
                     lineHeader
+
+                    // Service alerts affecting this line (if any)
+                    lineAlertsSection
 
                     // Inline minimap — shows route shape before the stop list
                     if !stopsInDirection.isEmpty {
@@ -89,7 +93,7 @@ struct LineDetailView: View {
                     LucideIcon.map.sized(18)
                         .foregroundStyle(headerTextColor)
                 }
-                .accessibilityLabel("Mappa linea")
+                .accessibilityLabel(Text(String(localized: "a11y_line_map")))
                 .accessibilityIdentifier("btn_line_map")
             }
         }
@@ -113,6 +117,72 @@ struct LineDetailView: View {
                     self.showLineMap = true
                 }
             }
+        }
+    }
+
+    // MARK: - Line Alerts Section
+
+    @ViewBuilder
+    private var lineAlertsSection: some View {
+        let alerts = alertStore.alerts(forRouteId: route.id)
+        if !alerts.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    LucideIcon.alertTriangle.sized(14)
+                        .foregroundStyle(AppTheme.accent)
+                    Text(String(localized: "stop_detail_alerts_section").uppercased())
+                        .font(.caption.weight(.semibold))
+                        .kerning(0.6)
+                        .foregroundStyle(AppTheme.textTertiary)
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+
+                VStack(spacing: 8) {
+                    ForEach(alerts) { alert in
+                        NavigationLink {
+                            AlertDetailView(alert: alert)
+                        } label: {
+                            HStack(spacing: 10) {
+                                Circle()
+                                    .fill(alertDotColor(alert.severity))
+                                    .frame(width: 8, height: 8)
+                                Text(alert.headerText.resolved())
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(AppTheme.textPrimary)
+                                    .lineLimit(2)
+                                    .multilineTextAlignment(.leading)
+                                Spacer(minLength: 0)
+                                LucideIcon.chevronRight.sized(14)
+                                    .foregroundStyle(AppTheme.textTertiary)
+                            }
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(AppTheme.bgSecondary)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .strokeBorder(AppTheme.glassBorder, lineWidth: 1)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 16)
+            }
+            .padding(.top, 16)
+            .padding(.bottom, 4)
+        }
+    }
+
+    private func alertDotColor(_ severity: AlertSeverity) -> Color {
+        switch severity {
+        case .severe:  return .red
+        case .warning: return .orange
+        case .info:    return AppTheme.accent
+        case .unknown: return AppTheme.textTertiary
         }
     }
 
@@ -313,7 +383,7 @@ struct LineDetailView: View {
             ForEach(visible, id: \.self) { name in
                 let r = store.routes.first { $0.name == name }
                 LineBadge(
-                    lineName: name,
+                    name: name,
                     color: r?.color ?? "#666666",
                     textColor: r?.textColor ?? "#FFFFFF",
                     transitType: r?.resolvedTransitType ?? .bus,

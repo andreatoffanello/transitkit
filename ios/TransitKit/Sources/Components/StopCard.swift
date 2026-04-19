@@ -55,7 +55,7 @@ struct StopCard: View {
                     HStack(spacing: 4) {
                         ForEach(lines.prefix(6), id: \.name) { line in
                             LineBadge(
-                                lineName: line.name,
+                                name: line.name,
                                 color: line.color,
                                 textColor: line.textColor,
                                 transitType: transitTypes.first ?? .bus,

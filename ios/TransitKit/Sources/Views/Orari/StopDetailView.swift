@@ -13,6 +13,7 @@ struct StopDetailView: View {
     @State private var filterLine: String?
     @State private var linesExpanded = false
     @Environment(FavoritesManager.self) private var favoritesManager
+    @Environment(AlertStore.self) private var alertStore
 
     @State private var mapExpanded: Bool = false
     @State private var expandedMapPosition: MapCameraPosition = .automatic
@@ -122,7 +123,7 @@ struct StopDetailView: View {
                 Button {
                     favoritesManager.toggle(stop.id)
                 } label: {
-                    Image(systemName: favoritesManager.isFavorite(stop.id) ? "star.fill" : "star")
+                    Image(systemName: favoritesManager.isFavorite(stop.id) ? "bookmark.fill" : "bookmark")
                 }
                 .accessibilityLabel(favoritesManager.isFavorite(stop.id)
                     ? String(localized: "remove_from_favorites")
@@ -173,7 +174,7 @@ struct StopDetailView: View {
                             Circle()
                                 .fill(AppTheme.accent)
                                 .frame(width: 28, height: 28)
-                            (stop.transitTypes.first ?? .bus).icon.sized(13)
+                            LucideIcon.signpost.sized(13)
                                 .foregroundStyle(.white)
                         }
                         .shadow(color: .black.opacity(0.2), radius: 3, y: 1)
@@ -197,7 +198,7 @@ struct StopDetailView: View {
             }
             .buttonStyle(.plain)
             .padding(12)
-            .accessibilityLabel("Espandi mappa")
+            .accessibilityLabel(Text(String(localized: "a11y_expand_map")))
             .accessibilityIdentifier("btn_expand_map")
         }
         .frame(height: UIScreen.main.bounds.height * 0.4)
@@ -218,7 +219,7 @@ struct StopDetailView: View {
                                 Circle()
                                     .fill(AppTheme.accent)
                                     .frame(width: 32, height: 32)
-                                (stop.transitTypes.first ?? .bus).icon.sized(15)
+                                LucideIcon.signpost.sized(15)
                                     .foregroundStyle(.white)
                             }
                             .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
@@ -259,7 +260,7 @@ struct StopDetailView: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Chiudi mappa")
+                    .accessibilityLabel(Text(String(localized: "a11y_close_map")))
                     .accessibilityIdentifier("btn_close_map")
                 }
                 .padding(.top, geo.safeAreaInsets.top + 16)
@@ -268,7 +269,7 @@ struct StopDetailView: View {
                 // Bottom controls row
                 HStack(alignment: .bottom) {
                     // "Apri in mappe" button — bottom leading
-                    Button("Apri in mappe") {
+                    Button(String(localized: "open_in_maps")) {
                         showMapAppPicker = true
                     }
                     .font(.system(size: 13, weight: .semibold))
@@ -326,7 +327,7 @@ struct StopDetailView: View {
             }
         }
         .ignoresSafeArea(.all)
-        .confirmationDialog("Apri in...", isPresented: $showMapAppPicker) {
+        .confirmationDialog(Text(String(localized: "open_in_prompt")), isPresented: $showMapAppPicker) {
             Button("Apple Maps") { openInAppleMaps() }
             if UIApplication.shared.canOpenURL(URL(string: "comgooglemaps://")!) {
                 Button("Google Maps") { openInGoogleMaps() }
@@ -334,7 +335,7 @@ struct StopDetailView: View {
             if UIApplication.shared.canOpenURL(URL(string: "waze://")!) {
                 Button("Waze") { openInWaze() }
             }
-            Button("Annulla", role: .cancel) { }
+            Button(String(localized: "cancel"), role: .cancel) { }
         }
         .onAppear {
             expandedMapPosition = .camera(MapCamera(
@@ -356,6 +357,9 @@ struct StopDetailView: View {
         return VStack(spacing: 0) {
             // Stop name header
             inlineStopHeader
+
+            // Service alerts affecting this stop (if any)
+            stopAlertsSection
 
             // Lines section
             linesSection
@@ -515,6 +519,76 @@ struct StopDetailView: View {
         .padding(.bottom, 12)
     }
 
+    // MARK: - Stop Alerts Section
+
+    @ViewBuilder
+    private var stopAlertsSection: some View {
+        let alerts = alertStore.alerts(forStopId: stop.id)
+        if !alerts.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    LucideIcon.alertTriangle.sized(14)
+                        .foregroundStyle(AppTheme.accent)
+                    Text(String(localized: "stop_detail_alerts_section").uppercased())
+                        .font(.caption.weight(.semibold))
+                        .kerning(0.6)
+                        .foregroundStyle(AppTheme.textTertiary)
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+
+                VStack(spacing: 8) {
+                    ForEach(alerts) { alert in
+                        NavigationLink {
+                            AlertDetailView(alert: alert)
+                        } label: {
+                            inlineAlertRow(alert)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 20)
+            }
+            .padding(.top, 16)
+            .padding(.bottom, 4)
+        }
+    }
+
+    private func inlineAlertRow(_ alert: GtfsRtAlert) -> some View {
+        HStack(spacing: 10) {
+            Circle()
+                .fill(alertRowDotColor(alert.severity))
+                .frame(width: 8, height: 8)
+            Text(alert.headerText.resolved())
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(AppTheme.textPrimary)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+            Spacer(minLength: 0)
+            LucideIcon.chevronRight.sized(14)
+                .foregroundStyle(AppTheme.textTertiary)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(AppTheme.bgSecondary)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(AppTheme.glassBorder, lineWidth: 1)
+        )
+    }
+
+    private func alertRowDotColor(_ severity: AlertSeverity) -> Color {
+        switch severity {
+        case .severe:  return .red
+        case .warning: return .orange
+        case .info:    return AppTheme.accent
+        case .unknown: return AppTheme.textTertiary
+        }
+    }
+
     // MARK: - Lines Section
 
     private var linesSection: some View {
@@ -531,7 +605,7 @@ struct StopDetailView: View {
                     let visible = linesExpanded ? allBadges : Array(allBadges.prefix(compactLimit))
                     ForEach(visible, id: \.name) { badge in
                         LineBadge(
-                            lineName: badge.name,
+                            name: badge.name,
                             color: badge.route.flatMap(\.color) ?? "#666666",
                             textColor: badge.route.flatMap(\.textColor) ?? "#FFFFFF",
                             transitType: badge.route.map { TransitType(gtfsRouteType: $0.transitType) } ?? .bus,
@@ -555,6 +629,7 @@ struct StopDetailView: View {
                 }
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Text(String(localized: "a11y_show_all_lines")))
             .accessibilityIdentifier("btn_expand_lines")
         }
         .padding(.horizontal, 20)
@@ -565,6 +640,15 @@ struct StopDetailView: View {
 
     private func nextDeparturesSection(_ departures: [Departure]) -> some View {
         VStack(spacing: 0) {
+            // Section label
+            Text(String(localized: "today_label"))
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(AppTheme.textTertiary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+                .padding(.bottom, 4)
+
             // Departure rows
             VStack(spacing: 0) {
                 ForEach(Array(departures.enumerated()), id: \.element.id) { index, dep in
@@ -854,7 +938,7 @@ private struct FullScheduleSheet: View {
                                     .foregroundStyle(AppTheme.textPrimary)
                                     .frame(width: 52, alignment: .leading)
 
-                                LineBadge(departure: dep, size: .big)
+                                LineBadge(departure: dep, size: .large)
 
                                 Text(dep.headsign)
                                     .font(.system(size: 14))

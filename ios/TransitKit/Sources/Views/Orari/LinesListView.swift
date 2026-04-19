@@ -297,11 +297,11 @@ private struct LineRowContent: View {
         HStack(spacing: 12) {
             // Line badge
             LineBadge(
-                lineName: route.name,
+                name: route.name,
                 color: route.color ?? "#000000",
-                textColor: route.textColor ?? "#FFFFFF",
+                textColor: route.textColor,
                 transitType: resolvedTransitType,
-                size: .big
+                size: .large
             )
 
             VStack(alignment: .leading, spacing: 2) {
@@ -316,7 +316,7 @@ private struct LineRowContent: View {
                 if let sequence = store.routeStopSequences[route.id], !sequence.isEmpty {
                     MarqueeText(
                         text: sequence,
-                        font: .system(size: 11),
+                        fontSize: 11,
                         foregroundStyle: AppTheme.textSecondary,
                         speed: 28
                     )
@@ -368,5 +368,147 @@ private struct LineRowContent: View {
         .accessibilityLabel(String(format: NSLocalizedString("line_badge_a11y", comment: ""), route.name))
         .accessibilityHint(String(localized: "a11y_hint_show_line_stops"))
         .accessibilityAddTraits(.isButton)
+    }
+}
+
+// MARK: - LineeTab
+
+/// Standalone tab for all transit lines with search and transit-type filter.
+/// Deep-link aware: consumes `DeepLinkRouter.pendingRoute` to push line detail.
+struct LineeTab: View {
+    @Environment(ScheduleStore.self) private var store
+    @Environment(SearchHistoryStore.self) private var searchHistoryStore
+    @Environment(DeepLinkRouter.self) private var router
+    @State private var searchQuery = ""
+    @State private var selectedTransitType: TransitType?
+    @State private var path = NavigationPath()
+
+    private var availableTransitTypes: [TransitType] {
+        let types = Set(store.routes.map { TransitType(gtfsRouteType: $0.transitType) })
+        return TransitType.allCases.filter { types.contains($0) }
+    }
+
+    var body: some View {
+        NavigationStack(path: $path) {
+            VStack(spacing: 0) {
+                // Search bar
+                searchBar
+
+                // Transit type filter chips
+                if availableTransitTypes.count > 1 {
+                    filterChips
+                }
+
+                // Separator
+                Rectangle()
+                    .fill(AppTheme.separatorLine)
+                    .frame(height: 0.5)
+
+                // Loading indicator
+                if store.isLoading {
+                    ProgressView()
+                        .tint(AppTheme.accent)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 4)
+                }
+
+                // Lines list
+                LinesListView(
+                    searchQuery: searchQuery,
+                    transitTypeFilter: selectedTransitType,
+                    recentIds: searchHistoryStore.recentLineIds
+                )
+                .frame(maxHeight: .infinity)
+            }
+            .background(AppTheme.background.ignoresSafeArea())
+            .navigationTitle(String(localized: "tab_lines"))
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(for: APIRoute.self) { route in
+                let _ = searchHistoryStore.recordLine(route.id)
+                LineDetailView(route: route)
+            }
+            .task {
+                if store.routes.isEmpty && !store.isLoading {
+                    await store.load()
+                }
+            }
+            .onAppear { consumePending() }
+            .onChange(of: router.pendingRoute) { _, _ in consumePending() }
+        }
+    }
+
+    private func consumePending() {
+        if let route = router.pendingRoute {
+            router.pendingRoute = nil
+            path = NavigationPath()
+            path.append(route)
+        }
+    }
+
+    private var searchBar: some View {
+        HStack(spacing: 8) {
+            LucideIcon.search.sized(15)
+                .foregroundStyle(AppTheme.textTertiary)
+
+            TextField(
+                String(localized: "search_line_placeholder"),
+                text: $searchQuery
+            )
+            .font(.system(.subheadline))
+            .foregroundStyle(AppTheme.textPrimary)
+            .autocorrectionDisabled()
+            .textInputAutocapitalization(.never)
+            .accessibilityIdentifier("search_lines")
+
+            if !searchQuery.isEmpty {
+                Button {
+                    searchQuery = ""
+                } label: {
+                    LucideIcon.circleX.sized(14)
+                        .foregroundStyle(AppTheme.textTertiary)
+                }
+                .accessibilityIdentifier("btn_clear_lines_search")
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(AppTheme.glassFill, in: RoundedRectangle(cornerRadius: 10))
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(AppTheme.glassBorder, lineWidth: 1)
+        )
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+    }
+
+    private var filterChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                FilterChip(
+                    label: String(localized: "filter_all"),
+                    isSelected: selectedTransitType == nil
+                ) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        selectedTransitType = nil
+                    }
+                }
+                .accessibilityIdentifier("filter_all_lines")
+
+                ForEach(availableTransitTypes, id: \.self) { type in
+                    FilterChip(
+                        label: type.displayName,
+                        isSelected: selectedTransitType == type,
+                        icon: type.icon
+                    ) {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            selectedTransitType = selectedTransitType == type ? nil : type
+                        }
+                    }
+                    .accessibilityIdentifier("filter_line_\(type.rawValue)")
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 8)
+        }
     }
 }

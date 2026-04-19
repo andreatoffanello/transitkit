@@ -1333,14 +1333,6 @@ private fun dayGroupLabel(key: String): String {
 @Composable
 private fun FullScheduleRow(dep: ResolvedDeparture) {
     val colors = TransitTheme.colors
-    val routeColor = dep.routeColor
-        .takeIf { it.isNotBlank() }
-        ?.let { runCatching { it.toColor() }.getOrNull() }
-        ?: colors.accent
-    val textColor = dep.routeTextColor
-        .takeIf { it.isNotBlank() }
-        ?.let { runCatching { it.toColor() }.getOrNull() }
-        ?: Color.White
 
     Row(
         modifier = Modifier
@@ -1356,22 +1348,12 @@ private fun FullScheduleRow(dep: ResolvedDeparture) {
             color = colors.textPrimary,
             fontWeight = FontWeight.Medium,
         )
-        Box(
-            modifier = Modifier
-                .height(22.dp)
-                .widthIn(min = 32.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(routeColor)
-                .padding(horizontal = 8.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                dep.routeName.take(5),
-                style = MaterialTheme.typography.labelSmall,
-                color = textColor,
-                fontWeight = FontWeight.Bold,
-            )
-        }
+        com.transitkit.app.ui.components.LineBadge(
+            name = dep.routeName.take(5),
+            colorHex = dep.routeColor,
+            textColorHex = dep.routeTextColor,
+            size = com.transitkit.app.ui.components.LineBadgeSize.Small,
+        )
         Text(
             dep.headsign.ifBlank { "" },
             style = MaterialTheme.typography.bodySmall,

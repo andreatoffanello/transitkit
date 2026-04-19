@@ -77,12 +77,12 @@ struct StopsListView: View {
 
     /// Group stops by their primary transit type for sectioned display.
     private var groupedStops: [(type: TransitType, stops: [ResolvedStop])] {
-        let stops = filteredStops
         // When filtering by a specific type or searching, show flat list
         if transitTypeFilter != nil || !searchQuery.isEmpty {
             return []
         }
 
+        let stops = filteredStopsExcludingRecent
         var groups: [(TransitType, [ResolvedStop])] = []
         for type in TransitType.allCases {
             let matching = stops.filter { $0.transitTypes.contains(type) }
@@ -95,6 +95,13 @@ struct StopsListView: View {
 
     private var showGrouped: Bool {
         transitTypeFilter == nil && searchQuery.isEmpty && groupedStops.count > 1
+    }
+
+    /// filteredStops with recently-shown stops removed to avoid duplication.
+    private var filteredStopsExcludingRecent: [ResolvedStop] {
+        guard !recentStops.isEmpty else { return filteredStops }
+        let recentIdSet = Set(recentStops.map(\.id))
+        return filteredStops.filter { !recentIdSet.contains($0.id) }
     }
 
     // MARK: - Body
@@ -210,6 +217,17 @@ struct StopsListView: View {
             // Recent section — only visible when not actively searching
             recentSection
 
+            // "Tutte le fermate" header — only when recents are visible and not searching
+            if !recentStops.isEmpty && searchQuery.isEmpty {
+                Text(String(localized: "section_all_stops"))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(AppTheme.textTertiary)
+                    .padding(.horizontal, 4)
+                    .padding(.top, 8)
+                    .padding(.bottom, 2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
             // Result count
             if !searchQuery.isEmpty {
                 Text(String(format: NSLocalizedString("stops_result_count", comment: ""), filteredStops.count))
@@ -220,7 +238,7 @@ struct StopsListView: View {
                     .padding(.bottom, 4)
             }
 
-            ForEach(Array(filteredStops.enumerated()), id: \.element.id) { index, stop in
+            ForEach(Array(filteredStopsExcludingRecent.enumerated()), id: \.element.id) { index, stop in
                 stopRow(stop: stop, index: index)
             }
         }
@@ -317,7 +335,7 @@ private struct StopRowContent: View {
                     HStack(spacing: 4) {
                         ForEach(lineBadges, id: \.name) { badge in
                             LineBadge(
-                                lineName: badge.name,
+                                name: badge.name,
                                 color: badge.route.flatMap(\.color) ?? "#666666",
                                 textColor: badge.route.flatMap(\.textColor) ?? "#FFFFFF",
                                 transitType: badge.route.map { TransitType(gtfsRouteType: $0.transitType) } ?? primaryType,

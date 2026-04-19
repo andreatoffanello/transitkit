@@ -115,7 +115,7 @@ struct StopMapSheet: View {
         VStack(spacing: 6) {
             ForEach(upcomingDepartures) { departure in
                 HStack(spacing: 8) {
-                    LineBadge(departure: departure, size: .big)
+                    LineBadge(departure: departure, size: .large)
 
                     Text(departure.headsign)
                         .font(.system(size: 13, weight: .medium))
@@ -137,7 +137,7 @@ struct StopMapSheet: View {
             HStack(spacing: 4) {
                 ForEach(routesAtStop) { route in
                     LineBadge(
-                        lineName: route.name,
+                        name: route.name,
                         color: route.color ?? "#000000",
                         textColor: route.textColor ?? "#FFFFFF",
                         transitType: route.resolvedTransitType,

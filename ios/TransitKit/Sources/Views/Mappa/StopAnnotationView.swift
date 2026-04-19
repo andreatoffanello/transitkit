@@ -208,7 +208,7 @@ struct StopPreviewCard: View {
                     ForEach(upcoming) { dep in
                         HStack(spacing: 8) {
                             LineBadge(
-                                lineName: dep.lineName,
+                                name: dep.lineName,
                                 color: dep.color,
                                 textColor: dep.textColor,
                                 transitType: dep.transitType,

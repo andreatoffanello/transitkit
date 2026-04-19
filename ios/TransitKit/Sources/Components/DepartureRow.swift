@@ -47,10 +47,18 @@ struct DepartureRow: View {
     var body: some View {
         HStack(spacing: 8) {
             // Line badge
-            LineBadge(departure: departure, size: .big)
+            LineBadge(departure: departure, size: .large)
 
             // Destination sequence (marquee) or headsign fallback
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: 3) {
+                if isFirst {
+                    Text(String(localized: "label_next_departure"))
+                        .font(.caption2.weight(.semibold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color(hex: "06845C"), in: RoundedRectangle(cornerRadius: 4))
+                }
                 let sequence: String? = {
                     if let s = scheduleStore.routeStopSequences[departure.routeId], !s.isEmpty { return s }
                     return nil
@@ -58,6 +66,8 @@ struct DepartureRow: View {
                 if let sequence {
                     MarqueeText(
                         text: sequence,
+                        fontSize: isFirst ? 13 : 11,
+                        fontWeight: isFirst ? .medium : .regular,
                         foregroundStyle: isDeparted ? AppTheme.textTertiary : AppTheme.textPrimary
                     )
                 } else {
@@ -65,9 +75,12 @@ struct DepartureRow: View {
                         .font(.system(size: isFirst ? 14 : 13, weight: isFirst ? .semibold : .regular))
                         .foregroundStyle(isDeparted ? AppTheme.textTertiary : AppTheme.textPrimary)
                         .lineLimit(1)
+                        .truncationMode(.tail)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .layoutPriority(1)
 
             // Dock indicator (if present)
             if !departure.dock.isEmpty {

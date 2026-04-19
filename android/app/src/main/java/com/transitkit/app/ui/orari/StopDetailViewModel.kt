@@ -81,14 +81,18 @@ class StopDetailViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
-    /** Distinct routes that serve this stop on **any** day of the week.
-     *  iOS parity: the coincidences row + filter chips are week-wide so the
-     *  list stays stable across days — otherwise a user opening a stop on
-     *  Sunday would see a shorter pill row than on a weekday, which is
-     *  confusing ("did lines disappear?"). The departures list underneath
-     *  is still today-filtered. */
+    /** Distinct routes that serve this stop on **any** day of the week,
+     *  sorted alphabetically by route short name so the pill row order
+     *  stays stable and matches iOS.
+     *  Week-wide list keeps the row stable across days — otherwise a
+     *  user opening a stop on Sunday would see a shorter pill row than
+     *  on a weekday, which is confusing ("did lines disappear?"). The
+     *  departures list underneath is still today-filtered. */
     val availableRoutes: StateFlow<List<ResolvedDeparture>> = _allDepartures
-        .map { all -> all.distinctBy { it.routeId } }
+        .map { all ->
+            all.distinctBy { it.routeId }
+                .sortedBy { it.routeName.lowercase() }
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val tickFlow = flow<Unit> {

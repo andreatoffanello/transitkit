@@ -971,7 +971,7 @@ private fun transitTypeIcon(type: Int): Int = when (type) {
     1 -> LucideIcons.Train
     2 -> LucideIcons.Train
     4 -> LucideIcons.Ship
-    else -> LucideIcons.Bus
+    else -> LucideIcons.BusFront
 }
 
 private fun transitTypeName(type: Int): String = when (type) {

@@ -502,7 +502,7 @@ private fun transitTypeIcon(types: List<Int>): Int = when (types.firstOrNull()) 
     0 -> LucideIcons.Train
     1, 2 -> LucideIcons.Train
     4 -> LucideIcons.Ship
-    else -> LucideIcons.Bus
+    else -> LucideIcons.BusFront
 }
 
 private fun transitTypeLabel(type: Int, context: android.content.Context): String = when (type) {

@@ -894,7 +894,7 @@ fun FavoriteStopCard(
                         1 -> LucideIcons.Train
                         2 -> LucideIcons.Train
                         4 -> LucideIcons.Ship
-                        else -> LucideIcons.Bus
+                        else -> LucideIcons.BusFront
                     }),
                     contentDescription = null,
                     tint = TransitTheme.colors.accent,
@@ -976,7 +976,7 @@ fun NearbyStopCard(
                         1 -> LucideIcons.Train
                         2 -> LucideIcons.Train
                         4 -> LucideIcons.Ship
-                        else -> LucideIcons.Bus
+                        else -> LucideIcons.BusFront
                     }),
                     contentDescription = null,
                     tint = TransitTheme.colors.accent,
@@ -1072,7 +1072,7 @@ private fun transitTypeIcon(type: Int): Int = when (type) {
     1 -> LucideIcons.Train
     2 -> LucideIcons.Train
     4 -> LucideIcons.Ship
-    else -> LucideIcons.Bus
+    else -> LucideIcons.BusFront
 }
 
 // ---------------------------------------------------------------------------

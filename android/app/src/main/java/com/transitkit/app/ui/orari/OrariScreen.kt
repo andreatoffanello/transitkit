@@ -479,7 +479,7 @@ private fun transitTypeIcon(types: List<Int>): Int {
         1 -> LucideIcons.Train
         2 -> LucideIcons.Train
         4 -> LucideIcons.Ship
-        else -> LucideIcons.Bus
+        else -> LucideIcons.BusFront
     }
 }
 
@@ -694,7 +694,7 @@ private fun LinesTab(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Icon(
-                    painterResource(LucideIcons.Bus),
+                    painterResource(LucideIcons.BusFront),
                     contentDescription = null,
                     tint = colors.textTertiary,
                     modifier = Modifier.size(48.dp),

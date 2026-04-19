@@ -203,7 +203,7 @@ private fun resolveTextColor(textColorHex: String?, background: Color): Color {
 private fun transitIcon(transitType: Int?): Int? = when (transitType) {
     0 -> LucideIcons.Tram          // 0 = Tram, Streetcar, Light rail
     1, 2, 12 -> LucideIcons.Train  // 1 = Subway/Metro, 2 = Rail, 12 = Monorail
-    3, 11 -> LucideIcons.Bus       // 3 = Bus, 11 = Trolleybus
+    3, 11 -> LucideIcons.BusFront       // 3 = Bus, 11 = Trolleybus
     4 -> LucideIcons.Ship          // 4 = Ferry
     else -> null
 }

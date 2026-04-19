@@ -447,9 +447,9 @@ private fun RouteListItem(
     ) {
         com.transitkit.app.ui.components.LineBadge(
             route = route,
-            // iOS LinesListView parity: route rows are Large.
+            // iOS LinesListView parity: route rows are Large without icon
+            // (the modal chip is rendered separately in the row metadata).
             size = com.transitkit.app.ui.components.LineBadgeSize.Large,
-            showTransitIcon = true,
         )
 
         Column(modifier = Modifier.weight(1f)) {

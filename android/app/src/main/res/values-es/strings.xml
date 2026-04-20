@@ -325,4 +325,24 @@
 
     <!-- Alert toast -->
     <string name="alerts_toast_kicker">Nuevo aviso</string>
+
+    <!-- Home redesign -->
+    <string name="walking_1_min">1 min a pie</string>
+    <string name="walking_n_min">%d min a pie</string>
+    <string name="walking_10_plus_min">10+ min a pie</string>
+    <string name="home_footer_disclaimer">Datos oficiales %1$s · App no oficial</string>
+    <string name="home_enable_location_chip">Activa la ubicación para ver paradas cercanas</string>
+    <string name="home_empty_favorites_title">Tus paradas, siempre a mano</string>
+    <string name="home_empty_favorites_body">Añade tus paradas habituales para ver los horarios en tiempo real.</string>
+    <string name="home_empty_favorites_cta">Explorar paradas</string>
+    <string name="location_primer_title">Encuentra paradas cerca de ti</string>
+    <string name="location_primer_body">Permite el acceso a la ubicación para ver las paradas más cercanas y sus próximas salidas. Puedes cambiarlo en Ajustes.</string>
+    <string name="location_primer_cta_enable">Activar ubicación</string>
+    <string name="location_primer_cta_skip">Ahora no</string>
+    <string name="settings_info_section">Información</string>
+    <string name="settings_disclaimer_body">%1$s no está desarrollada ni gestionada por %2$s. Los datos son proporcionados oficialmente por %2$s.</string>
+    <string name="settings_location_section">Privacidad</string>
+    <string name="settings_location_title">Acceso a la ubicación</string>
+    <string name="settings_location_enable">Activar</string>
+    <string name="settings_location_open">Abrir Ajustes</string>
 </resources>

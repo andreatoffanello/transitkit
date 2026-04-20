@@ -348,4 +348,24 @@
     <string name="vehicle_follow">Follow vehicle</string>
     <string name="vehicle_unfollow">Stop following</string>
     <string name="vehicle_open_trip">Open trip</string>
+
+    <!-- Home redesign -->
+    <string name="walking_1_min">1 min walk</string>
+    <string name="walking_n_min">%d min walk</string>
+    <string name="walking_10_plus_min">10+ min walk</string>
+    <string name="home_footer_disclaimer">Official %1$s data · Unofficial app</string>
+    <string name="home_enable_location_chip">Enable location to find nearby stops</string>
+    <string name="home_empty_favorites_title">Your stops, always at hand</string>
+    <string name="home_empty_favorites_body">Add your daily stops to see real-time departures here.</string>
+    <string name="home_empty_favorites_cta">Browse stops</string>
+    <string name="location_primer_title">Find stops near you</string>
+    <string name="location_primer_body">Allow location access to see the closest stops and their next departures. You can change this anytime in Settings.</string>
+    <string name="location_primer_cta_enable">Enable location</string>
+    <string name="location_primer_cta_skip">Not now</string>
+    <string name="settings_info_section">About</string>
+    <string name="settings_disclaimer_body">%1$s is not developed or managed by %2$s. Timetable data is officially provided by %2$s.</string>
+    <string name="settings_location_section">Privacy</string>
+    <string name="settings_location_title">Location access</string>
+    <string name="settings_location_enable">Enable</string>
+    <string name="settings_location_open">Open Settings</string>
 </resources>

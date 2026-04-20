@@ -4976,6 +4976,150 @@
         "es-419": { "stringUnit": { "state": "translated", "value": "Nuevo aviso" } },
         "it": { "stringUnit": { "state": "translated", "value": "Nuovo avviso" } }
       }
+    },
+    "walking_1_min": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "1 min walk" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "1 min a pie" } },
+        "it": { "stringUnit": { "state": "translated", "value": "1 min a piedi" } }
+      }
+    },
+    "walking_n_min": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%d min walk" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "%d min a pie" } },
+        "it": { "stringUnit": { "state": "translated", "value": "%d min a piedi" } }
+      }
+    },
+    "walking_10_plus_min": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "10+ min walk" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "10+ min a pie" } },
+        "it": { "stringUnit": { "state": "translated", "value": "10+ min a piedi" } }
+      }
+    },
+    "home_footer_disclaimer": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Official %@ data · Unofficial app" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Datos oficiales %@ · App no oficial" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Dati ufficiali %@ · App non ufficiale" } }
+      }
+    },
+    "home_enable_location_chip": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Enable location to find nearby stops" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Activa la ubicación para ver paradas cercanas" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Attiva la posizione per vedere fermate vicine" } }
+      }
+    },
+    "home_empty_favorites_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Your stops, always at hand" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Tus paradas, siempre a mano" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Le tue fermate, sempre a portata" } }
+      }
+    },
+    "home_empty_favorites_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Add your daily stops to see real-time departures here." } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Añade tus paradas habituales para ver los horarios en tiempo real." } },
+        "it": { "stringUnit": { "state": "translated", "value": "Aggiungi le tue fermate quotidiane per vedere le partenze in tempo reale." } }
+      }
+    },
+    "home_empty_favorites_cta": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Browse stops" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Explorar paradas" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Sfoglia fermate" } }
+      }
+    },
+    "location_primer_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Find stops near you" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Encuentra paradas cerca de ti" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Trova fermate vicino a te" } }
+      }
+    },
+    "location_primer_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Allow location access to see the closest stops and their next departures. You can change this anytime in Settings." } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Permite el acceso a la ubicación para ver las paradas más cercanas y sus próximas salidas. Puedes cambiarlo en Ajustes." } },
+        "it": { "stringUnit": { "state": "translated", "value": "Concedi l'accesso alla posizione per vedere le fermate più vicine e le loro prossime partenze. Puoi cambiare idea in Impostazioni." } }
+      }
+    },
+    "location_primer_cta_enable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Enable location" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Activar ubicación" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Attiva posizione" } }
+      }
+    },
+    "location_primer_cta_skip": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Not now" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Ahora no" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Non ora" } }
+      }
+    },
+    "settings_info_section": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "About" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Información" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Informazioni" } }
+      }
+    },
+    "settings_disclaimer_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%1$@ is not developed or managed by %2$@. Timetable data is officially provided by %2$@." } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "%1$@ no está desarrollada ni gestionada por %2$@. Los datos son proporcionados oficialmente por %2$@." } },
+        "it": { "stringUnit": { "state": "translated", "value": "I dati degli orari sono forniti ufficialmente da %2$@. %1$@ non è sviluppata né gestita da %2$@." } }
+      }
+    },
+    "settings_location_section": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Privacy" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Privacidad" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Privacy" } }
+      }
+    },
+    "settings_location_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Location access" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Acceso a la ubicación" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Accesso alla posizione" } }
+      }
+    },
+    "settings_location_enable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Enable" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Activar" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Attiva" } }
+      }
+    },
+    "settings_location_open": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Open Settings" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Abrir Ajustes" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Apri Impostazioni" } }
+      }
     }
   },
   "version": "1.0"

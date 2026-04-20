@@ -15,6 +15,8 @@ struct HomeTab: View {
     @State private var selectedMainStop: ResolvedStop?
     @State private var showSettings = false
     @State private var showAlertList = false
+    @AppStorage("hasSeenLocationPrimer") private var hasSeenLocationPrimer = false
+    @State private var showLocationPrimer = false
 
     // MARK: - Greeting
 

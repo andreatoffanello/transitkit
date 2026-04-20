@@ -10,6 +10,7 @@ struct HomeTab: View {
     @Environment(LocationManager.self) private var locationManager
     @Environment(VehicleStore.self) private var vehicleStore
     @Environment(AlertStore.self) private var alertStore
+    @Environment(\.colorScheme) private var colorScheme
 
     private var config: OperatorConfig? { try? ConfigLoader.load() }
     @State private var selectedMainStop: ResolvedStop?
@@ -27,27 +28,86 @@ struct HomeTab: View {
         else { return String(localized: "home_greeting_evening") }
     }
 
+    @ViewBuilder
+    private var operatorMapBackground: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0)) { ctx in
+            let t = Float(ctx.date.timeIntervalSinceReferenceDate)
+            let isDark: Float = colorScheme == .dark ? 1.0 : 0.0
+            GeometryReader { geo in
+                Image("OperatorBackground")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    .clipped()
+                    .colorEffect(
+                        ShaderLibrary.mapGlowEffect(
+                            .float2(geo.size),
+                            .float(t),
+                            .float(isDark)
+                        )
+                    )
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 0) {
-                    // Hero — full-width, no padding
-                    operatorHeroSection
+            ZStack {
+                operatorMapBackground.ignoresSafeArea()
 
-                    // Content sections
-                    VStack(spacing: 20) {
-                        favoritesSection
-                        nearbyStopsSection
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        // Alert chip sopra l'header (safety-critical)
+                        if !alertStore.activeAlerts.isEmpty {
+                            alertChip
+                                .padding(.top, 8)
+                                .padding(.bottom, 4)
+                        }
+                        homeMinimalHeader
+
+                        VStack(spacing: 20) {
+                            favoritesSection
+                            nearbyStopsSection
+                            footerDisclaimer
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 16)
+                        .padding(.bottom, 100)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 20)
-                    .padding(.bottom, 100)
                 }
+                .background(.clear)
+
+                // Footer gradient fade per leggibilità disclaimer sullo sfondo
+                VStack {
+                    Spacer()
+                    LinearGradient(
+                        colors: [AppTheme.background.opacity(0), AppTheme.background.opacity(0.9)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: 120)
+                    .allowsHitTesting(false)
+                }
+                .ignoresSafeArea()
             }
             .background(AppTheme.background.ignoresSafeArea())
-            .onAppear { locationManager.requestPermissionAndStart() }
+            .fullScreenCover(isPresented: $showLocationPrimer) {
+                LocationPrimerView()
+            }
+            .onAppear {
+                locationManager.requestPermissionAndStart()
+                if !hasSeenLocationPrimer &&
+                   locationManager.authorizationStatus == .notDetermined {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                        showLocationPrimer = true
+                        hasSeenLocationPrimer = true
+                    }
+                }
+            }
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -61,13 +121,9 @@ struct HomeTab: View {
                     .accessibilityLabel(String(localized: "tab_settings"))
                 }
             }
-            .sheet(isPresented: $showSettings) {
-                SettingsTab()
-            }
+            .sheet(isPresented: $showSettings) { SettingsTab() }
             .sheet(isPresented: $showAlertList) {
-                NavigationStack {
-                    AlertListView()
-                }
+                NavigationStack { AlertListView() }
             }
             .navigationDestination(item: $selectedMainStop) { stop in
                 StopDetailView(stop: stop)
@@ -75,156 +131,84 @@ struct HomeTab: View {
         }
     }
 
-    // MARK: - Operator Hero
+    // MARK: - Minimal Header
 
-    @ViewBuilder
-    private var operatorHeroSection: some View {
-        if let config {
-            heroCard(config: config)
-        } else {
-            heroSkeleton
-        }
-    }
-
-    private func heroCard(config: OperatorConfig) -> some View {
-        ZStack(alignment: .bottomLeading) {
-            // Gradient background
-            LinearGradient(
-                colors: [AppTheme.accent, AppTheme.accent.opacity(0.75)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-
-            // Dot-pattern texture
-            Canvas { ctx, size in
-                let dotColor = GraphicsContext.Shading.color(.white.opacity(0.06))
-                let spacing: CGFloat = 32
-                var y: CGFloat = 0
-                while y < size.height + spacing {
-                    var x: CGFloat = 0
-                    while x < size.width + spacing {
-                        let rect = CGRect(x: x - 2, y: y - 2, width: 4, height: 4)
-                        ctx.fill(Path(ellipseIn: rect), with: dotColor)
-                        x += spacing
+    private var homeMinimalHeader: some View {
+        HStack(spacing: 12) {
+            if UIImage(named: "OperatorLogo") != nil {
+                Image("OperatorLogo")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 32, height: 32)
+                    .clipShape(Circle())
+            }
+            if let config {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(config.name)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(AppTheme.textPrimary)
+                    if !config.region.isEmpty {
+                        Text(config.region)
+                            .font(.system(size: 12))
+                            .foregroundStyle(AppTheme.textSecondary)
                     }
-                    y += spacing
                 }
             }
-
-            VStack(alignment: .leading, spacing: 16) {
-                // Top row: avatar + greeting + operator
-                HStack(spacing: 16) {
-                    // Avatar — logo or initials
-                    ZStack {
-                        Circle().fill(.white.opacity(0.2))
-                        if UIImage(named: "OperatorLogo") != nil {
-                            Image("OperatorLogo")
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 64, height: 64)
-                                .clipShape(Circle())
-                        } else {
-                            Text(initials(from: config.name))
-                                .font(.title3.weight(.bold))
-                                .foregroundStyle(.white)
-                        }
-                    }
-                    .frame(width: 64, height: 64)
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(greeting)
-                            .font(.subheadline)
-                            .foregroundStyle(.white.opacity(0.75))
-                        Text(config.name)
-                            .font(.title2.weight(.bold))
-                            .foregroundStyle(.white)
-                            .lineLimit(1)
-                        if !config.region.isEmpty {
-                            Text(config.region)
-                                .font(.caption)
-                                .foregroundStyle(.white.opacity(0.65))
-                                .lineLimit(1)
-                        }
-                    }
-
-                    Spacer()
-                }
-
-                // Alert banner — shows only when active alerts exist
-                if !alertStore.activeAlerts.isEmpty {
-                    alertBanner(count: alertStore.activeAlerts.count,
-                                severity: highestSeverity(alertStore.activeAlerts))
-                }
-            }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 28)
+            Spacer()
         }
-        .frame(maxWidth: .infinity)
-        .shadow(color: AppTheme.accent.opacity(0.25), radius: 16, y: 8)
+        .padding(.horizontal, 20)
+        .padding(.top, 16)
+        .padding(.bottom, 8)
     }
 
-    private func highestSeverity(_ alerts: [GtfsRtAlert]) -> AlertSeverity {
-        alerts.map(\.severity).max(by: { $0.rawValue < $1.rawValue }) ?? .unknown
-    }
+    // MARK: - Alert Chip
 
-    /// Tappable pill inside the hero that opens the alert list sheet.
-    /// Color follows severity: SEVERE/WARNING = warm on-white, INFO/UNKNOWN = neutral on-white.
-    private func alertBanner(count: Int, severity: AlertSeverity) -> some View {
+    private var alertChip: some View {
         Button {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             showAlertList = true
         } label: {
-            HStack(spacing: 10) {
-                LucideIcon.alertTriangle.sized(16)
-                    .foregroundStyle(.white)
-                Text(alertBannerLabel(count: count))
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.white)
+            HStack(spacing: 8) {
+                LucideIcon.alertTriangle.sized(13)
+                    .foregroundStyle(chipAlertColor)
+                Text(alertChipLabel)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(AppTheme.textPrimary)
                     .lineLimit(1)
                 Spacer(minLength: 0)
-                LucideIcon.chevronRight.sized(14)
-                    .foregroundStyle(.white.opacity(0.7))
+                LucideIcon.chevronRight.sized(12)
+                    .foregroundStyle(AppTheme.textTertiary)
             }
             .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(.white.opacity(severity == .severe ? 0.22 : 0.16))
-            )
+            .padding(.vertical, 10)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
             .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(.white.opacity(0.25), lineWidth: 0.5)
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(chipAlertColor.opacity(0.35), lineWidth: 1)
             )
         }
         .buttonStyle(PressableButtonStyle())
-        .accessibilityIdentifier("home_alert_banner")
+        .accessibilityIdentifier("home_alert_chip")
+        .padding(.horizontal, 16)
     }
 
-    private func alertBannerLabel(count: Int) -> String {
-        count == 1
+    private var chipAlertColor: Color {
+        switch highestSeverity(alertStore.activeAlerts) {
+        case .severe:  return .red
+        case .warning: return .orange
+        default:       return AppTheme.accent
+        }
+    }
+
+    private var alertChipLabel: String {
+        let count = alertStore.activeAlerts.count
+        return count == 1
             ? String(localized: "alerts_banner_one")
             : String(format: String(localized: "alerts_banner_many"), count)
     }
 
-    private var heroSkeleton: some View {
-        HStack(spacing: 16) {
-            Circle()
-                .fill(AppTheme.glassFill)
-                .frame(width: 64, height: 64)
-            VStack(alignment: .leading, spacing: 6) {
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(AppTheme.glassFill)
-                    .frame(width: 100, height: 13)
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(AppTheme.glassFill)
-                    .frame(width: 160, height: 20)
-            }
-            Spacer()
-        }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 28)
-        .background(AppTheme.glassFill)
-        .frame(maxWidth: .infinity)
+    private func highestSeverity(_ alerts: [GtfsRtAlert]) -> AlertSeverity {
+        alerts.map(\.severity).max(by: { $0.rawValue < $1.rawValue }) ?? .unknown
     }
 
     // MARK: - Favorites
@@ -477,10 +461,5 @@ struct HomeTab: View {
             .foregroundStyle(AppTheme.textTertiary)
             .textCase(.uppercase)
             .kerning(0.5)
-    }
-
-    private func initials(from name: String) -> String {
-        let words = name.split(separator: " ").prefix(2)
-        return words.compactMap { $0.first }.map(String.init).joined()
     }
 }

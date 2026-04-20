@@ -30,8 +30,9 @@ using namespace metal;
     float d = length(uv - lightUV);
     float spotlight = exp(-d * d * 4.5);
 
-    // Base visibility: 4% for ink lines; up to +7% near the spotlight centre
-    float alpha = ink * (0.04 + spotlight * 0.07);
+    // Base visibility: 15% for ink lines; up to +10% near the spotlight centre.
+    // Bumped from 4%/+7% — card glass materials + footer gradient provide local readability.
+    float alpha = ink * (0.15 + spotlight * 0.10);
 
     // Output: original ink colour in light mode, white in dark mode
     half3 rgb = isDark > 0.5 ? half3(1.0) : color.rgb;

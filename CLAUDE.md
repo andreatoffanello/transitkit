@@ -1,6 +1,35 @@
 # transit-engine / TransitKit
 
 
+## REALTIME PROXY (dipendenza esterna obbligatoria)
+
+Le feature real-time (posizioni veicoli, ritardi live, alert di servizio) **non** colpiscono più l'upstream dell'operatore direttamente. Tutti i client (iOS, Android, web PWA) passano attraverso un proxy HTTP dedicato:
+
+- **Repo:** https://github.com/andreatoffanello/transitkit-realtime-proxy
+- **Prod URL:** `https://rt.transitkit.app`
+- **Pattern endpoint:** `https://rt.transitkit.app/{operator_id}/{feed}.pb`
+  - `{feed}` ∈ `vehicle-positions | trip-updates | alerts` (kebab-case)
+- **Content-Type:** `application/x-protobuf` (passthrough bytes, zero trasformazione)
+- **Cache:** Cloudflare edge 10s + `max-age=10` lato browser
+
+**Quando aggiungi/modifichi un operatore con feed GTFS-RT:**
+
+1. PR sul repo `transitkit-realtime-proxy` che aggiorna `operators.yaml` (schema: `label`, `used_by: [transitkit]`, `feeds.{vehicle_positions,trip_updates,alerts}` con `url` + `ttl`).
+2. Merge su `main` → CI automatica fa build GHCR + SSH deploy sul VPS Hetzner.
+3. In `transit-engine`, i `gtfs_rt` nei `config.json` (iOS + Android + `shared/operators/{op}/config.json` + eventualmente CDN `transitkit-data` per web) devono puntare a `https://rt.transitkit.app/{op}/{feed}.pb`, mai all'upstream diretto.
+
+**Health e debug:**
+- `curl https://rt.transitkit.app/healthz` → `ok`
+- `curl https://rt.transitkit.app/status` → JSON con age + bytes per ogni feed
+- Se un feed ritorna 503 con `Retry-After`: snapshot non ancora fetched (<1 TTL).
+- Se header `X-Stale: true`: upstream giù da >5×TTL, dati potenzialmente vecchi.
+
+**NEVER** inserire URL upstream dell'operatore (es. `s3.amazonaws.com/etatransit.gtfs/...`) nei `config.json` dei client: la regola è **tutti i GTFS-RT passano dal proxy**. Il solo feed ancora diretto è `gtfs_url` (static schedule zip, non real-time — non va nel proxy).
+
+Documentazione operativa completa: [README](https://github.com/andreatoffanello/transitkit-realtime-proxy#readme), [Runbook](https://github.com/andreatoffanello/transitkit-realtime-proxy/blob/main/docs/RUNBOOK.md), [Troubleshooting](https://github.com/andreatoffanello/transitkit-realtime-proxy/blob/main/docs/TROUBLESHOOTING.md).
+
+---
+
 ## IDENTIFICATIVI PROGETTO (pinned — non toccare senza aggiornare la macchina)
 
 - Scheme: `TransitKit`

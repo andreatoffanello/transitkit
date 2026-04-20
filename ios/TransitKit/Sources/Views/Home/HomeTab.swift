@@ -96,13 +96,21 @@ struct HomeTab: View {
                 LocationPrimerView()
             }
             .onAppear {
-                locationManager.requestPermissionAndStart()
-                if !hasSeenLocationPrimer &&
-                   locationManager.authorizationStatus == .notDetermined {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                        showLocationPrimer = true
-                        hasSeenLocationPrimer = true
+                switch locationManager.authorizationStatus {
+                case .authorizedWhenInUse, .authorizedAlways:
+                    // Gia' autorizzato: avvia gli updates (non mostra prompt)
+                    locationManager.requestPermissionAndStart()
+                case .notDetermined:
+                    // Primo launch: mostra il primer, NON triggerare il prompt sistema
+                    if !hasSeenLocationPrimer {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                            showLocationPrimer = true
+                            hasSeenLocationPrimer = true
+                        }
                     }
+                default:
+                    // .denied / .restricted: niente, l'utente gestisce da Settings > Privacy
+                    break
                 }
             }
             .navigationTitle("")

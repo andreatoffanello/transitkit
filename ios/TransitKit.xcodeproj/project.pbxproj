@@ -65,6 +65,7 @@
 		CCEAFD601CAE70A4485CB7F4 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56A72FCF47290855E84C160B /* AboutView.swift */; };
 		CF82333AC918F9A07C2B1890 /* DepartureRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33103B5EDE272DE94D3F38FD /* DepartureRow.swift */; };
 		D394E8A32DE3511A87B2106F /* LucideIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA2061CA100464E2D083D514 /* LucideIcon.swift */; };
+		AA01B001000000000000B001 /* PressableButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01B002000000000000B002 /* PressableButtonStyle.swift */; };
 		D6C160C0BF1074C786C11059 /* MappaTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F3436F501268CE8E925D853 /* MappaTab.swift */; };
 		DC3D72EDB297D1729CA65084 /* AlertToastOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECFB7E48F2DE54F148E94DA8 /* AlertToastOverlay.swift */; };
 		E0D813D49D272A48BC20356E /* AlertDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64FC603D174889581AD1AD62 /* AlertDetailView.swift */; };
@@ -155,6 +156,7 @@
 		CC677A39447A949F646FA8DF /* config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = config.json; sourceTree = "<group>"; };
 		D89EE35213444EB1DF6A8D93 /* GtfsRtDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GtfsRtDecoder.swift; sourceTree = "<group>"; };
 		DA2061CA100464E2D083D514 /* LucideIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LucideIcon.swift; sourceTree = "<group>"; };
+		AA01B002000000000000B002 /* PressableButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PressableButtonStyle.swift; sourceTree = "<group>"; };
 		DA9BD090565D8838CFA04A8B /* FavoritesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesManager.swift; sourceTree = "<group>"; };
 		E57AC28DB956ECD7D1B2D59C /* AlertListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertListView.swift; sourceTree = "<group>"; };
 		E7E5839E8A1674A88E34D940 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -306,6 +308,7 @@
 				DA2061CA100464E2D083D514 /* LucideIcon.swift */,
 				6D44F141BB08C2CABC2AD686 /* MarqueeLabel.swift */,
 				719322EED20F488F3E0B4317 /* MarqueeText.swift */,
+				AA01B002000000000000B002 /* PressableButtonStyle.swift */,
 				EC6BBEB0DCFFFF27DB881B02 /* SkeletonView.swift */,
 				C69F73160D11EE306A2190B7 /* StopCard.swift */,
 				3298ECC36B6DC09D4139EC06 /* TimeDisplay.swift */,
@@ -558,6 +561,7 @@
 				D6C160C0BF1074C786C11059 /* MappaTab.swift in Sources */,
 				35DDCCA972E0C2BE475258E8 /* MarqueeLabel.swift in Sources */,
 				41C27602529E673926D375E4 /* MarqueeText.swift in Sources */,
+				AA01B001000000000000B001 /* PressableButtonStyle.swift in Sources */,
 				1DB7D0A77B4D8DE7DAAB9604 /* OperatorConfig.swift in Sources */,
 				B513766EF6F25125E6EB8868 /* OperatorInfoView.swift in Sources */,
 				2BCA1D7672AA34A413EA9F64 /* OrariTab.swift in Sources */,

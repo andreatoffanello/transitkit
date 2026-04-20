@@ -214,9 +214,16 @@ struct HomeTab: View {
     // MARK: - Favorites
 
     private var favoriteStops: [ResolvedStop] {
-        favoritesManager.favoriteStopIds.prefix(3).compactMap { stopId in
+        favoritesManager.favoriteStopIds.prefix(5).compactMap { stopId in
             store.stops.first { $0.id == stopId }
         }
+    }
+
+    private func walkingTime(meters: Double) -> String {
+        let minutes = Int((meters / 80.0).rounded(.up))
+        if minutes <= 1 { return String(localized: "walking_1_min") }
+        if minutes > 10 { return String(localized: "walking_10_plus_min") }
+        return String(format: String(localized: "walking_n_min"), minutes)
     }
 
     @ViewBuilder
@@ -261,33 +268,41 @@ struct HomeTab: View {
             .map { ($0.0, $0.1) }
     }
 
-    /// Formats a distance in meters as a short localized string (e.g. "420 m", "1.2 km").
-    private func formatDistance(_ meters: Double) -> String {
-        if meters < 1000 {
-            return String(format: String(localized: "distance_meters"), Int(meters.rounded()))
+    private var enableLocationChip: some View {
+        Button {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            showLocationPrimer = true
+        } label: {
+            HStack(spacing: 8) {
+                LucideIcon.mapPin.sized(14)
+                    .foregroundStyle(AppTheme.accent)
+                Text(String(localized: "home_enable_location_chip"))
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(AppTheme.textPrimary)
+                Spacer(minLength: 0)
+                LucideIcon.chevronRight.sized(12)
+                    .foregroundStyle(AppTheme.textTertiary)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
         }
-        let km = meters / 1000
-        let formatter = NumberFormatter()
-        formatter.locale = .current
-        formatter.minimumFractionDigits = 1
-        formatter.maximumFractionDigits = 1
-        let number = formatter.string(from: NSNumber(value: km)) ?? String(format: "%.1f", km)
-        return String(format: String(localized: "distance_kilometers"), number)
+        .buttonStyle(PressableButtonStyle())
+        .accessibilityIdentifier("home_enable_location_chip")
     }
 
     @ViewBuilder
     private var nearbyStopsSection: some View {
         switch locationManager.authorizationStatus {
         case .notDetermined:
-            permissionPromptCard
-        case .denied, .restricted:
-            permissionDeniedCard
+            enableLocationChip
         case .authorizedWhenInUse, .authorizedAlways:
-            if !nearbyStopsWithDistance.isEmpty {
+            let nearby = nearbyStopsWithDistance.filter { $0.1 <= 400 }
+            if !nearby.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
                     sectionHeader(String(localized: "nearby_you"))
                     VStack(spacing: 8) {
-                        ForEach(nearbyStopsWithDistance, id: \.0.id) { (stop, distance) in
+                        ForEach(nearby, id: \.0.id) { (stop, distance) in
                             Button {
                                 selectedMainStop = stop
                             } label: {
@@ -298,89 +313,34 @@ struct HomeTab: View {
                     }
                 }
             }
-        @unknown default:
+        default:
             EmptyView()
         }
-    }
-
-    private var permissionPromptCard: some View {
-        Button {
-            locationManager.requestPermissionAndStart()
-        } label: {
-            HStack(spacing: 10) {
-                LucideIcon.mapPin.sized(20)
-                    .foregroundStyle(AppTheme.accent)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(String(localized: "nearby_enable_title"))
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(AppTheme.textPrimary)
-                    Text(String(localized: "nearby_enable_subtitle"))
-                        .font(.system(size: 12))
-                        .foregroundStyle(AppTheme.textSecondary)
-                }
-                Spacer()
-                LucideIcon.chevronRight.sized(14)
-                    .foregroundStyle(AppTheme.textTertiary)
-            }
-            .padding(14)
-            .adaptiveGlass(in: RoundedRectangle(cornerRadius: 12), withShadow: false)
-        }
-        .buttonStyle(.plain)
-    }
-
-    /// Shown when user previously denied the location permission. Opens Settings app.
-    private var permissionDeniedCard: some View {
-        Button {
-            if let url = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(url)
-            }
-        } label: {
-            HStack(spacing: 10) {
-                LucideIcon.mapPinOff.sized(20)
-                    .foregroundStyle(AppTheme.textSecondary)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(String(localized: "nearby_denied_title"))
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(AppTheme.textPrimary)
-                    Text(String(localized: "nearby_denied_subtitle"))
-                        .font(.system(size: 12))
-                        .foregroundStyle(AppTheme.textSecondary)
-                }
-                Spacer()
-                LucideIcon.chevronRight.sized(14)
-                    .foregroundStyle(AppTheme.textTertiary)
-            }
-            .padding(14)
-            .adaptiveGlass(in: RoundedRectangle(cornerRadius: 12), withShadow: false)
-        }
-        .buttonStyle(.plain)
     }
 
 
     // MARK: - Stop Card (shared for favorites and nearby)
 
     private func stopCard(_ stop: ResolvedStop, showLiveBadge: Bool, distanceMeters: Double? = nil) -> some View {
-        let departures = store.upcomingDepartures(forStopId: stop.id, limit: 2)
-        // A stop is represented by a signpost icon regardless of transit type —
-        // the visual metaphor is "the sign at the corner", not the vehicle.
+        let departures = store.upcomingDepartures(forStopId: stop.id, limit: 3)
         let transitTypeIcon: Image = stopPinIcon(transitTypes: stop.transitTypes).image
+        let isImminent = departures.first.map { isWithinFiveMinutes($0) } ?? false
 
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6) {
                 transitTypeIcon
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(AppTheme.textTertiary)
-                    .frame(width: 16, height: 16)
+                    .frame(width: 14, height: 14)
                 Text(stop.name)
-                    .font(.subheadline.bold())
-                    .foregroundStyle(AppTheme.textPrimary)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(AppTheme.textSecondary)
                     .lineLimit(1)
                 Spacer()
                 if let distanceMeters {
-                    Text(formatDistance(distanceMeters))
+                    Text(walkingTime(meters: distanceMeters))
                         .font(.caption.weight(.medium))
                         .foregroundStyle(AppTheme.textTertiary)
-                        .monospacedDigit()
                 }
             }
 
@@ -389,12 +349,12 @@ struct HomeTab: View {
                     .font(.caption)
                     .foregroundStyle(AppTheme.textTertiary)
             } else {
-                VStack(spacing: 6) {
-                    ForEach(departures) { dep in
-                        HStack(spacing: 6) {
-                            LineBadge(departure: dep, size: .large)
+                VStack(spacing: 0) {
+                    ForEach(Array(departures.enumerated()), id: \.element.id) { index, dep in
+                        HStack(spacing: 8) {
+                            LineBadge(departure: dep, size: .medium)
                             Text(dep.headsign)
-                                .font(.caption)
+                                .font(.system(size: 13))
                                 .foregroundStyle(AppTheme.textSecondary)
                                 .lineLimit(1)
                                 .truncationMode(.tail)
@@ -406,12 +366,36 @@ struct HomeTab: View {
                                 TimeDisplay(departure: dep)
                             }
                         }
+                        .padding(.vertical, 6)
+                        if index < departures.count - 1 {
+                            Divider().overlay(AppTheme.separatorLine)
+                        }
                     }
                 }
             }
         }
         .padding(14)
         .adaptiveGlass(in: RoundedRectangle(cornerRadius: 14), withShadow: true)
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(
+                    isImminent ? AppTheme.accent.opacity(0.6) : Color.clear,
+                    lineWidth: isImminent ? 1.5 : 0
+                )
+        )
+    }
+
+    /// True se la partenza è entro 5 minuti — usato per evidenziare la card.
+    private func isWithinFiveMinutes(_ dep: Departure) -> Bool {
+        let now = Date()
+        let cal = Calendar.current
+        let comps = dep.time.split(separator: ":").compactMap { Int($0) }
+        guard comps.count == 2 else { return false }
+        guard let depDate = cal.date(bySettingHour: comps[0], minute: comps[1], second: 0, of: now) else {
+            return false
+        }
+        let delta = depDate.timeIntervalSince(now)
+        return delta >= 0 && delta <= 300
     }
 
     // MARK: - Onboarding Card
@@ -422,24 +406,25 @@ struct HomeTab: View {
                 Circle()
                     .fill(AppTheme.accent.opacity(0.12))
                     .frame(width: 56, height: 56)
-                LucideIcon.mapPin.sized(24)
+                LucideIcon.star.sized(24)
                     .foregroundStyle(AppTheme.accent)
             }
 
             VStack(spacing: 6) {
-                Text(String(localized: "onboarding_title"))
+                Text(String(localized: "home_empty_favorites_title"))
                     .font(.system(size: 17, weight: .bold))
                     .foregroundStyle(AppTheme.textPrimary)
-                Text(String(localized: "onboarding_subtitle"))
+                    .multilineTextAlignment(.center)
+                Text(String(localized: "home_empty_favorites_body"))
                     .font(.system(size: 14))
                     .foregroundStyle(AppTheme.textSecondary)
                     .multilineTextAlignment(.center)
             }
 
             Button {
-                selectedTab = 1
+                selectedTab = 1   // tab Orari
             } label: {
-                Text(String(localized: "onboarding_cta"))
+                Text(String(localized: "home_empty_favorites_cta"))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
@@ -449,8 +434,7 @@ struct HomeTab: View {
             .buttonStyle(.plain)
         }
         .padding(20)
-        .background(AppTheme.glassFill, in: RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(AppTheme.glassBorder))
+        .adaptiveGlass(in: RoundedRectangle(cornerRadius: 16), withShadow: true)
     }
 
     // MARK: - Helpers
@@ -461,5 +445,19 @@ struct HomeTab: View {
             .foregroundStyle(AppTheme.textTertiary)
             .textCase(.uppercase)
             .kerning(0.5)
+    }
+
+    // MARK: - Footer Disclaimer
+
+    @ViewBuilder
+    private var footerDisclaimer: some View {
+        if let config {
+            Text(String(format: String(localized: "home_footer_disclaimer"), config.name))
+                .font(.system(size: 11))
+                .foregroundStyle(AppTheme.textTertiary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 8)
+        }
     }
 }

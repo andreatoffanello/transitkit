@@ -33,6 +33,9 @@ final class DeepLinkRouter {
     var pendingMapOpen: UUID? = nil
     /// Vehicle id to show as preview card on the Mappa tab. Consumed by MappaTab.
     var pendingMapPreviewVehicleId: String? = nil
+    /// Shader playground (dev tool). Set true to present the fullscreen shader view
+    /// for visual iteration. Trigger via `transitkit://shader`.
+    var showShaderPlayground = false
 }
 
 // MARK: - Trip Target

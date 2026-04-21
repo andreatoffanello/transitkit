@@ -62,24 +62,27 @@ static inline float fbm4(float2 p) {
     vignette = mix(0.55, 1.0, vignette);
     float baseAlpha = 0.14 * vignette;
 
-    // --- Macchie: 3 layer di noise a frequenze diverse ---
-    // Freq più basse = macchie più larghe; drift più lento per movimento "calmo".
-    float noiseA = fbm4(uv * 8.5 + float2(time * 0.30, time * 0.22));
-    float noiseB = fbm4(uv * 15.0 + float2(-time * 0.38, time * 0.28));
-    float noiseC = fbm4(uv * 23.0 + float2(time * 0.20, -time * 0.34));
+    // --- Macchie: 3 layer di noise a frequenze basse (macchie larghe) ---
+    // Drift molto lento per movimento "calmo" e contemplativo
+    float noiseA = fbm4(uv * 4.5 + float2(time * 0.10, time * 0.07));
+    float noiseB = fbm4(uv * 8.0 + float2(-time * 0.12, time * 0.09));
+    float noiseC = fbm4(uv * 13.0 + float2(time * 0.07, -time * 0.11));
 
-    // Smoothstep con banda ampia → bordi sfumati lunghi (vaporoso)
-    float blobA = smoothstep(0.48, 0.80, noiseA);
-    float blobB = smoothstep(0.52, 0.82, noiseB);
-    float blobC = smoothstep(0.56, 0.84, noiseC);
+    // Smoothstep con banda larga → dissoluzione molto sfumata sui bordi
+    float blobA = smoothstep(0.44, 0.82, noiseA);
+    float blobB = smoothstep(0.48, 0.84, noiseB);
+    float blobC = smoothstep(0.52, 0.86, noiseC);
 
     float blobs = max(blobA, max(blobB * 0.85, blobC * 0.70));
 
-    // --- Glare: alone sfocato con drift più lento ---
-    float haloInner = fbm4(uv * 4.0 + float2(time * 0.20, -time * 0.15));
-    float haloOuter = fbm4(uv * 1.6 + float2(-time * 0.14, time * 0.11));
-    float halo = smoothstep(0.46, 0.76, haloInner) * 0.60
-               + smoothstep(0.48, 0.80, haloOuter) * 0.40;
+    // --- Glare: alone sfocato ampio che bleeds out oltre le macchie ---
+    // Frequenze molto basse → macchie di glare grandi che si espandono
+    float haloInner = fbm4(uv * 2.2 + float2(time * 0.08, -time * 0.06));
+    float haloOuter = fbm4(uv * 0.9 + float2(-time * 0.05, time * 0.04));
+    // Soglie basse e bande larghe → halo dolce ma presente in molte zone
+    float halo = smoothstep(0.38, 0.72, haloInner) * 0.80
+               + smoothstep(0.42, 0.78, haloOuter) * 0.55;
+    halo = clamp(halo, 0.0, 1.0);
 
     // --- Breathing molto lento (~20s) per pulsazione globale ---
     float breath = 0.85 + 0.15 * sin(time * 0.32);
@@ -88,28 +91,22 @@ static inline float fbm4(float2 p) {
     float2 grainSeed = position + float2(time * 13.7, time * 9.3);
     float grain = (hash(grainSeed) - 0.5) * 0.18;
 
-    // Reveal strength combinato: dove blobs+halo sono alti, è "rivelato";
-    // dove bassi, è "scomparendo".
-    float reveal = max(blobs, halo * 0.75);
+    // Reveal strength combinato: halo contribuisce pesantemente per sentirlo.
+    float reveal = max(blobs, halo * 0.95);
 
-    // --- Dissolvenza-blur simulata via ink thresholding adattivo ---
-    // In zone non rivelate, solo ink denso (strade principali, testi di mappe)
-    // sopravvive; linee sottili e texture fine dissolvono per prime.
-    // In zone rivelate, ogni livello di ink è visibile.
-    // L'effetto è: mentre il reveal si ritira, i dettagli fini spariscono prima,
-    // le linee grosse lingering per ultime — come se si sciogliessero nell'aria.
-    float threshold = mix(0.62, 0.02, reveal);
-    float softInk = smoothstep(threshold, threshold + 0.28, ink);
+    // --- Dissolvenza-blur aggressiva via ink thresholding adattivo ---
+    // threshold da 0.88 (zone "morte": quasi nessun ink sopravvive) a 0.0
+    // (zone pienamente rivelate: tutto visibile).
+    // Banda transizione larga (0.38) → fade-out graduale lungo, effetto
+    // "sciogliersi nell'aria".
+    float threshold = mix(0.88, 0.0, reveal);
+    float softInk = smoothstep(threshold, threshold + 0.38, ink);
 
-    // Boost dato dalle macchie sopra la base tenue.
-    float blobBoost = (blobs * 0.50 + halo * 0.30) * breath;
+    // Boost dato dalle macchie + halo (molto più presente).
+    float blobBoost = (blobs * 0.55 + halo * 0.45) * breath;
 
-    // Alpha finale:
-    //   - baseAlpha modulata da softInk → tenue visibile solo dove ink è forte
-    //     E reveal è almeno parziale. Zone morenti: thin ink sparisce,
-    //     heavy ink sbiadisce gradualmente.
-    //   - blobBoost aggiunge rivelazioni localizzate (usa softInk, non ink raw)
-    //   - grain lavorato anche lui sull'ink softato
+    // Alpha finale: tutto modulato da softInk → linee sottili dissolvono
+    // nelle zone morenti, lingering solo le più dense.
     float alpha = baseAlpha * softInk + softInk * (blobBoost + grain * 0.25);
     alpha = clamp(alpha, 0.0, 0.55);
 

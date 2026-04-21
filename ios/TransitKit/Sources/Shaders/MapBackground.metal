@@ -62,26 +62,28 @@ static inline float fbm4(float2 p) {
     vignette = mix(0.55, 1.0, vignette);
     float baseAlpha = 0.14 * vignette;
 
-    // --- Macchie: 2 layer di noise ad alta frequenza in movimento ---
-    // Layer A: macchie medie (~10-12 per schermo), drift lento
-    float noiseA = fbm4(uv * 7.5 + float2(time * 0.10, time * 0.07));
-    // Layer B: macchie più piccole (~20-30), drift in direzione opposta
-    float noiseB = fbm4(uv * 14.0 + float2(-time * 0.12, time * 0.09));
+    // --- Macchie: 3 layer di noise a frequenze diverse ---
+    // Drift veloce per movimento visibile, max() invece di somma per picchi distinti
+    float noiseA = fbm4(uv * 10.0 + float2(time * 0.45, time * 0.32));
+    float noiseB = fbm4(uv * 18.0 + float2(-time * 0.55, time * 0.40));
+    float noiseC = fbm4(uv * 28.0 + float2(time * 0.28, -time * 0.48));
 
-    // Smoothstep morbido → dissoluzione graduale tra "nulla" e "pieno"
-    // Bordi ampi dello smoothstep (0.35→0.85) per simulare blur/sfumatura
-    // lunga, tipo vaporoso.
-    float blobA = smoothstep(0.38, 0.78, noiseA);
-    float blobB = smoothstep(0.42, 0.82, noiseB);
+    // Smoothstep stretto su soglia alta → solo i picchi del noise diventano
+    // macchie visibili; le valli restano a zero. Questo produce veri contrasti
+    // tra zone rivelate e zone invisibili (no saturazione media).
+    float blobA = smoothstep(0.52, 0.78, noiseA);
+    float blobB = smoothstep(0.55, 0.82, noiseB);
+    float blobC = smoothstep(0.58, 0.82, noiseC);
 
-    // Combinazione pesata: layer A domina, B aggiunge varietà fine
-    float blobs = blobA * 0.65 + blobB * 0.45;
-    blobs = clamp(blobs, 0.0, 1.0);
+    // max() invece di + : il layer più forte in quel punto domina,
+    // evitando la "sovrapposizione uniforme" che appiattisce tutto.
+    float blobs = max(blobA, max(blobB * 0.85, blobC * 0.70));
 
-    // --- Glare diffuso: alone attorno alle zone rivelate (bleed acquarello) ---
-    // Prendiamo un noise più basso come "halo" che bleeds out dalle blobs
-    float haloNoise = fbm4(uv * 3.8 + float2(time * 0.06, -time * 0.05));
-    float halo = smoothstep(0.45, 0.75, haloNoise) * 0.35;
+    // --- Glare: alone sfocato con drift veloce per bleed animato ---
+    float haloInner = fbm4(uv * 4.5 + float2(time * 0.30, -time * 0.22));
+    float haloOuter = fbm4(uv * 1.8 + float2(-time * 0.20, time * 0.16));
+    float halo = smoothstep(0.48, 0.74, haloInner) * 0.60
+               + smoothstep(0.50, 0.78, haloOuter) * 0.40;
 
     // --- Breathing molto lento (~20s) per pulsazione globale ---
     float breath = 0.85 + 0.15 * sin(time * 0.32);
@@ -91,9 +93,8 @@ static inline float fbm4(float2 p) {
     float grain = (hash(grainSeed) - 0.5) * 0.18;
 
     // Boost dato dalle macchie sopra la base tenue.
-    // blobBoost va da 0 (zone non rivelate = solo base tenue) a ~0.35 (zone pienamente
-    // rivelate = ink nitido). Halo aggiunge un layer intermedio sfumato.
-    float blobBoost = (blobs * 0.35 + halo * 0.15) * breath;
+    // Aumentati i contributi: blobs fino a +50%, halo fino a +30% (glare sensibile).
+    float blobBoost = (blobs * 0.50 + halo * 0.30) * breath;
 
     // Alpha finale:
     //   - baseAlpha sempre presente (mappa tenue percepibile)

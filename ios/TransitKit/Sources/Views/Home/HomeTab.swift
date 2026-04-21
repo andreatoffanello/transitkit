@@ -31,7 +31,10 @@ struct HomeTab: View {
     @ViewBuilder
     private var operatorMapBackground: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 24.0)) { ctx in
-            let t = Float(ctx.date.timeIntervalSinceReferenceDate)
+            // Wrap time to 0..1000 to avoid Float32 precision loss in sin(time * mult)
+            // at wall-clock magnitudes (~8e8). At 800s cycle, a 4x multiplier still
+            // stays well within Float precision.
+            let t = Float(ctx.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1000.0))
             let isDark: Float = colorScheme == .dark ? 1.0 : 0.0
             let (ar, ag, ab) = Self.rgbComponents(of: AppTheme.accent)
             GeometryReader { geo in

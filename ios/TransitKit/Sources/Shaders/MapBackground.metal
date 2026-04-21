@@ -32,35 +32,35 @@ using namespace metal;
     float lum = dot(float3(color.rgb), float3(0.299, 0.587, 0.114));
     float ink = isDark > 0.5 ? lum : (1.0 - lum);
 
-    // --- Primary bright spotlight (slow wide, ~62s) ---
-    float t1 = time * 0.10;
+    // --- Primary bright spotlight (~16s per cycle, fast enough to be noticeable) ---
+    float t1 = time * 0.40;
     float2 light1 = float2(
-        0.5 + 0.42 * sin(t1),
-        0.5 + 0.32 * sin(t1 * 1.618 + 0.9)
+        0.5 + 0.45 * sin(t1),
+        0.5 + 0.35 * sin(t1 * 1.618 + 0.9)
     );
     float d1 = length(uv - light1);
-    float spot1 = exp(-d1 * d1 * 3.5);
+    float spot1 = exp(-d1 * d1 * 3.0);
 
-    // --- Secondary bright spotlight (faster tighter, ~41s) ---
-    float t2 = time * 0.15 + 3.14;
+    // --- Secondary bright spotlight (~10s per cycle, faster tighter) ---
+    float t2 = time * 0.62 + 3.14;
     float2 light2 = float2(
-        0.5 + 0.35 * sin(t2 * 1.3),
-        0.5 + 0.28 * cos(t2 * 0.8)
+        0.5 + 0.38 * sin(t2 * 1.3),
+        0.5 + 0.32 * cos(t2 * 0.8)
     );
     float d2 = length(uv - light2);
-    float spot2 = exp(-d2 * d2 * 8.0);
+    float spot2 = exp(-d2 * d2 * 7.0);
 
-    // --- Anti-spotlight: dimmer zone drifting ~ contra direction ---
-    float t3 = time * 0.12 + 1.57;
+    // --- Anti-spotlight: dimmer zone drifting contra direction (~13s) ---
+    float t3 = time * 0.48 + 1.57;
     float2 darkCenter = float2(
-        0.5 - 0.38 * sin(t3 * 0.9),
-        0.5 - 0.30 * cos(t3 * 1.1)
+        0.5 - 0.42 * sin(t3 * 0.9),
+        0.5 - 0.35 * cos(t3 * 1.1)
     );
     float d3 = length(uv - darkCenter);
-    float darkZone = exp(-d3 * d3 * 5.0);
+    float darkZone = exp(-d3 * d3 * 4.0);
 
-    // --- Breathing modulation on bright spots ---
-    float breath = 0.85 + 0.15 * sin(time * 0.08);
+    // --- Breathing modulation on bright spots (~16s) ---
+    float breath = 0.80 + 0.20 * sin(time * 0.40);
 
     // --- Film grain: hash-based, animated ---
     float2 grainSeed = position + float2(time * 13.7, time * 9.3);

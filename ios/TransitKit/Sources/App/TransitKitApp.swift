@@ -65,6 +65,13 @@ struct TransitKitApp: App {
         // host = command, pathComponents (filtered) = args
         let command = url.host ?? ""
         let parts = url.pathComponents.filter { $0 != "/" }
+
+        // transitkit://shader  — apri lo shader playground (dev tool, no args)
+        if command == "shader" {
+            router.showShaderPlayground = true
+            return
+        }
+
         guard !parts.isEmpty else { return }
 
         switch command {

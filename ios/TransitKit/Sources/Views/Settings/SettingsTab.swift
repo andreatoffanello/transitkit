@@ -7,6 +7,7 @@ import SwiftUI
 struct SettingsTab: View {
     @Environment(ScheduleStore.self) private var store
     @Environment(FavoritesManager.self) private var favoritesManager
+    @Environment(LocationManager.self) private var locationManager
 
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
 
@@ -84,6 +85,31 @@ struct SettingsTab: View {
                         Text(String(localized: "settings_language_footer"))
                     }
 
+                    // MARK: Privacy (Location)
+                    Section {
+                        HStack(spacing: 12) {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(AppTheme.accent.opacity(0.12))
+                                .frame(width: 32, height: 32)
+                                .overlay(
+                                    LucideIcon.mapPin.sized(14)
+                                        .foregroundStyle(AppTheme.accent)
+                                )
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(String(localized: "settings_location_title"))
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(AppTheme.textPrimary)
+                                Text(locationStatusDescription)
+                                    .font(.caption)
+                                    .foregroundStyle(AppTheme.textSecondary)
+                            }
+                            Spacer()
+                            locationActionButton
+                        }
+                    } header: {
+                        Text(String(localized: "settings_location_section"))
+                    }
+
                     // MARK: About
                     Section {
                         NavigationLink {
@@ -111,6 +137,16 @@ struct SettingsTab: View {
                         }
                     } header: {
                         Text(String(localized: "settings_section_about"))
+                    }
+
+                    // MARK: Informazioni (Disclaimer)
+                    Section {
+                        Text(String(format: String(localized: "settings_disclaimer_body"), config.name, config.fullName))
+                            .font(.system(size: 13))
+                            .foregroundStyle(AppTheme.textSecondary)
+                            .padding(.vertical, 4)
+                    } header: {
+                        Text(String(localized: "settings_info_section"))
                     }
                 }
             }
@@ -196,6 +232,46 @@ struct SettingsTab: View {
                         .foregroundStyle(AppTheme.textSecondary)
                 }
             }
+        }
+    }
+
+    // MARK: - Location (Privacy)
+
+    private var locationStatusDescription: String {
+        switch locationManager.authorizationStatus {
+        case .authorizedWhenInUse, .authorizedAlways:
+            return String(localized: "nearby_enable_subtitle")
+        case .denied, .restricted:
+            return String(localized: "nearby_denied_subtitle")
+        case .notDetermined:
+            return String(localized: "nearby_enable_subtitle")
+        @unknown default:
+            return ""
+        }
+    }
+
+    @ViewBuilder
+    private var locationActionButton: some View {
+        switch locationManager.authorizationStatus {
+        case .notDetermined:
+            Button(String(localized: "settings_location_enable")) {
+                locationManager.requestPermissionAndStart()
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(AppTheme.accent)
+            .accessibilityIdentifier("settings_location_enable_button")
+        case .denied, .restricted:
+            Button(String(localized: "settings_location_open")) {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            .buttonStyle(.bordered)
+            .accessibilityIdentifier("settings_location_open_button")
+        default:
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(AppTheme.accent)
+                .accessibilityIdentifier("settings_location_granted")
         }
     }
 

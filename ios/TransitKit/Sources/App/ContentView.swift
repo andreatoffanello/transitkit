@@ -13,6 +13,7 @@ struct ContentView: View {
     @State private var selectedTab = 0
     @State private var toastPresenter = AlertToastPresenter()
     @State private var toastDetailAlert: GtfsRtAlert?
+    @State private var showShaderPlayground = false
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -134,6 +135,15 @@ struct ContentView: View {
             NavigationStack {
                 AlertDetailView(alert: alert)
             }
+        }
+        .onChange(of: router.showShaderPlayground) { _, requested in
+            if requested {
+                showShaderPlayground = true
+                router.showShaderPlayground = false
+            }
+        }
+        .fullScreenCover(isPresented: $showShaderPlayground) {
+            ShaderPlaygroundView()
         }
     }
 

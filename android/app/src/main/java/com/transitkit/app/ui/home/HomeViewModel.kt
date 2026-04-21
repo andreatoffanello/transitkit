@@ -1,5 +1,6 @@
 package com.transitkit.app.ui.home
 
+import android.content.SharedPreferences
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -59,6 +60,12 @@ class HomeViewModel @Inject constructor(
     private val _favoriteDepartures = MutableStateFlow<Map<String, List<Departure>>>(emptyMap())
     val favoriteDepartures: StateFlow<Map<String, List<Departure>>> = _favoriteDepartures.asStateFlow()
 
+    private val _nearbyDepartures = MutableStateFlow<Map<String, List<Departure>>>(emptyMap())
+    val nearbyDepartures: StateFlow<Map<String, List<Departure>>> = _nearbyDepartures.asStateFlow()
+
+    private val _shouldShowLocationPrimer = MutableStateFlow(false)
+    val shouldShowLocationPrimer: StateFlow<Boolean> = _shouldShowLocationPrimer.asStateFlow()
+
     val scheduleLoadError: StateFlow<String?> = scheduleRepository.loadError
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
@@ -92,6 +99,7 @@ class HomeViewModel @Inject constructor(
             val distM = kotlin.math.sqrt(dLat * dLat + dLon * dLon) * 111_320.0
             stop to distM
         }
+            .filter { it.second <= 400.0 }
             .sortedBy { it.second }
             .take(3)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -121,6 +129,27 @@ class HomeViewModel @Inject constructor(
                 loadDepartures(stopIds)
             }
         }
+        viewModelScope.launch {
+            nearbyStops.collectLatest { nearby ->
+                val result = mutableMapOf<String, List<Departure>>()
+                for ((stop, _) in nearby) {
+                    result[stop.id] = scheduleRepository
+                        .upcomingDepartures(stop.id, limit = 3)
+                        .map { it.toDeparture() }
+                }
+                _nearbyDepartures.value = result
+            }
+        }
+    }
+
+    fun checkLocationPrimer(prefs: SharedPreferences, currentPermissionGranted: Boolean) {
+        val hasSeen = prefs.getBoolean("has_seen_location_primer", false)
+        _shouldShowLocationPrimer.value = !hasSeen && !currentPermissionGranted
+    }
+
+    fun markLocationPrimerSeen(prefs: SharedPreferences) {
+        prefs.edit().putBoolean("has_seen_location_primer", true).apply()
+        _shouldShowLocationPrimer.value = false
     }
 
     override fun onCleared() {

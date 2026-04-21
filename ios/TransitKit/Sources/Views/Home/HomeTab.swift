@@ -10,11 +10,14 @@ struct HomeTab: View {
     @Environment(LocationManager.self) private var locationManager
     @Environment(VehicleStore.self) private var vehicleStore
     @Environment(AlertStore.self) private var alertStore
+    @Environment(\.colorScheme) private var colorScheme
 
     private var config: OperatorConfig? { try? ConfigLoader.load() }
     @State private var selectedMainStop: ResolvedStop?
     @State private var showSettings = false
     @State private var showAlertList = false
+    @AppStorage("hasSeenLocationPrimer") private var hasSeenLocationPrimer = false
+    @State private var showLocationPrimer = false
 
     // MARK: - Greeting
 
@@ -25,27 +28,137 @@ struct HomeTab: View {
         else { return String(localized: "home_greeting_evening") }
     }
 
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 0) {
-                    // Hero — full-width, no padding
-                    operatorHeroSection
+    @ViewBuilder
+    private var operatorMapBackground: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0)) { ctx in
+            // Wrap time a 0..1000 per evitare precision loss Float32 GPU
+            let t = Float(ctx.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1000.0))
+            let (ar, ag, ab) = Self.rgbComponents(of: AppTheme.accent)
+            let isDark = colorScheme == .dark
+            GeometryReader { geo in
+                ZStack {
+                    // Layer 1: Deep fog (always present)
+                    homeMapLayer(size: geo.size, time: t, sharpness: 0.0, accent: (ar, ag, ab))
+                        .blur(radius: 28)
+                        .opacity(isDark ? 0.70 : 0.55)
 
-                    // Content sections
-                    VStack(spacing: 20) {
-                        favoritesSection
-                        nearbyStopsSection
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 20)
-                    .padding(.bottom, 100)
+                    // Layer 2: Medium fog
+                    homeMapLayer(size: geo.size, time: t, sharpness: 0.3, accent: (ar, ag, ab))
+                        .blur(radius: 12)
+                        .opacity(isDark ? 0.50 : 0.42)
+
+                    // Layer 3: Forming lines
+                    homeMapLayer(size: geo.size, time: t, sharpness: 0.7, accent: (ar, ag, ab))
+                        .blur(radius: 4)
+                        .opacity(isDark ? 0.45 : 0.36)
+
+                    // Layer 4: Crisp lines (peak breathing only)
+                    homeMapLayer(size: geo.size, time: t, sharpness: 1.0, accent: (ar, ag, ab))
+                        .opacity(isDark ? 0.50 : 0.38)
                 }
             }
+        }
+        .allowsHitTesting(false)
+    }
+
+    @ViewBuilder
+    private func homeMapLayer(
+        size: CGSize,
+        time: Float,
+        sharpness: Float,
+        accent: (Float, Float, Float)
+    ) -> some View {
+        Image("OperatorBackground")
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: size.width, height: size.height)
+            .clipped()
+            .colorEffect(
+                ShaderLibrary.mapGlowEffect(
+                    .float2(size),
+                    .float(time),
+                    .float(sharpness),
+                    .float(accent.0),
+                    .float(accent.1),
+                    .float(accent.2)
+                )
+            )
+    }
+
+    /// Estrae componenti RGB 0..1 da una Color SwiftUI risolvendola via UIColor.
+    /// Usata per passare l'accent color all'shader Metal come uniform.
+    private static func rgbComponents(of color: Color) -> (Float, Float, Float) {
+        let ui = UIColor(color)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        ui.getRed(&r, green: &g, blue: &b, alpha: &a)
+        return (Float(r), Float(g), Float(b))
+    }
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                operatorMapBackground.ignoresSafeArea()
+
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        // Alert chip sopra l'header (safety-critical)
+                        if !alertStore.activeAlerts.isEmpty {
+                            alertChip
+                                .padding(.top, 8)
+                                .padding(.bottom, 4)
+                        }
+                        homeMinimalHeader
+
+                        VStack(spacing: 20) {
+                            favoritesSection
+                            nearbyStopsSection
+                            footerDisclaimer
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 16)
+                        .padding(.bottom, 100)
+                    }
+                }
+                .background(.clear)
+
+                // Footer gradient fade per leggibilità disclaimer sullo sfondo
+                VStack {
+                    Spacer()
+                    LinearGradient(
+                        colors: [AppTheme.background.opacity(0), AppTheme.background.opacity(0.9)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: 120)
+                    .allowsHitTesting(false)
+                }
+                .ignoresSafeArea()
+            }
             .background(AppTheme.background.ignoresSafeArea())
-            .onAppear { locationManager.requestPermissionAndStart() }
+            .fullScreenCover(isPresented: $showLocationPrimer) {
+                LocationPrimerView()
+            }
+            .onAppear {
+                switch locationManager.authorizationStatus {
+                case .authorizedWhenInUse, .authorizedAlways:
+                    // Gia' autorizzato: avvia gli updates (non mostra prompt)
+                    locationManager.requestPermissionAndStart()
+                case .notDetermined:
+                    // Primo launch: mostra il primer, NON triggerare il prompt sistema
+                    if !hasSeenLocationPrimer {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                            showLocationPrimer = true
+                            hasSeenLocationPrimer = true
+                        }
+                    }
+                default:
+                    // .denied / .restricted: niente, l'utente gestisce da Settings > Privacy
+                    break
+                }
+            }
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -59,13 +172,9 @@ struct HomeTab: View {
                     .accessibilityLabel(String(localized: "tab_settings"))
                 }
             }
-            .sheet(isPresented: $showSettings) {
-                SettingsTab()
-            }
+            .sheet(isPresented: $showSettings) { SettingsTab() }
             .sheet(isPresented: $showAlertList) {
-                NavigationStack {
-                    AlertListView()
-                }
+                NavigationStack { AlertListView() }
             }
             .navigationDestination(item: $selectedMainStop) { stop in
                 StopDetailView(stop: stop)
@@ -73,164 +182,99 @@ struct HomeTab: View {
         }
     }
 
-    // MARK: - Operator Hero
+    // MARK: - Minimal Header
 
-    @ViewBuilder
-    private var operatorHeroSection: some View {
-        if let config {
-            heroCard(config: config)
-        } else {
-            heroSkeleton
+    private var homeMinimalHeader: some View {
+        HStack(spacing: 12) {
+            if UIImage(named: "OperatorLogo") != nil {
+                Image("OperatorLogo")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 32, height: 32)
+                    .clipShape(Circle())
+            }
+            if let config {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(config.name)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(AppTheme.textPrimary)
+                    if !config.region.isEmpty {
+                        Text(config.region)
+                            .font(.system(size: 12))
+                            .foregroundStyle(AppTheme.textSecondary)
+                    }
+                }
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 16)
+        .padding(.bottom, 8)
+    }
+
+    // MARK: - Alert Chip
+
+    private var alertChip: some View {
+        Button {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            showAlertList = true
+        } label: {
+            HStack(spacing: 8) {
+                LucideIcon.alertTriangle.sized(13)
+                    .foregroundStyle(chipAlertColor)
+                Text(alertChipLabel)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                LucideIcon.chevronRight.sized(12)
+                    .foregroundStyle(AppTheme.textTertiary)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(chipAlertColor.opacity(0.35), lineWidth: 1)
+            )
+        }
+        .buttonStyle(PressableButtonStyle())
+        .accessibilityIdentifier("home_alert_chip")
+        .padding(.horizontal, 16)
+    }
+
+    private var chipAlertColor: Color {
+        switch highestSeverity(alertStore.activeAlerts) {
+        case .severe:  return .red
+        case .warning: return .orange
+        default:       return AppTheme.accent
         }
     }
 
-    private func heroCard(config: OperatorConfig) -> some View {
-        ZStack(alignment: .bottomLeading) {
-            // Gradient background
-            LinearGradient(
-                colors: [AppTheme.accent, AppTheme.accent.opacity(0.75)],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-
-            // Dot-pattern texture
-            Canvas { ctx, size in
-                let dotColor = GraphicsContext.Shading.color(.white.opacity(0.06))
-                let spacing: CGFloat = 32
-                var y: CGFloat = 0
-                while y < size.height + spacing {
-                    var x: CGFloat = 0
-                    while x < size.width + spacing {
-                        let rect = CGRect(x: x - 2, y: y - 2, width: 4, height: 4)
-                        ctx.fill(Path(ellipseIn: rect), with: dotColor)
-                        x += spacing
-                    }
-                    y += spacing
-                }
-            }
-
-            VStack(alignment: .leading, spacing: 16) {
-                // Top row: avatar + greeting + operator
-                HStack(spacing: 16) {
-                    // Avatar — logo or initials
-                    ZStack {
-                        Circle().fill(.white.opacity(0.2))
-                        if UIImage(named: "OperatorLogo") != nil {
-                            Image("OperatorLogo")
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 64, height: 64)
-                                .clipShape(Circle())
-                        } else {
-                            Text(initials(from: config.name))
-                                .font(.title3.weight(.bold))
-                                .foregroundStyle(.white)
-                        }
-                    }
-                    .frame(width: 64, height: 64)
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(greeting)
-                            .font(.subheadline)
-                            .foregroundStyle(.white.opacity(0.75))
-                        Text(config.name)
-                            .font(.title2.weight(.bold))
-                            .foregroundStyle(.white)
-                            .lineLimit(1)
-                        if !config.region.isEmpty {
-                            Text(config.region)
-                                .font(.caption)
-                                .foregroundStyle(.white.opacity(0.65))
-                                .lineLimit(1)
-                        }
-                    }
-
-                    Spacer()
-                }
-
-                // Alert banner — shows only when active alerts exist
-                if !alertStore.activeAlerts.isEmpty {
-                    alertBanner(count: alertStore.activeAlerts.count,
-                                severity: highestSeverity(alertStore.activeAlerts))
-                }
-            }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 28)
-        }
-        .frame(maxWidth: .infinity)
-        .shadow(color: AppTheme.accent.opacity(0.25), radius: 16, y: 8)
+    private var alertChipLabel: String {
+        let count = alertStore.activeAlerts.count
+        return count == 1
+            ? String(localized: "alerts_banner_one")
+            : String(format: String(localized: "alerts_banner_many"), count)
     }
 
     private func highestSeverity(_ alerts: [GtfsRtAlert]) -> AlertSeverity {
         alerts.map(\.severity).max(by: { $0.rawValue < $1.rawValue }) ?? .unknown
     }
 
-    /// Tappable pill inside the hero that opens the alert list sheet.
-    /// Color follows severity: SEVERE/WARNING = warm on-white, INFO/UNKNOWN = neutral on-white.
-    private func alertBanner(count: Int, severity: AlertSeverity) -> some View {
-        Button {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            showAlertList = true
-        } label: {
-            HStack(spacing: 10) {
-                LucideIcon.alertTriangle.sized(16)
-                    .foregroundStyle(.white)
-                Text(alertBannerLabel(count: count))
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                Spacer(minLength: 0)
-                LucideIcon.chevronRight.sized(14)
-                    .foregroundStyle(.white.opacity(0.7))
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(.white.opacity(severity == .severe ? 0.22 : 0.16))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(.white.opacity(0.25), lineWidth: 0.5)
-            )
-        }
-        .buttonStyle(PressableButtonStyle())
-        .accessibilityIdentifier("home_alert_banner")
-    }
-
-    private func alertBannerLabel(count: Int) -> String {
-        count == 1
-            ? String(localized: "alerts_banner_one")
-            : String(format: String(localized: "alerts_banner_many"), count)
-    }
-
-    private var heroSkeleton: some View {
-        HStack(spacing: 16) {
-            Circle()
-                .fill(AppTheme.glassFill)
-                .frame(width: 64, height: 64)
-            VStack(alignment: .leading, spacing: 6) {
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(AppTheme.glassFill)
-                    .frame(width: 100, height: 13)
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(AppTheme.glassFill)
-                    .frame(width: 160, height: 20)
-            }
-            Spacer()
-        }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 28)
-        .background(AppTheme.glassFill)
-        .frame(maxWidth: .infinity)
-    }
-
     // MARK: - Favorites
 
     private var favoriteStops: [ResolvedStop] {
-        favoritesManager.favoriteStopIds.prefix(3).compactMap { stopId in
+        favoritesManager.favoriteStopIds.prefix(5).compactMap { stopId in
             store.stops.first { $0.id == stopId }
         }
+    }
+
+    private func walkingTime(meters: Double) -> String {
+        let minutes = Int((meters / 80.0).rounded(.up))
+        if minutes <= 1 { return String(localized: "walking_1_min") }
+        if minutes > 10 { return String(localized: "walking_10_plus_min") }
+        return String(format: String(localized: "walking_n_min"), minutes)
     }
 
     @ViewBuilder
@@ -275,33 +319,41 @@ struct HomeTab: View {
             .map { ($0.0, $0.1) }
     }
 
-    /// Formats a distance in meters as a short localized string (e.g. "420 m", "1.2 km").
-    private func formatDistance(_ meters: Double) -> String {
-        if meters < 1000 {
-            return String(format: String(localized: "distance_meters"), Int(meters.rounded()))
+    private var enableLocationChip: some View {
+        Button {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            showLocationPrimer = true
+        } label: {
+            HStack(spacing: 8) {
+                LucideIcon.mapPin.sized(14)
+                    .foregroundStyle(AppTheme.accent)
+                Text(String(localized: "home_enable_location_chip"))
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(AppTheme.textPrimary)
+                Spacer(minLength: 0)
+                LucideIcon.chevronRight.sized(12)
+                    .foregroundStyle(AppTheme.textTertiary)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
         }
-        let km = meters / 1000
-        let formatter = NumberFormatter()
-        formatter.locale = .current
-        formatter.minimumFractionDigits = 1
-        formatter.maximumFractionDigits = 1
-        let number = formatter.string(from: NSNumber(value: km)) ?? String(format: "%.1f", km)
-        return String(format: String(localized: "distance_kilometers"), number)
+        .buttonStyle(PressableButtonStyle())
+        .accessibilityIdentifier("home_enable_location_chip")
     }
 
     @ViewBuilder
     private var nearbyStopsSection: some View {
         switch locationManager.authorizationStatus {
         case .notDetermined:
-            permissionPromptCard
-        case .denied, .restricted:
-            permissionDeniedCard
+            enableLocationChip
         case .authorizedWhenInUse, .authorizedAlways:
-            if !nearbyStopsWithDistance.isEmpty {
+            let nearby = nearbyStopsWithDistance.filter { $0.1 <= 400 }
+            if !nearby.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
                     sectionHeader(String(localized: "nearby_you"))
                     VStack(spacing: 8) {
-                        ForEach(nearbyStopsWithDistance, id: \.0.id) { (stop, distance) in
+                        ForEach(nearby, id: \.0.id) { (stop, distance) in
                             Button {
                                 selectedMainStop = stop
                             } label: {
@@ -312,89 +364,34 @@ struct HomeTab: View {
                     }
                 }
             }
-        @unknown default:
+        default:
             EmptyView()
         }
-    }
-
-    private var permissionPromptCard: some View {
-        Button {
-            locationManager.requestPermissionAndStart()
-        } label: {
-            HStack(spacing: 10) {
-                LucideIcon.mapPin.sized(20)
-                    .foregroundStyle(AppTheme.accent)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(String(localized: "nearby_enable_title"))
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(AppTheme.textPrimary)
-                    Text(String(localized: "nearby_enable_subtitle"))
-                        .font(.system(size: 12))
-                        .foregroundStyle(AppTheme.textSecondary)
-                }
-                Spacer()
-                LucideIcon.chevronRight.sized(14)
-                    .foregroundStyle(AppTheme.textTertiary)
-            }
-            .padding(14)
-            .adaptiveGlass(in: RoundedRectangle(cornerRadius: 12), withShadow: false)
-        }
-        .buttonStyle(.plain)
-    }
-
-    /// Shown when user previously denied the location permission. Opens Settings app.
-    private var permissionDeniedCard: some View {
-        Button {
-            if let url = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(url)
-            }
-        } label: {
-            HStack(spacing: 10) {
-                LucideIcon.mapPinOff.sized(20)
-                    .foregroundStyle(AppTheme.textSecondary)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(String(localized: "nearby_denied_title"))
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(AppTheme.textPrimary)
-                    Text(String(localized: "nearby_denied_subtitle"))
-                        .font(.system(size: 12))
-                        .foregroundStyle(AppTheme.textSecondary)
-                }
-                Spacer()
-                LucideIcon.chevronRight.sized(14)
-                    .foregroundStyle(AppTheme.textTertiary)
-            }
-            .padding(14)
-            .adaptiveGlass(in: RoundedRectangle(cornerRadius: 12), withShadow: false)
-        }
-        .buttonStyle(.plain)
     }
 
 
     // MARK: - Stop Card (shared for favorites and nearby)
 
     private func stopCard(_ stop: ResolvedStop, showLiveBadge: Bool, distanceMeters: Double? = nil) -> some View {
-        let departures = store.upcomingDepartures(forStopId: stop.id, limit: 2)
-        // A stop is represented by a signpost icon regardless of transit type —
-        // the visual metaphor is "the sign at the corner", not the vehicle.
+        let departures = store.upcomingDepartures(forStopId: stop.id, limit: 3)
         let transitTypeIcon: Image = stopPinIcon(transitTypes: stop.transitTypes).image
+        let isImminent = departures.first.map { isWithinFiveMinutes($0) } ?? false
 
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6) {
                 transitTypeIcon
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(AppTheme.textTertiary)
-                    .frame(width: 16, height: 16)
+                    .frame(width: 14, height: 14)
                 Text(stop.name)
-                    .font(.subheadline.bold())
-                    .foregroundStyle(AppTheme.textPrimary)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(AppTheme.textSecondary)
                     .lineLimit(1)
                 Spacer()
                 if let distanceMeters {
-                    Text(formatDistance(distanceMeters))
+                    Text(walkingTime(meters: distanceMeters))
                         .font(.caption.weight(.medium))
                         .foregroundStyle(AppTheme.textTertiary)
-                        .monospacedDigit()
                 }
             }
 
@@ -403,12 +400,12 @@ struct HomeTab: View {
                     .font(.caption)
                     .foregroundStyle(AppTheme.textTertiary)
             } else {
-                VStack(spacing: 6) {
-                    ForEach(departures) { dep in
-                        HStack(spacing: 6) {
-                            LineBadge(departure: dep, size: .large)
+                VStack(spacing: 0) {
+                    ForEach(Array(departures.enumerated()), id: \.element.id) { index, dep in
+                        HStack(spacing: 8) {
+                            LineBadge(departure: dep, size: .medium)
                             Text(dep.headsign)
-                                .font(.caption)
+                                .font(.system(size: 13))
                                 .foregroundStyle(AppTheme.textSecondary)
                                 .lineLimit(1)
                                 .truncationMode(.tail)
@@ -420,12 +417,36 @@ struct HomeTab: View {
                                 TimeDisplay(departure: dep)
                             }
                         }
+                        .padding(.vertical, 6)
+                        if index < departures.count - 1 {
+                            Divider().overlay(AppTheme.separatorLine)
+                        }
                     }
                 }
             }
         }
         .padding(14)
         .adaptiveGlass(in: RoundedRectangle(cornerRadius: 14), withShadow: true)
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(
+                    isImminent ? AppTheme.accent.opacity(0.6) : Color.clear,
+                    lineWidth: isImminent ? 1.5 : 0
+                )
+        )
+    }
+
+    /// True se la partenza è entro 5 minuti — usato per evidenziare la card.
+    private func isWithinFiveMinutes(_ dep: Departure) -> Bool {
+        let now = Date()
+        let cal = Calendar.current
+        let comps = dep.time.split(separator: ":").compactMap { Int($0) }
+        guard comps.count == 2 else { return false }
+        guard let depDate = cal.date(bySettingHour: comps[0], minute: comps[1], second: 0, of: now) else {
+            return false
+        }
+        let delta = depDate.timeIntervalSince(now)
+        return delta >= 0 && delta <= 300
     }
 
     // MARK: - Onboarding Card
@@ -436,24 +457,25 @@ struct HomeTab: View {
                 Circle()
                     .fill(AppTheme.accent.opacity(0.12))
                     .frame(width: 56, height: 56)
-                LucideIcon.mapPin.sized(24)
+                LucideIcon.star.sized(24)
                     .foregroundStyle(AppTheme.accent)
             }
 
             VStack(spacing: 6) {
-                Text(String(localized: "onboarding_title"))
+                Text(String(localized: "home_empty_favorites_title"))
                     .font(.system(size: 17, weight: .bold))
                     .foregroundStyle(AppTheme.textPrimary)
-                Text(String(localized: "onboarding_subtitle"))
+                    .multilineTextAlignment(.center)
+                Text(String(localized: "home_empty_favorites_body"))
                     .font(.system(size: 14))
                     .foregroundStyle(AppTheme.textSecondary)
                     .multilineTextAlignment(.center)
             }
 
             Button {
-                selectedTab = 1
+                selectedTab = 1   // tab Orari
             } label: {
-                Text(String(localized: "onboarding_cta"))
+                Text(String(localized: "home_empty_favorites_cta"))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
@@ -463,8 +485,7 @@ struct HomeTab: View {
             .buttonStyle(.plain)
         }
         .padding(20)
-        .background(AppTheme.glassFill, in: RoundedRectangle(cornerRadius: 16))
-        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(AppTheme.glassBorder))
+        .adaptiveGlass(in: RoundedRectangle(cornerRadius: 16), withShadow: true)
     }
 
     // MARK: - Helpers
@@ -477,8 +498,17 @@ struct HomeTab: View {
             .kerning(0.5)
     }
 
-    private func initials(from name: String) -> String {
-        let words = name.split(separator: " ").prefix(2)
-        return words.compactMap { $0.first }.map(String.init).joined()
+    // MARK: - Footer Disclaimer
+
+    @ViewBuilder
+    private var footerDisclaimer: some View {
+        if let config {
+            Text(String(format: String(localized: "home_footer_disclaimer"), config.name))
+                .font(.system(size: 11))
+                .foregroundStyle(AppTheme.textTertiary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 8)
+        }
     }
 }

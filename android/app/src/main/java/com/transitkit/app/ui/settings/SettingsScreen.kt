@@ -429,6 +429,16 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
+        // ── Privacy ──────────────────────────────────────────────────────────
+        item {
+            SectionLabel(text = stringResource(R.string.settings_location_section))
+        }
+
+        item {
+            PrivacyLocationCard()
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
         // ── Info ─────────────────────────────────────────────────────────────
         item {
             SectionLabel(text = stringResource(R.string.settings_section_info))
@@ -448,7 +458,82 @@ fun SettingsScreen(
                     subtitle = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
                 )
             }
+            Text(
+                text = stringResource(R.string.settings_disclaimer_body, config.name, config.fullName),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.textSecondary,
+                modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp),
+            )
             Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Privacy — location access card
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun PrivacyLocationCard() {
+    val colors = TransitTheme.colors
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val granted = androidx.core.content.ContextCompat.checkSelfPermission(
+        context, android.Manifest.permission.ACCESS_FINE_LOCATION
+    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+    CardContainer {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(colors.accent.copy(alpha = 0.12f), RoundedCornerShape(8.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(LucideIcons.MapPin),
+                    contentDescription = null,
+                    tint = colors.accent,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+            Spacer(Modifier.width(12.dp))
+            Text(
+                text = stringResource(R.string.settings_location_title),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+                color = colors.textPrimary,
+                modifier = Modifier.weight(1f),
+            )
+            if (granted) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .background(colors.realtimeGreen, androidx.compose.foundation.shape.CircleShape),
+                )
+            } else {
+                Text(
+                    text = stringResource(R.string.settings_location_open),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.accent,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable {
+                            context.startActivity(
+                                android.content.Intent(
+                                    android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                    android.net.Uri.fromParts("package", context.packageName, null)
+                                )
+                            )
+                        }
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                )
+            }
         }
     }
 }

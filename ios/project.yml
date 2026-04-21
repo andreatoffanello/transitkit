@@ -55,7 +55,7 @@ targets:
               - transitkit
             CFBundleURLName: "com.transitkit.${OPERATOR_ID}"
     dependencies:
-      - framework: MapKit.framework
+      - sdk: MapKit.framework
     scheme:
       testTargets:
         - TransitKitTests

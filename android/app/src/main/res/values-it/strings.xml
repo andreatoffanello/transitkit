@@ -328,4 +328,24 @@
 
     <!-- Line detail -->
     <string name="open_in_map">Apri in mappa</string>
+
+    <!-- Home redesign -->
+    <string name="walking_1_min">1 min a piedi</string>
+    <string name="walking_n_min">%d min a piedi</string>
+    <string name="walking_10_plus_min">10+ min a piedi</string>
+    <string name="home_footer_disclaimer">Dati ufficiali %1$s · App non ufficiale</string>
+    <string name="home_enable_location_chip">Attiva la posizione per vedere fermate vicine</string>
+    <string name="home_empty_favorites_title">Le tue fermate, sempre a portata</string>
+    <string name="home_empty_favorites_body">Aggiungi le tue fermate quotidiane per vedere le partenze in tempo reale.</string>
+    <string name="home_empty_favorites_cta">Sfoglia fermate</string>
+    <string name="location_primer_title">Trova fermate vicino a te</string>
+    <string name="location_primer_body">Concedi l\'accesso alla posizione per vedere le fermate più vicine e le loro prossime partenze. Puoi cambiare idea in Impostazioni.</string>
+    <string name="location_primer_cta_enable">Attiva posizione</string>
+    <string name="location_primer_cta_skip">Non ora</string>
+    <string name="settings_info_section">Informazioni</string>
+    <string name="settings_disclaimer_body">I dati degli orari sono forniti ufficialmente da %2$s. %1$s non è sviluppata né gestita da %2$s.</string>
+    <string name="settings_location_section">Privacy</string>
+    <string name="settings_location_title">Accesso alla posizione</string>
+    <string name="settings_location_enable">Attiva</string>
+    <string name="settings_location_open">Apri Impostazioni</string>
 </resources>

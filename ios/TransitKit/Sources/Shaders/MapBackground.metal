@@ -53,14 +53,15 @@ static inline float fbm(float2 p) {
     float ink = isDark > 0.5 ? lum : (1.0 - lum);
 
     // --- Domain warping per forme organiche ---
-    // Due campioni fbm a seed diversi generano un vettore di displacement.
-    // L'offset temporale lento fa "respirare" le forme come acquarello bagnato.
-    float warpTime = time * 0.08;
+    // Frequenza alta (uv * 6.5) genera warp dettagliato con varietà ravvicinate
+    // invece di una singola onda voluminosa. Ampiezza ridotta a 0.09 per preservare
+    // struttura dello spotlight pur aggiungendo mottling fine.
+    float warpTime = time * 0.10;
     float2 warp = float2(
-        fbm(uv * 2.8 + float2(warpTime, 0.0)),
-        fbm(uv * 2.8 + float2(5.2, 1.3) + float2(0.0, warpTime))
-    ) * 0.18;
-    float2 warpedUV = uv + warp - 0.09;  // centra il warp
+        fbm(uv * 6.5 + float2(warpTime, 0.0)),
+        fbm(uv * 6.5 + float2(5.2, 1.3) + float2(0.0, warpTime))
+    ) * 0.09;
+    float2 warpedUV = uv + warp - 0.045;
 
     // --- Primary spotlight (~16s, warped per organic shape) ---
     float t1 = time * 0.40;
@@ -92,33 +93,41 @@ static inline float fbm(float2 p) {
     float d3 = length(warpedUV - darkCenter);
     float darkZone = exp(-d3 * d3 * 3.5);
 
-    // --- Cloud multiplier: low-freq fbm drifts slowly, wash effect ---
-    float cloud = fbm(uv * 1.8 + float2(time * 0.06, -time * 0.04));
-    float cloudMod = mix(0.55, 1.20, cloud);  // modula base ±
+    // --- Reveal mask: combina spotlight + cloud layers.
+    // Dove il mask è basso, l'ink sparisce completamente (blur-to-invisible).
+    // Dove è alto, l'ink si rivela nitido.
+    float cloudMid = fbm(uv * 4.0 + float2(time * 0.08, -time * 0.06));
+    float cloudFine = fbm(uv * 11.0 + float2(-time * 0.05, time * 0.07));
+    float cloudReveal = cloudMid * 0.60 + cloudFine * 0.40;
 
     // --- Breathing modulation (~16s) ---
     float breath = 0.80 + 0.20 * sin(time * 0.40);
 
     // --- Film grain: hash-based, animated ---
     float2 grainSeed = position + float2(time * 13.7, time * 9.3);
-    float noise = hash(grainSeed);
-    float grain = (noise - 0.5) * 0.25;
+    float grain = (hash(grainSeed) - 0.5) * 0.20;
 
     // --- Vignette ---
     float2 centered = uv - 0.5;
-    float vignette = 1.0 - smoothstep(0.30, 0.80, length(centered));
-    vignette = mix(0.60, 1.0, vignette);
+    float vignette = 1.0 - smoothstep(0.28, 0.82, length(centered));
+    vignette = mix(0.45, 1.0, vignette);
 
-    // Combined alpha:
-    //   - base ink * cloud * vignette (densità varia fluidamente)
-    //   - bright spotlights + glare boost (alone)
-    //   - anti-spot dimmer
-    //   - grain on top
-    float baseAlpha = 0.20 * cloudMod * vignette;
-    float spotBoost = (spot1 * 0.30 + glare1 * 0.18 + spot2 * 0.20 + glare2 * 0.12) * breath;
-    float darkPenalty = darkZone * 0.12;
-    float alpha = ink * (baseAlpha + spotBoost - darkPenalty + grain * 0.40);
-    alpha = clamp(alpha, 0.0, 0.60);
+    // Reveal signal: spotlight + glare + cloud reveal
+    // Lo spotlight primario/secondario + glare contribuiscono direttamente;
+    // le nuvole aggiungono chiazze random di "rivelazione" parziale.
+    float spotReveal = (spot1 * 1.0 + glare1 * 0.6 + spot2 * 0.8 + glare2 * 0.4) * breath;
+    float reveal = spotReveal + cloudReveal * 0.55;
+
+    // Anti-spot riduce reveal in quella zona
+    reveal -= darkZone * 0.35;
+
+    // Smoothstep per transizione "wipe": sotto il lower threshold sparisce,
+    // sopra il higher si vede nitido.
+    float mask = smoothstep(0.25, 0.80, reveal);
+
+    // Alpha finale: ink visibile SOLO dove il mask è alto. Grain aggiunto sopra.
+    float alpha = ink * mask * vignette + ink * grain * 0.15 * mask;
+    alpha = clamp(alpha, 0.0, 0.65);
 
     // Accent tint nello spotlight
     half3 rgb;

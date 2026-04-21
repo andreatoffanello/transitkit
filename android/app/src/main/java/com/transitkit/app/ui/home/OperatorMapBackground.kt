@@ -95,13 +95,13 @@ half4 main(float2 position) {
     float lum = dot(color.rgb, half3(0.299, 0.587, 0.114));
     float ink = isDark > 0.5 ? lum : (1.0 - lum);
 
-    // Domain warping fbm → organic spotlight shapes (watercolor)
-    float warpTime = time * 0.08;
+    // Domain warping fbm → organic shapes, freq alta per mottling fine
+    float warpTime = time * 0.10;
     float2 warp = float2(
-        fbm(uv * 2.8 + float2(warpTime, 0.0)),
-        fbm(uv * 2.8 + float2(5.2, 1.3) + float2(0.0, warpTime))
-    ) * 0.18;
-    float2 warpedUV = uv + warp - 0.09;
+        fbm(uv * 6.5 + float2(warpTime, 0.0)),
+        fbm(uv * 6.5 + float2(5.2, 1.3) + float2(0.0, warpTime))
+    ) * 0.09;
+    float2 warpedUV = uv + warp - 0.045;
 
     // Primary spotlight + glare
     float t1 = time * 0.40;
@@ -132,27 +132,31 @@ half4 main(float2 position) {
     float d3 = length(warpedUV - darkCenter);
     float darkZone = exp(-d3 * d3 * 3.5);
 
-    // Cloud multiplier (watercolor wash drifting)
-    float cloud = fbm(uv * 1.8 + float2(time * 0.06, -time * 0.04));
-    float cloudMod = mix(0.55, 1.20, cloud);
+    // Dual-scale cloud reveal layers: medium drift + fine mottling
+    float cloudMid = fbm(uv * 4.0 + float2(time * 0.08, -time * 0.06));
+    float cloudFine = fbm(uv * 11.0 + float2(-time * 0.05, time * 0.07));
+    float cloudReveal = cloudMid * 0.60 + cloudFine * 0.40;
 
     // Breathing (~16s)
     float breath = 0.80 + 0.20 * sin(time * 0.40);
 
     // Film grain
     float2 grainSeed = position + float2(time * 13.7, time * 9.3);
-    float grain = (hash2(grainSeed) - 0.5) * 0.25;
+    float grain = (hash2(grainSeed) - 0.5) * 0.20;
 
     // Vignette
     float2 centered = uv - 0.5;
-    float vignette = 1.0 - smoothstep(0.30, 0.80, length(centered));
-    vignette = mix(0.60, 1.0, vignette);
+    float vignette = 1.0 - smoothstep(0.28, 0.82, length(centered));
+    vignette = mix(0.45, 1.0, vignette);
 
-    float baseAlpha = 0.20 * cloudMod * vignette;
-    float spotBoost = (spot1 * 0.30 + glare1 * 0.18 + spot2 * 0.20 + glare2 * 0.12) * breath;
-    float darkPenalty = darkZone * 0.12;
-    float alpha = ink * (baseAlpha + spotBoost - darkPenalty + grain * 0.40);
-    alpha = clamp(alpha, 0.0, 0.60);
+    // Reveal mask: wipe effect, sotto threshold ink sparisce
+    float spotReveal = (spot1 * 1.0 + glare1 * 0.6 + spot2 * 0.8 + glare2 * 0.4) * breath;
+    float reveal = spotReveal + cloudReveal * 0.55;
+    reveal -= darkZone * 0.35;
+    float mask = smoothstep(0.25, 0.80, reveal);
+
+    float alpha = ink * mask * vignette + ink * grain * 0.15 * mask;
+    alpha = clamp(alpha, 0.0, 0.65);
 
     half3 accentCol = half3(half(accentR), half(accentG), half(accentB));
     float tintAmount = spot1 * 0.45 + glare1 * 0.30;

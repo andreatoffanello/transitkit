@@ -9,7 +9,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -18,8 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
@@ -27,37 +25,40 @@ import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import com.transitkit.app.R
 import com.transitkit.app.config.TransitTheme
-import kotlin.math.cos
-import kotlin.math.sin
 
 /**
- * Ghost map background per la Home.
+ * Operator map background per la Home. Composizione a 4 layer (ispirata a
+ * VeniceGlow di civici) — parità con iOS Metal shader `mapGlowEffect`.
  *
- * Su API 33+ usa AGSL (RuntimeShader) per parità con Metal iOS:
- *   - Dual bright spotlight (primary slow+wide, secondary faster+tight, counter-phase)
- *   - Anti-spotlight (zona dimmer che crea bande di contrasto visibili)
- *   - Accent tint (ink vira verso colore operatore nelle zone illuminate)
- *   - Film grain animato, breathing intensity, vignette ai bordi
+ * Ogni layer è la stessa immagine mappa con:
+ *  - blur SwiftUI/Compose reale diverso (28 / 12 / 4 / 0 dp)
+ *  - sharpness uniform diverso (0.0 fog → 1.0 crisp) per lo shader
+ *  - opacity per-layer calibrata light/dark mode
  *
- * Su API < 33: fallback a dual radial gradient su Image desaturata + accent tint statico.
+ * Lo shader (AGSL su API 33+) colora in varianti dell'accent operatore:
+ * base + versione più luminosa (+18% bianco) + versione chiara aerea (+42% bianco).
+ * Breathing fbm + color waves + visibilità sharpness-dipendente + glow additivo.
+ *
+ * Su API < 33: fallback statico (Image desaturata + radial gradient) senza AGSL.
  */
 @Composable
 fun OperatorMapBackground(modifier: Modifier = Modifier) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        OperatorMapBackgroundAgsl(modifier)
+        OperatorMapBackgroundLayered(modifier)
     } else {
         OperatorMapBackgroundFallback(modifier)
     }
 }
 
-// AGSL shader - watercolor/gas reveal, parita' con MapBackground.metal iOS.
+// AGSL shader - parità con ios/Shaders/MapBackground.metal
 private const val AGSL_MAP_GLOW = """
 uniform shader composable;
 uniform float2 size;
 uniform float time;
-uniform float isDark;
+uniform float sharpness;
 uniform float accentR;
 uniform float accentG;
 uniform float accentB;
@@ -80,100 +81,66 @@ float vnoise(float2 p) {
 float fbm(float2 p) {
     float v = 0.0;
     float a = 0.5;
-    for (int i = 0; i < 3; i++) {
+    float2 shift = float2(100.0);
+    for (int i = 0; i < 4; i++) {
         v += a * vnoise(p);
-        p *= 2.03;
+        p = p * 2.0 + shift;
         a *= 0.5;
     }
     return v;
 }
 
 half4 main(float2 position) {
-    float2 uv = position / size;
-
     half4 color = composable.eval(position);
     float lum = dot(color.rgb, half3(0.299, 0.587, 0.114));
-    float ink = isDark > 0.5 ? lum : (1.0 - lum);
+    float ink = 1.0 - lum;
+    if (ink < 0.05) return half4(0.0);
 
-    // Domain warping fbm → organic shapes, freq alta per mottling fine
-    float warpTime = time * 0.10;
-    float2 warp = float2(
-        fbm(uv * 6.5 + float2(warpTime, 0.0)),
-        fbm(uv * 6.5 + float2(5.2, 1.3) + float2(0.0, warpTime))
-    ) * 0.09;
-    float2 warpedUV = uv + warp - 0.045;
+    float2 uv = position / size;
 
-    // Primary spotlight + glare
-    float t1 = time * 0.40;
-    float2 light1 = float2(
-        0.5 + 0.42 * sin(t1),
-        0.5 + 0.35 * sin(t1 * 1.618 + 0.9)
-    );
-    float d1 = length(warpedUV - light1);
-    float spot1 = exp(-d1 * d1 * 2.5);
-    float glare1 = exp(-d1 * d1 * 0.7) * 0.35;
+    // Base + 2 varianti più luminose
+    half3 accent       = half3(half(accentR), half(accentG), half(accentB));
+    half3 accentBright = mix(accent, half3(1.0), half(0.18));
+    half3 accentLight  = mix(accent, half3(1.0), half(0.42));
 
-    // Secondary spotlight + glare
-    float t2 = time * 0.62 + 3.14;
-    float2 light2 = float2(
-        0.5 + 0.38 * sin(t2 * 1.3),
-        0.5 + 0.32 * cos(t2 * 0.8)
-    );
-    float d2 = length(warpedUV - light2);
-    float spot2 = exp(-d2 * d2 * 5.5);
-    float glare2 = exp(-d2 * d2 * 1.5) * 0.25;
+    // Color waves
+    float wave1 = sin(uv.x * 5.0 + uv.y * 3.0 - time * 1.4) * 0.5 + 0.5;
+    float wave2 = sin(-uv.x * 4.0 + uv.y * 6.0 + time * 1.0) * 0.5 + 0.5;
+    float dist  = length(uv - float2(0.5, 0.4));
+    float wave3 = sin(dist * 10.0 - time * 1.6) * 0.5 + 0.5;
+    float wave4 = sin((uv.x + uv.y) * 3.0 - time * 0.5) * 0.5 + 0.5;
 
-    // Anti-spotlight
-    float t3 = time * 0.48 + 1.57;
-    float2 darkCenter = float2(
-        0.5 - 0.42 * sin(t3 * 0.9),
-        0.5 - 0.35 * cos(t3 * 1.1)
-    );
-    float d3 = length(warpedUV - darkCenter);
-    float darkZone = exp(-d3 * d3 * 3.5);
+    half3 col1 = mix(accent, accentBright, half(wave1));
+    half3 finalColor = mix(col1, accentLight, half(wave3 * 0.4 + wave4 * 0.3));
 
-    // Dual-scale cloud reveal layers: medium drift + fine mottling
-    float cloudMid = fbm(uv * 4.0 + float2(time * 0.08, -time * 0.06));
-    float cloudFine = fbm(uv * 11.0 + float2(-time * 0.05, time * 0.07));
-    float cloudReveal = cloudMid * 0.60 + cloudFine * 0.40;
+    // Breathing
+    float2 nc1 = uv * 2.5 + float2(time * 0.12, time * 0.08);
+    float breath1 = fbm(nc1);
+    float2 nc2 = uv * 1.2 + float2(-time * 0.07, time * 0.10);
+    float breath2 = fbm(nc2 + 50.0);
+    float breathing = breath1 * 0.6 + breath2 * 0.4;
 
-    // Breathing (~16s)
-    float breath = 0.80 + 0.20 * sin(time * 0.40);
+    // Sharpness-dependent visibility
+    float loThresh = mix(0.15, 0.40, sharpness);
+    float hiThresh = mix(0.35, 0.60, sharpness);
+    float visibility = smoothstep(loThresh, hiThresh, breathing);
+    float minVis = mix(0.25, 0.0, sharpness);
+    visibility = max(visibility, minVis);
 
-    // Film grain
-    float2 grainSeed = position + float2(time * 13.7, time * 9.3);
-    float grain = (hash2(grainSeed) - 0.5) * 0.20;
+    // Glow
+    float glow = wave1 * 0.3 + wave2 * 0.3 + wave3 * 0.2 + wave4 * 0.2;
+    glow += pow(wave1 * wave2 * wave3, 0.5) * 0.5;
+    glow = pow(glow, 0.6);
 
-    // Vignette
-    float2 centered = uv - 0.5;
-    float vignette = 1.0 - smoothstep(0.28, 0.82, length(centered));
-    vignette = mix(0.45, 1.0, vignette);
-
-    // Reveal mask: wipe effect, sotto threshold ink sparisce
-    float spotReveal = (spot1 * 1.0 + glare1 * 0.6 + spot2 * 0.8 + glare2 * 0.4) * breath;
-    float reveal = spotReveal + cloudReveal * 0.55;
-    reveal -= darkZone * 0.35;
-    float mask = smoothstep(0.25, 0.80, reveal);
-
-    float alpha = ink * mask * vignette + ink * grain * 0.15 * mask;
-    alpha = clamp(alpha, 0.0, 0.65);
-
-    half3 accentCol = half3(half(accentR), half(accentG), half(accentB));
-    float tintAmount = spot1 * 0.45 + glare1 * 0.30;
-    half3 rgb;
-    if (isDark > 0.5) {
-        rgb = mix(half3(1.0), accentCol, half(tintAmount));
-    } else {
-        rgb = mix(color.rgb, accentCol, half(tintAmount));
-    }
-
-    return half4(rgb, half(alpha));
+    float intensity = ink * glow * visibility;
+    half alpha = half(intensity);
+    return half4(finalColor * alpha, alpha);
 }
 """
 
 @androidx.annotation.RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-private fun OperatorMapBackgroundAgsl(modifier: Modifier = Modifier) {
+private fun OperatorMapBackgroundLayered(modifier: Modifier = Modifier) {
     val isDark = isSystemInDarkTheme()
     val accent = TransitTheme.colors.accent
 
@@ -188,18 +155,64 @@ private fun OperatorMapBackgroundAgsl(modifier: Modifier = Modifier) {
         label = "time"
     )
 
-    val shader = remember { RuntimeShader(AGSL_MAP_GLOW) }
+    Box(modifier = modifier.fillMaxSize()) {
+        // Layer 1: Deep fog — blur grande, sempre presente
+        MapShaderLayer(
+            time = time,
+            sharpness = 0.0f,
+            accent = accent,
+            blurRadius = 28.dp,
+            layerOpacity = if (isDark) 0.70f else 0.55f
+        )
+        // Layer 2: Medium fog
+        MapShaderLayer(
+            time = time,
+            sharpness = 0.3f,
+            accent = accent,
+            blurRadius = 12.dp,
+            layerOpacity = if (isDark) 0.50f else 0.42f
+        )
+        // Layer 3: Forming lines
+        MapShaderLayer(
+            time = time,
+            sharpness = 0.7f,
+            accent = accent,
+            blurRadius = 4.dp,
+            layerOpacity = if (isDark) 0.45f else 0.36f
+        )
+        // Layer 4: Crisp lines — peak breathing only
+        MapShaderLayer(
+            time = time,
+            sharpness = 1.0f,
+            accent = accent,
+            blurRadius = 0.dp,
+            layerOpacity = if (isDark) 0.50f else 0.38f
+        )
+    }
+}
 
+@androidx.annotation.RequiresApi(Build.VERSION_CODES.TIRAMISU)
+@Composable
+private fun MapShaderLayer(
+    time: Float,
+    sharpness: Float,
+    accent: Color,
+    blurRadius: androidx.compose.ui.unit.Dp,
+    layerOpacity: Float,
+) {
+    val shader = remember { RuntimeShader(AGSL_MAP_GLOW) }
     Image(
         painter = painterResource(id = R.drawable.operator_background),
         contentDescription = null,
         contentScale = ContentScale.Crop,
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
+            .then(if (blurRadius.value > 0f) Modifier.blur(blurRadius) else Modifier)
             .graphicsLayer {
+                this.alpha = layerOpacity
                 shader.setFloatUniform("size", this.size.width, this.size.height)
                 shader.setFloatUniform("time", time)
-                shader.setFloatUniform("isDark", if (isDark) 1f else 0f)
+                shader.setFloatUniform("sharpness", sharpness)
                 shader.setFloatUniform("accentR", accent.red)
                 shader.setFloatUniform("accentG", accent.green)
                 shader.setFloatUniform("accentB", accent.blue)
@@ -210,49 +223,13 @@ private fun OperatorMapBackgroundAgsl(modifier: Modifier = Modifier) {
     )
 }
 
-// Fallback per API < 33: due radial gradient su Image desaturata + tint accent statico.
+/** Fallback API < 33: semplice image desaturata senza shader. */
 @Composable
 private fun OperatorMapBackgroundFallback(modifier: Modifier = Modifier) {
-    val infinite = rememberInfiniteTransition(label = "fallbackTime")
-
-    val phaseX by infinite.animateFloat(
-        initialValue = 0f,
-        targetValue = (2f * Math.PI).toFloat(),
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 62_000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "phaseX"
-    )
-    val phaseY by infinite.animateFloat(
-        initialValue = 0f,
-        targetValue = (2f * Math.PI * 1.618f).toFloat(),
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 62_000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "phaseY"
-    )
-    val phase2 by infinite.animateFloat(
-        initialValue = 0f,
-        targetValue = (2f * Math.PI * 1.3f).toFloat(),
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 41_000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "phase2"
-    )
-
     val isDark = isSystemInDarkTheme()
-    val accent = TransitTheme.colors.accent
-    val inkAlpha = if (isDark) 0.22f else 0.28f  // più visibile anche qui
-    val primarySpotAlpha = if (isDark) 0.14f else 0.12f
-    val secondarySpotAlpha = if (isDark) 0.09f else 0.08f
-
+    val inkAlpha = if (isDark) 0.22f else 0.28f
     val desaturate = remember { ColorMatrix().apply { setToSaturation(0f) } }
-
     Box(modifier = modifier.fillMaxSize()) {
-        // Base desaturated map
         Image(
             painter = painterResource(id = R.drawable.operator_background),
             contentDescription = null,
@@ -261,38 +238,5 @@ private fun OperatorMapBackgroundFallback(modifier: Modifier = Modifier) {
             colorFilter = ColorFilter.colorMatrix(desaturate),
             modifier = Modifier.fillMaxSize()
         )
-
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            // Primary spotlight (accent-tinted)
-            val lx1 = (0.5f + 0.42f * sin(phaseX)) * size.width
-            val ly1 = (0.5f + 0.32f * sin(phaseY + 0.9f)) * size.height
-            val r1 = size.minDimension * 0.70f
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        accent.copy(alpha = primarySpotAlpha),
-                        Color.Transparent
-                    ),
-                    center = Offset(lx1, ly1),
-                    radius = r1
-                ),
-                radius = r1,
-                center = Offset(lx1, ly1)
-            )
-
-            // Secondary spotlight (white)
-            val lx2 = (0.5f + 0.35f * sin(phase2)) * size.width
-            val ly2 = (0.5f + 0.28f * cos(phase2 * 0.8f)) * size.height
-            val r2 = size.minDimension * 0.40f
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(Color.White.copy(alpha = secondarySpotAlpha), Color.Transparent),
-                    center = Offset(lx2, ly2),
-                    radius = r2
-                ),
-                radius = r2,
-                center = Offset(lx2, ly2)
-            )
-        }
     }
 }

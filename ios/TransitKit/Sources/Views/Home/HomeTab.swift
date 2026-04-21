@@ -33,6 +33,7 @@ struct HomeTab: View {
         TimelineView(.animation(minimumInterval: 1.0 / 24.0)) { ctx in
             let t = Float(ctx.date.timeIntervalSinceReferenceDate)
             let isDark: Float = colorScheme == .dark ? 1.0 : 0.0
+            let (ar, ag, ab) = Self.rgbComponents(of: AppTheme.accent)
             GeometryReader { geo in
                 Image("OperatorBackground")
                     .resizable()
@@ -43,12 +44,24 @@ struct HomeTab: View {
                         ShaderLibrary.mapGlowEffect(
                             .float2(geo.size),
                             .float(t),
-                            .float(isDark)
+                            .float(isDark),
+                            .float(ar),
+                            .float(ag),
+                            .float(ab)
                         )
                     )
             }
         }
         .allowsHitTesting(false)
+    }
+
+    /// Estrae componenti RGB 0..1 da una Color SwiftUI risolvendola via UIColor.
+    /// Usata per passare l'accent color all'shader Metal come uniform.
+    private static func rgbComponents(of color: Color) -> (Float, Float, Float) {
+        let ui = UIColor(color)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        ui.getRed(&r, green: &g, blue: &b, alpha: &a)
+        return (Float(r), Float(g), Float(b))
     }
 
     var body: some View {

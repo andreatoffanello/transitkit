@@ -2,67 +2,100 @@
 using namespace metal;
 
 /// Ghost map background for the Home screen.
-/// Renders the operator territory map as ink lines over transparent, with:
-///   1) Dual Gaussian spotlights on contra-rotating Lissajous paths (depth illusion)
-///   2) Breathing intensity modulation (very slow sin on spotlight gain)
-///   3) Film-grain noise on the ink to add living texture
-///   4) Subtle vignette so edges recede and cards feel anchored
-/// Light mode → dark ink on transparent. Dark mode → light ink on transparent.
+///
+/// The map is rendered as ink lines with multiple moving lighting effects that create
+/// clearly visible variation across the screen:
+///   1) Primary bright spotlight — slow wide Lissajous (~62s), strong boost
+///   2) Secondary bright spotlight — faster tighter counter-phase (~41s)
+///   3) Anti-spotlight — counter-phase dimmer zone that reduces ink locally, creating
+///      visible contrast bands that drift across the map
+///   4) Accent tint — ink shifts toward operator accent color in the bright spotlight zone
+///   5) Film grain — hash-based noise animated per frame for "living" texture
+///   6) Vignette — edges fade for content anchoring
+///
+/// Uniforms:
+///   accentR/G/B — operator accent color components (0..1), used for tint shift.
+///   isDark — 1.0 for dark mode (renders light ink on transparent).
 [[ stitchable ]] half4 mapGlowEffect(
     float2 position,
     half4 color,
     float2 size,
     float time,
-    float isDark
+    float isDark,
+    float accentR,
+    float accentG,
+    float accentB
 ) {
     float2 uv = position / size;
 
-    // Luminance → ink density (high where dark lines are)
+    // Luminance → ink density
     float lum = dot(float3(color.rgb), float3(0.299, 0.587, 0.114));
     float ink = isDark > 0.5 ? lum : (1.0 - lum);
 
-    // --- Primary spotlight: slow, wide (~62s per cycle) ---
+    // --- Primary bright spotlight (slow wide, ~62s) ---
     float t1 = time * 0.10;
     float2 light1 = float2(
         0.5 + 0.42 * sin(t1),
         0.5 + 0.32 * sin(t1 * 1.618 + 0.9)
     );
     float d1 = length(uv - light1);
-    float spot1 = exp(-d1 * d1 * 4.5);
+    float spot1 = exp(-d1 * d1 * 3.5);
 
-    // --- Secondary spotlight: faster, tighter, counter-phase (~41s) ---
+    // --- Secondary bright spotlight (faster tighter, ~41s) ---
     float t2 = time * 0.15 + 3.14;
     float2 light2 = float2(
         0.5 + 0.35 * sin(t2 * 1.3),
         0.5 + 0.28 * cos(t2 * 0.8)
     );
     float d2 = length(uv - light2);
-    float spot2 = exp(-d2 * d2 * 11.0);
+    float spot2 = exp(-d2 * d2 * 8.0);
 
-    // --- Breathing: intensity pulse (~79s) ---
-    float breath = 0.88 + 0.12 * sin(time * 0.08);
+    // --- Anti-spotlight: dimmer zone drifting ~ contra direction ---
+    float t3 = time * 0.12 + 1.57;
+    float2 darkCenter = float2(
+        0.5 - 0.38 * sin(t3 * 0.9),
+        0.5 - 0.30 * cos(t3 * 1.1)
+    );
+    float d3 = length(uv - darkCenter);
+    float darkZone = exp(-d3 * d3 * 5.0);
 
-    // --- Film grain: hash-based, animated by time ---
-    float2 grainSeed = position + float2(time * 11.3, time * 7.7);
+    // --- Breathing modulation on bright spots ---
+    float breath = 0.85 + 0.15 * sin(time * 0.08);
+
+    // --- Film grain: hash-based, animated ---
+    float2 grainSeed = position + float2(time * 13.7, time * 9.3);
     float noise = fract(sin(dot(grainSeed, float2(12.9898, 78.233))) * 43758.5453);
-    float grain = (noise - 0.5) * 0.12;
+    float grain = (noise - 0.5) * 0.18;
 
-    // --- Vignette: edges fade ~20% ---
+    // --- Vignette: edges fade ~30% ---
     float2 centered = uv - 0.5;
-    float vignette = 1.0 - smoothstep(0.35, 0.78, length(centered));
-    vignette = mix(0.78, 1.0, vignette);
+    float vignette = 1.0 - smoothstep(0.30, 0.78, length(centered));
+    vignette = mix(0.65, 1.0, vignette);
 
     // Combined alpha:
-    //   - base ink at 13% * vignette
-    //   - spotlight 1 boost up to +10%
-    //   - spotlight 2 boost up to +6% (tighter, more localized)
-    //   - all spotlight gain modulated by breath
-    //   - grain adds ±3% on top of ink
-    float baseAlpha = 0.13 * vignette;
-    float spotBoost = (spot1 * 0.10 + spot2 * 0.06) * breath;
-    float alpha = ink * (baseAlpha + spotBoost + grain * 0.25);
-    alpha = clamp(alpha, 0.0, 0.32);
+    //   base ~18% * vignette
+    //   bright spot1 boost up to +28% (breath modulated)
+    //   bright spot2 boost up to +18% (breath modulated)
+    //   anti-spot reduces up to -10% (creates visible contrast bands)
+    //   grain ±5% on the ink
+    float baseAlpha = 0.18 * vignette;
+    float spotBoost = (spot1 * 0.28 + spot2 * 0.18) * breath;
+    float darkPenalty = darkZone * 0.10;
+    float alpha = ink * (baseAlpha + spotBoost - darkPenalty + grain * 0.35);
+    alpha = clamp(alpha, 0.0, 0.55);
 
-    half3 rgb = isDark > 0.5 ? half3(1.0) : color.rgb;
+    // --- Ink color with accent tint in the bright spotlight zone ---
+    half3 rgb;
+    if (isDark > 0.5) {
+        // Dark mode: white ink, tinted toward accent in spotlight
+        half3 accentCol = half3(half(accentR), half(accentG), half(accentB));
+        rgb = mix(half3(1.0), accentCol, half(spot1 * 0.45));
+    } else {
+        // Light mode: keep ink dark, but blend toward accent in bright zone
+        half3 inkCol = color.rgb;
+        half3 accentCol = half3(half(accentR), half(accentG), half(accentB));
+        rgb = mix(inkCol, accentCol, half(spot1 * 0.35));
+    }
+
     return half4(rgb, half(alpha));
 }

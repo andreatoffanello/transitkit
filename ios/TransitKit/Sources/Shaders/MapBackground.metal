@@ -63,27 +63,23 @@ static inline float fbm4(float2 p) {
     float baseAlpha = 0.14 * vignette;
 
     // --- Macchie: 3 layer di noise a frequenze diverse ---
-    // Drift veloce per movimento visibile, max() invece di somma per picchi distinti
-    float noiseA = fbm4(uv * 10.0 + float2(time * 0.45, time * 0.32));
-    float noiseB = fbm4(uv * 18.0 + float2(-time * 0.55, time * 0.40));
-    float noiseC = fbm4(uv * 28.0 + float2(time * 0.28, -time * 0.48));
+    // Freq più basse = macchie più larghe; drift più lento per movimento "calmo".
+    float noiseA = fbm4(uv * 8.5 + float2(time * 0.30, time * 0.22));
+    float noiseB = fbm4(uv * 15.0 + float2(-time * 0.38, time * 0.28));
+    float noiseC = fbm4(uv * 23.0 + float2(time * 0.20, -time * 0.34));
 
-    // Smoothstep stretto su soglia alta → solo i picchi del noise diventano
-    // macchie visibili; le valli restano a zero. Questo produce veri contrasti
-    // tra zone rivelate e zone invisibili (no saturazione media).
-    float blobA = smoothstep(0.52, 0.78, noiseA);
-    float blobB = smoothstep(0.55, 0.82, noiseB);
-    float blobC = smoothstep(0.58, 0.82, noiseC);
+    // Smoothstep con banda ampia → bordi sfumati lunghi (vaporoso)
+    float blobA = smoothstep(0.48, 0.80, noiseA);
+    float blobB = smoothstep(0.52, 0.82, noiseB);
+    float blobC = smoothstep(0.56, 0.84, noiseC);
 
-    // max() invece di + : il layer più forte in quel punto domina,
-    // evitando la "sovrapposizione uniforme" che appiattisce tutto.
     float blobs = max(blobA, max(blobB * 0.85, blobC * 0.70));
 
-    // --- Glare: alone sfocato con drift veloce per bleed animato ---
-    float haloInner = fbm4(uv * 4.5 + float2(time * 0.30, -time * 0.22));
-    float haloOuter = fbm4(uv * 1.8 + float2(-time * 0.20, time * 0.16));
-    float halo = smoothstep(0.48, 0.74, haloInner) * 0.60
-               + smoothstep(0.50, 0.78, haloOuter) * 0.40;
+    // --- Glare: alone sfocato con drift più lento ---
+    float haloInner = fbm4(uv * 4.0 + float2(time * 0.20, -time * 0.15));
+    float haloOuter = fbm4(uv * 1.6 + float2(-time * 0.14, time * 0.11));
+    float halo = smoothstep(0.46, 0.76, haloInner) * 0.60
+               + smoothstep(0.48, 0.80, haloOuter) * 0.40;
 
     // --- Breathing molto lento (~20s) per pulsazione globale ---
     float breath = 0.85 + 0.15 * sin(time * 0.32);
@@ -92,15 +88,29 @@ static inline float fbm4(float2 p) {
     float2 grainSeed = position + float2(time * 13.7, time * 9.3);
     float grain = (hash(grainSeed) - 0.5) * 0.18;
 
+    // Reveal strength combinato: dove blobs+halo sono alti, è "rivelato";
+    // dove bassi, è "scomparendo".
+    float reveal = max(blobs, halo * 0.75);
+
+    // --- Dissolvenza-blur simulata via ink thresholding adattivo ---
+    // In zone non rivelate, solo ink denso (strade principali, testi di mappe)
+    // sopravvive; linee sottili e texture fine dissolvono per prime.
+    // In zone rivelate, ogni livello di ink è visibile.
+    // L'effetto è: mentre il reveal si ritira, i dettagli fini spariscono prima,
+    // le linee grosse lingering per ultime — come se si sciogliessero nell'aria.
+    float threshold = mix(0.62, 0.02, reveal);
+    float softInk = smoothstep(threshold, threshold + 0.28, ink);
+
     // Boost dato dalle macchie sopra la base tenue.
-    // Aumentati i contributi: blobs fino a +50%, halo fino a +30% (glare sensibile).
     float blobBoost = (blobs * 0.50 + halo * 0.30) * breath;
 
     // Alpha finale:
-    //   - baseAlpha sempre presente (mappa tenue percepibile)
-    //   - blobBoost aggiunge rivelazioni localizzate sopra
-    //   - grain su tutto (indipendente da blobs per dare texture continua)
-    float alpha = ink * (baseAlpha + blobBoost + grain * 0.25);
+    //   - baseAlpha modulata da softInk → tenue visibile solo dove ink è forte
+    //     E reveal è almeno parziale. Zone morenti: thin ink sparisce,
+    //     heavy ink sbiadisce gradualmente.
+    //   - blobBoost aggiunge rivelazioni localizzate (usa softInk, non ink raw)
+    //   - grain lavorato anche lui sull'ink softato
+    float alpha = baseAlpha * softInk + softInk * (blobBoost + grain * 0.25);
     alpha = clamp(alpha, 0.0, 0.55);
 
     // --- Accent tint: ink vira verso colore operatore nelle macchie rivelate ---

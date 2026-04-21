@@ -31,31 +31,58 @@ struct HomeTab: View {
     @ViewBuilder
     private var operatorMapBackground: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 24.0)) { ctx in
-            // Wrap time to 0..1000 to avoid Float32 precision loss in sin(time * mult)
-            // at wall-clock magnitudes (~8e8). At 800s cycle, a 4x multiplier still
-            // stays well within Float precision.
+            // Wrap time a 0..1000 per evitare precision loss Float32 GPU
             let t = Float(ctx.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1000.0))
-            let isDark: Float = colorScheme == .dark ? 1.0 : 0.0
             let (ar, ag, ab) = Self.rgbComponents(of: AppTheme.accent)
+            let isDark = colorScheme == .dark
             GeometryReader { geo in
-                Image("OperatorBackground")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: geo.size.width, height: geo.size.height)
-                    .clipped()
-                    .colorEffect(
-                        ShaderLibrary.mapGlowEffect(
-                            .float2(geo.size),
-                            .float(t),
-                            .float(isDark),
-                            .float(ar),
-                            .float(ag),
-                            .float(ab)
-                        )
-                    )
+                ZStack {
+                    // Layer 1: Deep fog (always present)
+                    homeMapLayer(size: geo.size, time: t, sharpness: 0.0, accent: (ar, ag, ab))
+                        .blur(radius: 28)
+                        .opacity(isDark ? 0.70 : 0.55)
+
+                    // Layer 2: Medium fog
+                    homeMapLayer(size: geo.size, time: t, sharpness: 0.3, accent: (ar, ag, ab))
+                        .blur(radius: 12)
+                        .opacity(isDark ? 0.50 : 0.42)
+
+                    // Layer 3: Forming lines
+                    homeMapLayer(size: geo.size, time: t, sharpness: 0.7, accent: (ar, ag, ab))
+                        .blur(radius: 4)
+                        .opacity(isDark ? 0.45 : 0.36)
+
+                    // Layer 4: Crisp lines (peak breathing only)
+                    homeMapLayer(size: geo.size, time: t, sharpness: 1.0, accent: (ar, ag, ab))
+                        .opacity(isDark ? 0.50 : 0.38)
+                }
             }
         }
         .allowsHitTesting(false)
+    }
+
+    @ViewBuilder
+    private func homeMapLayer(
+        size: CGSize,
+        time: Float,
+        sharpness: Float,
+        accent: (Float, Float, Float)
+    ) -> some View {
+        Image("OperatorBackground")
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: size.width, height: size.height)
+            .clipped()
+            .colorEffect(
+                ShaderLibrary.mapGlowEffect(
+                    .float2(size),
+                    .float(time),
+                    .float(sharpness),
+                    .float(accent.0),
+                    .float(accent.1),
+                    .float(accent.2)
+                )
+            )
     }
 
     /// Estrae componenti RGB 0..1 da una Color SwiftUI risolvendola via UIColor.

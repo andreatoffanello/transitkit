@@ -82,27 +82,56 @@ struct ShaderPlaygroundView: View {
     private var operatorMapBackground: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { ctx in
             let t = Float(ctx.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1000.0))
-            let isDark: Float = colorScheme == .dark ? 1.0 : 0.0
             let (ar, ag, ab) = Self.rgbComponents(of: AppTheme.accent)
+            let isDark = colorScheme == .dark
             GeometryReader { geo in
-                Image("OperatorBackground")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: geo.size.width, height: geo.size.height)
-                    .clipped()
-                    .colorEffect(
-                        ShaderLibrary.mapGlowEffect(
-                            .float2(geo.size),
-                            .float(t),
-                            .float(isDark),
-                            .float(ar),
-                            .float(ag),
-                            .float(ab)
-                        )
-                    )
+                ZStack {
+                    // Layer 1: Deep fog — sempre presente, molto sfocato
+                    mapLayer(size: geo.size, time: t, sharpness: 0.0, accent: (ar, ag, ab))
+                        .blur(radius: 28)
+                        .opacity(isDark ? 0.70 : 0.55)
+
+                    // Layer 2: Medium fog — per lo più presente
+                    mapLayer(size: geo.size, time: t, sharpness: 0.3, accent: (ar, ag, ab))
+                        .blur(radius: 12)
+                        .opacity(isDark ? 0.50 : 0.42)
+
+                    // Layer 3: Forming lines — appaiono dalla nebbia
+                    mapLayer(size: geo.size, time: t, sharpness: 0.7, accent: (ar, ag, ab))
+                        .blur(radius: 4)
+                        .opacity(isDark ? 0.45 : 0.36)
+
+                    // Layer 4: Crisp lines — solo quando il breathing è forte
+                    mapLayer(size: geo.size, time: t, sharpness: 1.0, accent: (ar, ag, ab))
+                        .opacity(isDark ? 0.50 : 0.38)
+                }
             }
         }
         .allowsHitTesting(false)
+    }
+
+    @ViewBuilder
+    private func mapLayer(
+        size: CGSize,
+        time: Float,
+        sharpness: Float,
+        accent: (Float, Float, Float)
+    ) -> some View {
+        Image("OperatorBackground")
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .frame(width: size.width, height: size.height)
+            .clipped()
+            .colorEffect(
+                ShaderLibrary.mapGlowEffect(
+                    .float2(size),
+                    .float(time),
+                    .float(sharpness),
+                    .float(accent.0),
+                    .float(accent.1),
+                    .float(accent.2)
+                )
+            )
     }
 
     private static func rgbComponents(of color: Color) -> (Float, Float, Float) {

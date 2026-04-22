@@ -116,13 +116,14 @@ fun OrariScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(colors.realtimeRed.copy(alpha = 0.10f))
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                    .background(colors.bgSecondary)
+                    .border(1.dp, colors.realtimeRed.copy(alpha = 0.20f), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 14.dp, vertical = 11.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(painterResource(LucideIcons.WifiOff), contentDescription = null, tint = colors.realtimeRed, modifier = Modifier.size(18.dp))
-                Text(scheduleLoadError!!, style = MaterialTheme.typography.bodySmall, color = colors.realtimeRed)
+                Icon(painterResource(LucideIcons.WifiOff), contentDescription = null, tint = colors.realtimeRed, modifier = Modifier.size(16.dp))
+                Text(scheduleLoadError!!, style = MaterialTheme.typography.bodyMedium, color = colors.textSecondary)
             }
         }
         // Search bar

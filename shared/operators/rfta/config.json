@@ -31,5 +31,6 @@
     "enableNotifications": true
   },
   "exclude_patterns": [],
-  "terminal_overrides": {}
+  "terminal_overrides": {},
+  "privacyUrl": "https://rfta.transitkit.app/privacy"
 }

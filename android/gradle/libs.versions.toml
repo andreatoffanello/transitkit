@@ -6,8 +6,6 @@ hilt = "2.56.1"
 retrofit = "2.11.0"
 okhttp = "4.12.0"
 room = "2.7.1"
-maps-compose = "6.5.2"
-play-services-maps = "19.1.0"
 play-services-location = "21.3.0"
 datastore = "1.1.4"
 wire = "5.3.1"
@@ -62,10 +60,7 @@ room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 
-# Maps
-maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "maps-compose" }
-maps-compose-utils = { group = "com.google.maps.android", name = "maps-compose-utils", version.ref = "maps-compose" }
-play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "play-services-maps" }
+# Location
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "play-services-location" }
 
 # Mapbox (copia da movete)

@@ -6,7 +6,7 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.gms.maps.model.LatLng
+import com.mapbox.geojson.Point
 import com.transitkit.app.config.OperatorConfig
 import com.transitkit.app.data.model.ResolvedDeparture
 import com.transitkit.app.data.model.ResolvedStop
@@ -45,8 +45,8 @@ class MappaViewModel @Inject constructor(
     private val _vehicles = MutableStateFlow<List<VehiclePosition>>(emptyList())
     val vehicles: StateFlow<List<VehiclePosition>> = _vehicles.asStateFlow()
 
-    val mapCenter: StateFlow<LatLng> = MutableStateFlow(
-        LatLng(config.map.centerLat, config.map.centerLng)
+    val mapCenter: StateFlow<Point> = MutableStateFlow(
+        Point.fromLngLat(config.map.centerLng, config.map.centerLat)
     ).asStateFlow()
 
     val defaultZoom: StateFlow<Float> = MutableStateFlow(
@@ -95,18 +95,18 @@ class MappaViewModel @Inject constructor(
      * `RouteDirection`, falls back to the ordered stop coordinates for that direction.
      * Shape tuples in JSON are `[lat, lng]` (see pipeline/build.py::parse_shapes).
      */
-    val routePolylines: StateFlow<List<List<LatLng>>> =
+    val routePolylines: StateFlow<List<List<Point>>> =
         combine(scheduleRepository.routes, _selectedRouteId, scheduleRepository.stops) { routeList, routeId, stopList ->
             if (routeId == null) return@combine emptyList()
             val route = routeList.firstOrNull { it.id == routeId } ?: return@combine emptyList()
             val stopsById = stopList.associateBy { it.id }
             route.directions.mapNotNull { dir ->
                 val fromShape = dir.shape.mapNotNull { pair ->
-                    if (pair.size >= 2) LatLng(pair[0], pair[1]) else null
+                    if (pair.size >= 2) Point.fromLngLat(pair[1], pair[0]) else null
                 }
                 val coords = if (fromShape.size >= 2) fromShape
                 else dir.stopIds.mapNotNull { sid ->
-                    stopsById[sid]?.let { LatLng(it.lat, it.lon) }
+                    stopsById[sid]?.let { Point.fromLngLat(it.lon, it.lat) }
                 }
                 coords.takeIf { it.size >= 2 }
             }

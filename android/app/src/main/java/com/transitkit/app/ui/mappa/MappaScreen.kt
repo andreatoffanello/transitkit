@@ -178,7 +178,7 @@ fun MappaScreen(
     // Camera state (viewport) — movete parity
     val viewportState = rememberMapViewportState {
         setCameraOptions {
-            center(Point.fromLngLat(mapCenter.longitude, mapCenter.latitude))
+            center(Point.fromLngLat(mapCenter.longitude(), mapCenter.latitude()))
             zoom(defaultZoom.toDouble())
         }
     }
@@ -262,10 +262,10 @@ fun MappaScreen(
         if (routePolylines.isEmpty()) return@LaunchedEffect
         val all = routePolylines.flatten()
         if (all.size < 2) return@LaunchedEffect
-        val minLat = all.minOf { it.latitude }
-        val maxLat = all.maxOf { it.latitude }
-        val minLon = all.minOf { it.longitude }
-        val maxLon = all.maxOf { it.longitude }
+        val minLat = all.minOf { it.latitude() }
+        val maxLat = all.maxOf { it.latitude() }
+        val minLon = all.minOf { it.longitude() }
+        val maxLon = all.maxOf { it.longitude() }
         val center = Point.fromLngLat((minLon + maxLon) / 2, (minLat + maxLat) / 2)
         viewportState.flyTo(
             CameraOptions.Builder()
@@ -298,7 +298,7 @@ fun MappaScreen(
             // ---- Route polyline (doppio stroke: bianco sotto + colore sopra)
             if (selectedRoute != null && routePolylines.isNotEmpty() && selectedLineColor != null) {
                 routePolylines.forEachIndexed { idx, linePoints ->
-                    val points = linePoints.map { Point.fromLngLat(it.longitude, it.latitude) }
+                    val points = linePoints
                     if (points.size >= 2) {
                         key("poly_w_${selectedRoute.id}_$idx") {
                             PolylineAnnotation(points = points) {
@@ -472,7 +472,7 @@ fun MappaScreen(
                         scope.launch {
                             viewportState.flyTo(
                                 CameraOptions.Builder()
-                                    .center(Point.fromLngLat(mapCenter.longitude, mapCenter.latitude))
+                                    .center(Point.fromLngLat(mapCenter.longitude(), mapCenter.latitude()))
                                     .zoom(defaultZoom.toDouble())
                                     .pitch(0.0)
                                     .bearing(0.0)
@@ -501,7 +501,7 @@ fun MappaScreen(
                         scope.launch {
                             viewportState.flyTo(
                                 CameraOptions.Builder()
-                                    .center(Point.fromLngLat(mapCenter.longitude, mapCenter.latitude))
+                                    .center(Point.fromLngLat(mapCenter.longitude(), mapCenter.latitude()))
                                     .zoom(defaultZoom.toDouble())
                                     .build()
                             )

@@ -27,8 +27,6 @@ android {
         versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        manifestPlaceholders["MAPS_API_KEY"] = localProps.getProperty("MAPS_API_KEY", "")
-        buildConfigField("String", "MAPS_API_KEY", "\"${localProps.getProperty("MAPS_API_KEY", "")}\"")
         buildConfigField(
             "String",
             "MAPBOX_ACCESS_TOKEN",
@@ -36,10 +34,20 @@ android {
         )
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file(localProps.getProperty("KEYSTORE_FILE", ""))
+            storePassword = localProps.getProperty("KEYSTORE_PASSWORD", "")
+            keyAlias = localProps.getProperty("KEY_ALIAS", "")
+            keyPassword = localProps.getProperty("KEY_PASSWORD", "")
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -96,14 +104,9 @@ dependencies {
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
 
-    // Mapbox (Mappa principale — parità con movete Android)
+    // Mapbox — unico renderer mappe (principale + dettaglio)
     implementation(libs.mapbox.maps)
     implementation(libs.mapbox.compose)
-    // Google Maps mantenuto per mappe inline di dettaglio (LineDetail, StopDetail).
-    // La mappa principale (MappaScreen) è su Mapbox.
-    implementation(libs.maps.compose)
-    implementation(libs.maps.compose.utils)
-    implementation(libs.play.services.maps)
     implementation(libs.play.services.location)
 
     implementation(libs.datastore.preferences)

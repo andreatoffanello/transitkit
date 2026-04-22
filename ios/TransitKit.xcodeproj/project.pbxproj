@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0472FBE04E76A45E27C5121C /* VehicleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B9FD10B5C48C0410259687C /* VehicleStore.swift */; };
+		07D82C491BAFD5FA8A68965E /* ShaderPlaygroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB215263A64BE0882D67B1F3 /* ShaderPlaygroundView.swift */; };
 		093E157BE0797EEFDBE6DE7A /* FavoritesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A20EEA199B52A3A2B66325A /* FavoritesListView.swift */; };
 		0D3364F8923B6F37D3DD18D1 /* StopsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9601C0115B556918E079DD02 /* StopsListView.swift */; };
 		104BD8CFDE2B1FD1AC43E64C /* SearchHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55B43C749CFDA933F18B4CD4 /* SearchHistoryStore.swift */; };
@@ -137,6 +138,7 @@
 		A7410BEEC0AEB17E6FFB2785 /* FilterChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterChip.swift; sourceTree = "<group>"; };
 		A747722BEC4DD248EFCC62BF /* ServiceDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceDetailView.swift; sourceTree = "<group>"; };
 		A8AB69082C727FD94B52155A /* ColorUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorUtils.swift; sourceTree = "<group>"; };
+		AB215263A64BE0882D67B1F3 /* ShaderPlaygroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShaderPlaygroundView.swift; sourceTree = "<group>"; };
 		ADA621C317C78061A2EE1BCE /* StopDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopDetailView.swift; sourceTree = "<group>"; };
 		AF29A33249EEAAC16698F765 /* RouteOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteOverlay.swift; sourceTree = "<group>"; };
 		B10BEFD5CA21B9EBA3ADE1D7 /* LineBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineBadge.swift; sourceTree = "<group>"; };
@@ -233,6 +235,7 @@
 			isa = PBXGroup;
 			children = (
 				AA7A6FF74EA776D23158017F /* Alerts */,
+				BF94C39AFBC565E99E7AAE76 /* Dev */,
 				615460CD0061432E74D3FAA2 /* Home */,
 				4A40EEC4DB337E61604CD6EE /* Info */,
 				4871CDA03E0161DF06905B2E /* Mappa */,
@@ -376,6 +379,14 @@
 				06000FD86BE3D061DF6266BE /* TransitKitTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		BF94C39AFBC565E99E7AAE76 /* Dev */ = {
+			isa = PBXGroup;
+			children = (
+				AB215263A64BE0882D67B1F3 /* ShaderPlaygroundView.swift */,
+			);
+			path = Dev;
 			sourceTree = "<group>";
 		};
 		DE34AE920D7FB4C4C05E95D7 /* Tests */ = {
@@ -561,6 +572,7 @@
 				104BD8CFDE2B1FD1AC43E64C /* SearchHistoryStore.swift in Sources */,
 				EBA5682D3A08121DE7FDFAF0 /* ServiceDetailView.swift in Sources */,
 				B9D2D53997DA76D3C57489BA /* SettingsTab.swift in Sources */,
+				07D82C491BAFD5FA8A68965E /* ShaderPlaygroundView.swift in Sources */,
 				58E4307F0EF6473220F053E8 /* SkeletonView.swift in Sources */,
 				28924DA06A3B5D02B0C0DCB6 /* StopAnnotationView.swift in Sources */,
 				EDD673EC6CD887E9DDD47422 /* StopCard.swift in Sources */,

@@ -98,15 +98,16 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MapStyleOptions
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapProperties
-import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.MarkerComposable
-import com.google.maps.android.compose.MarkerState
-import com.google.maps.android.compose.rememberCameraPositionState
+import com.mapbox.geojson.Point
+import com.mapbox.maps.CameraOptions
+import com.mapbox.maps.ViewAnnotationAnchor
+import com.mapbox.maps.extension.compose.MapboxMap
+import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
+import com.mapbox.maps.extension.compose.annotation.ViewAnnotation
+import com.mapbox.maps.extension.compose.style.MapStyle
+import com.mapbox.maps.viewannotation.annotationAnchor
+import com.mapbox.maps.viewannotation.geometry
+import com.mapbox.maps.viewannotation.viewAnnotationOptions
 import com.transitkit.app.config.LocalTransitColors
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.config.toColor
@@ -120,16 +121,8 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.text.font.FontFamily
-import com.google.android.gms.maps.CameraUpdateFactory
-
-// Suppresses stray Google POI/transit icons (pink station icons, social check-in markers)
-private val stopDetailMapStyle = """
-[
-  {"featureType":"poi","elementType":"labels","stylers":[{"visibility":"off"}]},
-  {"featureType":"transit","elementType":"labels.icon","stylers":[{"visibility":"off"}]},
-  {"featureType":"transit.station","elementType":"labels.icon","stylers":[{"visibility":"off"}]}
-]
-""".trimIndent()
+private const val MAPBOX_STYLE_DARK = "mapbox://styles/mapbox/navigation-night-v1"
+private const val MAPBOX_STYLE_LIGHT = "mapbox://styles/mapbox/navigation-day-v1"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -322,59 +315,52 @@ fun StopDetailScreen(
             Column(modifier = Modifier.fillMaxSize()) {
                 // Mini-map header — solo se abbiamo la posizione
                 stopLocation?.let { (lat, lon) ->
-                    val stopLatLng = remember(lat, lon) { LatLng(lat, lon) }
-                    val cameraState = rememberCameraPositionState {
-                        position = CameraPosition.Builder()
-                            .target(stopLatLng)
-                            .zoom(12f)   // Start more zoomed out — iOS 1200m distance equivalent
-                            .tilt(0f)
-                            .bearing(0f)
-                            .build()
+                    val stopPoint = remember(lat, lon) { Point.fromLngLat(lon, lat) }
+                    val viewportState = rememberMapViewportState {
+                        setCameraOptions {
+                            center(stopPoint)
+                            zoom(12.0)
+                            pitch(0.0)
+                            bearing(0.0)
+                        }
                     }
-                    LaunchedEffect(stopLatLng) {
-                        // Two-phase fly-in matching iOS: wait for tiles, then animate to final position
-                        // Phase 1: 500ms delay while map tiles load
+                    LaunchedEffect(stopPoint) {
+                        // Two-phase fly-in: wait for tiles, then animate to 3D view
                         kotlinx.coroutines.delay(500)
-                        // Phase 2: Fly in to 3D view — +0.0006° lat offset compensates pitch perspective
-                        val offsetTarget = LatLng(lat + 0.0006, lon)
-                        cameraState.animate(
-                            CameraUpdateFactory.newCameraPosition(
-                                CameraPosition.Builder()
-                                    .target(offsetTarget)
-                                    .zoom(15f)
-                                    .tilt(60f)   // Matches iOS 60° pitch
-                                    .bearing(0f)
-                                    .build()
-                            ),
-                            durationMs = 1200,  // Match iOS easeInOut(duration: 1.2)
+                        val offsetPoint = Point.fromLngLat(lon, lat + 0.0006)
+                        viewportState.flyTo(
+                            CameraOptions.Builder()
+                                .center(offsetPoint)
+                                .zoom(15.0)
+                                .pitch(60.0)
+                                .bearing(0.0)
+                                .build(),
+                            animationOptions = com.mapbox.maps.plugin.animation.MapAnimationOptions
+                                .mapAnimationOptions { duration(1200) },
                         )
                     }
                     val screenHeightDp = LocalConfiguration.current.screenHeightDp
+                    val styleUri = if (isDark) MAPBOX_STYLE_DARK else MAPBOX_STYLE_LIGHT
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height((screenHeightDp * 0.38f).dp),
                     ) {
-                        GoogleMap(
+                        MapboxMap(
                             modifier = Modifier.fillMaxSize(),
-                            cameraPositionState = cameraState,
-                            properties = MapProperties(
-                                isMyLocationEnabled = false,
-                                mapStyleOptions = MapStyleOptions(stopDetailMapStyle),
-                            ),
-                            uiSettings = MapUiSettings(
-                                zoomControlsEnabled = false,
-                                myLocationButtonEnabled = false,
-                                scrollGesturesEnabled = false,
-                                zoomGesturesEnabled = false,
-                                rotationGesturesEnabled = false,
-                                tiltGesturesEnabled = false,
-                                mapToolbarEnabled = false,
-                                compassEnabled = false,
-                            ),
+                            mapViewportState = viewportState,
+                            style = { MapStyle(style = styleUri) },
+                            compass = {},
+                            scaleBar = {},
                         ) {
-                            MarkerComposable(
-                                state = MarkerState(position = stopLatLng),
+                            ViewAnnotation(
+                                options = viewAnnotationOptions {
+                                    geometry(stopPoint)
+                                    annotationAnchor {
+                                        anchor(ViewAnnotationAnchor.BOTTOM)
+                                    }
+                                    allowOverlap(true)
+                                }
                             ) {
                                 StopMarkerDetail(
                                     accentColor = transitColors.accent,

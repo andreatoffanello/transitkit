@@ -46,8 +46,9 @@ object AppModule {
             .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
             .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
             .writeTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+            .followRedirects(false)
+            .addInterceptor(HttpsUpgradeInterceptor())
             .addInterceptor(RetryInterceptor())
-        // Add logging only in debug builds
         if (BuildConfig.DEBUG) {
             val logging = HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
@@ -55,6 +56,28 @@ object AppModule {
             builder.addInterceptor(logging)
         }
         return builder.build()
+    }
+
+    // Follows redirects manually, upgrading http:// → https:// to avoid cleartext blocks.
+    // Needed because GitHub Pages custom domain redirects return http:// Location headers.
+    private class HttpsUpgradeInterceptor(private val maxHops: Int = 5) : okhttp3.Interceptor {
+        override fun intercept(chain: okhttp3.Interceptor.Chain): okhttp3.Response {
+            var request = chain.request()
+            var hops = 0
+            while (hops++ < maxHops) {
+                val response = chain.proceed(request)
+                if (!response.isRedirect) return response
+                val location = response.header("Location") ?: return response
+                response.close()
+                val httpsLocation = if (location.startsWith("http://")) {
+                    "https://" + location.removePrefix("http://")
+                } else {
+                    location
+                }
+                request = request.newBuilder().url(httpsLocation).build()
+            }
+            return chain.proceed(request)
+        }
     }
 
     private class RetryInterceptor(private val maxRetries: Int = 2) : okhttp3.Interceptor {

@@ -32,9 +32,5 @@
             </intent-filter>
         </activity>
 
-        <!-- MAPS_API_KEY is injected from local.properties at build time -->
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="${MAPS_API_KEY}" />
     </application>
 </manifest>

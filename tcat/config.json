@@ -30,5 +30,6 @@
     "enableGeolocation": true,
     "enableFavorites": true,
     "enableNotifications": true
-  }
+  },
+  "privacyUrl": "https://tcat.transitkit.app/privacy"
 }

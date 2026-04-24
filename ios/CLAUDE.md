@@ -21,15 +21,22 @@ Root codice: `ios/TransitKit/Sources/`. Progetto Xcode: `ios/TransitKit.xcodepro
 
 ## File grossi — splittare quando tocchi
 
+Post-refactor (aprile 2026) i due view monstre principali sono stati splittati:
+
+- `Views/Orari/StopDetailView.swift` — 495 LOC orchestrator + `Views/Orari/StopDetail/FullScheduleSheet.swift`, `ExpandedMapOverlay.swift`, `StopAlertsSection.swift` + `Components/DockIndicators.swift`, `FlowLayout.swift`
+- `Views/Mappa/MappaTab.swift` — 383 LOC orchestrator + `MappaTab+Actions.swift` extension + `Components/MapSearchPill.swift`, `MapActiveRouteChip.swift`, `MapControlsColumn.swift`, `MapExpandedControls.swift`, `MapFloatingOverlays.swift`
+
+Ancora da splittare quando li tocchi:
+
 | File | LOC | Note / estraibile in |
 |------|-----|----------------------|
-| `Components/MarqueeLabel.swift` | 2160 | Legacy third-party (MIT). **Candidato sostituzione** con `MarqueeText.swift` nativo già presente. Non leggere intero — Grep mirato. |
-| `Views/Orari/StopDetailView.swift` | 1010 | Splittare in: header fermata, lista departures, sheet filtri linea, mappa embed, sezione alert |
-| `Views/Mappa/MappaTab.swift` | 840 | Splittare in: viewmodel stato mappa, overlay layer (vehicles/stops/routes), controls panel, line filter |
+| `Components/MarqueeLabel.swift` | 2160 | Legacy third-party (MIT). **Candidato sostituzione** con `MarqueeText.swift` nativo già presente — richiede design decision in cantiere dedicato. Non leggere intero — Grep mirato. |
 | `Models/GtfsRtDecoder.swift` | 685 | Decoder protobuf manuale — splittare per message type (VehiclePosition, TripUpdate, Alert) |
 | `Views/Orari/LinesListView.swift` | 514 | Splittare: header + search, row, sheet filtro direzione |
 | `Views/Home/HomeTab.swift` | 514 | Splittare: hero card, nearby stops section, favorites section, alerts banner |
 | `Views/Mappa/TransitMapView.swift` | 469 | UIViewRepresentable MKMapView — estraibile: delegate, annotation registry, camera controller |
+
+Pattern splitting: orchestrator `<Screen>View.swift` snello + sottocartella `<Screen>/` con subview + `Components/` per riusabili cross-feature. XcodeGen path glob `TransitKit/Sources` include tutto automaticamente — nessuna modifica a `project.yml` richiesta per nuovi file.
 
 ## Store e Service
 
@@ -77,8 +84,7 @@ Tutti gli endpoint GTFS-RT (vehicle-positions, trip-updates, alerts) puntano a `
 ## Cosa NON fare
 
 - **NEVER** leggere `Components/MarqueeLabel.swift` intero (2160 LOC, legacy third-party, candidato rimozione) — usa Grep mirato se devi.
-- **NEVER** aggiungere feature dentro `Views/Orari/StopDetailView.swift` senza splittarla prima (è già a 1010 LOC).
-- **NEVER** aggiungere feature dentro `Views/Mappa/MappaTab.swift` senza splittarla prima (840 LOC).
+- **NEVER** gonfiare `Views/Orari/StopDetailView.swift` (495 LOC orchestrator) o `Views/Mappa/MappaTab.swift` (383 LOC orchestrator) — aggiungi sottofile in `StopDetail/` o `Components/`, non inline.
 - **NEVER** usare `booted` come target `xcrun simctl` — UDID pinned nel CLAUDE.md root.
 - **NEVER** inventare pathData SVG per icone — usa `LucideIcon` (`Components/LucideIcon.swift`) con nome da libreria.
 - **NEVER** usare `font-size`-equivalenti per dimensionare icone SVG — sempre `.frame(width:height:)` espliciti.

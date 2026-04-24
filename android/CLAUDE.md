@@ -30,20 +30,18 @@ Root Kotlin: `app/src/main/java/com/transitkit/app/`.
 | `di/` | `AppModule` (Hilt bindings unico modulo) |
 | `assets/` | `config.json` operator (bundled a build time) |
 
-## File monstre — splittare quando tocchi
+## File grossi — splittare quando tocchi
 
-Verificati con `wc -l`:
+Post-refactor (aprile 2026) i quattro screen monstre principali sono stati splittati in orchestrator + file locali allo screen:
 
-- `ui/orari/StopDetailScreen.kt` (1446) → estrarre DepartureList, FilterChips, MapEmbed, AlertBanner
-- `ui/mappa/MappaScreen.kt` (1431) → estrarre MapAnnotations (vehicles/stops), FilterBar, StopPreview, VehicleCard (MapAnnotations.kt già esiste: usarlo, non duplicare)
-- `ui/orari/OrariScreen.kt` (954) → SearchBar, RecentStopsList, TabFilters
-- `ui/info/InfoScreen.kt` (850) → splittare per sezione (operator, contatti, fare)
-- `ui/home/HomeScreen.kt` (832) → HeroHeader, QuickActions, NearbyStopsStrip
-- `data/gtfsrt/GtfsRtFetcher.kt` (700) → separare fetch/parse/merge per feed
-- `ui/orari/LineDetailScreen.kt` (601) → StopsTimeline, RoutePolyline, VehicleLiveCount
-- `ui/settings/SettingsScreen.kt` (539), `ui/servizi/ServiceDetailScreen.kt` (520), `ui/servizi/ServiziScreen.kt` (518), `ui/linee/LineeScreen.kt` (515) — splittare quando li tocchi
+- `ui/orari/StopDetailScreen.kt` — 383 LOC orchestrator + `StopDetailDeparturesList`, `FullScheduleSheet`, `DepartureRow`, `States`, `Alerts`, `LineBadgeRow`, `Helpers`, `Map`
+- `ui/mappa/MappaScreen.kt` — 440 LOC orchestrator + `MappaMapLayers`, `TopBar`, `FabColumn`, `StopPreview`, `VehiclePreview`, `Helpers`
+- `ui/orari/OrariScreen.kt` — 102 LOC orchestrator + `OrariSearchBar`, `StopsTab`, `StopCard`, `Helpers` (dead `LinesTab` rimosso)
+- `ui/orari/LineDetailScreen.kt` — 285 LOC orchestrator + `LineDetailHeader`, `StopsTimeline`, `Helpers`
 
-Regola: se aggiungi >50 righe a uno di questi, prima estrai in componenti nuovi sotto `ui/components/` o sottocartella locale allo screen.
+Nessun file >400 LOC attualmente. Se ne emergono, splittare in sottofile locali allo screen (naming `<Screen><Part>.kt`) o in `ui/components/` se riusabili cross-feature.
+
+Regola: se aggiungi >50 righe a uno screen, prima estrai in file locali o in `ui/components/`.
 
 ## ViewModel e data layer
 
@@ -90,7 +88,7 @@ Tutti i feed GTFS-RT passano da `https://rt.transitkit.app/{operator}/{feed}.pb`
 
 ## Cosa NON fare
 
-- Non aggiungere logica agli screen monstre (>500 LOC) senza prima estrarre componenti
+- Non aggiungere logica a uno screen se già >400 LOC — prima estrai in file locali
 - Non usare `KotlinJsonAdapterFactory` con riflessione — Moshi KSP è la strada
 - Non collezionare Flow in Composable senza lifecycle (`collectAsStateWithLifecycle`)
 - Non usare `LiveData` — tutto `StateFlow`/`SharedFlow`

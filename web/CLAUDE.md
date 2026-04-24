@@ -21,14 +21,21 @@ PWA Nuxt 3 + Vue 3 + TypeScript strict, SSG su Vercel, white-label per operatore
 
 ## File grossi — splittare quando tocchi
 
-- `pages/stop/[stopId].vue` — **615 righe**. Candidati estrazione: SchedulePanel, UpcomingPanel (merge realtime), ShareActions, DayGroupLogic.
-- `pages/index.vue` — **599 righe**. Home con ricerca fermate, recenti, favoriti, download banner. Estrarre HomeSearch, RecentStopsSection, FavoritesSection.
-- `utils/strings.ts` — **363 righe**. i18n home-grown; ok per ora, ma valutare split per namespace se cresce.
-- `pages/lines/[lineId].vue` — **321 righe**. Dettaglio linea con schedule per direzione.
-- `pages/lines/index.vue` — **276 righe**. Lista linee con filtro per transit type.
+Post-refactor (aprile 2026):
+
+- `pages/stop/[stopId].vue` — **305 righe** orchestrator + `components/stop/` (`StopHeader`, `UpcomingPanel`, `SchedulePanel`, `ShareActions`, `useStopHead`).
+- `composables/useOperator.ts` — **61 righe** facade + `useOperatorConfig.ts` + `useOperatorSchedule.ts`. **API pubblica invariata** — consumer continuano a usare `useOperator()`.
+
+Ancora da splittare quando li tocchi:
+
+- `pages/index.vue` — **~599 righe**. Home con ricerca fermate, recenti, favoriti, download banner. Estrarre in `components/home/` (HomeSearch, RecentStopsSection, FavoritesSection, DownloadBanner).
+- `utils/strings.ts` — **363 righe**. i18n home-grown; ok per ora, valutare split per namespace se cresce.
+- `pages/lines/[lineId].vue` — **321 righe**.
+- `pages/lines/index.vue` — **276 righe**.
 - `pages/info/services/[serviceId].vue` — **254 righe**.
-- `utils/schedule.ts` — **222 righe**. Parsing orari + group by service day.
-- `composables/useOperator.ts` — **165 righe**. Troppe responsabilità (fetch CDN + normalize iOS→web format + theme color lowercase + abort controller). Split candidato: `fetchOperatorConfig`, `normalizeSchedules`, `useOperator` sottile.
+- `utils/schedule.ts` — **222 righe**.
+
+Pattern splitting: orchestrator `pages/<route>.vue` snello + sottocartella `components/<feature>/` con subview + composables dedicati per logica stateful.
 
 ## Composables chiave
 
@@ -82,7 +89,7 @@ PWA Nuxt 3 + Vue 3 + TypeScript strict, SSG su Vercel, white-label per operatore
 
 - **Mai** inserire URL upstream GTFS-RT (es. `s3.amazonaws.com/...`, endpoint operatore diretto) in config — tutto real-time passa da `rt.transitkit.app/{op}/{feed}.pb`. Solo `gtfs_url` (zip static schedule) resta diretto.
 - **Mai** ignorare hydration mismatch sulle pagine realtime o sulle bindings `:style` con colori operator. I colori hex devono essere lowercase lato server e client (vedi comment in `useOperator.ts`).
-- **Mai** aggiungere logica a `pages/stop/[stopId].vue` o `pages/index.vue` senza prima splittare — sono già oltre soglia manutenibile.
+- **Mai** aggiungere logica a `pages/index.vue` (~599 righe) senza prima splittare in `components/home/`. Su `pages/stop/[stopId].vue` (305 orchestrator) aggiungi sottocomponenti in `components/stop/`, non inline.
 - **Mai** usare `font-size` per dimensionare icone SVG: sempre `width` + `height` espliciti.
 - **Mai** leggere `localStorage` / `window` senza guard `import.meta.client` — rompe SSG.
 - **Mai** modificare `OPERATOR_HOSTS` senza prevedere redeploy Vercel (non è runtime config).

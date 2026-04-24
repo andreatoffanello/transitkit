@@ -3,6 +3,10 @@ import MapKit
 
 /// Full stop detail screen: inline 3D map header + hero expand overlay showing departures.
 /// THE MOST IMPORTANT VIEW — shows next departures, full schedule by day, line filtering, dock indicators.
+///
+/// Sub-views extracted into `StopDetail/`:
+/// - `FullScheduleSheet` — fullScreenCover with day/line filter + hourly departure board
+/// - `ExpandedMapOverlay` — full-screen immersive map shown when the compact map is expanded
 struct StopDetailView: View {
     let stop: ResolvedStop
     @Environment(ScheduleStore.self) private var store
@@ -13,7 +17,6 @@ struct StopDetailView: View {
     @State private var filterLine: String?
     @State private var linesExpanded = false
     @Environment(FavoritesManager.self) private var favoritesManager
-    @Environment(AlertStore.self) private var alertStore
 
     @State private var mapExpanded: Bool = false
     @State private var expandedMapPosition: MapCameraPosition = .automatic
@@ -92,16 +95,24 @@ struct StopDetailView: View {
             .ignoresSafeArea(edges: .top)
 
             if mapExpanded {
-                expandedMapOverlay
-                    .transition(
-                        .asymmetric(
-                            insertion: .scale(scale: 0.92, anchor: UnitPoint(x: 0.88, y: 0.22))
-                                .combined(with: .opacity),
-                            removal: .scale(scale: 0.92, anchor: UnitPoint(x: 0.88, y: 0.22))
-                                .combined(with: .opacity)
-                        )
+                ExpandedMapOverlay(
+                    stop: stop,
+                    expandedMapPosition: $expandedMapPosition,
+                    mapExpanded: $mapExpanded,
+                    showMapAppPicker: $showMapAppPicker,
+                    openInAppleMaps: openInAppleMaps,
+                    openInGoogleMaps: openInGoogleMaps,
+                    openInWaze: openInWaze
+                )
+                .transition(
+                    .asymmetric(
+                        insertion: .scale(scale: 0.92, anchor: UnitPoint(x: 0.88, y: 0.22))
+                            .combined(with: .opacity),
+                        removal: .scale(scale: 0.92, anchor: UnitPoint(x: 0.88, y: 0.22))
+                            .combined(with: .opacity)
                     )
-                    .zIndex(10)
+                )
+                .zIndex(10)
             }
         }
         .navigationTitle("")
@@ -205,148 +216,6 @@ struct StopDetailView: View {
         .clipped()
     }
 
-    // MARK: - Expanded Map Overlay
-
-    @ViewBuilder
-    private var expandedMapOverlay: some View {
-        GeometryReader { geo in
-            ZStack(alignment: .top) {
-                // Full-screen map
-                Map(position: $expandedMapPosition) {
-                    if stop.docks.isEmpty {
-                        Annotation(stop.name, coordinate: stopCoordinate) {
-                            ZStack {
-                                Circle()
-                                    .fill(AppTheme.accent)
-                                    .frame(width: 32, height: 32)
-                                LucideIcon.signpost.sized(15)
-                                    .foregroundStyle(.white)
-                            }
-                            .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
-                        }
-                    }
-                }
-                .mapStyle(.standard(elevation: .realistic, pointsOfInterest: .excludingAll))
-                .ignoresSafeArea(.all)
-
-                // Drag handle strip — sits above the map, captures swipe-down
-                Color.clear
-                    .frame(maxWidth: .infinity)
-                    .frame(height: geo.safeAreaInsets.top + 72)
-                    .contentShape(Rectangle())
-                    .gesture(
-                        DragGesture(minimumDistance: 20)
-                            .onEnded { value in
-                                if value.translation.height > 60 {
-                                    withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
-                                        mapExpanded = false
-                                    }
-                                }
-                            }
-                    )
-
-                // Close button — anchored to safe area top
-                HStack {
-                    Spacer()
-                    Button {
-                        withAnimation(.spring(response: 0.42, dampingFraction: 0.82)) {
-                            mapExpanded = false
-                        }
-                    } label: {
-                        LucideIcon.x.sized(14)
-                            .foregroundStyle(.primary)
-                            .frame(width: 44, height: 44)
-                            .background(.regularMaterial, in: Capsule())
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(Text(String(localized: "a11y_close_map")))
-                    .accessibilityIdentifier("btn_close_map")
-                }
-                .padding(.top, geo.safeAreaInsets.top + 16)
-                .padding(.trailing, 16)
-
-                // Bottom controls row
-                HStack(alignment: .bottom) {
-                    // "Apri in mappe" button — bottom leading
-                    Button(String(localized: "open_in_maps")) {
-                        showMapAppPicker = true
-                    }
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.primary)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
-                    .background(.regularMaterial, in: Capsule())
-                    .padding(.bottom, geo.safeAreaInsets.bottom + 16)
-                    .padding(.leading, 16)
-
-                    Spacer()
-
-                    // Map controls — bottom trailing
-                    VStack(spacing: 8) {
-                        // Reset north / bearing
-                        Button {
-                            withAnimation {
-                                expandedMapPosition = .camera(MapCamera(
-                                    centerCoordinate: stopCoordinate,
-                                    distance: 350,
-                                    heading: 0,
-                                    pitch: 65
-                                ))
-                            }
-                        } label: {
-                            Image(systemName: "location.north.fill")
-                                .font(.system(size: 14))
-                                .frame(width: 40, height: 40)
-                                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
-                        }
-                        .accessibilityLabel(String(localized: "reset_map_view"))
-
-                        // Re-center on stop
-                        Button {
-                            withAnimation {
-                                expandedMapPosition = .camera(MapCamera(
-                                    centerCoordinate: stopCoordinate,
-                                    distance: 350,
-                                    heading: 0,
-                                    pitch: 65
-                                ))
-                            }
-                        } label: {
-                            Image(systemName: "scope")
-                                .font(.system(size: 14))
-                                .frame(width: 40, height: 40)
-                                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
-                        }
-                        .accessibilityLabel(String(localized: "center_on_location"))
-                    }
-                    .padding(.bottom, geo.safeAreaInsets.bottom + 16)
-                    .padding(.trailing, 16)
-                }
-                .frame(maxHeight: .infinity, alignment: .bottom)
-            }
-        }
-        .ignoresSafeArea(.all)
-        .confirmationDialog(Text(String(localized: "open_in_prompt")), isPresented: $showMapAppPicker) {
-            Button("Apple Maps") { openInAppleMaps() }
-            if UIApplication.shared.canOpenURL(URL(string: "comgooglemaps://")!) {
-                Button("Google Maps") { openInGoogleMaps() }
-            }
-            if UIApplication.shared.canOpenURL(URL(string: "waze://")!) {
-                Button("Waze") { openInWaze() }
-            }
-            Button(String(localized: "cancel"), role: .cancel) { }
-        }
-        .onAppear {
-            expandedMapPosition = .camera(MapCamera(
-                centerCoordinate: stopCoordinate,
-                distance: 350,
-                heading: 0,
-                pitch: 65
-            ))
-        }
-    }
-
     // MARK: - Inline Content (below map header)
 
     private var stopInlineContent: some View {
@@ -359,7 +228,7 @@ struct StopDetailView: View {
             inlineStopHeader
 
             // Service alerts affecting this stop (if any)
-            stopAlertsSection
+            StopAlertsSection(stop: stop)
 
             // Lines section
             linesSection
@@ -519,76 +388,6 @@ struct StopDetailView: View {
         .padding(.bottom, 12)
     }
 
-    // MARK: - Stop Alerts Section
-
-    @ViewBuilder
-    private var stopAlertsSection: some View {
-        let alerts = alertStore.alerts(forStopId: stop.id)
-        if !alerts.isEmpty {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 8) {
-                    LucideIcon.alertTriangle.sized(14)
-                        .foregroundStyle(AppTheme.accent)
-                    Text(String(localized: "stop_detail_alerts_section").uppercased())
-                        .font(.caption.weight(.semibold))
-                        .kerning(0.6)
-                        .foregroundStyle(AppTheme.textTertiary)
-                    Spacer()
-                }
-                .padding(.horizontal, 20)
-
-                VStack(spacing: 8) {
-                    ForEach(alerts) { alert in
-                        NavigationLink {
-                            AlertDetailView(alert: alert)
-                        } label: {
-                            inlineAlertRow(alert)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(.horizontal, 20)
-            }
-            .padding(.top, 16)
-            .padding(.bottom, 4)
-        }
-    }
-
-    private func inlineAlertRow(_ alert: GtfsRtAlert) -> some View {
-        HStack(spacing: 10) {
-            Circle()
-                .fill(alertRowDotColor(alert.severity))
-                .frame(width: 8, height: 8)
-            Text(alert.headerText.resolved())
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(AppTheme.textPrimary)
-                .lineLimit(2)
-                .multilineTextAlignment(.leading)
-            Spacer(minLength: 0)
-            LucideIcon.chevronRight.sized(14)
-                .foregroundStyle(AppTheme.textTertiary)
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(AppTheme.bgSecondary)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(AppTheme.glassBorder, lineWidth: 1)
-        )
-    }
-
-    private func alertRowDotColor(_ severity: AlertSeverity) -> Color {
-        switch severity {
-        case .severe:  return .red
-        case .warning: return .orange
-        case .info:    return AppTheme.accent
-        case .unknown: return AppTheme.textTertiary
-        }
-    }
-
     // MARK: - Lines Section
 
     private var linesSection: some View {
@@ -692,319 +491,5 @@ struct StopDetailView: View {
     private func openInWaze() {
         let url = URL(string: "waze://?ll=\(stopCoordinate.latitude),\(stopCoordinate.longitude)&navigate=false")!
         UIApplication.shared.open(url)
-    }
-}
-
-// MARK: - Dock Pin (map)
-
-private struct DockPin: View {
-    let letter: String
-
-    var body: some View {
-        ZStack {
-            Circle()
-                .fill(.white)
-                .frame(width: 26, height: 26)
-            Circle()
-                .fill(Color(red: 1.0, green: 0.82, blue: 0.0))
-                .frame(width: 22, height: 22)
-            Text(letter)
-                .font(.system(size: 13, weight: .heavy, design: .rounded))
-                .foregroundStyle(.black)
-        }
-        .shadow(color: .black.opacity(0.2), radius: 3, y: 1)
-    }
-}
-
-// MARK: - Dock Badge (inline)
-
-struct DockBadgeView: View {
-    let letter: String
-
-    var body: some View {
-        Text(letter)
-            .font(.system(size: 10, weight: .heavy, design: .rounded))
-            .foregroundStyle(.black)
-            .frame(width: 18, height: 18)
-            .background(Color(red: 1.0, green: 0.82, blue: 0.0), in: Circle())
-            .accessibilityLabel(String(format: NSLocalizedString("dock_label", comment: ""), letter))
-    }
-}
-
-// MARK: - Full Schedule Sheet
-
-private struct FullScheduleSheet: View {
-    let stop: ResolvedStop
-    @Environment(ScheduleStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
-    @State private var selectedDayGroup: DayGroup?
-    @State private var filterLine: String?
-    @State private var isReady = false
-
-    private var allGroups: [DayGroup: [Departure]] {
-        store.departures(forStopId: stop.id)
-    }
-
-    private var sortedDayGroups: [DayGroup] {
-        allGroups.keys.sorted { $0.id < $1.id }
-    }
-
-    private var currentDepartures: [Departure] {
-        guard let group = selectedDayGroup else { return [] }
-        return allGroups[group] ?? []
-    }
-
-    private var filteredDepartures: [Departure] {
-        let deps = currentDepartures
-        guard let line = filterLine else { return deps }
-        return deps.filter { $0.lineName == line }
-    }
-
-    private var availableLines: [String] {
-        var seen = Set<String>()
-        return currentDepartures.map(\.lineName).filter { seen.insert($0).inserted }
-    }
-
-    init(stop: ResolvedStop) {
-        self.stop = stop
-    }
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 0) {
-                    daySelector
-                    lineFilter
-                    if isReady {
-                        departuresBoard
-                            .transition(.opacity)
-                    } else {
-                        ProgressView()
-                            .tint(AppTheme.accent)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 40)
-                    }
-                }
-            }
-            .navigationTitle(stop.name)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        LucideIcon.circleX.sized(24)
-                            .foregroundStyle(.secondary)
-                    }
-                    .accessibilityIdentifier("btn_close_schedule")
-                }
-            }
-            .onAppear {
-                // Select today's day group or first available
-                if selectedDayGroup == nil {
-                    selectedDayGroup = sortedDayGroups.first
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                    withAnimation(.easeIn(duration: 0.2)) { isReady = true }
-                }
-            }
-            .onChange(of: selectedDayGroup) {
-                isReady = false
-                filterLine = nil
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                    withAnimation(.easeIn(duration: 0.15)) { isReady = true }
-                }
-            }
-        }
-    }
-
-    // MARK: - Day Selector
-
-    @ViewBuilder
-    private var daySelector: some View {
-        if sortedDayGroups.count > 1 {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(sortedDayGroups) { group in
-                        let isSelected = selectedDayGroup == group
-                        Button {
-                            withAnimation(.smooth(duration: 0.2)) {
-                                selectedDayGroup = group
-                            }
-                        } label: {
-                            Text(group.displayLabel)
-                                .font(.system(size: 15, weight: isSelected ? .semibold : .regular))
-                                .foregroundStyle(isSelected ? .white : AppTheme.textPrimary)
-                                .padding(.horizontal, 16)
-                                .frame(height: 44)
-                                .background(isSelected ? AppTheme.accent : AppTheme.glassFill)
-                                .clipShape(Capsule())
-                        }
-                        .accessibilityIdentifier("btn_day_\(group.id)")
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 8)
-            }
-        }
-    }
-
-    // MARK: - Line Filter
-
-    @ViewBuilder
-    private var lineFilter: some View {
-        if availableLines.count > 1 {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    FilterChip(
-                        label: String(localized: "filter_all_lines"),
-                        isSelected: filterLine == nil,
-                        action: {
-                            withAnimation(.smooth(duration: 0.2)) { filterLine = nil }
-                        }
-                    )
-                    .opacity(filterLine != nil ? 0.35 : 1.0)
-                    .animation(.smooth(duration: 0.2), value: filterLine)
-                    .accessibilityIdentifier("btn_filter_all_lines_schedule")
-
-                    ForEach(availableLines, id: \.self) { line in
-                        let route = store.routes.first { $0.name == line }
-                        let isSelected = filterLine == line
-                        LineFilterChip(
-                            lineName: line,
-                            routeColor: route?.color ?? "#666666",
-                            isSelected: isSelected
-                        ) {
-                            withAnimation(.smooth(duration: 0.2)) {
-                                filterLine = (filterLine == line) ? nil : line
-                            }
-                        }
-                        .opacity(filterLine != nil && !isSelected ? 0.35 : 1.0)
-                        .animation(.smooth(duration: 0.2), value: filterLine)
-                        .accessibilityIdentifier("btn_filter_line_\(line)")
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 10)
-            }
-        }
-    }
-
-    // MARK: - Departures Board
-
-    private var departuresBoard: some View {
-        let departures = filteredDepartures
-        let hasDocks = !stop.docks.isEmpty
-
-        return VStack(spacing: 0) {
-            if departures.isEmpty {
-                VStack(spacing: 8) {
-                    LucideIcon.clock.sized(28)
-                        .foregroundStyle(AppTheme.textTertiary)
-                    Text(String(localized: "no_departures"))
-                        .font(.system(size: 14))
-                        .foregroundStyle(AppTheme.textSecondary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 40)
-            } else {
-                // Group by hour
-                let grouped = Dictionary(grouping: departures) { dep in
-                    String(dep.time.prefix(2))
-                }
-                let hours = grouped.keys.sorted()
-
-                ForEach(hours, id: \.self) { hour in
-                    if let hourDeps = grouped[hour] {
-                        // Hour separator
-                        HStack(spacing: 6) {
-                            Text(hour)
-                                .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                                .foregroundStyle(AppTheme.textTertiary)
-                                .frame(width: 24, alignment: .trailing)
-                            Rectangle()
-                                .fill(AppTheme.separatorLine)
-                                .frame(height: 0.5)
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 10)
-                        .padding(.bottom, 2)
-
-                        // Departure rows
-                        ForEach(hourDeps) { dep in
-                            HStack(spacing: 10) {
-                                Text(dep.time)
-                                    .font(.system(size: 15, weight: .medium, design: .monospaced))
-                                    .foregroundStyle(AppTheme.textPrimary)
-                                    .frame(width: 52, alignment: .leading)
-
-                                LineBadge(departure: dep, size: .large)
-
-                                Text(dep.headsign)
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(AppTheme.textSecondary)
-                                    .lineLimit(1)
-
-                                Spacer()
-
-                                if hasDocks && !dep.dock.isEmpty {
-                                    DockBadgeView(letter: dep.dock)
-                                }
-                            }
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 6)
-                            .accessibilityIdentifier("schedule_dep_\(dep.lineName)_\(dep.time)")
-                        }
-                    }
-                }
-
-                Color.clear.frame(height: 40)
-            }
-        }
-    }
-}
-
-// MARK: - Flow Layout
-
-/// Horizontal wrapping layout, re-used for line badges.
-struct FlowLayout: Layout {
-    var spacing: CGFloat = 6
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let width = proposal.width ?? .infinity
-        var x: CGFloat = 0
-        var y: CGFloat = 0
-        var rowHeight: CGFloat = 0
-
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            if x + size.width > width && x > 0 {
-                x = 0
-                y += rowHeight + spacing
-                rowHeight = 0
-            }
-            x += size.width + spacing
-            rowHeight = max(rowHeight, size.height)
-        }
-
-        return CGSize(width: width, height: y + rowHeight)
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        var x = bounds.minX
-        var y = bounds.minY
-        var rowHeight: CGFloat = 0
-
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            if x + size.width > bounds.maxX && x > bounds.minX {
-                x = bounds.minX
-                y += rowHeight + spacing
-                rowHeight = 0
-            }
-            subview.place(at: CGPoint(x: x, y: y), proposal: .unspecified)
-            x += size.width + spacing
-            rowHeight = max(rowHeight, size.height)
-        }
     }
 }

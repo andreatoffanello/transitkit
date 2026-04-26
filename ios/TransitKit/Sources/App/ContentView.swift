@@ -67,7 +67,19 @@ struct ContentView: View {
             .tag(3)
             .accessibilityIdentifier("tab_map")
 
-            // MARK: Tab 4 — Servizi
+            // MARK: Tab 4 — Planner
+            PlannerTab()
+                .tabItem {
+                    Label {
+                        Text(String(localized: "tab_planner"))
+                    } icon: {
+                        LucideIcon.navigation.image
+                    }
+                }
+                .tag(4)
+                .accessibilityIdentifier("tab_planner")
+
+            // MARK: Tab 5 — Servizi
             ServiziTab(config: config)
                 .tabItem {
                     Label {
@@ -76,7 +88,7 @@ struct ContentView: View {
                         LucideIcon.info.image
                     }
                 }
-                .tag(4)
+                .tag(5)
                 .accessibilityIdentifier("tab_services")
         }
         .environment(\.vehiclePositionsUrl, config.gtfsRt?.vehiclePositionsUrl)

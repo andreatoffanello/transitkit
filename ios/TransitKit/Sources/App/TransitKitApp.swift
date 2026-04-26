@@ -14,6 +14,7 @@ struct TransitKitApp: App {
     @State private var loadingConfig: OperatorConfig?
     @State private var configError: String?
     @State private var router = DeepLinkRouter()
+    @State private var connectionsStore = ConnectionsStore()
 
     init() {
         if CommandLine.arguments.contains("--reset-schedule-cache") {
@@ -36,6 +37,7 @@ struct TransitKitApp: App {
                         .environment(vehicleStore)
                         .environment(alertStore)
                         .environment(router)
+                        .environment(connectionsStore)
                         .tint(AppTheme.accent)
                 } else if let configError {
                     errorView(message: configError)
@@ -144,6 +146,7 @@ struct TransitKitApp: App {
                 routeIdByTripId: scheduleStore.routeIdByTripId
             )
             alertStore.configure(serviceAlertsUrl: config.gtfsRt?.serviceAlertsUrl)
+            Task { await connectionsStore.load(config: config, routes: scheduleStore.routes) }
             if let pending = router.pendingUrl {
                 router.pendingUrl = nil
                 resolve(url: pending, store: scheduleStore)

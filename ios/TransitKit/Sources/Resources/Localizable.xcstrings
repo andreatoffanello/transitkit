@@ -4484,6 +4484,29 @@
         }
       }
     },
+    "tab_planner": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planner"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pianifica"
+          }
+        },
+        "es-419": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planifica"
+          }
+        }
+      }
+    },
     "tab_services": {
       "extractionState": "manual",
       "localizations": {

@@ -101,7 +101,9 @@ final class ConnectionsStore {
         config.timeoutIntervalForResource = 60
         let session = URLSession(configuration: config)
 
-        let (data, response) = try await session.data(from: url)
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
             throw URLError(.badServerResponse)
         }

@@ -14,6 +14,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -55,6 +56,10 @@ import com.transitkit.app.ui.servizi.AccessibilityInfoScreen
 import com.transitkit.app.ui.servizi.ContactInfoScreen
 import com.transitkit.app.ui.servizi.ServiceDetailScreen
 import com.transitkit.app.ui.servizi.ServiziScreen
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.transitkit.app.ui.planner.JourneyDetailScreen
+import com.transitkit.app.ui.planner.PlannerScreen
+import com.transitkit.app.ui.planner.PlannerViewModel
 import com.transitkit.app.ui.settings.AboutScreen
 import com.transitkit.app.ui.settings.SettingsScreen
 import dagger.hilt.android.AndroidEntryPoint
@@ -69,6 +74,7 @@ sealed class Screen(val route: String) {
     object Linee : Screen("linee_graph")
     object Mappa : Screen("mappa")
     object Servizi : Screen("servizi")
+    object Planner : Screen("planner")
 }
 
 private const val ROUTE_LINEE_ROOT = "linee"
@@ -100,15 +106,19 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
     val navController = rememberNavController()
     val haptic = LocalHapticFeedback.current
     val colors = TransitTheme.colors
+    // Scoped to the activity — shared between Planner tab and JourneyDetail push.
+    val plannerViewModel: PlannerViewModel = hiltViewModel()
     val labelHome    = stringResource(R.string.tab_home)
     val labelOrari   = stringResource(R.string.tab_orari)
     val labelLinee   = stringResource(R.string.tab_linee)
     val labelMappa   = stringResource(R.string.tab_mappa)
     val labelServizi = stringResource(R.string.tab_servizi)
+    val labelPlanner = stringResource(R.string.tab_planner)
 
     val items = buildList {
         add(Triple(Screen.Home,    LucideIcons.LayoutDashboard, labelHome))
         add(Triple(Screen.Orari,   LucideIcons.Clock,           labelOrari))
+        add(Triple(Screen.Planner, LucideIcons.Compass,         labelPlanner))
         add(Triple(Screen.Linee,   LucideIcons.Route,           labelLinee))
         if (operatorConfig.features.enableMap) {
             add(Triple(Screen.Mappa, LucideIcons.Map, labelMappa))
@@ -358,6 +368,27 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                         val encodedId = URLEncoder.encode(stopId, StandardCharsets.UTF_8.name())
                         navController.navigate("stop/$encodedId")
                     },
+                )
+            }
+
+            // ── Planner ──────────────────────────────────────────────────────────
+            composable(Screen.Planner.route) {
+                PlannerScreen(
+                    onNavigateToJourneyDetail = { journey ->
+                        // Store in the ViewModel so the detail screen can retrieve it
+                        // without serializing to the nav back-stack.
+                        plannerViewModel.selectJourney(journey)
+                        navController.navigate("journey_detail")
+                    },
+                    viewModel = plannerViewModel,
+                )
+            }
+            composable(route = "journey_detail") {
+                val journey = plannerViewModel.selectedJourney.collectAsState().value
+                    ?: run { navController.popBackStack(); return@composable }
+                JourneyDetailScreen(
+                    journey = journey,
+                    onBack = { navController.popBackStack() },
                 )
             }
 

@@ -120,4 +120,5 @@ object AppModule {
     @Singleton
     fun provideTransitApiService(retrofit: Retrofit): TransitApiService =
         retrofit.create(TransitApiService::class.java)
+
 }

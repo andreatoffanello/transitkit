@@ -368,4 +368,22 @@
     <string name="settings_location_title">Location access</string>
     <string name="settings_location_enable">Enable</string>
     <string name="settings_location_open">Open Settings</string>
+
+    <!-- Planner -->
+    <string name="tab_planner">Planner</string>
+    <string name="planner_from">From…</string>
+    <string name="planner_to">To…</string>
+    <string name="planner_now">Now</string>
+    <string name="planner_depart_at">Depart at</string>
+    <string name="planner_arrive_by">Arrive by</string>
+    <string name="planner_no_trips">No trips found</string>
+    <string name="planner_searching">Searching…</string>
+    <string name="planner_downloading">Downloading trip data…</string>
+    <string name="planner_same_stop">Origin and destination are the same</string>
+    <string name="planner_change">change</string>
+    <string name="planner_changes">changes</string>
+    <string name="planner_walk_min">%d min walk</string>
+    <string name="planner_departs_in">Departs in %s</string>
+    <string name="planner_journey">Journey</string>
+    <string name="planner_stops_collapsed">%d stops</string>
 </resources>

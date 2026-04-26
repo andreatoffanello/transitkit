@@ -20,6 +20,7 @@ export interface OperatorConfig {
   headsignMap?: Record<string, string>
   services?: OperatorService[]
   accessibility?: AccessibilityInfo
+  appLinks?: AppLinks
 }
 
 export interface ThemeConfig {
@@ -100,6 +101,11 @@ export interface OperatorService {
   notes?: MultiLangString[]
   cta?: ServiceCta
   links?: Array<{ label: MultiLangString; url: string }>
+}
+
+export interface AppLinks {
+  ios?: string
+  android?: string
 }
 
 export interface AccessibilityInfo {

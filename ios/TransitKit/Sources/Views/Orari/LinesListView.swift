@@ -154,21 +154,11 @@ struct LinesListView: View {
     // MARK: - Empty
 
     private var emptyState: some View {
-        VStack(spacing: 12) {
-            Spacer()
-            LucideIcon.train.sized(28)
-                .foregroundStyle(AppTheme.textTertiary)
-            Text(String(localized: "lines_no_result"))
-                .font(.headline)
-                .foregroundStyle(AppTheme.textPrimary)
-            Text(String(localized: "lines_no_result_hint"))
-                .font(.subheadline)
-                .foregroundStyle(AppTheme.textSecondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-            Spacer()
-        }
-        .frame(maxWidth: .infinity)
+        EmptyStateView(
+            icon: .train,
+            title: String(localized: "lines_no_result"),
+            subtitle: String(localized: "lines_no_result_hint")
+        )
     }
 
     // MARK: - APIRoutes List

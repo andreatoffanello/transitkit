@@ -16,7 +16,7 @@ import SwiftUI
 struct EmptyStateView: View {
     let icon: LucideIcon
     let title: String
-    let subtitle: String
+    var subtitle: String = ""
 
     var body: some View {
         VStack(spacing: 16) {
@@ -48,11 +48,13 @@ struct EmptyStateView: View {
                 .font(.headline)
                 .foregroundStyle(AppTheme.textPrimary)
 
-            Text(subtitle)
-                .font(.subheadline)
-                .foregroundStyle(AppTheme.textTertiary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
+            if !subtitle.isEmpty {
+                Text(subtitle)
+                    .font(.subheadline)
+                    .foregroundStyle(AppTheme.textTertiary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 40)

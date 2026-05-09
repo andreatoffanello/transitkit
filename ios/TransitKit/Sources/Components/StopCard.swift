@@ -63,12 +63,7 @@ struct StopCard: View {
                             )
                         }
                         if lines.count > 6 {
-                            Text("+\(lines.count - 6)")
-                                .font(.system(size: 9, weight: .semibold, design: .rounded))
-                                .foregroundStyle(AppTheme.textTertiary)
-                                .padding(.horizontal, 4)
-                                .padding(.vertical, 2)
-                                .background(AppTheme.glassFill, in: RoundedRectangle(cornerRadius: 3))
+                            OverflowBadge(count: lines.count - 6)
                         }
                     }
                 }

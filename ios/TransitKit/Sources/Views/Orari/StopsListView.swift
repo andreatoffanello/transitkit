@@ -134,21 +134,11 @@ struct StopsListView: View {
     // MARK: - Empty
 
     private var emptyState: some View {
-        VStack(spacing: 12) {
-            Spacer()
-            LucideIcon.search.sized(28)
-                .foregroundStyle(AppTheme.textTertiary)
-            Text(String(localized: "stops_no_result"))
-                .font(.headline)
-                .foregroundStyle(AppTheme.textPrimary)
-            Text(String(localized: "stops_no_result_hint"))
-                .font(.subheadline)
-                .foregroundStyle(AppTheme.textSecondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-            Spacer()
-        }
-        .frame(maxWidth: .infinity)
+        EmptyStateView(
+            icon: .search,
+            title: String(localized: "stops_no_result"),
+            subtitle: String(localized: "stops_no_result_hint")
+        )
     }
 
     // MARK: - Stops List

@@ -166,16 +166,11 @@ struct LinePickerSheet: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 28))
-                .foregroundStyle(.tertiary)
-            Text(String(localized: "no_matching_line"))
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.vertical, 48)
+        EmptyStateView(
+            icon: .search,
+            title: String(localized: "no_matching_line"),
+            subtitle: String(localized: "empty_no_results_subtitle")
+        )
     }
 }
 

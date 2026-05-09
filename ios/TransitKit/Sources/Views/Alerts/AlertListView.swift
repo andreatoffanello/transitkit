@@ -89,26 +89,11 @@ struct AlertListView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            ZStack {
-                Circle()
-                    .fill(AppTheme.accent.opacity(0.12))
-                    .frame(width: 72, height: 72)
-                LucideIcon.check.sized(32)
-                    .foregroundStyle(AppTheme.accent)
-            }
-            VStack(spacing: 6) {
-                Text(String(localized: "alerts_empty_title"))
-                    .font(.headline)
-                    .foregroundStyle(AppTheme.textPrimary)
-                Text(String(localized: "alerts_empty_subtitle"))
-                    .font(.subheadline)
-                    .foregroundStyle(AppTheme.textSecondary)
-                    .multilineTextAlignment(.center)
-            }
-        }
-        .padding(.horizontal, 32)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        EmptyStateView(
+            icon: .check,
+            title: String(localized: "alerts_empty_title"),
+            subtitle: String(localized: "alerts_empty_subtitle")
+        )
     }
 
     // MARK: Helpers

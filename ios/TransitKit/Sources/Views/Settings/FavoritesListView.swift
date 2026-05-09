@@ -105,19 +105,10 @@ struct FavoritesListView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Spacer()
-            LucideIcon.star.sized(48)
-                .foregroundStyle(AppTheme.textTertiary)
-            Text(String(localized: "favorites_empty_title"))
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(AppTheme.textPrimary)
-            Text(String(localized: "favorites_empty_subtitle"))
-                .font(.subheadline)
-                .foregroundStyle(AppTheme.textSecondary)
-                .multilineTextAlignment(.center)
-            Spacer()
-        }
-        .padding(32)
+        EmptyStateView(
+            icon: .star,
+            title: String(localized: "favorites_empty_title"),
+            subtitle: String(localized: "favorites_empty_subtitle")
+        )
     }
 }

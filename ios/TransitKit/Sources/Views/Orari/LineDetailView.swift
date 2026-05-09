@@ -391,12 +391,7 @@ struct LineDetailView: View {
                 )
             }
             if overflow > 0 {
-                Text("+\(overflow)")
-                    .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(AppTheme.textTertiary)
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 2)
-                    .background(AppTheme.textTertiary.opacity(0.12), in: RoundedRectangle(cornerRadius: 3))
+                OverflowBadge(count: overflow)
             }
         }
     }

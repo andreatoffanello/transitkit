@@ -18,6 +18,7 @@ class ScheduleStore {
     // MARK: Lookup tables
     private(set) var scheduleResponse: ScheduleResponse?
     private var routeById: [String: APIRoute] = [:]
+    private var routeByName: [String: APIRoute] = [:]
     private var stopById: [String: ResolvedStop] = [:]
     /// Secondary index mapping original GTFS stop_ids (from the feed's
     /// VehiclePosition.stop_id and TripUpdate.stop_id) back to the
@@ -91,6 +92,11 @@ class ScheduleStore {
         lastUpdated = response.lastUpdated
 
         routeById = Dictionary(uniqueKeysWithValues: response.routes.map { ($0.id, $0) })
+        // Name-based index for UI contexts that only carry the line name
+        // (e.g. ResolvedStop.lineNames in the Planner stop search). Last
+        // wins on duplicate names — acceptable since GTFS short_names are
+        // intended to be unique per agency.
+        routeByName = Dictionary(response.routes.map { ($0.name, $0) }, uniquingKeysWith: { _, last in last })
         routes = response.routes
 
         stops = response.stops.map { apiStop in
@@ -220,6 +226,10 @@ class ScheduleStore {
 
     func route(forId routeId: String) -> APIRoute? {
         routeById[routeId]
+    }
+
+    func route(forName name: String) -> APIRoute? {
+        routeByName[name]
     }
 
     func stop(forId stopId: String) -> ResolvedStop? {

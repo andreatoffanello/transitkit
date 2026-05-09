@@ -301,9 +301,7 @@ struct VehicleDetailSheet: View {
     @ViewBuilder
     private var liveRow: some View {
         HStack(spacing: 6) {
-            Circle()
-                .fill(AppTheme.realtimeGreen)
-                .frame(width: 6, height: 6)
+            LiveBadge()
             Text(String(localized: "map_live_badge"))
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(AppTheme.realtimeGreen)

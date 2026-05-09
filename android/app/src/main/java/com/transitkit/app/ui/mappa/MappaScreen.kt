@@ -41,15 +41,13 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
+import com.mapbox.maps.Style
+import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.style.MapStyle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-
-// Stile Mapbox — movete parity
-private const val MAPBOX_STYLE_DARK = "mapbox://styles/mapbox/navigation-night-v1"
-private const val MAPBOX_STYLE_LIGHT = "mapbox://styles/mapbox/navigation-day-v1"
 
 @OptIn(
     ExperimentalPermissionsApi::class,
@@ -177,7 +175,6 @@ fun MappaScreen(
     }
 
     var showLinePicker by remember { mutableStateOf(false) }
-    val styleUri = if (isDark) MAPBOX_STYLE_DARK else MAPBOX_STYLE_LIGHT
 
     // Pulse halo condiviso tra tutti i veicoli — 1 animazione, N letture
     val pulseTransition = rememberInfiniteTransition(label = "vehicle_pulse")
@@ -223,7 +220,7 @@ fun MappaScreen(
                 .fillMaxSize()
                 .semantics { testTag = "mappa_tab" },
             mapViewportState = viewportState,
-            style = { MapStyle(style = styleUri) },
+            style = { MapStyle(style = Style.STANDARD) },
             compass = {},
             scaleBar = {},
             onMapClickListener = { _ ->
@@ -278,6 +275,19 @@ fun MappaScreen(
                     }
                 },
             )
+
+            MapEffect(isDark) { mapView ->
+                val s = mapView.mapboxMap.style
+                if (s != null) {
+                    applyTransitKitStandardStyleConfig(s, isDark)
+                } else {
+                    mapView.mapboxMap.subscribeStyleLoaded {
+                        mapView.mapboxMap.style?.let { loaded ->
+                            applyTransitKitStandardStyleConfig(loaded, isDark)
+                        }
+                    }
+                }
+            }
         }
 
         // -----------------------------------------------------------------------

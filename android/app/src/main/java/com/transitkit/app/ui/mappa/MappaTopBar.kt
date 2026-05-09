@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,6 +30,7 @@ import com.transitkit.app.R
 import com.transitkit.app.config.LocalTransitColors
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.data.model.ScheduleRoute
+import com.transitkit.app.ui.components.LiveIndicator
 
 // ---------------------------------------------------------------------------
 // Search pill — "Cerca linea"
@@ -122,12 +122,7 @@ internal fun RouteDismissChip(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(6.dp)
-                            .clip(CircleShape)
-                            .background(colors.realtimeGreen),
-                    )
+                    LiveIndicator(size = 6.dp, animated = false)
                     Text(
                         text = "$liveCount",
                         style = MaterialTheme.typography.labelSmall,

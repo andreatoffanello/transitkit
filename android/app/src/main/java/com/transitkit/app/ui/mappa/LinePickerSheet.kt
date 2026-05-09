@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -48,6 +47,7 @@ import com.transitkit.app.config.LocalTransitColors
 import com.transitkit.app.config.LucideIcons
 import androidx.compose.ui.res.painterResource
 import com.transitkit.app.data.model.ScheduleRoute
+import com.transitkit.app.ui.components.LiveIndicator
 
 /**
  * Line-picker sheet. Modelled on movete's `LinePicker` but adapted to transitkit's
@@ -291,12 +291,7 @@ private fun LinePickerRow(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .clip(CircleShape)
-                        .background(colors.realtimeGreen),
-                )
+                LiveIndicator(size = 6.dp, animated = false)
                 Text(
                     text = "$liveCount",
                     style = MaterialTheme.typography.labelSmall,

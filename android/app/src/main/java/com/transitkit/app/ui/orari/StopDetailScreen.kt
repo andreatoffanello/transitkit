@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -50,7 +48,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
+import com.mapbox.maps.Style
 import com.mapbox.maps.ViewAnnotationAnchor
+import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.annotation.ViewAnnotation
@@ -62,9 +62,7 @@ import com.transitkit.app.R
 import com.transitkit.app.config.LocalTransitColors
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
-
-private const val MAPBOX_STYLE_DARK = "mapbox://styles/mapbox/navigation-night-v1"
-private const val MAPBOX_STYLE_LIGHT = "mapbox://styles/mapbox/navigation-day-v1"
+import com.transitkit.app.ui.mappa.applyTransitKitStandardStyleConfig
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -225,7 +223,7 @@ fun StopDetailScreen(
                     ) {
                         if (isFavorite) {
                             Icon(
-                                imageVector = Icons.Filled.Star,
+                                painter = painterResource(LucideIcons.StarFilled),
                                 contentDescription = stringResource(R.string.cd_rimuovi_preferiti),
                                 tint = colors.accent,
                                 modifier = Modifier.scale(favScale),
@@ -282,7 +280,6 @@ fun StopDetailScreen(
                         )
                     }
                     val screenHeightDp = LocalConfiguration.current.screenHeightDp
-                    val styleUri = if (isDark) MAPBOX_STYLE_DARK else MAPBOX_STYLE_LIGHT
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -291,7 +288,7 @@ fun StopDetailScreen(
                         MapboxMap(
                             modifier = Modifier.fillMaxSize(),
                             mapViewportState = viewportState,
-                            style = { MapStyle(style = styleUri) },
+                            style = { MapStyle(style = Style.STANDARD) },
                             compass = {},
                             scaleBar = {},
                         ) {
@@ -308,6 +305,19 @@ fun StopDetailScreen(
                                     accentColor = transitColors.accent,
                                     transitType = availableRoutes.firstOrNull()?.transitType ?: 3,
                                 )
+                            }
+
+                            MapEffect(isDark) { mapView ->
+                                val s = mapView.mapboxMap.style
+                                if (s != null) {
+                                    applyTransitKitStandardStyleConfig(s, isDark)
+                                } else {
+                                    mapView.mapboxMap.subscribeStyleLoaded {
+                                        mapView.mapboxMap.style?.let { loaded ->
+                                            applyTransitKitStandardStyleConfig(loaded, isDark)
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

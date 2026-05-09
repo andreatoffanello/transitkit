@@ -38,6 +38,7 @@ import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.data.gtfsrt.VehiclePosition
 import com.transitkit.app.data.model.ScheduleRoute
+import com.transitkit.app.ui.components.LiveIndicator
 
 @Composable
 internal fun VehiclePreviewContent(
@@ -313,11 +314,7 @@ internal fun VehiclePreviewContent(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .size(6.dp)
-                    .background(colors.realtimeGreen, CircleShape),
-            )
+            LiveIndicator(size = 6.dp, animated = true)
             Text(
                 text = stringResource(R.string.mappa_live),
                 style = MaterialTheme.typography.labelSmall,

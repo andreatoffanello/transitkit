@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,6 +36,7 @@ import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.data.model.ScheduleRoute
+import com.transitkit.app.ui.components.LiveIndicator
 
 // ---------------------------------------------------------------------------
 // Header with color gradient + stop count pill
@@ -151,11 +151,7 @@ internal fun LineDetailHeader(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(5.dp),
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(6.dp)
-                                        .background(TransitTheme.colors.realtimeGreen, CircleShape),
-                                )
+                                LiveIndicator(size = 6.dp, animated = true)
                                 Text(
                                     text = stringResource(R.string.live_count, liveCount),
                                     style = MaterialTheme.typography.labelSmall,

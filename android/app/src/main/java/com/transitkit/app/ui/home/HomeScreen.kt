@@ -72,6 +72,7 @@ import com.transitkit.app.data.model.ServiceAlert
 import com.transitkit.app.ui.components.DepartureTimeState
 import com.transitkit.app.ui.components.LineBadge
 import com.transitkit.app.ui.components.LineBadgeSize
+import com.transitkit.app.ui.components.LiveIndicator
 import com.transitkit.app.ui.components.TimeDisplay
 import com.transitkit.app.ui.components.departureTimeState
 import com.transitkit.app.ui.components.stopIcon
@@ -663,20 +664,10 @@ private fun StopCardDepartureRow(
             modifier = Modifier.weight(1f),
         )
         if (isLive) {
-            LiveDot()
+            LiveIndicator(animated = true)
         }
         TimeDisplay(state = timeState)
     }
-}
-
-@Composable
-private fun LiveDot() {
-    Box(
-        modifier = Modifier
-            .size(8.dp)
-            .clip(CircleShape)
-            .background(TransitTheme.colors.realtimeGreen),
-    )
 }
 
 @Composable

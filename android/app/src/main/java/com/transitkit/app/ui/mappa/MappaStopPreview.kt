@@ -47,6 +47,10 @@ import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.data.model.ResolvedDeparture
 import com.transitkit.app.data.model.ResolvedStop
+import com.transitkit.app.ui.components.LineBadge
+import com.transitkit.app.ui.components.LineBadgeSize
+import com.transitkit.app.ui.components.TimeDisplay
+import com.transitkit.app.ui.components.departureTimeState
 
 // ---------------------------------------------------------------------------
 // Preview card container — shell condivisa da stop + vehicle preview
@@ -145,24 +149,11 @@ internal fun StopPreviewContent(
                     .padding(vertical = 8.dp),
             ) {
                 items(staticRoutes) { (routeName, _, routeColor) ->
-                    val chipColor = routeColor
-                        .takeIf { it.isNotBlank() }
-                        ?.let { runCatching { Color(android.graphics.Color.parseColor("#$it")) }.getOrNull() }
-                        ?: LocalTransitColors.current.accent
-                    Box(
-                        modifier = Modifier
-                            .height(28.dp)
-                            .background(chipColor, RoundedCornerShape(6.dp))
-                            .padding(horizontal = 10.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            routeName.take(5),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                        )
-                    }
+                    LineBadge(
+                        name = routeName,
+                        colorHex = routeColor.takeIf { it.isNotBlank() },
+                        size = LineBadgeSize.Medium,
+                    )
                 }
             }
         } else {
@@ -253,11 +244,6 @@ internal fun StopPreviewContent(
 
 @Composable
 private fun SheetDepartureRow(departure: ResolvedDeparture) {
-    val colors = LocalTransitColors.current
-    val routeColor = if (departure.routeColor.isNotBlank())
-        runCatching { Color(android.graphics.Color.parseColor("#${departure.routeColor}")) }.getOrElse { colors.accent }
-    else colors.accent
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -265,31 +251,15 @@ private fun SheetDepartureRow(departure: ResolvedDeparture) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .size(width = 36.dp, height = 22.dp)
-                .background(routeColor, RoundedCornerShape(5.dp)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = departure.routeName.take(5),
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                color = Color.White,
-                maxLines = 1,
-            )
-        }
+        LineBadge(departure = departure, size = LineBadgeSize.Small)
         Text(
             text = departure.headsign,
             style = MaterialTheme.typography.bodySmall,
-            color = colors.textPrimary,
+            color = LocalTransitColors.current.textPrimary,
             modifier = Modifier.weight(1f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        Text(
-            text = departure.departureTime.take(5),
-            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = colors.textPrimary,
-        )
+        TimeDisplay(state = departureTimeState(departure.departureTime))
     }
 }

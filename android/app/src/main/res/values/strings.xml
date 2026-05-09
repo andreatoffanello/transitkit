@@ -386,4 +386,14 @@
     <string name="planner_departs_in">Departs in %s</string>
     <string name="planner_journey">Journey</string>
     <string name="planner_stops_collapsed">%d stops</string>
+
+    <!-- Planner additions -->
+    <string name="planner_depart_at_format">Depart at %1$s</string>
+    <string name="planner_arrive_by_format">Arrive by %1$s</string>
+    <string name="planner_when">When</string>
+    <string name="planner_departure_time">Departure time</string>
+    <string name="planner_arrival_time">Arrival time</string>
+    <string name="done">Done</string>
+    <string name="cancel">Cancel</string>
+    <string name="search_stops">Search stops…</string>
 </resources>

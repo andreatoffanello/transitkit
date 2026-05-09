@@ -348,4 +348,29 @@
     <string name="settings_location_title">Accesso alla posizione</string>
     <string name="settings_location_enable">Attiva</string>
     <string name="settings_location_open">Apri Impostazioni</string>
+
+    <!-- Planner additions -->
+    <string name="planner_from">Da…</string>
+    <string name="planner_to">A…</string>
+    <string name="planner_now">Ora</string>
+    <string name="planner_depart_at">Parti alle</string>
+    <string name="planner_arrive_by">Arriva entro</string>
+    <string name="planner_depart_at_format">Parti alle %1$s</string>
+    <string name="planner_arrive_by_format">Arriva entro %1$s</string>
+    <string name="planner_when">Quando</string>
+    <string name="planner_departure_time">Orario di partenza</string>
+    <string name="planner_arrival_time">Orario di arrivo</string>
+    <string name="planner_no_trips">Nessun viaggio trovato</string>
+    <string name="planner_searching">Ricerca in corso…</string>
+    <string name="planner_downloading">Scaricamento orari…</string>
+    <string name="planner_same_stop">Partenza e destinazione coincidono</string>
+    <string name="planner_change">cambio</string>
+    <string name="planner_changes">cambi</string>
+    <string name="planner_walk_min">%1$d min a piedi</string>
+    <string name="planner_departs_in">Parte tra %1$s</string>
+    <string name="planner_journey">Itinerario</string>
+    <string name="planner_stops_collapsed">%1$d fermate</string>
+    <string name="done">Fatto</string>
+    <string name="cancel">Annulla</string>
+    <string name="search_stops">Cerca fermate…</string>
 </resources>

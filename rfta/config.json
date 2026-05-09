@@ -1,6 +1,7 @@
 {
   "id": "rfta",
   "cdnUrl": "https://andreatoffanello.github.io/transitkit",
+  "routing_endpoint": "https://api.transitkit.app",
   "name": "RFTA",
   "fullName": "Roaring Fork Transportation Authority",
   "url": "https://www.rfta.com",
@@ -29,7 +30,8 @@
     "enableMap": true,
     "enableGeolocation": true,
     "enableFavorites": true,
-    "enableNotifications": true
+    "enableNotifications": true,
+    "useRemoteEngine": false
   },
   "privacyUrl": "https://rfta.transitkit.app/privacy"
 }

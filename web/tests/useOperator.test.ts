@@ -18,6 +18,8 @@ vi.stubGlobal('useAsyncData', async (_key: string, fn: () => Promise<unknown>) =
 const fetchMock = vi.fn()
 vi.stubGlobal('fetch', fetchMock)
 
+vi.stubGlobal('useNuxtApp', () => ({ payload: { data: {} }, static: { data: {} } }))
+
 function makeResponse(body: unknown, status = 200): Response {
   return {
     ok: status >= 200 && status < 300,

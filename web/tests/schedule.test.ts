@@ -189,20 +189,16 @@ describe('getTodayDayGroupKey', () => {
   })
 
   it('usa il timezone fornito se passato', () => {
-    // Force Intl to return Wednesday via the 'long' format path
-    const origIntl = global.Intl
-    const mockFormat = vi.fn().mockReturnValue('Wednesday')
-    global.Intl = {
-      ...origIntl,
-      DateTimeFormat: vi.fn().mockReturnValue({ format: mockFormat }) as any,
-    }
+    // Jan 10, 2024 is a Wednesday; 12:00 UTC = 07:00 in America/New_York → still Wednesday
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2024-01-10T12:00:00Z'))
     const departures: Record<string, (string | number)[][]> = {
       'mon,tue,wed,thu,fri': [['08:00', 0, 0]],
       'sat,sun': [['10:00', 0, 0]],
     }
     const key = getTodayDayGroupKey(departures as any, 'America/New_York')
     expect(key).toBe('mon,tue,wed,thu,fri')
-    global.Intl = origIntl
+    vi.useRealTimers()
   })
 
   it('rimane backward compatible senza timezone', () => {
@@ -360,6 +356,7 @@ describe('getNextDeparture', () => {
 
   it('returns next departure after nowMs', () => {
     // 2026-04-03 is a Friday (getDay() = 5), matches 'mon,tue,wed,thu,fri'
+    vi.spyOn(Date.prototype, 'getDay').mockReturnValue(5)
     const nowMs = new Date('2026-04-03T10:00:00').getTime() // 600 min
     const result = getNextDeparture('stop-1', stopWithDepartures, nowMs)
     expect(result).not.toBeNull()
@@ -398,6 +395,7 @@ describe('getNextDeparture', () => {
 
   it('returns null when all departures have passed', () => {
     // 2026-04-03 is a Friday, nowMs = 19:00 (1140 min) → all deps (08:00, 12:00, 18:00) passed
+    vi.spyOn(Date.prototype, 'getDay').mockReturnValue(5)
     const nowMs = new Date('2026-04-03T19:00:00').getTime() // 1140 min
     const result = getNextDeparture('stop-1', stopWithDepartures, nowMs)
     expect(result).toBeNull()
@@ -423,6 +421,7 @@ describe('getNextDeparture', () => {
       }],
     }
     // 2026-04-03 is a Friday → matches 'mon,tue,wed,thu,fri'
+    vi.spyOn(Date.prototype, 'getDay').mockReturnValue(5)
     const nowMs = new Date('2026-04-03T10:00:00').getTime() // 600 min
     const result = getNextDeparture('stop-2', partialData, nowMs)
     expect(result).not.toBeNull()
@@ -432,6 +431,7 @@ describe('getNextDeparture', () => {
   it('headsignMap with empty string value: falls back to original headsign (|| ignores empty string)', () => {
     // || falls back on any falsy value including "" — empty string in map is ignored, rawHeadsign used
     // 2026-04-03 is a Friday → matches 'mon,tue,wed,thu,fri'
+    vi.spyOn(Date.prototype, 'getDay').mockReturnValue(5)
     const nowMs = new Date('2026-04-03T10:00:00').getTime() // 600 min; 08:00 is past, 12:00 is next
     const result = getNextDeparture('stop-1', stopWithDepartures, nowMs, undefined, { Centro: '' })
     expect(result).not.toBeNull()
@@ -471,6 +471,14 @@ describe('sortStopsByNextDeparture', () => {
   // 2026-04-03 is a Friday — matches 'mon,tue,wed,thu,fri'
   // nowMs at 07:00 (420 min) so all test departures at 08:00, 11:00, 14:00 are upcoming
   const nowMs = new Date('2026-04-03T07:00:00').getTime()
+
+  beforeEach(() => {
+    vi.spyOn(Date.prototype, 'getDay').mockReturnValue(5) // Friday, matches 'mon,tue,wed,thu,fri'
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
 
   const makeData = (stops: { id: string; departures: Record<string, (string | number)[][]> }[]): ScheduleData => ({
     ...mockScheduleData,

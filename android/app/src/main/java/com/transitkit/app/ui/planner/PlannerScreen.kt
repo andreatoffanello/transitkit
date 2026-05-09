@@ -421,8 +421,8 @@ private fun SwapButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
 private fun WhenChip(selection: PlannerViewModel.WhenSelection, onClick: () -> Unit) {
     val colors = TransitTheme.colors
     val label = when (selection.mode) {
-        1 -> "Depart at ${formatShortTime(selection.date)}"
-        2 -> "Arrive by ${formatShortTime(selection.date)}"
+        1 -> stringResource(R.string.planner_depart_at_format, formatShortTime(selection.date))
+        2 -> stringResource(R.string.planner_arrive_by_format, formatShortTime(selection.date))
         else -> stringResource(R.string.planner_now)
     }
     Surface(
@@ -824,7 +824,7 @@ private fun StopSearchSheet(
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it },
-                placeholder = { Text("Search stops…", color = colors.textSecondary) },
+                placeholder = { Text(stringResource(R.string.search_stops), color = colors.textSecondary) },
                 leadingIcon = {
                     Icon(painterResource(LucideIcons.Search), contentDescription = null, modifier = Modifier.size(18.dp))
                 },
@@ -924,7 +924,7 @@ private fun WhenBottomSheet(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
-                "When",
+                stringResource(R.string.planner_when),
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             )
 
@@ -1017,7 +1017,7 @@ private fun WhenBottomSheet(
                     .semantics { contentDescription = "Confirm when selection" },
             ) {
                 Text(
-                    "Done",
+                    stringResource(R.string.done),
                     style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
                     color = Color.White,
                     modifier = Modifier.padding(16.dp),

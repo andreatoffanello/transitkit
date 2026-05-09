@@ -24,6 +24,7 @@ struct OperatorConfig: Codable {
     let fares: FareInfo?
     let pointsOfSale: [PointOfSale]?
     let privacyUrl: String?
+    let routingEndpoint: String?
     let gtfsRt: GtfsRtConfig?
     let headsignMap: [String: String]?
     let services: [ServiceInfo]?
@@ -64,9 +65,10 @@ struct OperatorConfig: Codable {
         let enableGeolocation: Bool
         let enableFavorites: Bool
         let enableNotifications: Bool
+        let useRemoteEngine: Bool
 
         enum CodingKeys: String, CodingKey {
-            case enableMap, enableGeolocation, enableFavorites, enableNotifications
+            case enableMap, enableGeolocation, enableFavorites, enableNotifications, useRemoteEngine
         }
 
         init(from decoder: Decoder) throws {
@@ -75,6 +77,7 @@ struct OperatorConfig: Codable {
             enableGeolocation = try c.decodeIfPresent(Bool.self, forKey: .enableGeolocation) ?? false
             enableFavorites = try c.decodeIfPresent(Bool.self, forKey: .enableFavorites) ?? true
             enableNotifications = try c.decodeIfPresent(Bool.self, forKey: .enableNotifications) ?? false
+            useRemoteEngine = try c.decodeIfPresent(Bool.self, forKey: .useRemoteEngine) ?? false
         }
     }
 

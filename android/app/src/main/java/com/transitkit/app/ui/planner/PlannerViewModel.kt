@@ -112,17 +112,19 @@ class PlannerViewModel @Inject constructor(
         }
         if (connectionsStore.loadState != ConnectionsStore.LoadState.READY) return
 
+        val op = com.transitkit.app.data.model.PlannerStop(o.id, o.name, o.lat, o.lon)
+        val dp = com.transitkit.app.data.model.PlannerStop(d.id, d.name, d.lat, d.lon)
         searchJob?.cancel()
         searchJob = viewModelScope.launch {
             _isSearching.value = true
             _hasSearched.value = true
             _searchError.value = null
             val tz = config.timezone.ifBlank { "America/New_York" }
-            val results = withContext(Dispatchers.Default) {
+            val results = withContext(Dispatchers.IO) {
                 when (_whenSelection.value.mode) {
-                    1 -> connectionsStore.query(o.id, d.id, _whenSelection.value.date.time, tz)
-                    2 -> connectionsStore.queryArriveBy(o.id, d.id, _whenSelection.value.date.time, tz)
-                    else -> connectionsStore.query(o.id, d.id, System.currentTimeMillis(), tz)
+                    1 -> connectionsStore.query(op, dp, _whenSelection.value.date.time, tz)
+                    2 -> connectionsStore.queryArriveBy(op, dp, _whenSelection.value.date.time, tz)
+                    else -> connectionsStore.query(op, dp, System.currentTimeMillis(), tz)
                 }
             }
             _journeys.value = results

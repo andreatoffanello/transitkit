@@ -52,20 +52,24 @@ struct JourneyCard: View {
 
                 let mins = journey.minutesUntilDeparture
                 if mins <= 60 {
+                    let depLabel = String(format: NSLocalizedString("planner_departs_in_min", comment: ""), mins)
                     if mins <= 2 {
-                        Text("Departs in \(mins) min")
+                        Text(depLabel)
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(AppTheme.realtimeRed)
                             .modifier(PulseBadge())
                     } else {
-                        Text("Departs in \(mins) min")
+                        Text(depLabel)
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(.secondary)
                     }
                 }
 
                 if journey.transfers > 0 {
-                    Text(journey.transfers == 1 ? "1 change" : "\(journey.transfers) changes")
+                    let changeLabel = journey.transfers == 1
+                        ? String(localized: "planner_change_one")
+                        : String(format: NSLocalizedString("planner_change_count", comment: ""), journey.transfers)
+                    Text(changeLabel)
                         .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                 }

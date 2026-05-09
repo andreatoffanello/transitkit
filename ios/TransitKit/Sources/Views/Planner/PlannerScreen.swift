@@ -41,7 +41,7 @@ struct PlannerScreen: View {
 
             resultsList
         }
-        .navigationTitle("Plan a Trip")
+        .navigationTitle(String(localized: "planner_title"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarRole(.editor)
         .navigationDestination(item: $selectedJourney) { journey in
@@ -94,7 +94,7 @@ struct PlannerScreen: View {
                 // Input fields
                 VStack(spacing: 0) {
                     stopField(
-                        label: origin?.name ?? "From...",
+                        label: origin?.name ?? String(localized: "planner_from_placeholder"),
                         isFilled: origin != nil,
                         clearAction: { origin = nil },
                         tapAction: { showOriginSearch = true }
@@ -104,7 +104,7 @@ struct PlannerScreen: View {
                     Divider()
 
                     stopField(
-                        label: destination?.name ?? "To...",
+                        label: destination?.name ?? String(localized: "planner_to_placeholder"),
                         isFilled: destination != nil,
                         clearAction: { destination = nil },
                         tapAction: { showDestSearch = true }
@@ -177,7 +177,7 @@ struct PlannerScreen: View {
             LazyVStack(spacing: 12) {
                 switch connectionsStore.state {
                 case .downloading:
-                    plannerUnavailableView(message: "Downloading trip data…", showSpinner: true)
+                    plannerUnavailableView(message: String(localized: "planner_downloading"), showSpinner: true)
                 case .unavailable(let msg):
                     plannerUnavailableView(message: msg, showSpinner: false)
                 default:
@@ -210,52 +210,28 @@ struct PlannerScreen: View {
     }
 
     private var emptyView: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "tram.fill.tunnel")
-                .font(.system(size: 32))
-                .foregroundStyle(Color(.tertiaryLabel))
-                .padding(.top, 40)
-            Text("No trips found")
-                .font(.system(size: 15))
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-        }
-        .frame(maxWidth: .infinity)
+        EmptyStateView(icon: .route, title: String(localized: "planner_no_trips"))
     }
 
     private func errorView(message: String) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 32))
-                .foregroundStyle(Color(.tertiaryLabel))
-                .padding(.top, 40)
-            Text(message)
-                .font(.system(size: 15))
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-        }
-        .frame(maxWidth: .infinity)
+        EmptyStateView(icon: .alertTriangle, title: message)
     }
 
+    @ViewBuilder
     private func plannerUnavailableView(message: String, showSpinner: Bool) -> some View {
-        VStack(spacing: 12) {
-            if showSpinner {
+        if showSpinner {
+            VStack(spacing: 12) {
                 ProgressView().padding(.top, 40)
-            } else {
-                Image(systemName: "map")
-                    .font(.system(size: 32))
-                    .foregroundStyle(Color(.tertiaryLabel))
-                    .padding(.top, 40)
+                Text(message)
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
             }
-            Text(message)
-                .font(.system(size: 14))
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+            .frame(maxWidth: .infinity)
+        } else {
+            EmptyStateView(icon: .map, title: message)
         }
-        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Actions
@@ -286,7 +262,7 @@ struct PlannerScreen: View {
         guard o.id != d.id else {
             searchTask?.cancel(); searchTask = nil
             journeys = []
-            searchError = "Origin and destination are the same"
+            searchError = String(localized: "planner_same_stop")
             hasSearched = true
             return
         }
@@ -294,16 +270,18 @@ struct PlannerScreen: View {
 
         searchError = nil; isSearching = true; hasSearched = true
         let when = whenSelection
+        let op = PlannerStop(id: o.id, name: o.name, lat: o.lat, lng: o.lng)
+        let dp = PlannerStop(id: d.id, name: d.name, lat: d.lat, lng: d.lng)
         searchTask?.cancel()
         searchTask = Task { @MainActor in
             let results: [Journey]
             switch when {
             case .now:
-                results = await connectionsStore.query(originId: o.id, destId: d.id, after: Date())
+                results = await connectionsStore.query(origin: op, destination: dp, after: Date())
             case .departAt(let date):
-                results = await connectionsStore.query(originId: o.id, destId: d.id, after: date)
+                results = await connectionsStore.query(origin: op, destination: dp, after: date)
             case .arriveBy(let date):
-                results = await connectionsStore.queryArriveBy(originId: o.id, destId: d.id, before: date)
+                results = await connectionsStore.queryArriveBy(origin: op, destination: dp, before: date)
             }
             guard !Task.isCancelled else { return }
             journeys = results; isSearching = false
@@ -338,14 +316,17 @@ private struct WhenChip: View {
 
     private var label: String {
         switch selection {
-        case .now: "Now"
-        case .departAt(let d): "Depart \(timeStr(d))"
-        case .arriveBy(let d): "Arrive by \(timeStr(d))"
+        case .now:
+            String(localized: "planner_now")
+        case .departAt(let d):
+            String(format: NSLocalizedString("planner_depart_at_format", comment: ""), timeStr(d))
+        case .arriveBy(let d):
+            String(format: NSLocalizedString("planner_arrive_by_format", comment: ""), timeStr(d))
         }
     }
 
     private func timeStr(_ d: Date) -> String {
-        let f = DateFormatter(); f.dateFormat = "HH:mm"; return f.string(from: d)
+        DateFormatter.localizedString(from: d, dateStyle: .none, timeStyle: .short)
     }
 }
 
@@ -362,10 +343,10 @@ struct WhenSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Picker("When", selection: $mode) {
-                    Text("Now").tag(0)
-                    Text("Depart at").tag(1)
-                    Text("Arrive by").tag(2)
+                Picker(String(localized: "planner_when_title"), selection: $mode) {
+                    Text("planner_now").tag(0)
+                    Text("planner_depart_at").tag(1)
+                    Text("planner_arrive_by").tag(2)
                 }
                 .pickerStyle(.segmented)
                 .listRowBackground(Color.clear)
@@ -373,18 +354,18 @@ struct WhenSheet: View {
 
                 if mode != 0 {
                     DatePicker(
-                        mode == 1 ? "Departure time" : "Arrival time",
+                        String(localized: mode == 1 ? "planner_departure_time" : "planner_arrival_time"),
                         selection: $pickedDate,
                         in: Date()...,
                         displayedComponents: [.date, .hourAndMinute]
                     )
                 }
             }
-            .navigationTitle("When")
+            .navigationTitle(String(localized: "planner_when_title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
+                    Button(String(localized: "done")) {
                         let sel: WhenSelection
                         switch mode {
                         case 1: sel = .departAt(pickedDate)
@@ -397,7 +378,7 @@ struct WhenSheet: View {
                     .fontWeight(.semibold)
                 }
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button(String(localized: "cancel")) { dismiss() }
                 }
             }
         }

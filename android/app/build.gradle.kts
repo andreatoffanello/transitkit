@@ -32,6 +32,11 @@ android {
             "MAPBOX_ACCESS_TOKEN",
             "\"${localProps.getProperty("MAPBOX_ACCESS_TOKEN", "")}\""
         )
+        buildConfigField(
+            "String",
+            "ROUTING_API_KEY",
+            "\"${localProps.getProperty("ROUTING_API_KEY", "")}\""
+        )
     }
 
     signingConfigs {

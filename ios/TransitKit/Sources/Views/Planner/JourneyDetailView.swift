@@ -57,7 +57,7 @@ struct JourneyDetailView: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 32)
         }
-        .navigationTitle("Journey")
+        .navigationTitle(String(localized: "planner_journey"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarRole(.editor)
         .onAppear {
@@ -274,7 +274,7 @@ private struct TransferConnectorRow: View {
                 Image(systemName: "arrow.triangle.2.circlepath")
                     .font(.system(size: 11))
                     .foregroundStyle(Color(.secondaryLabel))
-                Text("Change")
+                Text("planner_change")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
             }

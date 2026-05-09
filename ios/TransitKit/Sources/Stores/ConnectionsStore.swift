@@ -28,11 +28,22 @@ final class ConnectionsStore {
     var isReady: Bool { state == .ready }
 
     let engine = RoutingEngine()
+    private var remoteProvider: RemoteRoutingProvider?
 
     // MARK: - Bootstrap
 
     func load(config: OperatorConfig, routes: [APIRoute]) async {
         guard state == .idle else { return }
+
+        // Remote routing: skip local data entirely
+        if config.features.useRemoteEngine,
+           let endpoint = config.routingEndpoint,
+           let apiKey = Bundle.main.object(forInfoDictionaryKey: "RoutingAPIKey") as? String,
+           !apiKey.isEmpty {
+            remoteProvider = RemoteRoutingProvider(baseURL: endpoint, apiKey: apiKey)
+            state = .ready
+            return
+        }
 
         // Try disk cache first
         if let cached = loadFromDisk(config: config) {
@@ -54,12 +65,18 @@ final class ConnectionsStore {
 
     // MARK: - Query
 
-    func query(originId: String, destId: String, after: Date) async -> [Journey] {
-        await engine.query(originId: originId, destId: destId, afterDate: after)
+    func query(origin: PlannerStop, destination: PlannerStop, after: Date) async -> [Journey] {
+        if let remote = remoteProvider {
+            return await remote.query(origin: origin, destination: destination, after: after)
+        }
+        return await engine.query(originId: origin.id, destId: destination.id, afterDate: after)
     }
 
-    func queryArriveBy(originId: String, destId: String, before: Date) async -> [Journey] {
-        await engine.queryArriveBy(originId: originId, destId: destId, beforeDate: before)
+    func queryArriveBy(origin: PlannerStop, destination: PlannerStop, before: Date) async -> [Journey] {
+        if let remote = remoteProvider {
+            return await remote.queryArriveBy(origin: origin, destination: destination, before: before)
+        }
+        return await engine.queryArriveBy(originId: origin.id, destId: destination.id, beforeDate: before)
     }
 
     // MARK: - Download

@@ -2,6 +2,7 @@
   "id": "appalcart",
   "apiUrl": "https://transitkit-engine.vercel.app/api",
   "cdnUrl": "https://andreatoffanello.github.io/transitkit",
+  "routing_endpoint": "https://api.transitkit.app",
   "name": "AppalCART",
   "fullName": "Appalachian District Transportation Authority",
   "url": "https://appalachiantransit.com",
@@ -36,7 +37,8 @@
     "enableMap": true,
     "enableGeolocation": true,
     "enableFavorites": true,
-    "enableNotifications": true
+    "enableNotifications": true,
+    "useRemoteEngine": false
   },
   "exclude_patterns": [],
   "terminal_overrides": {},

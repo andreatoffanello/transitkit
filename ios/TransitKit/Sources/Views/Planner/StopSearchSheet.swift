@@ -19,7 +19,9 @@ struct StopSearchSheet: View {
     @State private var query: String = ""
 
     private var title: String {
-        role == .origin ? "From" : "To"
+        role == .origin
+            ? String(localized: "planner_search_from_title")
+            : String(localized: "planner_search_to_title")
     }
 
     private var candidates: [ResolvedStop] {
@@ -52,12 +54,16 @@ struct StopSearchSheet: View {
                 .buttonStyle(.plain)
             }
             .listStyle(.plain)
-            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search stops")
+            .searchable(
+                text: $query,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: Text("search_stop_placeholder")
+            )
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button(String(localized: "cancel")) { dismiss() }
                 }
             }
         }
@@ -79,26 +85,33 @@ private struct StopRow: View {
     let stop: ResolvedStop
     let location: CLLocation?
 
+    @Environment(ScheduleStore.self) private var store
+
+    /// Out-of-service-area threshold. Beyond this we hide the distance label
+    /// — showing "7700 km" when the user is on a different continent (or
+    /// has stale GPS) is misleading rather than informative.
+    private static let maxDistanceMeters: Double = 50_000
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: 6) {
             Text(stop.name)
                 .font(.system(.body, weight: .semibold))
                 .foregroundStyle(.primary)
 
             HStack(spacing: 4) {
-                ForEach(stop.lineNames.prefix(5), id: \.self) { line in
-                    Text(line)
-                        .font(.system(size: 11, weight: .bold))
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 2)
-                        .background(Color(.secondarySystemFill))
-                        .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
-                        .foregroundStyle(.secondary)
+                ForEach(stop.lineNames.prefix(5), id: \.self) { name in
+                    if let route = store.route(forName: name) {
+                        LineBadge(route: route, size: .small)
+                    } else {
+                        // Fallback for the rare case where the line name
+                        // can't be resolved (stale data, transient state).
+                        LineBadge(name: name, color: "#8E8E93", textColor: nil, size: .small)
+                    }
                 }
 
-                if let loc = location {
+                if let label = distanceLabel(from: location) {
                     Spacer()
-                    Text(distanceLabel(lat: stop.lat, lng: stop.lng, from: loc))
+                    Text(label)
                         .font(.system(size: 12))
                         .foregroundStyle(.tertiary)
                 }
@@ -108,8 +121,10 @@ private struct StopRow: View {
         .contentShape(Rectangle())
     }
 
-    private func distanceLabel(lat: Double, lng: Double, from loc: CLLocation) -> String {
-        let d = loc.distance(from: CLLocation(latitude: lat, longitude: lng))
+    private func distanceLabel(from loc: CLLocation?) -> String? {
+        guard let loc else { return nil }
+        let d = loc.distance(from: CLLocation(latitude: stop.lat, longitude: stop.lng))
+        guard d < Self.maxDistanceMeters else { return nil }
         return d < 1000 ? "\(Int(d)) m" : String(format: "%.1f km", d / 1000)
     }
 }

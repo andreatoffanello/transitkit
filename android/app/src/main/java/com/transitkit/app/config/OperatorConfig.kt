@@ -103,6 +103,7 @@ data class OperatorConfig(
     val store: StoreConfig,
     val map: MapConfig,
     val features: FeaturesConfig,
+    @Json(name = "routing_endpoint") val routingEndpoint: String? = null,
     @Json(name = "gtfs_rt") val gtfsRt: GtfsRtConfig? = null,
     @Json(name = "headsign_map") val headsignMap: Map<String, String>? = null,
     val contact: ContactConfig? = null,
@@ -144,6 +145,7 @@ data class OperatorConfig(
         @Json(name = "enableGeolocation") val enableGeolocation: Boolean = false,
         @Json(name = "enableFavorites") val enableFavorites: Boolean = true,
         @Json(name = "enableNotifications") val enableNotifications: Boolean = false,
+        @Json(name = "useRemoteEngine") val useRemoteEngine: Boolean = false,
     )
 
     @Immutable

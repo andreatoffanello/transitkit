@@ -22,7 +22,6 @@ enum LucideIcon: String, CaseIterable {
     case mapPinOff = "lucide-map-pin-off"
     case map = "lucide-map"
     case navigation = "lucide-navigation"
-    case crosshair = "lucide-crosshair"
     case signpost = "lucide-signpost"
     case route = "lucide-route"
     case globe = "lucide-globe"
@@ -34,24 +33,19 @@ enum LucideIcon: String, CaseIterable {
     case chevronDown = "lucide-chevron-down"
     case x = "lucide-x"
     case circleX = "lucide-circle-x"
-    case filter = "lucide-filter"
-    case share = "lucide-share"
     case refreshCw = "lucide-refresh-cw"
-    case copy = "lucide-copy"
     case info = "lucide-info"
     case list = "lucide-list"
 
     // Status / Indicators
-    case wifiOff = "lucide-wifi-off"
     case alertTriangle = "lucide-alert-triangle"
     case check = "lucide-check"
-    case radio = "lucide-radio"
     case eye = "lucide-eye"
     case eyeOff = "lucide-eye-off"
 
     // Info / Settings
-    case ticket = "lucide-ticket"
     case bell = "lucide-bell"
+    case ticket = "lucide-ticket"
     case shield = "lucide-shield"
     case table = "lucide-table"
     case phone = "lucide-phone"

@@ -11,7 +11,6 @@ object LucideIcons {
     @DrawableRes val ArrowRight = R.drawable.ic_lucide_arrow_right
     @DrawableRes val Bell = R.drawable.ic_lucide_bell
     @DrawableRes val Box = R.drawable.ic_lucide_box
-    @DrawableRes val Bus = R.drawable.ic_lucide_bus
     @DrawableRes val BusFront = R.drawable.ic_lucide_bus_front
     @DrawableRes val ChevronDown = R.drawable.ic_lucide_chevron_down
     @DrawableRes val ChevronLeft = R.drawable.ic_lucide_chevron_left
@@ -30,8 +29,6 @@ object LucideIcons {
     @DrawableRes val Mail = R.drawable.ic_lucide_mail
     @DrawableRes val Map = R.drawable.ic_lucide_map
     @DrawableRes val MapPin = R.drawable.ic_lucide_map_pin
-    @DrawableRes val MapPinOff = R.drawable.ic_lucide_map_pin_off
-    @DrawableRes val Mic = R.drawable.ic_lucide_mic
     @DrawableRes val Phone = R.drawable.ic_lucide_phone
     @DrawableRes val RefreshCw = R.drawable.ic_lucide_refresh_cw
     @DrawableRes val Route = R.drawable.ic_lucide_route
@@ -41,6 +38,7 @@ object LucideIcons {
     @DrawableRes val Ship = R.drawable.ic_lucide_ship
     @DrawableRes val Signpost = R.drawable.ic_lucide_signpost
     @DrawableRes val Star = R.drawable.ic_lucide_star
+    @DrawableRes val StarFilled = R.drawable.ic_lucide_star_filled
     @DrawableRes val Store = R.drawable.ic_lucide_store
     @DrawableRes val Table = R.drawable.ic_lucide_table
     @DrawableRes val Ticket = R.drawable.ic_lucide_ticket

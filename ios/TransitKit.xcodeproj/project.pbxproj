@@ -20,6 +20,7 @@
 		189C94AE0BF1C9D3D6AB86F9 /* HomeTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C2048933225A12B749A4D7F /* HomeTab.swift */; };
 		1AB5B80CF57EA812533E06CE /* MapActiveRouteChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA366AD2544EFE026191866B /* MapActiveRouteChip.swift */; };
 		1DB7D0A77B4D8DE7DAAB9604 /* OperatorConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C37683E941E3DD9C29DEA9B /* OperatorConfig.swift */; };
+		21F7ABB7A17A817FB3B56E1E /* OverflowBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1BB2090BF4778297476635A /* OverflowBadge.swift */; };
 		23DEEFDA9FD22463C9C348FD /* FilterChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7410BEEC0AEB17E6FFB2785 /* FilterChip.swift */; };
 		253B8533C1701FFDED93A5D0 /* VehicleDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D713C24D42DB86C1C7593BE /* VehicleDetailSheet.swift */; };
 		25F8BA243D5079C094A24A2F /* TransitMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3467B8169A684F3587919902 /* TransitMapView.swift */; };
@@ -55,6 +56,7 @@
 		7F5F190ECED7C0E360386483 /* TripDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57168F694B2F4ED9A806021B /* TripDetailView.swift */; };
 		84A2B8BDA416F613EFD73749 /* LineDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FC30DB536DCC2557E2B1AF6 /* LineDetailView.swift */; };
 		8560F7B08DFA544BC1BDD10C /* ScheduleDecodingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 702A8E96E7DD20366A380819 /* ScheduleDecodingTests.swift */; };
+		866260AC62EFEE67EC7A1C23 /* RemoteRoutingProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24740CAB0ACE9045D18AE42A /* RemoteRoutingProvider.swift */; };
 		8DBC5753F101243CDB368805 /* FullScheduleSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 271B240F2B60AA029BA142F5 /* FullScheduleSheet.swift */; };
 		8E88CC564141F103CC24176B /* StopAlertsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C1A030C8B3A8CBB28C9B90 /* StopAlertsSection.swift */; };
 		91D73AB4317976D04456A5D4 /* MapSearchPill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B464F0160D57BEE0DEF47B3 /* MapSearchPill.swift */; };
@@ -120,6 +122,7 @@
 		1E065F67D4BCD87C25FD9357 /* TransitKit.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = TransitKit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		20A26A36C7CE3B4E8EEF7069 /* AlertStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertStore.swift; sourceTree = "<group>"; };
 		21DA2366D32AF5DBEACB5DC2 /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
+		24740CAB0ACE9045D18AE42A /* RemoteRoutingProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteRoutingProvider.swift; sourceTree = "<group>"; };
 		24A2F8550F9D65EFD7B990BA /* StopMapSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopMapSheet.swift; sourceTree = "<group>"; };
 		265421698770DB34151D287D /* OrariTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrariTab.swift; sourceTree = "<group>"; };
 		271B240F2B60AA029BA142F5 /* FullScheduleSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullScheduleSheet.swift; sourceTree = "<group>"; };
@@ -170,6 +173,7 @@
 		ADA621C317C78061A2EE1BCE /* StopDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopDetailView.swift; sourceTree = "<group>"; };
 		AF29A33249EEAAC16698F765 /* RouteOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteOverlay.swift; sourceTree = "<group>"; };
 		B10BEFD5CA21B9EBA3ADE1D7 /* LineBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineBadge.swift; sourceTree = "<group>"; };
+		B1BB2090BF4778297476635A /* OverflowBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverflowBadge.swift; sourceTree = "<group>"; };
 		C69F73160D11EE306A2190B7 /* StopCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopCard.swift; sourceTree = "<group>"; };
 		C8C00F56368F459460E633A3 /* ContactInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactInfoView.swift; sourceTree = "<group>"; };
 		CC2AA53B798B757635860574 /* JourneyCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyCard.swift; sourceTree = "<group>"; };
@@ -223,6 +227,7 @@
 			isa = PBXGroup;
 			children = (
 				1D40E7CF6F504A0493455693 /* LocationManager.swift */,
+				24740CAB0ACE9045D18AE42A /* RemoteRoutingProvider.swift */,
 				87A837900DBEDD8C72C9AD33 /* RoutingEngine.swift */,
 				F64B8B11F2D7D9CAE4F81E2B /* ScheduleLoader.swift */,
 			);
@@ -369,6 +374,7 @@
 				DA2061CA100464E2D083D514 /* LucideIcon.swift */,
 				6D44F141BB08C2CABC2AD686 /* MarqueeLabel.swift */,
 				719322EED20F488F3E0B4317 /* MarqueeText.swift */,
+				B1BB2090BF4778297476635A /* OverflowBadge.swift */,
 				879CA176F8269F9A87F967B4 /* PressableButtonStyle.swift */,
 				EC6BBEB0DCFFFF27DB881B02 /* SkeletonView.swift */,
 				C69F73160D11EE306A2190B7 /* StopCard.swift */,
@@ -659,9 +665,11 @@
 				1DB7D0A77B4D8DE7DAAB9604 /* OperatorConfig.swift in Sources */,
 				B513766EF6F25125E6EB8868 /* OperatorInfoView.swift in Sources */,
 				2BCA1D7672AA34A413EA9F64 /* OrariTab.swift in Sources */,
+				21F7ABB7A17A817FB3B56E1E /* OverflowBadge.swift in Sources */,
 				0E3B58D6D489F95CFD11E41D /* PlannerScreen.swift in Sources */,
 				2EAC01B98E742366A1C8F4C4 /* PlannerTab.swift in Sources */,
 				F813D4C802D95DE8C17933C5 /* PressableButtonStyle.swift in Sources */,
+				866260AC62EFEE67EC7A1C23 /* RemoteRoutingProvider.swift in Sources */,
 				5785D9F624777AC708F5FC1E /* RouteOverlay.swift in Sources */,
 				9BFE6F303CAB2E8A94988024 /* RoutingEngine.swift in Sources */,
 				7A9F2EDF896D4F377F7AF931 /* Schedule.swift in Sources */,
@@ -734,6 +742,7 @@
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.transitkit.${OPERATOR_ID}";
+				ROUTING_API_KEY = "";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -774,6 +783,7 @@
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.transitkit.${OPERATOR_ID}";
+				ROUTING_API_KEY = "";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = singlefile;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";

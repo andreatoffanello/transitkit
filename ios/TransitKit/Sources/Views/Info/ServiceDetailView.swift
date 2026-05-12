@@ -155,7 +155,7 @@ struct ServiceDetailView: View {
             VStack(alignment: .leading, spacing: 12) {
                 sectionLabel(icon: .listOrdered, text: String(localized: "services_label_how"))
                 VStack(spacing: 0) {
-                    ForEach(Array(steps.enumerated()), id: \.offset) { idx, step in
+                    ForEach(Array(steps.enumerated()), id: \.element) { idx, step in
                         HStack(alignment: .top, spacing: 12) {
                             ZStack {
                                 Circle()
@@ -194,7 +194,7 @@ struct ServiceDetailView: View {
             VStack(alignment: .leading, spacing: 12) {
                 sectionLabel(icon: .info, text: String(localized: "services_label_notes"))
                 VStack(alignment: .leading, spacing: 10) {
-                    ForEach(Array(notes.enumerated()), id: \.offset) { _, note in
+                    ForEach(notes, id: \.self) { note in
                         HStack(alignment: .top, spacing: 10) {
                             Circle()
                                 .fill(AppTheme.accent)
@@ -237,7 +237,7 @@ struct ServiceDetailView: View {
                 .padding(.horizontal, 4)
 
                 VStack(spacing: 8) {
-                    ForEach(Array(links.enumerated()), id: \.offset) { _, link in
+                    ForEach(links) { link in
                         linkRow(link: link)
                     }
                 }

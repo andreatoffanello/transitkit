@@ -113,7 +113,8 @@ struct LineDetailView: View {
             }
             if router.autoOpenMap {
                 router.autoOpenMap = false
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                Task { @MainActor in
+                    try? await Task.sleep(nanoseconds: 500_000_000)
                     self.showLineMap = true
                 }
             }

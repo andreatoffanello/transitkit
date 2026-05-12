@@ -73,14 +73,16 @@ struct FullScheduleSheet: View {
                 if selectedDayGroup == nil {
                     selectedDayGroup = sortedDayGroups.first
                 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                Task { @MainActor in
+                    try? await Task.sleep(nanoseconds: 150_000_000)
                     withAnimation(.easeIn(duration: 0.2)) { isReady = true }
                 }
             }
             .onChange(of: selectedDayGroup) {
                 isReady = false
                 filterLine = nil
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                Task { @MainActor in
+                    try? await Task.sleep(nanoseconds: 50_000_000)
                     withAnimation(.easeIn(duration: 0.15)) { isReady = true }
                 }
             }

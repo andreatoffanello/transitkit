@@ -54,18 +54,16 @@ struct ContentView: View {
                 .accessibilityIdentifier("tab_lines")
 
             // MARK: Tab 3 — Mappa
-            NavigationStack {
-                MappaTab(config: config)
-            }
-            .tabItem {
-                Label {
-                    Text(String(localized: "tab_map"))
-                } icon: {
-                    LucideIcon.map.image
+            MappaTab(config: config)
+                .tabItem {
+                    Label {
+                        Text(String(localized: "tab_map"))
+                    } icon: {
+                        LucideIcon.map.image
+                    }
                 }
-            }
-            .tag(3)
-            .accessibilityIdentifier("tab_map")
+                .tag(3)
+                .accessibilityIdentifier("tab_map")
 
             // MARK: Tab 4 — Planner
             PlannerTab()

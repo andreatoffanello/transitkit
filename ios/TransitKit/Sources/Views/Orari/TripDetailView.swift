@@ -176,7 +176,8 @@ struct TripDetailView: View {
                 }
             }
             .onAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                Task { @MainActor in
+                    try? await Task.sleep(nanoseconds: 150_000_000)
                     withAnimation(.easeInOut(duration: 0.3)) {
                         proxy.scrollTo(rows[min(origin, rows.count - 1)].id, anchor: .center)
                     }
@@ -218,11 +219,13 @@ struct TripDetailView: View {
                     .overlay(
                         Circle().fill(.white).frame(width: isTerminal || isOrigin ? 5 : 0)
                     )
-                    .overlay(
-                        isOrigin && !isTerminal
-                            ? AnyView(Circle().stroke(lineColor, lineWidth: 2).frame(width: dotSize + 6, height: dotSize + 6))
-                            : AnyView(EmptyView())
-                    )
+                    .overlay {
+                        if isOrigin && !isTerminal {
+                            Circle()
+                                .stroke(lineColor, lineWidth: 2)
+                                .frame(width: dotSize + 6, height: dotSize + 6)
+                        }
+                    }
             }
             .frame(width: 20)
             .frame(minHeight: 40)
@@ -295,18 +298,16 @@ struct TripDetailView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 3)
-        .background(
-            isOrigin
-                ? AnyView(
-                    lineColor.opacity(0.12)
-                        .overlay(alignment: .leading) {
-                            lineColor
-                                .frame(width: 3)
-                                .clipShape(Capsule())
-                        }
-                )
-                : AnyView(Color.clear)
-        )
+        .background {
+            if isOrigin {
+                lineColor.opacity(0.12)
+                    .overlay(alignment: .leading) {
+                        lineColor
+                            .frame(width: 3)
+                            .clipShape(Capsule())
+                    }
+            }
+        }
         .contentShape(Rectangle())
 
         NavigationLink(value: stop) {

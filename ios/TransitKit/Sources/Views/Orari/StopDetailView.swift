@@ -149,7 +149,8 @@ struct StopDetailView: View {
             mapPosition = flyInStartCamera
             if router.openScheduleForStop == stop.id {
                 router.openScheduleForStop = nil
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                Task { @MainActor in
+                    try? await Task.sleep(nanoseconds: 400_000_000)
                     showFullSchedule = true
                 }
             }

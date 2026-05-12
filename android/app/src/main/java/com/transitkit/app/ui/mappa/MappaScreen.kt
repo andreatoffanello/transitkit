@@ -276,6 +276,10 @@ fun MappaScreen(
                 },
             )
 
+            MapEffect(Unit) { mapView ->
+                mapView.mapboxMap.setPrefetchZoomDelta(4)
+            }
+
             MapEffect(isDark) { mapView ->
                 val s = mapView.mapboxMap.style
                 if (s != null) {

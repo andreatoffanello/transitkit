@@ -28,9 +28,11 @@ struct Journey: Identifiable, Hashable {
 
     var transfers: Int { max(0, transitLegs.count - 1) }
 
-    var durationMinutes: Int {
-        Int(arrivalTime.timeIntervalSince(departureTime) / 60)
+    var durationSeconds: Int {
+        max(0, Int(arrivalTime.timeIntervalSince(departureTime)))
     }
+
+    var durationMinutes: Int { durationSeconds / 60 }
 
     var transitLegs: [TransitLeg] {
         legs.compactMap { if case .transit(let l) = $0 { return l } else { return nil } }

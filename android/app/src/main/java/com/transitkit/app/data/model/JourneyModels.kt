@@ -11,7 +11,9 @@ data class Journey(
 
 val Journey.transfers: Int get() = (legs.filterIsInstance<TransitLeg>().size - 1).coerceAtLeast(0)
 
-val Journey.durationMinutes: Long get() = (arrivalTime - departureTime) / 60_000L
+val Journey.durationSeconds: Long get() = ((arrivalTime - departureTime) / 1_000L).coerceAtLeast(0L)
+
+val Journey.durationMinutes: Long get() = durationSeconds / 60L
 
 sealed class JourneyLeg
 

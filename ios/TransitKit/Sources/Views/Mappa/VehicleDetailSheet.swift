@@ -17,7 +17,6 @@ struct VehicleDetailSheet: View {
 
     /// Ticks every 15s — coupled with vehicle feed refresh cadence.
     @State private var now: Date = Date()
-    private let refreshTimer = Timer.publish(every: 15, on: .main, in: .common).autoconnect()
 
     private var transitType: TransitType {
         route.map { TransitType(gtfsRouteType: $0.transitType) } ?? .bus
@@ -141,7 +140,13 @@ struct VehicleDetailSheet: View {
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
-        .onReceive(refreshTimer) { now = $0 }
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 15_000_000_000)
+                if Task.isCancelled { break }
+                now = Date()
+            }
+        }
     }
 
     // MARK: - Row 1 — Badge + name + vehicle id + Live + close

@@ -25,7 +25,7 @@ struct AccessibilityInfoView: View {
 
                 GlassCard(cornerRadius: 16) {
                     VStack(alignment: .leading, spacing: 10) {
-                        ForEach(Array(info.bullets.enumerated()), id: \.offset) { _, bullet in
+                        ForEach(info.bullets, id: \.self) { bullet in
                             HStack(alignment: .top, spacing: 10) {
                                 Circle()
                                     .fill(AppTheme.accent)

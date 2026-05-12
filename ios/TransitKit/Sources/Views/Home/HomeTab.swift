@@ -146,7 +146,8 @@ struct HomeTab: View {
                 case .notDetermined:
                     // Primo launch: mostra il primer, NON triggerare il prompt sistema
                     if !hasSeenLocationPrimer {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                        Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: 400_000_000)
                             showLocationPrimer = true
                             hasSeenLocationPrimer = true
                         }

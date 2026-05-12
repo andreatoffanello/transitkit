@@ -61,6 +61,7 @@ fun MappaScreen(
     onOpenTripDetail: (tripId: String, fromStopId: String, routeName: String, routeColor: String) -> Unit = { _, _, _, _ -> },
     initialRouteId: String? = null,
     initialVehicleId: String? = null,
+    initialPreviewStopId: String? = null,
     viewModel: MappaViewModel = hiltViewModel(),
 ) {
     val vehiclesWithColor by viewModel.vehiclesWithColor.collectAsStateWithLifecycle()
@@ -113,6 +114,20 @@ fun MappaScreen(
 
     val scope = rememberCoroutineScope()
     val isDark = isSystemInDarkTheme()
+
+    // Deeplink: `transitkit://map/stop/<stopId>` — apre la Mappa con la
+    // fermata selezionata + camera fly-to a stopFocus zoom (Street tier).
+    // Re-runs quando arrivano gli stops (l'iniziale load dal CDN può
+    // impiegare diversi secondi); guard `applied` evita double-selection.
+    var previewApplied by remember { mutableStateOf(false) }
+    LaunchedEffect(initialPreviewStopId, stops) {
+        val sid = initialPreviewStopId ?: return@LaunchedEffect
+        if (previewApplied) return@LaunchedEffect
+        val match = stops.firstOrNull { it.id == sid } ?: return@LaunchedEffect
+        viewModel.clearSelectedVehicle()
+        viewModel.selectStop(match)
+        previewApplied = true
+    }
 
     // Camera state (viewport) — movete parity
     val viewportState = rememberMapViewportState {
@@ -194,6 +209,19 @@ fun MappaScreen(
         selectedRoute?.color?.takeIf { it.isNotBlank() }?.let { hex ->
             runCatching { Color(android.graphics.Color.parseColor("#$hex")) }.getOrNull()
         }
+    }
+
+    // Fly-to su fermata selezionata (sia da tap che da deeplink map/stop/<id>):
+    // porta la camera alla coordinata stop a `stopFocus` zoom — fa scattare
+    // il tier Street, mostrando pin pieno + label sotto.
+    LaunchedEffect(selectedStop?.id) {
+        val s = selectedStop ?: return@LaunchedEffect
+        viewportState.flyTo(
+            CameraOptions.Builder()
+                .center(Point.fromLngLat(s.lon, s.lat))
+                .zoom(maxOf(currentZoom, MapZoomLevels.stopFocus))
+                .build()
+        )
     }
 
     // Fit camera ai punti polilinea quando cambia la rotta selezionata

@@ -13,6 +13,7 @@ import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMapComposable
 import com.mapbox.maps.extension.style.expressions.generated.Expression
 import com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor
+import com.mapbox.maps.extension.style.layers.properties.generated.TextAnchor
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.data.model.ResolvedStop
 import com.transitkit.app.data.model.ScheduleRoute
@@ -124,9 +125,23 @@ internal fun StopSymbolLayer(
                         """["case", ["==", ["get", "$PROP_STOP_SELECTED"], true], 1.28, 1.0]"""
                     )
                 )
-                // Nessuna label sotto al pin per parità visiva col rendering
-                // ViewAnnotation precedente — il nome fermata appare nel
-                // preview card alla selezione, non sulla mappa.
+
+                // Nome fermata sotto al pin — visibile solo a Street tier
+                // (zoom ≥ neighborhoodMaxZoom). Halo si adatta auto al tema
+                // del map style Mapbox Standard.
+                textField(
+                    Expression.fromRaw(
+                        """["step", ["zoom"], "", ${MapZoomLevels.neighborhoodMaxZoom}, ["get", "$PROP_STOP_NAME"]]"""
+                    )
+                )
+                textSize(11.0)
+                textAnchor(TextAnchor.TOP)
+                textOffset(listOf(0.0, 1.4))
+                textOptional(true)
+                textAllowOverlap(false)
+                textIgnorePlacement(false)
+                textHaloWidth(1.5)
+                textPadding(2.0)
             }
         }
     }

@@ -398,12 +398,15 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                 deepLinks = listOf(
                     navDeepLink { uriPattern = "transitkit://map" },
                     navDeepLink { uriPattern = "transitkit://map/vehicle/{vehicleId}" },
+                    navDeepLink { uriPattern = "transitkit://map/stop/{previewStopId}" },
                 ),
                 arguments = listOf(
                     navArgument("vehicleId") { type = NavType.StringType; nullable = true; defaultValue = null },
+                    navArgument("previewStopId") { type = NavType.StringType; nullable = true; defaultValue = null },
                 ),
             ) { backStackEntry ->
                 val vehicleId = backStackEntry.arguments?.getString("vehicleId")
+                val previewStopId = backStackEntry.arguments?.getString("previewStopId")
                 MappaScreen(
                     onNavigateToStop = { stopId ->
                         val encodedId = URLEncoder.encode(stopId, StandardCharsets.UTF_8.name())
@@ -413,6 +416,7 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                         navController.navigate("trip/$tripId?fromStopId=$fromStopId&routeName=$routeName&routeColor=$routeColor")
                     },
                     initialVehicleId = vehicleId,
+                    initialPreviewStopId = previewStopId,
                 )
             }
 

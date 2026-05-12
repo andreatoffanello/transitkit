@@ -148,19 +148,19 @@ internal fun StopSymbolLayer(
                 textSize(11.0)
                 textAnchor(TextAnchor.TOP)
                 textOffset(listOf(0.0, 1.4))
-                textOptional(true)
-                textAllowOverlap(false)
-                textIgnorePlacement(false)
-                // Color + halo espliciti: senza textHaloColor il default è
-                // rgba(0,0,0,0) → halo invisibile → testo nero illeggibile
-                // su tile colorati. Halo bianco 1.5dp = leggibilità garantita
-                // su qualsiasi sfondo.
+                // textAllowOverlap=true + textIgnorePlacement=true:
+                // Le label delle FERMATE devono SEMPRE apparire al tier Street,
+                // anche se si sovrappongono ai POI del Mapbox Standard style.
+                // Con `false` (priorità collision) i POI del map style vincono
+                // sempre e le label dei pin spariscono.
+                textOptional(false)
+                textAllowOverlap(true)
+                textIgnorePlacement(true)
                 textColor(Expression.rgb(literal(20.0), literal(20.0), literal(20.0)))
                 textHaloColor(Expression.rgb(literal(255.0), literal(255.0), literal(255.0)))
                 textHaloWidth(1.5)
                 textHaloBlur(0.5)
                 textPadding(2.0)
-                textFont(listOf("Open Sans Semibold", "Arial Unicode MS Bold"))
             }
         }
     }

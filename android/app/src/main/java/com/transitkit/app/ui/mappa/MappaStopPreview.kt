@@ -1,6 +1,5 @@
 package com.transitkit.app.ui.mappa
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,7 +24,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -33,7 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -184,13 +181,17 @@ internal fun StopPreviewContent(
                 )
             }
             else -> {
-                departures.take(5).forEach { dep ->
+                // Max 3 partenze nel preview — il resto sta nello StopDetail.
+                departures.take(3).forEach { dep ->
                     SheetDepartureRow(dep)
                 }
             }
         }
 
         val accentColor = LocalTransitColors.current.accent
+        // Unico CTA: apri la fermata (vista completa con tutte le partenze,
+        // alerts, mappa zoomata). "Open in Maps" rimosso — il preview card
+        // è già una mappa, esportare a Google/Apple Maps è ridondante.
         Button(
             onClick = { onNavigateToStop(stop.id) },
             modifier = Modifier
@@ -206,35 +207,6 @@ internal fun StopPreviewContent(
             Spacer(Modifier.width(8.dp))
             Text(
                 stringResource(R.string.mappa_vedi_orari),
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-        }
-
-        val context = LocalContext.current
-        OutlinedButton(
-            onClick = {
-                val lat = stop.lat
-                val lon = stop.lon
-                val uri = android.net.Uri.parse(
-                    "geo:$lat,$lon?q=$lat,$lon(${android.net.Uri.encode(stop.name)})"
-                )
-                val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, uri)
-                if (intent.resolveActivity(context.packageManager) != null) {
-                    context.startActivity(intent)
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 12.dp),
-            border = BorderStroke(1.dp, accentColor.copy(alpha = 0.5f)),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = accentColor),
-        ) {
-            Icon(painterResource(LucideIcons.MapPin), null, modifier = Modifier.size(16.dp))
-            Spacer(Modifier.width(8.dp))
-            Text(
-                stringResource(R.string.mappa_apri_maps),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.SemiBold,
             )

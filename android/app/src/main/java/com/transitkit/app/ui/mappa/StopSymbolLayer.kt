@@ -11,6 +11,7 @@ import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMapComposable
+import com.mapbox.maps.extension.style.expressions.dsl.generated.literal
 import com.mapbox.maps.extension.style.expressions.generated.Expression
 import com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor
 import com.mapbox.maps.extension.style.layers.properties.generated.TextAnchor
@@ -150,8 +151,16 @@ internal fun StopSymbolLayer(
                 textOptional(true)
                 textAllowOverlap(false)
                 textIgnorePlacement(false)
+                // Color + halo espliciti: senza textHaloColor il default è
+                // rgba(0,0,0,0) → halo invisibile → testo nero illeggibile
+                // su tile colorati. Halo bianco 1.5dp = leggibilità garantita
+                // su qualsiasi sfondo.
+                textColor(Expression.rgb(literal(20.0), literal(20.0), literal(20.0)))
+                textHaloColor(Expression.rgb(literal(255.0), literal(255.0), literal(255.0)))
                 textHaloWidth(1.5)
+                textHaloBlur(0.5)
                 textPadding(2.0)
+                textFont(listOf("Open Sans Semibold", "Arial Unicode MS Bold"))
             }
         }
     }

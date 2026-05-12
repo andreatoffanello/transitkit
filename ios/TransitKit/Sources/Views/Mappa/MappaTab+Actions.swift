@@ -49,9 +49,18 @@ extension MappaTab {
                     }
                     selectedStop = stop
                 }
+                // La preview card occupa ~36% dello schermo bottom; centriamo
+                // la fermata sopra la card spostando il center mappa a SUD
+                // (~22% dello span lat). Senza, la fermata finisce sotto la
+                // card subito dopo il tap.
+                let span = 0.005
+                let cardOffsetLat = span * 0.22
                 mapRegion = MKCoordinateRegion(
-                    center: CLLocationCoordinate2D(latitude: stop.lat, longitude: stop.lng),
-                    span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
+                    center: CLLocationCoordinate2D(
+                        latitude: stop.lat - cardOffsetLat,
+                        longitude: stop.lng
+                    ),
+                    span: MKCoordinateSpan(latitudeDelta: span, longitudeDelta: span)
                 )
                 if isExpanded {
                     withAnimation { isExpanded = false }

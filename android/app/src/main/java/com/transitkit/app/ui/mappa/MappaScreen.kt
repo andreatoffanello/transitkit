@@ -39,8 +39,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
+import androidx.compose.ui.platform.LocalDensity
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
+import com.mapbox.maps.EdgeInsets
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
@@ -214,12 +216,31 @@ fun MappaScreen(
     // Fly-to su fermata selezionata (sia da tap che da deeplink map/stop/<id>):
     // porta la camera alla coordinata stop a `stopFocus` zoom — fa scattare
     // il tier Street, mostrando pin pieno + label sotto.
+    //
+    // Padding bottom: la preview card occupa circa metà schermo. Senza
+    // padding la fermata viene centrata sotto la card. Con `EdgeInsets.bottom`
+    // = altezza card stimata, Mapbox considera quel pixel range come
+    // "occupato" e centra la fermata nell'area visibile sopra la card.
+    val density = LocalDensity.current
+    val previewCardHeightPx = remember(density) {
+        with(density) { 360.dp.toPx().toDouble() }
+    }
     LaunchedEffect(selectedStop?.id) {
-        val s = selectedStop ?: return@LaunchedEffect
+        val s = selectedStop
+        if (s == null) {
+            // Resetta il padding al deselect — altrimenti rimane sticky.
+            viewportState.flyTo(
+                CameraOptions.Builder()
+                    .padding(EdgeInsets(0.0, 0.0, 0.0, 0.0))
+                    .build()
+            )
+            return@LaunchedEffect
+        }
         viewportState.flyTo(
             CameraOptions.Builder()
                 .center(Point.fromLngLat(s.lon, s.lat))
                 .zoom(maxOf(currentZoom, MapZoomLevels.stopFocus))
+                .padding(EdgeInsets(0.0, 0.0, previewCardHeightPx, 0.0))
                 .build()
         )
     }

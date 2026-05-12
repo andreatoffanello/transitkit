@@ -57,72 +57,8 @@ internal fun RoutePolylineLayer(
     }
 }
 
-/**
- * Stop annotations — colore fermata: GTFS della linea SELEZIONATA se presente,
- * altrimenti accent. Non prima linea della fermata (mosaico illeggibile).
- * Render selected stop last per z-order corretto (Mapbox ViewAnnotation).
- */
-@OptIn(ExperimentalComposeUiApi::class)
-@Composable
-@MapboxMapComposable
-internal fun StopAnnotationsLayer(
-    stops: List<ResolvedStop>,
-    selectedStop: ResolvedStop?,
-    selectedRouteId: String?,
-    selectedRoute: ScheduleRoute?,
-    tier: MapZoomTier,
-    lastAnnotationTapMs: AtomicLong,
-    onStopTap: (ResolvedStop) -> Unit,
-) {
-    val transitColors = LocalTransitColors.current
-    val haptic = LocalHapticFeedback.current
-    val (selectedStops, otherStops) = stops.partition { it.id == selectedStop?.id }
-    (otherStops + selectedStops).forEach { stop ->
-        val stopColor = remember(stop.id, selectedRouteId, selectedRoute?.color) {
-            selectedRoute?.color?.takeIf { it.isNotBlank() }?.let { hex ->
-                runCatching { Color(android.graphics.Color.parseColor("#$hex")) }.getOrNull()
-            }
-        } ?: transitColors.accent
-        val isSelectedStop = selectedStop?.id == stop.id
-        val dominantType = stop.transitTypes.firstOrNull() ?: 3
-
-        key(stop.id) {
-            ViewAnnotation(
-                options = viewAnnotationOptions {
-                    geometry(Point.fromLngLat(stop.lon, stop.lat))
-                    annotationAnchor {
-                        anchor(
-                            if (tier == MapZoomTier.Street) ViewAnnotationAnchor.BOTTOM
-                            else ViewAnnotationAnchor.CENTER
-                        )
-                    }
-                    allowOverlap(true)
-                }
-            ) {
-                Box(
-                    modifier = Modifier.pointerInteropFilter { event ->
-                        if (event.action == android.view.MotionEvent.ACTION_UP) {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            lastAnnotationTapMs.set(System.currentTimeMillis())
-                            onStopTap(stop)
-                        }
-                        true
-                    }
-                ) {
-                    if (tier == MapZoomTier.Street) {
-                        StopPinView(
-                            color = stopColor,
-                            transitType = dominantType,
-                            isSelected = isSelectedStop,
-                        )
-                    } else {
-                        StopDotView(tier = tier, color = stopColor)
-                    }
-                }
-            }
-        }
-    }
-}
+// MARK: - StopAnnotationsLayer rimosso —
+// fermate ora rese via `StopSymbolLayer` (SymbolLayer nativo Mapbox).
 
 /**
  * Vehicle annotations. Route-selected: tutti i veicoli di quella linea.

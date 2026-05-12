@@ -260,50 +260,10 @@ struct StopPreviewCard: View {
     }
 }
 
-// MARK: - Zoom Level
-
-/// Zoom level buckets derived from the map camera's latitude delta.
-enum MapZoomLevel: Hashable {
-    case far    // overview — dots only
-    case medium // neighborhood — pin + no label
-    case close  // street — pin + no label (label appears on tap via isSelected)
-
-    init(latitudeDelta: Double) {
-        switch latitudeDelta {
-        case ..<0.008: self = .close
-        case ..<0.02:  self = .medium
-        default:       self = .far
-        }
-    }
-}
-
-// MARK: - Zoom Tier
+// MARK: - Zoom Level / Tier
 //
-// Three-tier classification used to drive marker rendering intent on the map:
-// city-scale overview, neighborhood mid-zoom, and street-level detail. Unlike
-// `MapZoomLevel` (which only sizes a single marker shape), the tier decides
-// *which* shape to use and which vehicle embellishments (halo, pin-badge) to
-// render.
-//
-// Thresholds mirror the Android MapTier cutoffs (zoom < 12 → city,
-// 12 ≤ zoom < 14 → neighborhood, zoom ≥ 14 → street) translated into
-// MKCoordinateRegion latitudeDelta:
-//   - latDelta >= 0.088        → .city          (zoom < 12, no stops)
-//   - 0.022 <= latDelta < 0.088 → .neighborhood (mid zoom, small squares)
-//   - latDelta < 0.022         → .street        (close zoom, full pins)
-enum MapZoomTier: Hashable {
-    case city
-    case neighborhood
-    case street
-
-    init(latitudeDelta: Double) {
-        switch latitudeDelta {
-        case ..<0.022: self = .street
-        case ..<0.088: self = .neighborhood
-        default:       self = .city
-        }
-    }
-}
+// `MapZoomTier` e `MapZoomLevel` sono definiti in `MapZoomLevels.swift` —
+// single source of truth condivisa con Android (`MapZoomLevels.kt`).
 
 /// Stop pin icon: signpost (tab icon) for bus stops and mixed stops.
 /// Only exclusively non-bus stops (tram-only, rail-only, ferry-only, etc.)

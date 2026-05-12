@@ -46,6 +46,7 @@ import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.style.MapStyle
+import com.transitkit.app.config.LocalTransitColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -158,7 +159,7 @@ fun MappaScreen(
         }
     }
 
-    val tier by remember { derivedStateOf { zoomTierFor(currentZoom) } }
+    val tier by remember { derivedStateOf { MapZoomLevels.tier(currentZoom) } }
     val is3D by remember { derivedStateOf { currentPitch > 10.0 } }
 
     // Follow selected vehicle — camera segue le posizioni aggiornate.
@@ -208,7 +209,7 @@ fun MappaScreen(
         viewportState.flyTo(
             CameraOptions.Builder()
                 .center(center)
-                .zoom(12.5)
+                .zoom(MapZoomLevels.lineOverview)
                 .build()
         )
     }
@@ -239,14 +240,23 @@ fun MappaScreen(
                 selectedLineColor = selectedLineColor,
             )
 
-            StopAnnotationsLayer(
+            // Stops via SymbolLayer nativo (no ViewAnnotation Compose).
+            StopSymbolLayer(
                 stops = stops,
                 selectedStop = selectedStop,
-                selectedRouteId = selectedRouteId,
                 selectedRoute = selectedRoute,
-                tier = tier,
-                lastAnnotationTapMs = lastAnnotationTapMs,
-                onStopTap = { stop ->
+                accentColor = LocalTransitColors.current.accent,
+            )
+
+            // Tap handler combinato fermate + (in futuro) veicoli SymbolLayer.
+            // Per i veicoli oggi ancora ViewAnnotation: il loro tap è dentro
+            // VehicleAnnotationsLayer. Qui solo le fermate.
+            MarkerTapHandler(
+                layerIds = listOf(STOPS_LAYER_ID),
+                onPinTap = { feature, _ ->
+                    val stopId = feature.getStringProperty(PROP_STOP_ID) ?: return@MarkerTapHandler
+                    val stop = stops.firstOrNull { it.id == stopId } ?: return@MarkerTapHandler
+                    lastAnnotationTapMs.set(System.currentTimeMillis())
                     isFollowingVehicle = false
                     viewModel.clearSelectedVehicle()
                     viewModel.selectStop(stop)
@@ -269,7 +279,7 @@ fun MappaScreen(
                         viewportState.flyTo(
                             CameraOptions.Builder()
                                 .center(Point.fromLngLat(vehicle.lon, vehicle.lat))
-                                .zoom(maxOf(currentZoom, 16.5))
+                                .zoom(maxOf(currentZoom, MapZoomLevels.vehicleFocus))
                                 .build()
                         )
                     }

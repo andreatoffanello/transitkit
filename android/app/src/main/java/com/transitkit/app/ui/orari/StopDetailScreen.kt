@@ -49,19 +49,16 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.Style
-import com.mapbox.maps.ViewAnnotationAnchor
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
-import com.mapbox.maps.extension.compose.annotation.ViewAnnotation
 import com.mapbox.maps.extension.compose.style.MapStyle
-import com.mapbox.maps.viewannotation.annotationAnchor
-import com.mapbox.maps.viewannotation.geometry
-import com.mapbox.maps.viewannotation.viewAnnotationOptions
 import com.transitkit.app.R
 import com.transitkit.app.config.LocalTransitColors
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.stopIcon
+import com.transitkit.app.ui.mappa.SingleStopMarker
 import com.transitkit.app.ui.mappa.applyTransitKitStandardStyleConfig
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -292,20 +289,14 @@ fun StopDetailScreen(
                             compass = {},
                             scaleBar = {},
                         ) {
-                            ViewAnnotation(
-                                options = viewAnnotationOptions {
-                                    geometry(stopPoint)
-                                    annotationAnchor {
-                                        anchor(ViewAnnotationAnchor.BOTTOM)
-                                    }
-                                    allowOverlap(true)
-                                }
-                            ) {
-                                StopMarkerDetail(
-                                    accentColor = transitColors.accent,
-                                    transitType = availableRoutes.firstOrNull()?.transitType ?: 3,
-                                )
-                            }
+                            // Pin singolo via SymbolLayer + bitmap factory —
+                            // condivide pipeline e shape con la mappa principale
+                            // (MappaScreen). Single source of truth: StopMarkerBitmap.pin.
+                            SingleStopMarker(
+                                point = stopPoint,
+                                color = transitColors.accent,
+                                iconRes = stopIcon(listOf(availableRoutes.firstOrNull()?.transitType ?: 3)),
+                            )
 
                             MapEffect(isDark) { mapView ->
                                 val s = mapView.mapboxMap.style

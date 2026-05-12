@@ -126,6 +126,16 @@ internal fun StopSymbolLayer(
                     )
                 )
 
+                // Z-order: la fermata selezionata viene renderizzata SOPRA
+                // le altre (sortKey ascending → 1 sopra 0). Senza questo,
+                // Mapbox usa l'ordine del source e la selected può finire
+                // sotto pin vicini.
+                symbolSortKey(
+                    Expression.fromRaw(
+                        """["case", ["==", ["get", "$PROP_STOP_SELECTED"], true], 1.0, 0.0]"""
+                    )
+                )
+
                 // Nome fermata sotto al pin — visibile solo a Street tier
                 // (zoom ≥ neighborhoodMaxZoom). Halo si adatta auto al tema
                 // del map style Mapbox Standard.

@@ -9,11 +9,18 @@ import com.google.gson.JsonObject
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
+import com.mapbox.maps.ImageContent
+import com.mapbox.maps.ImageStretches
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMapComposable
 import com.mapbox.maps.extension.style.expressions.dsl.generated.literal
 import com.mapbox.maps.extension.style.expressions.generated.Expression
+import com.mapbox.maps.extension.style.image.addImage
+import com.mapbox.maps.extension.style.image.image
+import com.mapbox.maps.extension.style.layers.addLayer
+import com.mapbox.maps.extension.style.layers.generated.symbolLayer
 import com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor
+import com.mapbox.maps.extension.style.layers.properties.generated.IconTextFit
 import com.mapbox.maps.extension.style.layers.properties.generated.TextAnchor
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.data.model.ResolvedStop
@@ -23,10 +30,12 @@ import com.transitkit.app.data.model.ScheduleRoute
 
 internal const val STOPS_SOURCE_ID = "tk_stops_source"
 internal const val STOPS_LAYER_ID = "tk_stops_layer"
+internal const val STOPS_LABEL_LAYER_ID = "tk_stops_label_layer"
 
 private const val STOP_DOT_IMAGE_ID = "tk_stop_dot"
 private const val STOP_PIN_IMAGE_ID = "tk_stop_pin"
 private const val STOP_PIN_METRO_IMAGE_ID = "tk_stop_pin_metro"
+private const val STOP_LABEL_PILL_ID = "tk_stop_label_pill"
 
 internal const val PROP_STOP_ID = "id"
 internal const val PROP_STOP_NAME = "name"
@@ -68,7 +77,7 @@ internal fun StopSymbolLayer(
         )
     }
 
-    // ─── Bitmap registration (rare — solo a cambio colore) ───────────────────
+    // ─── Bitmap registration ─────────────────────────────────────────────────
     MapEffect(primaryArgb) { mapView ->
         mapView.mapboxMap.getStyle { style ->
             style.addImage(STOP_DOT_IMAGE_ID, StopMarkerBitmap.dot(ctx, primaryArgb))
@@ -83,6 +92,31 @@ internal fun StopSymbolLayer(
             style.addImage(
                 STOP_PIN_METRO_IMAGE_ID,
                 StopMarkerBitmap.pin(ctx, fillArgb = primaryArgb, glyph = "M"),
+            )
+        }
+    }
+
+    // Pill bg per badge label (registrato una volta — non dipende da colore).
+    // Stretchable: il bitmap si scala in larghezza/altezza in modo che la zona
+    // centrale assorba la variazione (bordi rounded restano intatti).
+    MapEffect(Unit) { mapView ->
+        mapView.mapboxMap.getStyle { style ->
+            val density = ctx.resources.displayMetrics.density
+            val pill = StopMarkerBitmap.labelPill(ctx)
+            // Zona stretchable centrale (in px del bitmap).
+            val padPx = 2f * density
+            val coreW = 40f * density
+            val coreH = 20f * density
+            val midXa = padPx + coreW * 0.45f
+            val midXb = padPx + coreW * 0.55f
+            val midYa = padPx + coreH * 0.40f
+            val midYb = padPx + coreH * 0.60f
+            style.addImage(
+                image(STOP_LABEL_PILL_ID, pill) {
+                    stretchX(listOf(ImageStretches(midXa, midXb)))
+                    stretchY(listOf(ImageStretches(midYa, midYb)))
+                    content(ImageContent(midXa, midYa, midXb, midYb))
+                }
             )
         }
     }
@@ -128,39 +162,52 @@ internal fun StopSymbolLayer(
                 )
 
                 // Z-order: la fermata selezionata viene renderizzata SOPRA
-                // le altre (sortKey ascending → 1 sopra 0). Senza questo,
-                // Mapbox usa l'ordine del source e la selected può finire
-                // sotto pin vicini.
+                // le altre (sortKey ascending → 1 sopra 0).
                 symbolSortKey(
                     Expression.fromRaw(
                         """["case", ["==", ["get", "$PROP_STOP_SELECTED"], true], 1.0, 0.0]"""
                     )
                 )
+            }
 
-                // Nome fermata sotto al pin — visibile solo a Street tier
-                // (zoom ≥ neighborhoodMaxZoom). Halo si adatta auto al tema
-                // del map style Mapbox Standard.
-                textField(
-                    Expression.fromRaw(
-                        """["step", ["zoom"], "", ${MapZoomLevels.neighborhoodMaxZoom}, ["get", "$PROP_STOP_NAME"]]"""
+            // Layer 2 — Badge label sotto al pin (solo a tier Street).
+            // Pattern: bitmap pill stretchable + iconTextFit(BOTH) → il pill
+            // si auto-scala in larghezza/altezza per contenere il nome fermata.
+            // Posizione: anchor=TOP + offset Y per stare sotto la punta tail
+            // del pin. Risultato: badge solido bianco con bordo soft +
+            // nome leggibile in nero, distinguibile dai POI del map style.
+            if (!style.styleLayerExists(STOPS_LABEL_LAYER_ID)) {
+                style.addLayer(symbolLayer(STOPS_LABEL_LAYER_ID, STOPS_SOURCE_ID) {
+                    iconImage(STOP_LABEL_PILL_ID)
+                    iconTextFit(IconTextFit.BOTH)
+                    iconTextFitPadding(listOf(2.0, 7.0, 2.0, 7.0))
+                    iconAnchor(IconAnchor.TOP)
+                    // Offset Y in ems (textSize=11): 0.6em ≈ 6.6dp gap sotto pin tail.
+                    iconOffset(listOf(0.0, 6.0))
+                    iconAllowOverlap(true)
+                    iconIgnorePlacement(true)
+
+                    textField(
+                        Expression.fromRaw(
+                            """["step", ["zoom"], "", ${MapZoomLevels.neighborhoodMaxZoom}, ["get", "$PROP_STOP_NAME"]]"""
+                        )
                     )
-                )
-                textSize(11.0)
-                textAnchor(TextAnchor.TOP)
-                textOffset(listOf(0.0, 1.4))
-                // textAllowOverlap=true + textIgnorePlacement=true:
-                // Le label delle FERMATE devono SEMPRE apparire al tier Street,
-                // anche se si sovrappongono ai POI del Mapbox Standard style.
-                // Con `false` (priorità collision) i POI del map style vincono
-                // sempre e le label dei pin spariscono.
-                textOptional(false)
-                textAllowOverlap(true)
-                textIgnorePlacement(true)
-                textColor(Expression.rgb(literal(20.0), literal(20.0), literal(20.0)))
-                textHaloColor(Expression.rgb(literal(255.0), literal(255.0), literal(255.0)))
-                textHaloWidth(1.5)
-                textHaloBlur(0.5)
-                textPadding(2.0)
+                    textSize(10.5)
+                    textAnchor(TextAnchor.TOP)
+                    textOffset(listOf(0.0, 6.0))
+                    textOptional(false)
+                    textAllowOverlap(true)
+                    textIgnorePlacement(true)
+                    textColor(Expression.rgb(literal(20.0), literal(20.0), literal(20.0)))
+                    textPadding(1.0)
+                    textMaxWidth(7.0) // wrap su 2 righe per nomi lunghi
+                    // Selected label sopra le altre (parità con pin sortKey).
+                    symbolSortKey(
+                        Expression.fromRaw(
+                            """["case", ["==", ["get", "$PROP_STOP_SELECTED"], true], 1.0, 0.0]"""
+                        )
+                    )
+                })
             }
         }
     }

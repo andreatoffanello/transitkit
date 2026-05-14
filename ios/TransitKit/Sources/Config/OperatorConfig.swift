@@ -8,6 +8,7 @@ import SwiftUI
 struct OperatorConfig: Codable {
     let id: String
     let name: String
+    let brandName: String?
     let fullName: String
     let url: String
     let apiUrl: String?       // legacy — kept for transition
@@ -65,10 +66,9 @@ struct OperatorConfig: Codable {
         let enableGeolocation: Bool
         let enableFavorites: Bool
         let enableNotifications: Bool
-        let useRemoteEngine: Bool
 
         enum CodingKeys: String, CodingKey {
-            case enableMap, enableGeolocation, enableFavorites, enableNotifications, useRemoteEngine
+            case enableMap, enableGeolocation, enableFavorites, enableNotifications
         }
 
         init(from decoder: Decoder) throws {
@@ -77,7 +77,6 @@ struct OperatorConfig: Codable {
             enableGeolocation = try c.decodeIfPresent(Bool.self, forKey: .enableGeolocation) ?? false
             enableFavorites = try c.decodeIfPresent(Bool.self, forKey: .enableFavorites) ?? true
             enableNotifications = try c.decodeIfPresent(Bool.self, forKey: .enableNotifications) ?? false
-            useRemoteEngine = try c.decodeIfPresent(Bool.self, forKey: .useRemoteEngine) ?? false
         }
     }
 

@@ -22,6 +22,7 @@ struct TransitMapView: UIViewRepresentable {
     let polylines: [CachedPolyline]
 
     // MARK: Config
+    let initialPitch: Double
     let zoomLevel: MapZoomLevel
     let tier: MapZoomTier
     let selectedStopId: String?
@@ -41,10 +42,24 @@ struct TransitMapView: UIViewRepresentable {
         let map = MKMapView()
         map.delegate = context.coordinator
         map.showsUserLocation = showsUserLocation
+        // Forza il pallino utente blu di sistema indipendentemente dall'accent
+        // dell'operatore (altrimenti veniva tintato col verde AppalCART e
+        // sembrava nero/scuro su sfondo chiaro).
+        map.tintColor = UIColor.systemBlue
         map.pointOfInterestFilter = .excludingAll
         map.showsCompass = false
         map.setRegion(region, animated: false)
+        if initialPitch > 0 {
+            let camera = MKMapCamera(
+                lookingAtCenter: region.center,
+                fromDistance: map.camera.altitude,
+                pitch: CGFloat(initialPitch),
+                heading: 0
+            )
+            map.setCamera(camera, animated: false)
+        }
         context.coordinator.parent = self
+        context.coordinator.lastBindingRegion = region
         return map
     }
 
@@ -52,11 +67,14 @@ struct TransitMapView: UIViewRepresentable {
         let coord = context.coordinator
         coord.parent = self
 
-        // Apply region from binding only when the change originated from the parent
-        // (not from user gestures routed back through the binding). Small tolerance
-        // prevents redundant animations for sub-degree rounding noise.
-        if !coord.isUpdatingFromMap,
-           !Self.regionsApproximatelyEqual(uiView.region, region) {
+        // Apply region from binding only when the binding value actually changed.
+        // Comparing against lastBindingRegion (not uiView.region) prevents pitch
+        // changes from spuriously triggering a setRegion that would flatten 3D view.
+        let bindingChanged = coord.lastBindingRegion.map {
+            !Self.regionsApproximatelyEqual($0, region)
+        } ?? true
+        if !coord.isUpdatingFromMap, bindingChanged {
+            coord.lastBindingRegion = region
             coord.isUpdatingFromBinding = true
             uiView.setRegion(region, animated: true)
             coord.isUpdatingFromBinding = false
@@ -91,6 +109,9 @@ struct TransitMapView: UIViewRepresentable {
         var parent: TransitMapView
         var isUpdatingFromBinding = false
         var isUpdatingFromMap = false
+        // Tracks the last region value the binding held, so programmatic pitch
+        // changes (which alter uiView.region) don't trigger a spurious setRegion.
+        var lastBindingRegion: MKCoordinateRegion?
 
         var stopAnnotations: [String: StopMKAnnotation] = [:]
         var vehicleAnnotations: [String: VehicleMKAnnotation] = [:]
@@ -264,6 +285,16 @@ struct TransitMapView: UIViewRepresentable {
 
         // MARK: MKMapViewDelegate — annotation views
 
+        // Garantisce che il pallino utente (MKUserLocationView, default blu di
+        // sistema) renda SEMPRE sopra stop e veicoli. Senza questo, i veicoli
+        // con zPriority .max lo coprivano.
+        func mapView(_ mapView: MKMapView, didAdd views: [MKAnnotationView]) {
+            for v in views where v.annotation is MKUserLocation {
+                v.zPriority = .max
+                v.displayPriority = .required
+            }
+        }
+
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
             if annotation is MKUserLocation { return nil }
 
@@ -298,7 +329,8 @@ struct TransitMapView: UIViewRepresentable {
                                route: route,
                                isSelected: parent.selectedVehicleId == vehicleAnn.vehicle.id)
                 view.displayPriority = .required
-                view.zPriority = .max
+                // Sotto al pallino utente (.max) ma sopra alle stop (100).
+                view.zPriority = MKAnnotationViewZPriority(rawValue: 900)
                 return view
             }
             return nil

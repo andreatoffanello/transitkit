@@ -7,6 +7,7 @@ struct LinesListView: View {
     let transitTypeFilter: TransitType?
     let recentIds: [String]
     @Environment(ScheduleStore.self) private var store
+    @Environment(VehicleStore.self) private var vehicleStore
     @State private var collapsedTypes: Set<TransitType> = []
 
     init(searchQuery: String, transitTypeFilter: TransitType?, recentIds: [String] = []) {
@@ -177,7 +178,12 @@ struct LinesListView: View {
                 VStack(spacing: 8) {
                     ForEach(recentAPIRoutes) { route in
                         NavigationLink(value: route) {
-                            LineRowContent(route: route, hasMultipleTypes: hasMultipleTransitTypes, store: store)
+                            LineRowContent(
+                                route: route,
+                                hasMultipleTypes: hasMultipleTransitTypes,
+                                store: store,
+                                liveCount: vehicleStore.liveCount(forRouteId: route.id)
+                            )
                         }
                         .buttonStyle(.plain)
                         .accessibilityIdentifier("recent_line_row_\(route.id)")
@@ -246,7 +252,12 @@ struct LinesListView: View {
                             VStack(spacing: 8) {
                                 ForEach(group.routes) { route in
                                     NavigationLink(value: route) {
-                                        LineRowContent(route: route, hasMultipleTypes: hasMultipleTransitTypes, store: store)
+                                        LineRowContent(
+                                route: route,
+                                hasMultipleTypes: hasMultipleTransitTypes,
+                                store: store,
+                                liveCount: vehicleStore.liveCount(forRouteId: route.id)
+                            )
                                     }
                                     .buttonStyle(.plain)
                                     .accessibilityIdentifier("line_row_\(route.id)")
@@ -271,6 +282,7 @@ private struct LineRowContent: View {
     let route: APIRoute
     let hasMultipleTypes: Bool
     let store: ScheduleStore
+    let liveCount: Int
 
     private var resolvedTransitType: TransitType { route.resolvedTransitType }
 
@@ -304,13 +316,12 @@ private struct LineRowContent: View {
 
                 // Stop sequence marquee — reads from pre-cached store dictionary (O(1))
                 if let sequence = store.routeStopSequences[route.id], !sequence.isEmpty {
-                    MarqueeText(
-                        text: sequence,
-                        fontSize: 11,
-                        foregroundStyle: AppTheme.textSecondary,
-                        speed: 28
-                    )
-                    .frame(maxWidth: .infinity)
+                    Text(sequence)
+                        .font(.system(size: 11))
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
                 // Subtitle: transit type (only when multiple types) + direction count (only when >1)
@@ -341,6 +352,24 @@ private struct LineRowContent: View {
             }
 
             Spacer(minLength: 8)
+
+            // Live vehicle count badge — chip statico senza animazione/material:
+            // dentro LazyVStack l'animazione pulsante di LiveBadge combinata col
+            // ri-render del vehicleStore ogni 15s creava layout instability.
+            if liveCount > 0 {
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(AppTheme.realtimeGreen)
+                        .frame(width: 6, height: 6)
+                    Text("\(liveCount) live")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(AppTheme.realtimeGreen)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(AppTheme.realtimeGreen.opacity(0.12), in: Capsule())
+                .accessibilityIdentifier("line_live_badge_\(route.id)")
+            }
 
             LucideIcon.chevronRight.image
                 .font(.caption.weight(.semibold))

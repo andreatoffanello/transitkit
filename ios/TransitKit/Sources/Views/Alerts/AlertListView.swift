@@ -2,15 +2,36 @@ import SwiftUI
 
 // MARK: - AlertListView
 
-/// Full list of currently-active service alerts. Opened from the Home hero banner
-/// and from the dedicated Alert sections on stop/line detail screens.
+/// Full list of currently-active service alerts. Top filter bar: All / Favorites / Specific line.
 /// Sorted by severity (severe → warning → info → unknown), then alphabetically.
 struct AlertListView: View {
     @Environment(AlertStore.self) private var alertStore
+    @Environment(ScheduleStore.self) private var store
+    @Environment(FavoritesManager.self) private var favoritesManager
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.isPresented) private var isPresented
 
-    private var sortedAlerts: [GtfsRtAlert] {
-        alertStore.activeAlerts.sorted { lhs, rhs in
+    enum Filter: Equatable {
+        case all
+        case favorites
+        case route(String) // routeId
+    }
+
+    @State private var filter: Filter = .all
+
+    private var filteredAlerts: [GtfsRtAlert] {
+        let base: [GtfsRtAlert]
+        switch filter {
+        case .all:
+            base = alertStore.activeAlerts
+        case .favorites:
+            let favs = Set(favoritesManager.favoriteRouteIds)
+            guard !favs.isEmpty else { return [] }
+            base = alertStore.activeAlerts.filter { !$0.affectedRouteIds.isDisjoint(with: favs) }
+        case .route(let rid):
+            base = alertStore.activeAlerts.filter { $0.affectedRouteIds.contains(rid) }
+        }
+        return base.sorted { lhs, rhs in
             if lhs.severity.rawValue != rhs.severity.rawValue {
                 return lhs.severity.rawValue > rhs.severity.rawValue
             }
@@ -19,35 +40,135 @@ struct AlertListView: View {
     }
 
     var body: some View {
-        Group {
-            if sortedAlerts.isEmpty {
-                emptyState
-            } else {
-                ScrollView {
-                    LazyVStack(spacing: 12) {
-                        ForEach(sortedAlerts) { alert in
-                            NavigationLink {
-                                AlertDetailView(alert: alert)
-                            } label: {
-                                alertRow(alert)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 16)
-                }
-            }
+        VStack(spacing: 0) {
+            filterBar
+            content
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(AppTheme.background.ignoresSafeArea())
         .navigationTitle(String(localized: "alerts_title"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button(String(localized: "action_close")) { dismiss() }
-                    .foregroundStyle(AppTheme.textPrimary)
+            if isPresented {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(String(localized: "action_close")) { dismiss() }
+                        .foregroundStyle(AppTheme.textPrimary)
+                }
             }
         }
+    }
+
+    // MARK: Content
+
+    @ViewBuilder
+    private var content: some View {
+        if filteredAlerts.isEmpty {
+            emptyState
+        } else {
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    ForEach(filteredAlerts) { alert in
+                        NavigationLink {
+                            AlertDetailView(alert: alert)
+                        } label: {
+                            alertRow(alert)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 16)
+            }
+        }
+    }
+
+    // MARK: Filter bar
+
+    @ViewBuilder
+    private var filterBar: some View {
+        HStack(spacing: 8) {
+            filterPill(label: String(localized: "alerts_filter_all"), isActive: filter == .all) {
+                filter = .all
+            }
+            filterPill(label: String(localized: "alerts_filter_favorites"), isActive: filter == .favorites) {
+                filter = .favorites
+            }
+            routePicker
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(AppTheme.background)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(AppTheme.separatorLine)
+                .frame(height: 0.5)
+        }
+        .sensoryFeedback(.selection, trigger: filter)
+    }
+
+    private func filterPill(label: String, isActive: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label)
+                .font(.system(size: 13, weight: isActive ? .semibold : .medium))
+                .foregroundStyle(isActive ? AppTheme.textPrimary : AppTheme.textSecondary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 7)
+                .background(
+                    Capsule().fill(isActive ? AppTheme.accent.opacity(0.18) : AppTheme.bgSecondary.opacity(0.5))
+                )
+                .overlay(
+                    Capsule().strokeBorder(
+                        isActive ? AppTheme.accent.opacity(0.5) : AppTheme.glassBorder,
+                        lineWidth: 1
+                    )
+                )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var routePicker: some View {
+        Menu {
+            ForEach(store.routes, id: \.id) { route in
+                Button {
+                    filter = .route(route.id)
+                } label: {
+                    Label(route.longName ?? route.name, systemImage: filter == .route(route.id) ? "checkmark" : "")
+                }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Text(routePickerLabel)
+                    .font(.system(size: 13, weight: routePickerIsActive ? .semibold : .medium))
+                    .foregroundStyle(routePickerIsActive ? AppTheme.textPrimary : AppTheme.textSecondary)
+                LucideIcon.chevronDown.sized(12)
+                    .foregroundStyle(routePickerIsActive ? AppTheme.textPrimary : AppTheme.textSecondary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .background(
+                Capsule().fill(routePickerIsActive ? AppTheme.accent.opacity(0.18) : AppTheme.bgSecondary.opacity(0.5))
+            )
+            .overlay(
+                Capsule().strokeBorder(
+                    routePickerIsActive ? AppTheme.accent.opacity(0.5) : AppTheme.glassBorder,
+                    lineWidth: 1
+                )
+            )
+        }
+        .accessibilityIdentifier("alerts_filter_route_menu")
+    }
+
+    private var routePickerIsActive: Bool {
+        if case .route = filter { return true }
+        return false
+    }
+
+    private var routePickerLabel: String {
+        if case .route(let rid) = filter, let route = store.route(forId: rid) {
+            return route.name
+        }
+        return String(localized: "alerts_filter_route")
     }
 
     // MARK: Row
@@ -88,17 +209,38 @@ struct AlertListView: View {
         )
     }
 
+    @ViewBuilder
     private var emptyState: some View {
-        EmptyStateView(
-            icon: .check,
-            title: String(localized: "alerts_empty_title"),
-            subtitle: String(localized: "alerts_empty_subtitle")
-        )
+        switch filter {
+        case .favorites where favoritesManager.favoriteRouteIds.isEmpty:
+            EmptyStateView(
+                icon: .star,
+                title: String(localized: "alerts_empty_no_favorites_title"),
+                subtitle: String(localized: "alerts_empty_no_favorites_subtitle")
+            )
+        case .favorites:
+            EmptyStateView(
+                icon: .check,
+                title: String(localized: "alerts_empty_favorites_title"),
+                subtitle: String(localized: "alerts_empty_favorites_subtitle")
+            )
+        case .route:
+            EmptyStateView(
+                icon: .check,
+                title: String(localized: "alerts_empty_route_title"),
+                subtitle: String(localized: "alerts_empty_route_subtitle")
+            )
+        case .all:
+            EmptyStateView(
+                icon: .check,
+                title: String(localized: "alerts_empty_title"),
+                subtitle: String(localized: "alerts_empty_subtitle")
+            )
+        }
     }
 
     // MARK: Helpers
 
-    /// A short subtitle — affected routes/stops count or effect label — to give the row context.
     private func alertSubtitle(_ alert: GtfsRtAlert) -> String? {
         let routes = alert.affectedRouteIds.count
         let stops = alert.affectedStopIds.count

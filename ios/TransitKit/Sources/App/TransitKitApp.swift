@@ -146,7 +146,7 @@ struct TransitKitApp: App {
                 routeIdByTripId: scheduleStore.routeIdByTripId
             )
             alertStore.configure(serviceAlertsUrl: config.gtfsRt?.serviceAlertsUrl)
-            Task { await connectionsStore.load(config: config, routes: scheduleStore.routes) }
+            Task { await connectionsStore.load(stops: scheduleStore.stops) }
             if let pending = router.pendingUrl {
                 router.pendingUrl = nil
                 resolve(url: pending, store: scheduleStore)

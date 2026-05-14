@@ -63,23 +63,7 @@ struct LinePickerSheet: View {
                         LazyVStack(spacing: 0, pinnedViews: .sectionHeaders) {
                             ForEach(grouped, id: \.0) { type, routes in
                                 Section {
-                                    ForEach(Array(routes.enumerated()), id: \.element.id) { idx, route in
-                                        Button {
-                                            onSelect(route)
-                                            dismiss()
-                                        } label: {
-                                            LinePickerRow(
-                                                route: route,
-                                                vehicleCount: vehicleStore.liveCount(forRouteId: route.id)
-                                            )
-                                        }
-                                        .buttonStyle(.plain)
-                                        .accessibilityIdentifier("line_row_\(route.id)")
-
-                                        if idx < routes.count - 1 {
-                                            Divider().padding(.leading, 64)
-                                        }
-                                    }
+                                    liveRoutesGroup(routes: routes)
                                 } header: {
                                     sectionHeader(type: type, count: routes.count)
                                 }
@@ -107,8 +91,7 @@ struct LinePickerSheet: View {
 
     private var searchField: some View {
         HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 15, weight: .medium))
+            LucideIcon.search.sized(15)
                 .foregroundStyle(.secondary)
             TextField(String(localized: "map_search_placeholder"), text: $searchText)
                 .font(.system(size: 15))
@@ -120,8 +103,7 @@ struct LinePickerSheet: View {
                 Button {
                     searchText = ""
                 } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 16))
+                    LucideIcon.circleX.sized(16)
                         .foregroundStyle(.tertiary)
                 }
                 .accessibilityLabel(Text(String(localized: "a11y_clear_search")))
@@ -148,6 +130,75 @@ struct LinePickerSheet: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
         .background(Color(.systemBackground))
+    }
+
+    // MARK: - Live/Static split rendering
+
+    @ViewBuilder
+    private func liveRoutesGroup(routes: [APIRoute]) -> some View {
+        let liveRoutes = routes.filter { vehicleStore.liveCount(forRouteId: $0.id) > 0 }
+        let staticRoutes = routes.filter { vehicleStore.liveCount(forRouteId: $0.id) == 0 }
+        let hasMix = !liveRoutes.isEmpty && !staticRoutes.isEmpty
+
+        if hasMix {
+            liveSubHeader
+        }
+        ForEach(Array(liveRoutes.enumerated()), id: \.element.id) { idx, route in
+            routeButton(route: route)
+            if idx < liveRoutes.count - 1 {
+                Divider().padding(.leading, 64)
+            }
+        }
+        if hasMix {
+            scheduleSubHeader
+        }
+        ForEach(Array(staticRoutes.enumerated()), id: \.element.id) { idx, route in
+            routeButton(route: route)
+            if idx < staticRoutes.count - 1 {
+                Divider().padding(.leading, 64)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func routeButton(route: APIRoute) -> some View {
+        Button {
+            onSelect(route)
+            dismiss()
+        } label: {
+            LinePickerRow(
+                route: route,
+                vehicleCount: vehicleStore.liveCount(forRouteId: route.id)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("line_row_\(route.id)")
+    }
+
+    private var liveSubHeader: some View {
+        HStack(spacing: 5) {
+            Circle().fill(AppTheme.realtimeGreen).frame(width: 6, height: 6)
+            Text(String(localized: "line_picker_live_now"))
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 6)
+        .background(Color(.secondarySystemBackground))
+    }
+
+    private var scheduleSubHeader: some View {
+        HStack(spacing: 5) {
+            LucideIcon.clock.sized(10).foregroundStyle(.secondary)
+            Text(String(localized: "line_picker_schedule_only"))
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 6)
+        .background(Color(.secondarySystemBackground))
     }
 
     private func sectionTitle(_ type: TransitType) -> String {
@@ -195,9 +246,7 @@ private struct LinePickerRow: View {
 
             if vehicleCount > 0 {
                 HStack(spacing: 4) {
-                    Image(systemName: "circle.fill")
-                        .font(.system(size: 6))
-                        .foregroundStyle(AppTheme.realtimeGreen)
+                    Circle().fill(AppTheme.realtimeGreen).frame(width: 8, height: 8)
                     Text("\(vehicleCount)")
                         .font(.footnote)
                         .foregroundStyle(.secondary)

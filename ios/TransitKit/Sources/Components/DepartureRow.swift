@@ -2,20 +2,25 @@ import SwiftUI
 
 // MARK: - DepartureRow
 
-/// A single departure row showing line badge, headsign, countdown, and dock indicator.
-/// Used in stop detail views, favorite stop cards, and search results.
+/// A single departure row: line badge | destination + description (marquee) | time.
 ///
-/// Layout: `[LineBadge] Headsign [DockBadge]  TimeDisplay  HH:MM`
+/// Layout:
+/// ```
+/// [LineBadge]  [Destination marquee     ]  [DockBadge] [Live]  [5'    ]
+///              [Description marquee     ]               [10:23  ]
+/// ```
+///
+/// All rows have identical layout — `isFirst` is kept in the interface for call-site
+/// compatibility but no longer drives font/padding differences.
 struct DepartureRow: View {
     let departure: Departure
     var isFirst: Bool = false
+    var hideBadge: Bool = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(VehicleStore.self) private var vehicleStore
     @Environment(ScheduleStore.self) private var scheduleStore
 
-    /// Mirrors the threshold logic in TimeDisplay.init(departure:now:).
-    /// ≤ 60 min → .minutes countdown; > 60 min → .absolute clock time.
     private var timeState: DepartureTimeState {
         let nowMinutes = scheduleStore.currentMinutesFromMidnight()
         let diff = departure.minutesFromMidnight - nowMinutes
@@ -45,63 +50,27 @@ struct DepartureRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 8) {
-            // Line badge
-            LineBadge(departure: departure, size: .large)
-
-            // Destination sequence (marquee) or headsign fallback.
-            // "Next departure" badge removed — position-in-list already
-            // communicates that the first row is the next one.
-            VStack(alignment: .leading, spacing: 3) {
-                let sequence: String? = {
-                    if let s = scheduleStore.routeStopSequences[departure.routeId], !s.isEmpty { return s }
-                    return nil
-                }()
-                if let sequence {
-                    MarqueeText(
-                        text: sequence,
-                        fontSize: isFirst ? 13 : 11,
-                        fontWeight: isFirst ? .medium : .regular,
-                        foregroundStyle: isDeparted ? AppTheme.textTertiary : AppTheme.textPrimary
-                    )
-                } else {
-                    Text(departure.headsign)
-                        .font(.system(size: isFirst ? 14 : 13, weight: isFirst ? .semibold : .regular))
-                        .foregroundStyle(isDeparted ? AppTheme.textTertiary : AppTheme.textPrimary)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
+        HStack(spacing: 10) {
+            // Line badge — hidden when a line filter is active (all rows are same line)
+            if !hideBadge {
+                LineBadge(departure: departure, size: .large)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .layoutPriority(1)
 
-            // Dock indicator (if present)
+            // Destination + description stack
+            destinationStack
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .layoutPriority(1)
+
+            // Dock (compact, right of text)
             if !departure.dock.isEmpty {
                 DockBadge(letter: departure.dock)
             }
 
-            // Live indicator
-            if vehicleStore.isLive(tripId: departure.tripId) {
-                LiveBadge()
-            }
-
-            // Countdown + absolute time stacked
-            VStack(alignment: .trailing, spacing: 1) {
-                TimeDisplay(state: timeState)
-                if case .minutes = timeState {
-                    Text(departure.time)
-                        .font(.system(size: isFirst ? 12 : 11, weight: .medium, design: .monospaced))
-                        .foregroundStyle(AppTheme.textSecondary)
-                } else if case .departing = timeState {
-                    Text(departure.time)
-                        .font(.system(size: isFirst ? 12 : 11, weight: .medium, design: .monospaced))
-                        .foregroundStyle(AppTheme.textSecondary)
-                }
-            }
-            .fixedSize(horizontal: true, vertical: false)
+            // Time stack: live dot inline col countdown + assoluto sotto
+            timeStack
+                .fixedSize(horizontal: true, vertical: false)
         }
-        .padding(.vertical, isFirst ? 14 : 10)
+        .padding(.vertical, 12)
         .overlay(alignment: .bottom) {
             Rectangle()
                 .fill(AppTheme.separatorLine)
@@ -113,10 +82,61 @@ struct DepartureRow: View {
         )
     }
 
+    // MARK: - Destination stack
+
+    @ViewBuilder
+    private var destinationStack: some View {
+        let sequence: String? = {
+            guard let s = scheduleStore.routeStopSequences[departure.routeId], !s.isEmpty else { return nil }
+            return s
+        }()
+
+        VStack(alignment: .leading, spacing: 2) {
+            // Primary: headsign / destination
+            Text(departure.headsign)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(isDeparted ? AppTheme.textTertiary : AppTheme.textPrimary)
+                .lineLimit(1)
+                .truncationMode(.tail)
+
+            // Secondary: stop sequence / route description
+            if let seq = sequence, seq != departure.headsign {
+                Text(seq)
+                    .font(.system(size: 11))
+                    .foregroundStyle(AppTheme.textTertiary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            }
+        }
+    }
+
+    // MARK: - Time stack
+
+    @ViewBuilder
+    private var timeStack: some View {
+        let isLive = vehicleStore.isLive(tripId: departure.tripId)
+        VStack(alignment: .trailing, spacing: 1) {
+            TimeDisplay(state: timeState, liveDot: isLive)
+
+            // Absolute clock time beneath the countdown
+            switch timeState {
+            case .minutes, .departing:
+                Text(departure.time)
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundStyle(isSoon ? AppTheme.realtimeGreen.opacity(0.8) : AppTheme.textSecondary)
+            default:
+                EmptyView()
+            }
+        }
+    }
+
+    // MARK: - Accessibility
+
     private var countdownAccessibilityLabel: String {
         switch timeState {
         case .departing: String(localized: "time_departing_a11y")
         case .minutes(let m): String(format: NSLocalizedString("time_minutes_a11y", comment: ""), m)
+        case .hoursMinutes(let h, let m): m > 0 ? "\(h) ore \(m) minuti" : "\(h) ore"
         case .absolute(let t): String(format: NSLocalizedString("time_at_a11y", comment: ""), t)
         case .passed(let t): String(format: NSLocalizedString("time_passed_a11y", comment: ""), t)
         }
@@ -146,3 +166,4 @@ struct DockBadge: View {
             .accessibilityLabel(String(format: NSLocalizedString("dock_a11y", comment: ""), letter))
     }
 }
+

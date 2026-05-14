@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		012BBE6336F1E81A85C9EE89 /* StopSearchSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DDEC75C7348FC79C25E4B36 /* StopSearchSheet.swift */; };
 		0472FBE04E76A45E27C5121C /* VehicleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B9FD10B5C48C0410259687C /* VehicleStore.swift */; };
+		05DC60EF173B5405A3393C92 /* WhenChipsRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = D29022161873C64FFC40CE53 /* WhenChipsRow.swift */; };
 		06FFD5B6A277A4D2FEA6EE9D /* JourneyDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC6A49E656E895E7FDCD1E96 /* JourneyDetailView.swift */; };
 		07D82C491BAFD5FA8A68965E /* ShaderPlaygroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB215263A64BE0882D67B1F3 /* ShaderPlaygroundView.swift */; };
 		093E157BE0797EEFDBE6DE7A /* FavoritesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A20EEA199B52A3A2B66325A /* FavoritesListView.swift */; };
@@ -20,12 +20,16 @@
 		189C94AE0BF1C9D3D6AB86F9 /* HomeTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C2048933225A12B749A4D7F /* HomeTab.swift */; };
 		1AB5B80CF57EA812533E06CE /* MapActiveRouteChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA366AD2544EFE026191866B /* MapActiveRouteChip.swift */; };
 		1DB7D0A77B4D8DE7DAAB9604 /* OperatorConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C37683E941E3DD9C29DEA9B /* OperatorConfig.swift */; };
+		1E59FD8DF62ADC4A346A4E94 /* ViewExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86D750054916B9BB0AC01DD2 /* ViewExtensions.swift */; };
 		21F7ABB7A17A817FB3B56E1E /* OverflowBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1BB2090BF4778297476635A /* OverflowBadge.swift */; };
 		23DEEFDA9FD22463C9C348FD /* FilterChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7410BEEC0AEB17E6FFB2785 /* FilterChip.swift */; };
 		253B8533C1701FFDED93A5D0 /* VehicleDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D713C24D42DB86C1C7593BE /* VehicleDetailSheet.swift */; };
 		25F8BA243D5079C094A24A2F /* TransitMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3467B8169A684F3587919902 /* TransitMapView.swift */; };
+		2613A55B8C719E63F7C4FB48 /* PlannerLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0063DBA25418907674264AFF /* PlannerLocation.swift */; };
+		26367F96010FDBB436444C96 /* VehicleLiveCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12E595EE557B4B89C653DF2 /* VehicleLiveCard.swift */; };
 		28924DA06A3B5D02B0C0DCB6 /* StopAnnotationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5481BF9847C559057368FA6B /* StopAnnotationView.swift */; };
 		289F832C5077F291F197874C /* ScheduleLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64B8B11F2D7D9CAE4F81E2B /* ScheduleLoader.swift */; };
+		28B441367397CD46A65670E2 /* JourneyMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EF3176A50EBF273C1004513 /* JourneyMapView.swift */; };
 		2BCA1D7672AA34A413EA9F64 /* OrariTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 265421698770DB34151D287D /* OrariTab.swift */; };
 		2EA54AB0AABB09A86E3ED092 /* MappaTab+Actions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD2EE8B1342B1D8E6FD6E2E /* MappaTab+Actions.swift */; };
 		2EAC01B98E742366A1C8F4C4 /* PlannerTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = F602609FFE84FA3F8409931C /* PlannerTab.swift */; };
@@ -33,6 +37,7 @@
 		35DDCCA972E0C2BE475258E8 /* MarqueeLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D44F141BB08C2CABC2AD686 /* MarqueeLabel.swift */; };
 		35FDAB23947D090227ED347E /* config.json in Resources */ = {isa = PBXBuildFile; fileRef = CC677A39447A949F646FA8DF /* config.json */; };
 		379B6C3D2E804EEE3E5257C7 /* TimeDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3298ECC36B6DC09D4139EC06 /* TimeDisplay.swift */; };
+		403398E0C0270E51F50F67A8 /* LocationPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B3052C8C0D90F67B899028A /* LocationPickerView.swift */; };
 		41C27602529E673926D375E4 /* MarqueeText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 719322EED20F488F3E0B4317 /* MarqueeText.swift */; };
 		41D7758909CF2E3B14B6EB55 /* AlertStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20A26A36C7CE3B4E8EEF7069 /* AlertStore.swift */; };
 		4202488BD8DE478C5F167B97 /* MapExpandedControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50FF8B27808C0B5F4F797E8A /* MapExpandedControls.swift */; };
@@ -48,11 +53,13 @@
 		58E4307F0EF6473220F053E8 /* SkeletonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC6BBEB0DCFFFF27DB881B02 /* SkeletonView.swift */; };
 		5E5B23034730E1830246C761 /* MapZoomLevels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 718C5B6A9CC4184B6E40E212 /* MapZoomLevels.swift */; };
 		661FF8A42FCC29B7B74EB5C0 /* FavoritesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA9BD090565D8838CFA04A8B /* FavoritesManager.swift */; };
+		6A0D75C54862E0398C5758E0 /* DirectionPills.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAF247C63BA3D783DA4D75F5 /* DirectionPills.swift */; };
 		6CE652E0DDE136C66F6F0FED /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DA2366D32AF5DBEACB5DC2 /* GlassCard.swift */; };
 		6E9E91E231876C379713E43E /* FareInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE1EBB88E53560FB389C43FA /* FareInfoView.swift */; };
 		7299B1936085CA7C0D5F426B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E7E5839E8A1674A88E34D940 /* Assets.xcassets */; };
 		75BF9DB9D7CF61A90CEBA2E4 /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02200CAFBA7484EB04E1B31A /* FlowLayout.swift */; };
 		7A9F2EDF896D4F377F7AF931 /* Schedule.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA83972FA950E8F68E2FB2F0 /* Schedule.swift */; };
+		7E9F4D24C89CFB799F824424 /* PlannerHomeBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 488752BF581F957A86F7D779 /* PlannerHomeBox.swift */; };
 		7F19B3C784E533D5471C5BAC /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3ECCF222F6E839416B5E8973 /* MapKit.framework */; };
 		7F5F190ECED7C0E360386483 /* TripDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57168F694B2F4ED9A806021B /* TripDetailView.swift */; };
 		84A2B8BDA416F613EFD73749 /* LineDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FC30DB536DCC2557E2B1AF6 /* LineDetailView.swift */; };
@@ -63,9 +70,10 @@
 		91D73AB4317976D04456A5D4 /* MapSearchPill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B464F0160D57BEE0DEF47B3 /* MapSearchPill.swift */; };
 		9348F246B0AD7805171D1AC0 /* ScheduleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF18EC8C137B8A6F37B3A79F /* ScheduleStore.swift */; };
 		970DD3E8ABA1AF549AAAC5B9 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 40C190F3ADD2E1B0E41BDFC6 /* Localizable.xcstrings */; };
+		97FD1942074FBC5A30261E46 /* LocationPickerMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8B6826165680E704A627FDF /* LocationPickerMap.swift */; };
 		98A9534E14CA4F1B1DF87822 /* schedules.json in Resources */ = {isa = PBXBuildFile; fileRef = EB0D2941E87A9FC1F213D9C7 /* schedules.json */; };
+		98DE59309962AC1F29836503 /* TransitKitSecrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CFE1A3C3B1313A7B5790B4D /* TransitKitSecrets.swift */; };
 		9A874A83ACA91FBB5CE2D435 /* MapBackground.metal in Sources */ = {isa = PBXBuildFile; fileRef = 15E2A948C884E4A05BA72913 /* MapBackground.metal */; };
-		9BFE6F303CAB2E8A94988024 /* RoutingEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87A837900DBEDD8C72C9AD33 /* RoutingEngine.swift */; };
 		9D390E6832E56529BB46181F /* LinePickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A338B0B04B601C99D134BD22 /* LinePickerSheet.swift */; };
 		A187D445C8D1E57438EDC41F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F971BA014101FAA050D40F9 /* ContentView.swift */; };
 		A1E5AD549A70349C0ED89628 /* DockIndicators.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0406584969AA537889762B68 /* DockIndicators.swift */; };
@@ -75,6 +83,7 @@
 		A7139FE92D9B81261286BE0B /* MapControlsColumn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020A8C792B1B76085DCC85E4 /* MapControlsColumn.swift */; };
 		A7E7A82A3DE68C11BA6656D1 /* ConnectionsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A171D8A0D7B978020D89F7F7 /* ConnectionsStore.swift */; };
 		AF071012F83A3D5DE6F9314A /* LineMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 956BB3A2B098FB4B81F4E59E /* LineMapView.swift */; };
+		B26BF0A92702AB726C842EBE /* LiveVehiclesSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789335F061C4DECB0AC4F383 /* LiveVehiclesSection.swift */; };
 		B513766EF6F25125E6EB8868 /* OperatorInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AFA7E5BB483BAD38EF55BD7 /* OperatorInfoView.swift */; };
 		B58FCF53043DB2955FCC1AA3 /* StopDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADA621C317C78061A2EE1BCE /* StopDetailView.swift */; };
 		B6E1C290F802C76A2679A05A /* HeadsignNormalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B93A0A7DFB9F661BB6F31F0 /* HeadsignNormalizer.swift */; };
@@ -110,12 +119,14 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0063DBA25418907674264AFF /* PlannerLocation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerLocation.swift; sourceTree = "<group>"; };
 		015B4E53773EEE32AC100D6F /* LinesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinesListView.swift; sourceTree = "<group>"; };
 		020A8C792B1B76085DCC85E4 /* MapControlsColumn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapControlsColumn.swift; sourceTree = "<group>"; };
 		02200CAFBA7484EB04E1B31A /* FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayout.swift; sourceTree = "<group>"; };
 		0406584969AA537889762B68 /* DockIndicators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DockIndicators.swift; sourceTree = "<group>"; };
 		06000FD86BE3D061DF6266BE /* TransitKitTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = TransitKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0C37683E941E3DD9C29DEA9B /* OperatorConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OperatorConfig.swift; sourceTree = "<group>"; };
+		0CFE1A3C3B1313A7B5790B4D /* TransitKitSecrets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransitKitSecrets.swift; sourceTree = "<group>"; };
 		15E2A948C884E4A05BA72913 /* MapBackground.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = MapBackground.metal; sourceTree = "<group>"; };
 		1860A6235DAC2FB85C1237E4 /* SettingsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsTab.swift; sourceTree = "<group>"; };
 		1B464F0160D57BEE0DEF47B3 /* MapSearchPill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapSearchPill.swift; sourceTree = "<group>"; };
@@ -137,6 +148,7 @@
 		3ECCF222F6E839416B5E8973 /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
 		40C190F3ADD2E1B0E41BDFC6 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		47BE6CB2EB2867D87CA8D146 /* DeepLinkRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkRouter.swift; sourceTree = "<group>"; };
+		488752BF581F957A86F7D779 /* PlannerHomeBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerHomeBox.swift; sourceTree = "<group>"; };
 		4A20EEA199B52A3A2B66325A /* FavoritesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesListView.swift; sourceTree = "<group>"; };
 		4B9FD10B5C48C0410259687C /* VehicleStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleStore.swift; sourceTree = "<group>"; };
 		4D713C24D42DB86C1C7593BE /* VehicleDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleDetailSheet.swift; sourceTree = "<group>"; };
@@ -156,16 +168,18 @@
 		71858BFF6C4A52232A37DF83 /* VehicleAnnotationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleAnnotationView.swift; sourceTree = "<group>"; };
 		718C5B6A9CC4184B6E40E212 /* MapZoomLevels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapZoomLevels.swift; sourceTree = "<group>"; };
 		719322EED20F488F3E0B4317 /* MarqueeText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarqueeText.swift; sourceTree = "<group>"; };
+		789335F061C4DECB0AC4F383 /* LiveVehiclesSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveVehiclesSection.swift; sourceTree = "<group>"; };
 		7EC580DFF98B83E2C0726F26 /* TransitKitApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransitKitApp.swift; sourceTree = "<group>"; };
 		83BA66D57BCDF6E9BD8F67D7 /* LiveBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveBadge.swift; sourceTree = "<group>"; };
+		86D750054916B9BB0AC01DD2 /* ViewExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewExtensions.swift; sourceTree = "<group>"; };
 		879CA176F8269F9A87F967B4 /* PressableButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PressableButtonStyle.swift; sourceTree = "<group>"; };
-		87A837900DBEDD8C72C9AD33 /* RoutingEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoutingEngine.swift; sourceTree = "<group>"; };
-		8DDEC75C7348FC79C25E4B36 /* StopSearchSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopSearchSheet.swift; sourceTree = "<group>"; };
 		916321D65DB9CA29A8CBE188 /* InfoTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InfoTab.swift; sourceTree = "<group>"; };
 		956BB3A2B098FB4B81F4E59E /* LineMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineMapView.swift; sourceTree = "<group>"; };
 		9601C0115B556918E079DD02 /* StopsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopsListView.swift; sourceTree = "<group>"; };
+		9B3052C8C0D90F67B899028A /* LocationPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPickerView.swift; sourceTree = "<group>"; };
 		9B93A0A7DFB9F661BB6F31F0 /* HeadsignNormalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeadsignNormalizer.swift; sourceTree = "<group>"; };
 		9C2048933225A12B749A4D7F /* HomeTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeTab.swift; sourceTree = "<group>"; };
+		9EF3176A50EBF273C1004513 /* JourneyMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyMapView.swift; sourceTree = "<group>"; };
 		A171D8A0D7B978020D89F7F7 /* ConnectionsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionsStore.swift; sourceTree = "<group>"; };
 		A338B0B04B601C99D134BD22 /* LinePickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinePickerSheet.swift; sourceTree = "<group>"; };
 		A7410BEEC0AEB17E6FFB2785 /* FilterChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterChip.swift; sourceTree = "<group>"; };
@@ -182,10 +196,13 @@
 		CC677A39447A949F646FA8DF /* config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = config.json; sourceTree = "<group>"; };
 		CC6A49E656E895E7FDCD1E96 /* JourneyDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyDetailView.swift; sourceTree = "<group>"; };
 		CDBE8C8BFED37B7CFCFCB0CA /* Journey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Journey.swift; sourceTree = "<group>"; };
+		D12E595EE557B4B89C653DF2 /* VehicleLiveCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleLiveCard.swift; sourceTree = "<group>"; };
+		D29022161873C64FFC40CE53 /* WhenChipsRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhenChipsRow.swift; sourceTree = "<group>"; };
 		D89EE35213444EB1DF6A8D93 /* GtfsRtDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GtfsRtDecoder.swift; sourceTree = "<group>"; };
 		DA2061CA100464E2D083D514 /* LucideIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LucideIcon.swift; sourceTree = "<group>"; };
 		DA366AD2544EFE026191866B /* MapActiveRouteChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapActiveRouteChip.swift; sourceTree = "<group>"; };
 		DA9BD090565D8838CFA04A8B /* FavoritesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesManager.swift; sourceTree = "<group>"; };
+		DAF247C63BA3D783DA4D75F5 /* DirectionPills.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectionPills.swift; sourceTree = "<group>"; };
 		E06DDEBAA46B9DDB09944BFF /* PlannerScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerScreen.swift; sourceTree = "<group>"; };
 		E57AC28DB956ECD7D1B2D59C /* AlertListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertListView.swift; sourceTree = "<group>"; };
 		E7E5839E8A1674A88E34D940 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -197,6 +214,7 @@
 		F1C1A030C8B3A8CBB28C9B90 /* StopAlertsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopAlertsSection.swift; sourceTree = "<group>"; };
 		F602609FFE84FA3F8409931C /* PlannerTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerTab.swift; sourceTree = "<group>"; };
 		F64B8B11F2D7D9CAE4F81E2B /* ScheduleLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleLoader.swift; sourceTree = "<group>"; };
+		F8B6826165680E704A627FDF /* LocationPickerMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPickerMap.swift; sourceTree = "<group>"; };
 		FA83972FA950E8F68E2FB2F0 /* Schedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Schedule.swift; sourceTree = "<group>"; };
 		FE07B73091451AC01AF8469A /* AccessibilityInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityInfoView.swift; sourceTree = "<group>"; };
 		FE1EBB88E53560FB389C43FA /* FareInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FareInfoView.swift; sourceTree = "<group>"; };
@@ -230,8 +248,8 @@
 			children = (
 				1D40E7CF6F504A0493455693 /* LocationManager.swift */,
 				24740CAB0ACE9045D18AE42A /* RemoteRoutingProvider.swift */,
-				87A837900DBEDD8C72C9AD33 /* RoutingEngine.swift */,
 				F64B8B11F2D7D9CAE4F81E2B /* ScheduleLoader.swift */,
+				0CFE1A3C3B1313A7B5790B4D /* TransitKitSecrets.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -241,9 +259,12 @@
 			children = (
 				CC2AA53B798B757635860574 /* JourneyCard.swift */,
 				CC6A49E656E895E7FDCD1E96 /* JourneyDetailView.swift */,
+				9EF3176A50EBF273C1004513 /* JourneyMapView.swift */,
+				F8B6826165680E704A627FDF /* LocationPickerMap.swift */,
+				9B3052C8C0D90F67B899028A /* LocationPickerView.swift */,
 				E06DDEBAA46B9DDB09944BFF /* PlannerScreen.swift */,
 				F602609FFE84FA3F8409931C /* PlannerTab.swift */,
-				8DDEC75C7348FC79C25E4B36 /* StopSearchSheet.swift */,
+				D29022161873C64FFC40CE53 /* WhenChipsRow.swift */,
 			);
 			path = Planner;
 			sourceTree = "<group>";
@@ -251,6 +272,7 @@
 		181DBD15AF7E9E8B80D9EBB1 /* Orari */ = {
 			isa = PBXGroup;
 			children = (
+				227C336035B7A84313FEA742 /* LineDetail */,
 				94045D3D0B9D68BAE82FCE22 /* StopDetail */,
 				6FC30DB536DCC2557E2B1AF6 /* LineDetailView.swift */,
 				015B4E53773EEE32AC100D6F /* LinesListView.swift */,
@@ -293,11 +315,22 @@
 			path = Components;
 			sourceTree = "<group>";
 		};
+		227C336035B7A84313FEA742 /* LineDetail */ = {
+			isa = PBXGroup;
+			children = (
+				DAF247C63BA3D783DA4D75F5 /* DirectionPills.swift */,
+				789335F061C4DECB0AC4F383 /* LiveVehiclesSection.swift */,
+				D12E595EE557B4B89C653DF2 /* VehicleLiveCard.swift */,
+			);
+			path = LineDetail;
+			sourceTree = "<group>";
+		};
 		3249C6F15F3583889B1B4EC5 /* Models */ = {
 			isa = PBXGroup;
 			children = (
 				D89EE35213444EB1DF6A8D93 /* GtfsRtDecoder.swift */,
 				CDBE8C8BFED37B7CFCFCB0CA /* Journey.swift */,
+				0063DBA25418907674264AFF /* PlannerLocation.swift */,
 				FA83972FA950E8F68E2FB2F0 /* Schedule.swift */,
 			);
 			path = Models;
@@ -391,6 +424,7 @@
 			children = (
 				9C2048933225A12B749A4D7F /* HomeTab.swift */,
 				30FCB0337BA7C83B21D94CEA /* LocationPrimerView.swift */,
+				488752BF581F957A86F7D779 /* PlannerHomeBox.swift */,
 			);
 			path = Home;
 			sourceTree = "<group>";
@@ -458,6 +492,7 @@
 			children = (
 				A8AB69082C727FD94B52155A /* ColorUtils.swift */,
 				9B93A0A7DFB9F661BB6F31F0 /* HeadsignNormalizer.swift */,
+				86D750054916B9BB0AC01DD2 /* ViewExtensions.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -627,6 +662,7 @@
 				A187D445C8D1E57438EDC41F /* ContentView.swift in Sources */,
 				52C01EFE8203A5A377A4FA1D /* DeepLinkRouter.swift in Sources */,
 				CF82333AC918F9A07C2B1890 /* DepartureRow.swift in Sources */,
+				6A0D75C54862E0398C5758E0 /* DirectionPills.swift in Sources */,
 				A1E5AD549A70349C0ED89628 /* DockIndicators.swift in Sources */,
 				570955E4E445283DADAE8C0E /* EmptyStateView.swift in Sources */,
 				CAEEDD9CD5BC9C8D5B8B4DBD /* ExpandedMapOverlay.swift in Sources */,
@@ -644,6 +680,7 @@
 				43CCFBB0C53FA0CAFAF94AF0 /* Journey.swift in Sources */,
 				D857E1BA67F87AB9B67C117C /* JourneyCard.swift in Sources */,
 				06FFD5B6A277A4D2FEA6EE9D /* JourneyDetailView.swift in Sources */,
+				28B441367397CD46A65670E2 /* JourneyMapView.swift in Sources */,
 				12DD8560C237FA40F6C9984E /* LineBadge.swift in Sources */,
 				84A2B8BDA416F613EFD73749 /* LineDetailView.swift in Sources */,
 				BF93091B594950B89BAE5B01 /* LineFilterChip.swift in Sources */,
@@ -652,7 +689,10 @@
 				A70C511F5EC7CDCD85057E40 /* LineStopsMap.swift in Sources */,
 				F189794232ECAE4227840D68 /* LinesListView.swift in Sources */,
 				4325D83B1D615E6F3F94EA06 /* LiveBadge.swift in Sources */,
+				B26BF0A92702AB726C842EBE /* LiveVehiclesSection.swift in Sources */,
 				A1EC9562509A5D7B1FD08BCA /* LocationManager.swift in Sources */,
+				97FD1942074FBC5A30261E46 /* LocationPickerMap.swift in Sources */,
+				403398E0C0270E51F50F67A8 /* LocationPickerView.swift in Sources */,
 				BFEB814B437915AE14D64239 /* LocationPrimerView.swift in Sources */,
 				D394E8A32DE3511A87B2106F /* LucideIcon.swift in Sources */,
 				1AB5B80CF57EA812533E06CE /* MapActiveRouteChip.swift in Sources */,
@@ -670,12 +710,13 @@
 				B513766EF6F25125E6EB8868 /* OperatorInfoView.swift in Sources */,
 				2BCA1D7672AA34A413EA9F64 /* OrariTab.swift in Sources */,
 				21F7ABB7A17A817FB3B56E1E /* OverflowBadge.swift in Sources */,
+				7E9F4D24C89CFB799F824424 /* PlannerHomeBox.swift in Sources */,
+				2613A55B8C719E63F7C4FB48 /* PlannerLocation.swift in Sources */,
 				0E3B58D6D489F95CFD11E41D /* PlannerScreen.swift in Sources */,
 				2EAC01B98E742366A1C8F4C4 /* PlannerTab.swift in Sources */,
 				F813D4C802D95DE8C17933C5 /* PressableButtonStyle.swift in Sources */,
 				866260AC62EFEE67EC7A1C23 /* RemoteRoutingProvider.swift in Sources */,
 				5785D9F624777AC708F5FC1E /* RouteOverlay.swift in Sources */,
-				9BFE6F303CAB2E8A94988024 /* RoutingEngine.swift in Sources */,
 				7A9F2EDF896D4F377F7AF931 /* Schedule.swift in Sources */,
 				289F832C5077F291F197874C /* ScheduleLoader.swift in Sources */,
 				9348F246B0AD7805171D1AC0 /* ScheduleStore.swift in Sources */,
@@ -689,15 +730,18 @@
 				EDD673EC6CD887E9DDD47422 /* StopCard.swift in Sources */,
 				B58FCF53043DB2955FCC1AA3 /* StopDetailView.swift in Sources */,
 				30E9F573C22D358FC846D364 /* StopMapSheet.swift in Sources */,
-				012BBE6336F1E81A85C9EE89 /* StopSearchSheet.swift in Sources */,
 				0D3364F8923B6F37D3DD18D1 /* StopsListView.swift in Sources */,
 				379B6C3D2E804EEE3E5257C7 /* TimeDisplay.swift in Sources */,
 				A651F455DD5D78C38E388882 /* TransitKitApp.swift in Sources */,
+				98DE59309962AC1F29836503 /* TransitKitSecrets.swift in Sources */,
 				25F8BA243D5079C094A24A2F /* TransitMapView.swift in Sources */,
 				7F5F190ECED7C0E360386483 /* TripDetailView.swift in Sources */,
 				522D52776600CC2D56493829 /* VehicleAnnotationView.swift in Sources */,
 				253B8533C1701FFDED93A5D0 /* VehicleDetailSheet.swift in Sources */,
+				26367F96010FDBB436444C96 /* VehicleLiveCard.swift in Sources */,
 				0472FBE04E76A45E27C5121C /* VehicleStore.swift in Sources */,
+				1E59FD8DF62ADC4A346A4E94 /* ViewExtensions.swift in Sources */,
+				05DC60EF173B5405A3393C92 /* WhenChipsRow.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -746,7 +790,6 @@
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.transitkit.${OPERATOR_ID}";
-				ROUTING_API_KEY = "";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -787,7 +830,6 @@
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.transitkit.${OPERATOR_ID}";
-				ROUTING_API_KEY = "";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = singlefile;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";

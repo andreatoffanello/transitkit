@@ -19,70 +19,91 @@ final class FavoritesManager {
 
     /// Ordered list of favorite stop IDs (most recently added first).
     private(set) var favoriteStopIds: [String] = []
+    /// Ordered list of favorite route IDs (most recently added first).
+    private(set) var favoriteRouteIds: [String] = []
 
     // MARK: Private
 
-    private let key: String
+    private let stopsKey: String
+    private let routesKey: String
     private let defaults: UserDefaults
 
     // MARK: Init
 
-    /// Creates a favorites manager.
-    /// - Parameters:
-    ///   - suiteName: Optional app group suite name for shared UserDefaults.
-    ///   - operatorId: Operator identifier for namespacing the storage key.
     init(operatorId: String = "default", defaults: UserDefaults = .standard) {
-        self.key = "favorites_stops_\(operatorId)"
+        self.stopsKey = "favorites_stops_\(operatorId)"
+        self.routesKey = "favorites_routes_\(operatorId)"
         self.defaults = defaults
-        self.favoriteStopIds = defaults.stringArray(forKey: key) ?? []
+        self.favoriteStopIds = defaults.stringArray(forKey: stopsKey) ?? []
+        self.favoriteRouteIds = defaults.stringArray(forKey: routesKey) ?? []
     }
 
-    // MARK: Queries
+    // MARK: Queries — stops
 
-    /// Returns `true` if the given stop ID is in the favorites list.
     func isFavorite(_ stopId: String) -> Bool {
         favoriteStopIds.contains(stopId)
     }
 
-    // MARK: Mutations
+    // MARK: Mutations — stops
 
-    /// Toggles a stop ID in/out of favorites. Returns the new state.
     @discardableResult
     func toggle(_ stopId: String) -> Bool {
         if let index = favoriteStopIds.firstIndex(of: stopId) {
             favoriteStopIds.remove(at: index)
-            save()
+            saveStops()
             return false
         } else {
             favoriteStopIds.insert(stopId, at: 0)
-            save()
+            saveStops()
             return true
         }
     }
 
-    /// Adds a stop ID to favorites if not already present.
     func add(_ stopId: String) {
         guard !favoriteStopIds.contains(stopId) else { return }
         favoriteStopIds.insert(stopId, at: 0)
-        save()
+        saveStops()
     }
 
-    /// Removes a stop ID from favorites.
     func remove(_ stopId: String) {
         guard let index = favoriteStopIds.firstIndex(of: stopId) else { return }
         favoriteStopIds.remove(at: index)
-        save()
+        saveStops()
     }
 
-    /// Removes all favorites.
     func removeAll() {
         favoriteStopIds.removeAll()
-        save()
+        saveStops()
+    }
+
+    // MARK: Queries — routes
+
+    func isFavoriteRoute(_ routeId: String) -> Bool {
+        favoriteRouteIds.contains(routeId)
+    }
+
+    // MARK: Mutations — routes
+
+    @discardableResult
+    func toggleRoute(_ routeId: String) -> Bool {
+        if let index = favoriteRouteIds.firstIndex(of: routeId) {
+            favoriteRouteIds.remove(at: index)
+            saveRoutes()
+            return false
+        } else {
+            favoriteRouteIds.insert(routeId, at: 0)
+            saveRoutes()
+            return true
+        }
     }
 
     // MARK: Persistence
 
-    private func save() {
-        defaults.set(favoriteStopIds, forKey: key)
+    private func saveStops() {
+        defaults.set(favoriteStopIds, forKey: stopsKey)
+    }
+
+    private func saveRoutes() {
+        defaults.set(favoriteRouteIds, forKey: routesKey)
     }
 }

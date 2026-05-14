@@ -32,7 +32,7 @@ struct LineMapView: View {
     @State private var cachedPolylines: [CachedPolyline] = []
 
     var body: some View {
-        ZStack(alignment: .topLeading) {
+        ZStack(alignment: .top) {
             Map(position: $cameraPosition) {
                 RouteOverlay(polylines: cachedPolylines, color: route.color)
 
@@ -80,58 +80,53 @@ struct LineMapView: View {
                 await decodePolylines()
             }
 
-            // Close button
-            Button { dismiss() } label: {
-                Image(systemName: "xmark")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(.primary)
-                    .frame(width: 44, height: 44)
-                    .background(.regularMaterial, in: Circle())
-                    .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
+            // Top row: line identity (left) + close button (right)
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 6) {
+                    // Line identity badge
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(lineColor)
+                            .frame(width: 10, height: 10)
+                            .overlay(Circle().stroke(.white.opacity(0.4), lineWidth: 1))
+                        Text(route.name)
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .foregroundStyle(.primary)
+                        Text(route.longName ?? "")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .frame(maxWidth: 150)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background(.regularMaterial)
+                    .clipShape(Capsule())
+                    .shadow(color: .black.opacity(0.1), radius: 3, y: 1)
+
+                    // Live badge — only when vehicles present
+                    if !vehicles.isEmpty {
+                        LiveBadge(count: vehicles.count)
+                            .shadow(color: .black.opacity(0.1), radius: 3, y: 1)
+                    }
+                }
+
+                Spacer()
+
+                // Close button — top-right for right-thumb reachability
+                Button { dismiss() } label: {
+                    LucideIcon.x.sized(16)
+                        .foregroundStyle(.primary)
+                        .frame(width: 44, height: 44)
+                        .background(.regularMaterial, in: Circle())
+                        .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
+                }
+                .accessibilityLabel(Text(String(localized: "a11y_close_map")))
+                .accessibilityIdentifier("btn_linemap_close")
             }
             .padding(.top, 56)
-            .padding(.leading, 16)
-            .accessibilityLabel(Text(String(localized: "a11y_close_map")))
-            .accessibilityIdentifier("btn_linemap_close")
-
-            // Top-right: line identity + optional live badge — stacked vertically
-            VStack {
-                HStack {
-                    Spacer()
-                    VStack(alignment: .trailing, spacing: 6) {
-                        // Line identity badge
-                        HStack(spacing: 6) {
-                            Circle()
-                                .fill(lineColor)
-                                .frame(width: 10, height: 10)
-                                .overlay(Circle().stroke(.white.opacity(0.4), lineWidth: 1))
-                            Text(route.name)
-                                .font(.system(size: 13, weight: .bold, design: .rounded))
-                                .foregroundStyle(.primary)
-                            Text(route.longName ?? "")
-                                .font(.system(size: 11))
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
-                                .frame(maxWidth: 150)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 7)
-                        .background(.regularMaterial)
-                        .clipShape(Capsule())
-                        .shadow(color: .black.opacity(0.1), radius: 3, y: 1)
-
-                        // Live badge — only when vehicles present
-                        if !vehicles.isEmpty {
-                            LiveBadge(count: vehicles.count)
-                                .shadow(color: .black.opacity(0.1), radius: 3, y: 1)
-                        }
-                    }
-                    .padding(.top, 58)
-                    .padding(.trailing, 16)
-                }
-                Spacer()
-            }
+            .padding(.horizontal, 16)
         }
     }
 

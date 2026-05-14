@@ -7,6 +7,8 @@ import SwiftUI
 /// in a single browsable list. Tapping any card navigates to its detail view.
 struct ServiziTab: View {
     let config: OperatorConfig
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.isPresented) private var isPresented
 
     var body: some View {
         NavigationStack {
@@ -25,6 +27,20 @@ struct ServiziTab: View {
             .background(AppTheme.background.ignoresSafeArea())
             .navigationTitle(String(localized: "services_title"))
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                if isPresented {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            dismiss()
+                        } label: {
+                            LucideIcon.x.sized(18)
+                                .foregroundStyle(AppTheme.textPrimary)
+                        }
+                        .accessibilityLabel(String(localized: "action_close"))
+                        .accessibilityIdentifier("btn_close_servizi")
+                    }
+                }
+            }
         }
     }
 
@@ -178,11 +194,11 @@ struct ServiziTab: View {
             GlassCard(cornerRadius: 16) {
                 HStack(spacing: 14) {
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .fill(AppTheme.accent)
+                        .fill(AppTheme.accent.opacity(0.14))
                         .frame(width: 48, height: 48)
                         .overlay(
                             LucideIcon.busFront.sized(22)
-                                .foregroundStyle(.white)
+                                .foregroundStyle(AppTheme.accent)
                         )
                     VStack(alignment: .leading, spacing: 2) {
                         Text(config.fullName)
@@ -256,9 +272,10 @@ struct ServiziTab: View {
                     )
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.headline)
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(AppTheme.textPrimary)
-                        .lineLimit(1)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text(subtitle)
                         .font(.subheadline)
                         .foregroundStyle(AppTheme.textSecondary)
@@ -295,9 +312,10 @@ private struct ServiceRowCard: View {
                     )
                 VStack(alignment: .leading, spacing: 3) {
                     Text(service.title.resolved())
-                        .font(.headline)
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(AppTheme.textPrimary)
-                        .lineLimit(1)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text(service.subtitle.resolved())
                         .font(.subheadline)
                         .foregroundStyle(AppTheme.textSecondary)

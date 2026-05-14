@@ -4,6 +4,7 @@
   "cdnUrl": "https://andreatoffanello.github.io/transitkit",
   "routing_endpoint": "https://api.transitkit.app",
   "name": "AppalCART",
+  "brandName": "AppalRider",
   "fullName": "Appalachian District Transportation Authority",
   "url": "https://appalachiantransit.com",
   "region": "Boone, North Carolina",
@@ -38,7 +39,7 @@
     "enableGeolocation": true,
     "enableFavorites": true,
     "enableNotifications": true,
-    "useRemoteEngine": false
+    "useRemoteEngine": true
   },
   "exclude_patterns": [],
   "terminal_overrides": {},

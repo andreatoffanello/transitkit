@@ -1,22 +1,18 @@
 import SwiftUI
 
-/// Route detail screen: header with line badge, direction picker, and stop sequence list.
+/// Route detail screen — Movete-parity layout (May 2026).
+/// Order: alerts → direction pills → live vehicles (filtered by direction) → stops timeline.
+/// No hero map: the toolbar maximize button switches to the Mappa tab focused on this line.
 struct LineDetailView: View {
     let route: APIRoute
     @Environment(ScheduleStore.self) private var store
     @Environment(VehicleStore.self) private var vehicleStore
     @Environment(AlertStore.self) private var alertStore
+    @Environment(FavoritesManager.self) private var favoritesManager
     @Environment(DeepLinkRouter.self) private var router
     @State private var selectedDirectionId: Int = 0
-    @State private var showLineMap = false
 
-    private var lineColor: Color {
-        Color(hex: route.color ?? "#000000")
-    }
-
-    private var headerTextColor: Color {
-        Color(hex: contrastingTextColor(for: route.color ?? "#000000"))
-    }
+    private var lineColor: Color { Color(hex: route.color ?? "#000000") }
 
     private var selectedDirection: APIRouteDirection? {
         route.directions.first { $0.directionId == selectedDirectionId }
@@ -24,6 +20,25 @@ struct LineDetailView: View {
 
     private var stopsInDirection: [ResolvedStop] {
         store.stopsForRoute(route.id, directionId: selectedDirectionId)
+    }
+
+    /// Vehicles on this route, split by selected direction.
+    /// Vehicles whose tripId doesn't resolve to a known direction fall through to "this".
+    private var vehiclesInThisDirection: [GtfsRtVehicle] {
+        vehicleStore.vehicles(forRouteId: route.id).filter {
+            (store.direction(forTripId: $0.tripId) ?? selectedDirectionId) == selectedDirectionId
+        }
+    }
+
+    private var oppositeDirectionCount: Int {
+        guard route.directions.count > 1 else { return 0 }
+        return vehicleStore.vehicles(forRouteId: route.id).filter {
+            (store.direction(forTripId: $0.tripId) ?? selectedDirectionId) != selectedDirectionId
+        }.count
+    }
+
+    private var anyVehiclesOnRoute: Bool {
+        !vehicleStore.vehicles(forRouteId: route.id).isEmpty
     }
 
     // MARK: - Body
@@ -34,71 +49,90 @@ struct LineDetailView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
-                    // Header
-                    lineHeader
-
-                    // Service alerts affecting this line (if any)
                     lineAlertsSection
 
-                    // Inline minimap — shows route shape before the stop list
-                    if !stopsInDirection.isEmpty {
-                        LineStopsMap(stops: stopsInDirection, lineColor: lineColor)
-                            .frame(height: UIScreen.main.bounds.height * 0.35)
+                    if route.directions.count > 1 {
+                        DirectionPills(
+                            directions: route.directions,
+                            lineColor: lineColor,
+                            selectedDirectionId: $selectedDirectionId
+                        )
                     }
 
-                    // Direction picker
-                    if route.directions.count > 1 {
-                        directionPicker
+                    if anyVehiclesOnRoute {
+                        LiveVehiclesSection(
+                            vehicles: vehiclesInThisDirection,
+                            oppositeDirectionCount: oppositeDirectionCount,
+                            lineColor: lineColor,
+                            onVehicleTap: { vehicle in
+                                router.pendingMapPreviewVehicleId = vehicle.id
+                            },
+                            onSwitchDirection: {
+                                guard let other = route.directions
+                                    .first(where: { $0.directionId != selectedDirectionId }) else { return }
+                                withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
+                                    selectedDirectionId = other.directionId
+                                }
+                            },
+                            resolveNextStop: { vehicle in
+                                store.stop(forId: vehicle.currentStopId)?.name
+                            }
+                        )
                     }
 
                     if !stopsInDirection.isEmpty {
                         stopsListHeader
-                    }
-
-                    // Stop sequence timeline
-                    if !stopsInDirection.isEmpty {
                         stopsTimeline
-                    }
-
-                    // Official schedule link (only shown when route_url is present in GTFS)
-                    if false, let url = URL(string: "") {
-                        Link(destination: url) {
-                            HStack(spacing: 6) {
-                                LucideIcon.externalLink.sized(14)
-                                Text(String(localized: "line_official_schedule"))
-                                    .font(.system(size: 14, weight: .semibold))
-                            }
-                            .foregroundStyle(AppTheme.accent)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(AppTheme.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
-                            .padding(.horizontal, 16)
-                        }
-                        .padding(.top, 16)
                     }
 
                     Spacer(minLength: 100)
                 }
+                .padding(.top, 8)
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbarColorScheme(headerTextColor == .white ? .dark : .light, for: .navigationBar)
+        .adaptiveNavBarBackground()
         .toolbar(.hidden, for: .tabBar)
         .toolbar {
+            ToolbarItem(placement: .principal) {
+                HStack(spacing: 8) {
+                    LineBadge(
+                        name: route.name,
+                        color: route.color ?? "#000000",
+                        textColor: route.textColor ?? "#FFFFFF",
+                        size: .small
+                    )
+                    Text(route.longName ?? route.name)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(AppTheme.textPrimary)
+                        .lineLimit(1)
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    showLineMap = true
+                    favoritesManager.toggleRoute(route.id)
                 } label: {
-                    LucideIcon.map.sized(18)
-                        .foregroundStyle(headerTextColor)
+                    LucideIcon.star.sized(18)
+                        .foregroundStyle(favoritesManager.isFavoriteRoute(route.id)
+                                         ? Color.accentColor
+                                         : AppTheme.textSecondary)
+                }
+                .accessibilityLabel(favoritesManager.isFavoriteRoute(route.id)
+                    ? String(localized: "remove_line_from_favorites")
+                    : String(localized: "add_line_to_favorites"))
+                .accessibilityIdentifier("btn_favorite_line")
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    router.pendingMapPreviewRouteId = route.id
+                    router.pendingMapPreviewDirectionId = selectedDirectionId
+                } label: {
+                    LucideIcon.maximize2.sized(18)
+                        .foregroundStyle(AppTheme.textPrimary)
                 }
                 .accessibilityLabel(Text(String(localized: "a11y_line_map")))
                 .accessibilityIdentifier("btn_line_map")
             }
-        }
-        .fullScreenCover(isPresented: $showLineMap) {
-            LineMapView(route: route, directionId: selectedDirectionId)
         }
         .navigationDestination(for: ResolvedStop.self) { stop in
             StopDetailView(stop: stop)
@@ -113,10 +147,8 @@ struct LineDetailView: View {
             }
             if router.autoOpenMap {
                 router.autoOpenMap = false
-                Task { @MainActor in
-                    try? await Task.sleep(nanoseconds: 500_000_000)
-                    self.showLineMap = true
-                }
+                router.pendingMapPreviewRouteId = route.id
+                router.pendingMapPreviewDirectionId = selectedDirectionId
             }
         }
     }
@@ -137,7 +169,7 @@ struct LineDetailView: View {
                         .foregroundStyle(AppTheme.textTertiary)
                     Spacer()
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 20)
 
                 VStack(spacing: 8) {
                     ForEach(alerts) { alert in
@@ -173,7 +205,7 @@ struct LineDetailView: View {
                 }
                 .padding(.horizontal, 16)
             }
-            .padding(.top, 16)
+            .padding(.top, 8)
             .padding(.bottom, 4)
         }
     }
@@ -185,85 +217,6 @@ struct LineDetailView: View {
         case .info:    return AppTheme.accent
         case .unknown: return AppTheme.textTertiary
         }
-    }
-
-    // MARK: - Header
-
-    private var lineHeader: some View {
-        VStack(spacing: 0) {
-            ZStack(alignment: .bottomLeading) {
-                // Background gradient — extends behind navbar via ignoresSafeArea
-                LinearGradient(
-                    colors: [lineColor, lineColor.opacity(0.7)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea(.all, edges: .top)
-
-                // Content
-                VStack(alignment: .leading, spacing: 10) {
-                    Spacer(minLength: 16)
-
-                    HStack(spacing: 12) {
-                        // Large badge
-                        Text(route.name)
-                            .font(.system(size: 28, weight: .black, design: .rounded))
-                            .foregroundStyle(headerTextColor)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(.white.opacity(0.2), in: RoundedRectangle(cornerRadius: 10))
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(route.longName ?? route.name)
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundStyle(headerTextColor)
-                                .lineLimit(2)
-
-                            Text(route.resolvedTransitType.displayName)
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundStyle(headerTextColor.opacity(0.85))
-                        }
-
-                        Spacer()
-                    }
-
-                    // Live vehicle chip — only shown when feed has active vehicles for this route
-                    if vehicleStore.liveCount(forRouteId: route.id) > 0 {
-                        Button { showLineMap = true } label: {
-                            LiveBadge(count: vehicleStore.liveCount(forRouteId: route.id))
-                        }
-                        .accessibilityIdentifier("btn_live_chip")
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 18)
-            }
-            .frame(minHeight: 130)
-            .clipShape(
-                UnevenRoundedRectangle(
-                    bottomLeadingRadius: 20,
-                    bottomTrailingRadius: 20
-                )
-            )
-        }
-    }
-
-    // MARK: - Direction Picker
-
-    private var directionPicker: some View {
-        VStack(spacing: 0) {
-            Picker(String(localized: "direction_label"), selection: $selectedDirectionId) {
-                ForEach(route.directions) { dir in
-                    Text(dir.headsign ?? "")
-                        .lineLimit(1)
-                        .tag(dir.directionId)
-                }
-            }
-            .pickerStyle(.segmented)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-        }
-        .sensoryFeedback(.selection, trigger: selectedDirectionId)
     }
 
     // MARK: - Stops List Header
@@ -296,13 +249,10 @@ struct LineDetailView: View {
                 let isFirst = idx == 0
                 let isLast = idx == stopsInDirection.count - 1
                 let isTerminal = isFirst || isLast
-
-                // Other lines at this stop (excluding current)
                 let coincidences = stop.lineNames.filter { $0 != route.name }
 
                 NavigationLink(value: stop) {
                     HStack(alignment: .top, spacing: 0) {
-                        // Timeline column
                         VStack(spacing: 0) {
                             if isFirst {
                                 Color.clear.frame(width: 3, height: 14)
@@ -329,7 +279,6 @@ struct LineDetailView: View {
                         }
                         .frame(width: 32)
 
-                        // Content
                         VStack(alignment: .leading, spacing: 4) {
                             HStack(spacing: 6) {
                                 Text(stop.name)
@@ -343,20 +292,6 @@ struct LineDetailView: View {
                                     .foregroundStyle(AppTheme.textTertiary)
                             }
 
-                            // Transfer indicator
-                            if stop.lineNames.count > 1 {
-                                HStack(spacing: 3) {
-                                    LucideIcon.refreshCw.image
-                                        .resizable()
-                                        .frame(width: 10, height: 10)
-                                        .foregroundStyle(AppTheme.accent)
-                                    Text(String(localized: "transfer_here"))
-                                        .font(.system(size: 10, weight: .medium))
-                                        .foregroundStyle(AppTheme.accent)
-                                }
-                            }
-
-                            // Coincidence badges
                             if !coincidences.isEmpty {
                                 coincidenceBadges(lines: coincidences)
                             }
@@ -396,5 +331,4 @@ struct LineDetailView: View {
             }
         }
     }
-
 }

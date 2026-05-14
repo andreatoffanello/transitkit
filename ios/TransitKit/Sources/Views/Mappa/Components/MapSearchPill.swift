@@ -13,8 +13,7 @@ struct MapSearchPill: View {
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 10) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 15, weight: .medium))
+                LucideIcon.search.sized(15)
                     .foregroundStyle(.secondary)
                 Text(String(localized: "map_search_placeholder"))
                     .font(.system(size: 15))

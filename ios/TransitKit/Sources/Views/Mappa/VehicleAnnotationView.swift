@@ -82,19 +82,21 @@ struct VehicleAnnotationView: View {
                         )
                         .shadow(color: .black.opacity(0.25), radius: 4, y: 2)
 
-                    // Tail triangle
+                    // Tail triangle — tip tocca il top del ring, nessun gap
                     DownwardBadgeTail()
                         .fill(lineColor)
                         .frame(width: 8, height: 5)
-
-                    Spacer().frame(height: 1)
                 }
 
-                // Halo + ring + dot in un unico Canvas per depth/stabilità
+                // Halo + ring + dot in un unico Canvas per depth/stabilità.
+                // Con badge: center.y = ringR così il ring top tocca il canvas top
+                // e il tail tip si connette senza gap. Senza badge: center.y = size.height/2
+                // per piazzare il dot esattamente sulla coordinata MapKit.
                 Canvas { ctx, size in
-                    let center = CGPoint(x: size.width / 2, y: size.height / 2)
-                    let haloR = size.width / 2
                     let ringR = (dotSize + 3) / 2
+                    let centerY = showBadge ? CGFloat(ringR) : size.height / 2
+                    let center = CGPoint(x: size.width / 2, y: centerY)
+                    let haloR = size.width / 2
                     let dotR = dotSize / 2
 
                     // Halo pulsante
@@ -138,7 +140,7 @@ struct VehicleAnnotationView: View {
                 // centro visivo del composable coincide col centro del pallino
                 // (MapKit Annotation piazza il centro del View sulla coordinata).
                 if showBadge {
-                    Spacer().frame(height: 26)
+                    Spacer().frame(height: 11)
                 }
             }
         }

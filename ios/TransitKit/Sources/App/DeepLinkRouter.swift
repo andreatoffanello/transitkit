@@ -33,6 +33,11 @@ final class DeepLinkRouter {
     var pendingMapOpen: UUID? = nil
     /// Vehicle id to show as preview card on the Mappa tab. Consumed by MappaTab.
     var pendingMapPreviewVehicleId: String? = nil
+    /// Route id to focus on the Mappa tab (camera fit on polyline, line filter).
+    /// Consumed by MappaTab. Used by LineDetail toolbar "open map" button.
+    var pendingMapPreviewRouteId: String? = nil
+    /// Direction id to apply when focusing a route on the Mappa tab.
+    var pendingMapPreviewDirectionId: Int? = nil
     /// Shader playground (dev tool). Set true to present the fullscreen shader view
     /// for visual iteration. Trigger via `transitkit://shader`.
     var showShaderPlayground = false

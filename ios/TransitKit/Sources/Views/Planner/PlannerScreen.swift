@@ -3,7 +3,7 @@ import CoreLocation
 
 // MARK: - WhenSelection
 
-enum WhenSelection: Equatable {
+enum WhenSelection: Equatable, Hashable {
     case now
     case departAt(Date)
     case arriveBy(Date)
@@ -11,25 +11,31 @@ enum WhenSelection: Equatable {
 
 // MARK: - PlannerScreen
 // Input header (origin / destination / when) + journey results list.
-// Origin auto-populates with the nearest stop on appear.
+// Origin auto-populates with the nearest stop on appear unless initialOrigin is provided.
 
 struct PlannerScreen: View {
     @Environment(ScheduleStore.self) private var store
     @Environment(ConnectionsStore.self) private var connectionsStore
     @Environment(LocationManager.self) private var locationManager
 
-    @State private var origin: ResolvedStop? = nil
-    @State private var destination: ResolvedStop? = nil
+    @State private var origin: PlannerLocation?
+    @State private var destination: PlannerLocation?
     @State private var journeys: [Journey] = []
     @State private var isSearching = false
     @State private var searchError: String? = nil
     @State private var hasSearched = false
     @State private var searchTask: Task<Void, Never>? = nil
+    init(initialOrigin: PlannerLocation? = nil, initialDestination: PlannerLocation? = nil, initialWhen: WhenSelection = .now) {
+        _origin = State(initialValue: initialOrigin)
+        _destination = State(initialValue: initialDestination)
+        _whenSelection = State(initialValue: initialWhen)
+    }
+
     @State private var swapRotation: Double = 0
-    @State private var whenSelection: WhenSelection = .now
-    @State private var showWhenSheet = false
-    @State private var showOriginSearch = false
-    @State private var showDestSearch = false
+    @State private var whenSelection: WhenSelection
+    // Difensivo: role + flag separati per evitare iOS 26 navigationDestination glitch
+    @State private var pickerIsOrigin: Bool = true
+    @State private var showPicker = false
     @State private var selectedJourney: Journey? = nil
 
     var body: some View {
@@ -45,17 +51,18 @@ struct PlannerScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarRole(.editor)
         .navigationDestination(item: $selectedJourney) { journey in
-            JourneyDetailView(journey: journey)
+            JourneyDetailView(
+                journey: journey,
+                originName: origin?.name,
+                destinationName: destination?.name
+            )
         }
-        .sheet(isPresented: $showOriginSearch) {
-            StopSearchSheet(role: .origin, excludedStopId: destination?.id, selected: $origin)
-        }
-        .sheet(isPresented: $showDestSearch) {
-            StopSearchSheet(role: .destination, excludedStopId: origin?.id, selected: $destination)
-        }
-        .sheet(isPresented: $showWhenSheet) {
-            WhenSheet(initial: whenSelection) { sel in
-                whenSelection = sel
+        .navigationDestination(isPresented: $showPicker) {
+            LocationPickerView(
+                isOrigin: pickerIsOrigin,
+                excludedStopId: pickerIsOrigin ? destination?.stopId : origin?.stopId
+            ) { location in
+                if pickerIsOrigin { origin = location } else { destination = location }
             }
         }
         .onChange(of: origin) { _, _ in triggerSearch() }
@@ -65,11 +72,23 @@ struct PlannerScreen: View {
         .onAppear {
             locationManager.requestPermissionAndStart()
             if origin == nil, let loc = locationManager.location {
-                origin = nearestStop(to: loc)
+                origin = .userLocation(
+                    name: String(localized: "planner_my_location"),
+                    coordinate: loc.coordinate
+                )
             }
+            // Se PlannerScreen è stato presentato già con origin+destination
+            // (es. via PlannerHomeBox), .onChange(of: origin/destination) non
+            // firerà perché i valori sono settati all'init. Triggera qui.
+            triggerSearch()
         }
         .onChange(of: locationManager.location) { _, loc in
-            if origin == nil, let loc { origin = nearestStop(to: loc) }
+            if origin == nil, let loc {
+                origin = .userLocation(
+                    name: String(localized: "planner_my_location"),
+                    coordinate: loc.coordinate
+                )
+            }
         }
     }
 
@@ -97,7 +116,10 @@ struct PlannerScreen: View {
                         label: origin?.name ?? String(localized: "planner_from_placeholder"),
                         isFilled: origin != nil,
                         clearAction: { origin = nil },
-                        tapAction: { showOriginSearch = true }
+                        tapAction: {
+                            pickerIsOrigin = true
+                            showPicker = true
+                        }
                     )
                     .accessibilityIdentifier("planner_origin_field")
 
@@ -107,15 +129,17 @@ struct PlannerScreen: View {
                         label: destination?.name ?? String(localized: "planner_to_placeholder"),
                         isFilled: destination != nil,
                         clearAction: { destination = nil },
-                        tapAction: { showDestSearch = true }
+                        tapAction: {
+                            pickerIsOrigin = false
+                            showPicker = true
+                        }
                     )
                     .accessibilityIdentifier("planner_dest_field")
                 }
 
                 // Swap button
                 Button { swapStops() } label: {
-                    Image(systemName: "arrow.up.arrow.down")
-                        .font(.system(size: 14, weight: .semibold))
+                    LucideIcon.arrowUpDown.sized(16)
                         .foregroundStyle(AppTheme.accent)
                         .rotationEffect(.degrees(swapRotation))
                         .frame(width: 36, height: 36)
@@ -129,10 +153,10 @@ struct PlannerScreen: View {
             .background(Color(.secondarySystemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
 
-            // When chip
+            // When chips: Adesso/Parti alle/Arriva entro + (time, date) inline.
             HStack {
                 Spacer()
-                WhenChip(selection: whenSelection) { showWhenSheet = true }
+                WhenChipsRow(selection: $whenSelection)
             }
         }
     }
@@ -159,8 +183,7 @@ struct PlannerScreen: View {
 
             if isFilled {
                 Button(action: clearAction) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 14))
+                    LucideIcon.circleX.sized(16)
                         .foregroundStyle(.tertiary)
                         .frame(width: 28, height: 28)
                         .contentShape(Circle())
@@ -176,8 +199,6 @@ struct PlannerScreen: View {
         ScrollView {
             LazyVStack(spacing: 12) {
                 switch connectionsStore.state {
-                case .downloading:
-                    plannerUnavailableView(message: String(localized: "planner_downloading"), showSpinner: true)
                 case .unavailable(let msg):
                     plannerUnavailableView(message: msg, showSpinner: false)
                 default:
@@ -214,7 +235,7 @@ struct PlannerScreen: View {
     }
 
     private func errorView(message: String) -> some View {
-        EmptyStateView(icon: .alertTriangle, title: message)
+        EmptyStateView(icon: .alertTriangle, title: message, tint: .orange)
     }
 
     @ViewBuilder
@@ -243,13 +264,22 @@ struct PlannerScreen: View {
         }
     }
 
-    private func nearestStop(to loc: CLLocation) -> ResolvedStop? {
-        store.stops
-            .min(by: {
-                let da = hypot($0.lat - loc.coordinate.latitude, $0.lng - loc.coordinate.longitude)
-                let db = hypot($1.lat - loc.coordinate.latitude, $1.lng - loc.coordinate.longitude)
-                return da < db
-            })
+    /// Risolve una `PlannerLocation` in una `PlannerStop` per il routing engine.
+    /// - `.stop` → usa direttamente i campi del stop
+    /// - `.place` / `.userLocation` → snap alla fermata GTFS più vicina al coordinate
+    /// Ritorna `nil` se non c'è nessuna fermata caricata.
+    private func resolveStop(_ location: PlannerLocation) -> PlannerStop? {
+        if location.kind == .stop,
+           let stopId = location.stopId,
+           let s = store.stops.first(where: { $0.id == stopId }) {
+            return PlannerStop(id: s.id, name: location.name, lat: s.lat, lng: s.lng)
+        }
+        let lat = location.coordinate.latitude
+        let lng = location.coordinate.longitude
+        guard let nearest = store.stops.min(by: {
+            hypot($0.lat - lat, $0.lng - lng) < hypot($1.lat - lat, $1.lng - lng)
+        }) else { return nil }
+        return PlannerStop(id: nearest.id, name: location.name, lat: nearest.lat, lng: nearest.lng)
     }
 
     @MainActor
@@ -267,11 +297,18 @@ struct PlannerScreen: View {
             return
         }
         guard connectionsStore.isReady else { return }
+        guard let op = resolveStop(o), let dp = resolveStop(d) else { return }
+        guard op.id != dp.id else {
+            // Coordinate diverse ma stessa fermata GTFS più vicina: caso degenere.
+            searchTask?.cancel(); searchTask = nil
+            journeys = []
+            searchError = String(localized: "planner_same_stop")
+            hasSearched = true
+            return
+        }
 
         searchError = nil; isSearching = true; hasSearched = true
         let when = whenSelection
-        let op = PlannerStop(id: o.id, name: o.name, lat: o.lat, lng: o.lng)
-        let dp = PlannerStop(id: d.id, name: d.name, lat: d.lat, lng: d.lng)
         searchTask?.cancel()
         searchTask = Task { @MainActor in
             let results: [Journey]
@@ -285,109 +322,6 @@ struct PlannerScreen: View {
             }
             guard !Task.isCancelled else { return }
             journeys = results; isSearching = false
-        }
-    }
-}
-
-// MARK: - WhenChip
-
-private struct WhenChip: View {
-    let selection: WhenSelection
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 4) {
-                Image(systemName: "clock")
-                    .font(.system(size: 12))
-                Text(label)
-                    .font(.system(size: 13, weight: .medium))
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 10, weight: .semibold))
-            }
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 7)
-            .background(Color(.secondarySystemFill))
-            .clipShape(Capsule())
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var label: String {
-        switch selection {
-        case .now:
-            String(localized: "planner_now")
-        case .departAt(let d):
-            String(format: NSLocalizedString("planner_depart_at_format", comment: ""), timeStr(d))
-        case .arriveBy(let d):
-            String(format: NSLocalizedString("planner_arrive_by_format", comment: ""), timeStr(d))
-        }
-    }
-
-    private func timeStr(_ d: Date) -> String {
-        DateFormatter.localizedString(from: d, dateStyle: .none, timeStyle: .short)
-    }
-}
-
-// MARK: - WhenSheet
-
-struct WhenSheet: View {
-    let initial: WhenSelection
-    let onSelect: (WhenSelection) -> Void
-
-    @Environment(\.dismiss) private var dismiss
-    @State private var mode: Int = 0   // 0=now, 1=depart, 2=arrive
-    @State private var pickedDate: Date = Date()
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Picker(String(localized: "planner_when_title"), selection: $mode) {
-                    Text("planner_now").tag(0)
-                    Text("planner_depart_at").tag(1)
-                    Text("planner_arrive_by").tag(2)
-                }
-                .pickerStyle(.segmented)
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets())
-
-                if mode != 0 {
-                    DatePicker(
-                        String(localized: mode == 1 ? "planner_departure_time" : "planner_arrival_time"),
-                        selection: $pickedDate,
-                        in: Date()...,
-                        displayedComponents: [.date, .hourAndMinute]
-                    )
-                }
-            }
-            .navigationTitle(String(localized: "planner_when_title"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(String(localized: "done")) {
-                        let sel: WhenSelection
-                        switch mode {
-                        case 1: sel = .departAt(pickedDate)
-                        case 2: sel = .arriveBy(pickedDate)
-                        default: sel = .now
-                        }
-                        onSelect(sel)
-                        dismiss()
-                    }
-                    .fontWeight(.semibold)
-                }
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(String(localized: "cancel")) { dismiss() }
-                }
-            }
-        }
-        .onAppear {
-            switch initial {
-            case .now: mode = 0; pickedDate = Date()
-            case .departAt(let d): mode = 1; pickedDate = d
-            case .arriveBy(let d): mode = 2; pickedDate = d
-            }
         }
     }
 }

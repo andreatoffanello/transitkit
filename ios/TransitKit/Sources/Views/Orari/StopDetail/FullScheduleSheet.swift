@@ -104,12 +104,18 @@ struct FullScheduleSheet: View {
                             }
                         } label: {
                             Text(group.displayLabel)
-                                .font(.system(size: 15, weight: isSelected ? .semibold : .regular))
+                                .font(.system(size: 15, weight: isSelected ? .semibold : .medium))
                                 .foregroundStyle(isSelected ? .white : AppTheme.textPrimary)
                                 .padding(.horizontal, 16)
                                 .frame(height: 44)
-                                .background(isSelected ? AppTheme.accent : AppTheme.glassFill)
-                                .clipShape(Capsule())
+                                .background {
+                                    if isSelected {
+                                        Capsule().fill(AppTheme.accent)
+                                    } else {
+                                        Capsule().fill(AppTheme.glassFill)
+                                            .overlay(Capsule().strokeBorder(AppTheme.textPrimary.opacity(0.12), lineWidth: 1))
+                                    }
+                                }
                         }
                         .accessibilityIdentifier("btn_day_\(group.id)")
                     }

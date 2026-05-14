@@ -2,8 +2,6 @@ import SwiftUI
 
 // MARK: - SettingsTab
 
-/// Main settings tab with favorites, notifications, language, and about sections.
-/// Content visibility is driven by `OperatorConfig.features`.
 struct SettingsTab: View {
     @Environment(ScheduleStore.self) private var store
     @Environment(FavoritesManager.self) private var favoritesManager
@@ -23,135 +21,128 @@ struct SettingsTab: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                if let config {
-                    // MARK: Operator Brand Card
-                    Section {
+            ScrollView {
+                LazyVStack(spacing: 20) {
+                    if let config {
                         operatorCard(config: config)
-                    }
-                    .listRowInsets(EdgeInsets())
-                    .listRowBackground(Color.clear)
 
-                    // MARK: Favorites
-                    if config.features.enableFavorites {
-                        Section {
-                            NavigationLink {
-                                FavoritesListView()
-                            } label: {
-                                settingsRow(
-                                    icon: .star,
-                                    iconColor: .yellow,
-                                    title: String(localized: "settings_favorites"),
-                                    detail: favoritesManager.favoriteStopIds.isEmpty
-                                        ? String(localized: "settings_favorites_none")
-                                        : String(format: NSLocalizedString("settings_favorites_count", comment: ""), favoritesManager.favoriteStopIds.count)
-                                )
+                        // MARK: Favorites
+                        if config.features.enableFavorites {
+                            sectionHeader(String(localized: "settings_section_favorites"))
+                            GlassCard(cornerRadius: 16) {
+                                NavigationLink {
+                                    FavoritesListView()
+                                } label: {
+                                    settingsRow(
+                                        icon: .star,
+                                        iconColor: .yellow,
+                                        title: String(localized: "settings_favorites"),
+                                        detail: favoritesManager.favoriteStopIds.isEmpty
+                                            ? String(localized: "settings_favorites_none")
+                                            : String(format: NSLocalizedString("settings_favorites_count", comment: ""), favoritesManager.favoriteStopIds.count),
+                                        tappable: true
+                                    )
+                                }
+                                .buttonStyle(.plain)
                             }
-                        } header: {
-                            Text(String(localized: "settings_section_favorites"))
                         }
-                    }
 
-                    // MARK: Notifications
-                    if config.features.enableNotifications {
-                        Section {
-                            Toggle(isOn: $notificationsEnabled) {
-                                settingsRow(
-                                    icon: .bell,
-                                    iconColor: AppTheme.accent,
-                                    title: String(localized: "settings_notifications"),
-                                    detail: nil
-                                )
+                        // MARK: Notifications
+                        if config.features.enableNotifications {
+                            sectionHeader(String(localized: "settings_section_notifications"))
+                            GlassCard(cornerRadius: 16) {
+                                Toggle(isOn: $notificationsEnabled) {
+                                    settingsRow(
+                                        icon: .bell,
+                                        iconColor: AppTheme.accent,
+                                        title: String(localized: "settings_notifications"),
+                                        detail: String(localized: "settings_notifications_footer"),
+                                        tappable: false
+                                    )
+                                }
+                                .tint(AppTheme.accent)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 4)
                             }
-                            .tint(AppTheme.accent)
-                        } header: {
-                            Text(String(localized: "settings_section_notifications"))
-                        } footer: {
-                            Text(String(localized: "settings_notifications_footer"))
                         }
-                    }
 
-                    // MARK: Language
-                    Section {
-                        settingsRow(
-                            icon: .globe,
-                            iconColor: AppTheme.accent,
-                            title: String(localized: "settings_language"),
-                            detail: currentLanguageLabel
-                        )
-                    } header: {
-                        Text(String(localized: "settings_section_language"))
-                    } footer: {
-                        Text(String(localized: "settings_language_footer"))
-                    }
-
-                    // MARK: Privacy (Location)
-                    Section {
-                        HStack(spacing: 12) {
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(AppTheme.accent.opacity(0.12))
-                                .frame(width: 32, height: 32)
-                                .overlay(
-                                    LucideIcon.mapPin.sized(14)
-                                        .foregroundStyle(AppTheme.accent)
-                                )
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(String(localized: "settings_location_title"))
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundStyle(AppTheme.textPrimary)
-                                Text(locationStatusDescription)
-                                    .font(.caption)
-                                    .foregroundStyle(AppTheme.textSecondary)
-                            }
-                            Spacer()
-                            locationActionButton
-                        }
-                    } header: {
-                        Text(String(localized: "settings_location_section"))
-                    }
-
-                    // MARK: About
-                    Section {
-                        NavigationLink {
-                            AboutView(config: config)
-                        } label: {
+                        // MARK: Language
+                        sectionHeader(String(localized: "settings_section_language"))
+                        GlassCard(cornerRadius: 16) {
                             settingsRow(
-                                icon: .info,
-                                iconColor: AppTheme.textSecondary,
-                                title: String(localized: "settings_about"),
-                                detail: nil
+                                icon: .globe,
+                                iconColor: AppTheme.accent,
+                                title: String(localized: "settings_language"),
+                                tappable: false,
+                                trailing: {
+                                    AnyView(
+                                        Text(currentLanguageLabel)
+                                            .font(.subheadline)
+                                            .foregroundStyle(AppTheme.textTertiary)
+                                    )
+                                }
                             )
                         }
 
-                        HStack {
-                            settingsRow(
-                                icon: .shield,
-                                iconColor: AppTheme.textTertiary,
-                                title: String(localized: "settings_version"),
-                                detail: nil
-                            )
-                            Spacer()
-                            Text(appVersion)
-                                .font(.subheadline)
-                                .foregroundStyle(AppTheme.textTertiary)
+                        // MARK: Privacy (Location)
+                        sectionHeader(String(localized: "settings_location_section"))
+                        GlassCard(cornerRadius: 16) {
+                            locationRow
                         }
-                    } header: {
-                        Text(String(localized: "settings_section_about"))
-                    }
 
-                    // MARK: Informazioni (Disclaimer)
-                    Section {
-                        Text(String(format: String(localized: "settings_disclaimer_body"), config.name, config.fullName))
-                            .font(.system(size: 13))
-                            .foregroundStyle(AppTheme.textSecondary)
-                            .padding(.vertical, 4)
-                    } header: {
-                        Text(String(localized: "settings_info_section"))
+                        // MARK: About
+                        sectionHeader(String(localized: "settings_section_about"))
+                        GlassCard(cornerRadius: 16) {
+                            VStack(spacing: 0) {
+                                NavigationLink {
+                                    AboutView(config: config)
+                                } label: {
+                                    settingsRow(
+                                        icon: .info,
+                                        iconColor: AppTheme.textSecondary,
+                                        title: String(localized: "settings_about"),
+                                        tappable: true
+                                    )
+                                }
+                                .buttonStyle(.plain)
+
+                                Rectangle()
+                                    .fill(AppTheme.separatorLine)
+                                    .frame(height: 0.5)
+                                    .padding(.leading, 56)
+
+                                settingsRow(
+                                    icon: .shield,
+                                    iconColor: AppTheme.textTertiary,
+                                    title: String(localized: "settings_version"),
+                                    tappable: false,
+                                    trailing: {
+                                        AnyView(
+                                            Text(appVersion)
+                                                .font(.subheadline)
+                                                .foregroundStyle(AppTheme.textTertiary)
+                                        )
+                                    }
+                                )
+                            }
+                        }
+
+                        // MARK: Disclaimer
+                        sectionHeader(String(localized: "settings_info_section"))
+                        GlassCard(cornerRadius: 16) {
+                            Text(String(format: String(localized: "settings_disclaimer_body"), config.name, config.fullName))
+                                .font(.system(size: 13))
+                                .foregroundStyle(AppTheme.textSecondary)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 14)
+                        }
+
+                        Spacer(minLength: 40)
                     }
                 }
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
             }
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
             .background(AppTheme.background.ignoresSafeArea())
             .navigationTitle(String(localized: "tab_settings"))
             .navigationBarTitleDisplayMode(.large)
@@ -161,40 +152,35 @@ struct SettingsTab: View {
     // MARK: - Operator Brand Card
 
     private func operatorCard(config: OperatorConfig) -> some View {
-        HStack(spacing: 12) {
-            ZStack {
-                LinearGradient(
-                    colors: [
-                        Color(hex: "06845C"),
-                        Color(hex: "165F9C")
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                Text(initials(for: config.name))
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.white)
-            }
-            .frame(width: 48, height: 48)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+        GlassCard(cornerRadius: 16) {
+            HStack(spacing: 14) {
+                ZStack {
+                    LinearGradient(
+                        colors: [Color(hex: "06845C"), Color(hex: "165F9C")],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    Text(initials(for: config.name))
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.white)
+                }
+                .frame(width: 48, height: 48)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(config.name)
-                    .font(.headline)
-                    .fontWeight(.bold)
-                    .foregroundStyle(AppTheme.textPrimary)
-                Text(config.region)
-                    .font(.subheadline)
-                    .foregroundStyle(AppTheme.textSecondary)
-            }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(config.name)
+                        .font(.headline)
+                        .fontWeight(.bold)
+                        .foregroundStyle(AppTheme.textPrimary)
+                    Text(config.region)
+                        .font(.subheadline)
+                        .foregroundStyle(AppTheme.textSecondary)
+                }
 
-            Spacer()
+                Spacer()
+            }
+            .padding(16)
         }
-        .padding(16)
-        .background(Color(.secondarySystemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
     }
 
     private func initials(for name: String) -> String {
@@ -208,20 +194,21 @@ struct SettingsTab: View {
 
     // MARK: - Settings Row
 
+    @ViewBuilder
     private func settingsRow(
         icon: LucideIcon,
         iconColor: Color,
         title: String,
-        detail: String?
+        detail: String? = nil,
+        tappable: Bool,
+        trailing: (() -> AnyView)? = nil
     ) -> some View {
-        HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 8)
+        HStack(spacing: 14) {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(iconColor.opacity(0.12))
-                .frame(width: 32, height: 32)
-                .overlay(
-                    icon.sized(14)
-                        .foregroundStyle(iconColor)
-                )
+                .frame(width: 40, height: 40)
+                .overlay(icon.sized(16).foregroundStyle(iconColor))
+
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.subheadline.weight(.medium))
@@ -232,10 +219,46 @@ struct SettingsTab: View {
                         .foregroundStyle(AppTheme.textSecondary)
                 }
             }
+
+            Spacer(minLength: 0)
+
+            if let trailing {
+                trailing()
+            } else if tappable {
+                LucideIcon.chevronRight.sized(16)
+                    .foregroundStyle(AppTheme.textTertiary)
+            }
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .contentShape(Rectangle())
     }
 
-    // MARK: - Location (Privacy)
+    // MARK: - Location Row
+
+    private var locationRow: some View {
+        HStack(spacing: 14) {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(AppTheme.accent.opacity(0.12))
+                .frame(width: 40, height: 40)
+                .overlay(LucideIcon.mapPin.sized(16).foregroundStyle(AppTheme.accent))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(String(localized: "settings_location_title"))
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(AppTheme.textPrimary)
+                Text(locationStatusDescription)
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.textSecondary)
+            }
+
+            Spacer(minLength: 0)
+
+            locationActionButton
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+    }
 
     private var locationStatusDescription: String {
         switch locationManager.authorizationStatus {
@@ -269,10 +292,24 @@ struct SettingsTab: View {
             .buttonStyle(.bordered)
             .accessibilityIdentifier("settings_location_open_button")
         default:
-            Image(systemName: "checkmark.circle.fill")
+            LucideIcon.check.sized(18)
                 .foregroundStyle(AppTheme.accent)
                 .accessibilityIdentifier("settings_location_granted")
         }
+    }
+
+    // MARK: - Section Header
+
+    private func sectionHeader(_ title: String) -> some View {
+        HStack {
+            Text(title.uppercased())
+                .font(.caption.weight(.semibold))
+                .kerning(0.6)
+                .foregroundStyle(AppTheme.textTertiary)
+            Spacer()
+        }
+        .padding(.horizontal, 4)
+        .padding(.top, 4)
     }
 
     // MARK: - Language Label

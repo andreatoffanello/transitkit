@@ -2,61 +2,79 @@ import SwiftUI
 
 // MARK: - Map Controls Column
 //
-// Vertical column of circular glass controls on the right edge of the map:
-// recenter (optional — driven by `showsRecenter`), reset default view, and
-// expand-to-fullscreen. Positioned vertically-centered in the map area by
-// the parent's ZStack so it never collides with nav bar or tab bar.
-//
-// Split from `MappaTab.swift` — behavior-preserving.
+// Pill verticale singolo (right edge, mappa compatta) con: 3D/2D, recenter,
+// reset bearing, expand. Il reset bearing compare solo quando il map ha
+// un heading != 0.
 
 struct MapControlsColumn: View {
+    let is3D: Bool
+    let onToggle3D: () -> Void
     let showsRecenter: Bool
     let onRecenter: () -> Void
-    let onReset: () -> Void
+    let showsResetBearing: Bool
+    let onResetBearing: () -> Void
     let onExpand: () -> Void
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 0) {
+            textCell(label: is3D ? "2D" : "3D", action: onToggle3D)
+                .accessibilityLabel(String(localized: is3D ? "map_switch_to_2d" : "map_switch_to_3d"))
+                .accessibilityIdentifier("btn_map_toggle_3d")
+
             if showsRecenter {
-                Button(action: onRecenter) {
-                    LucideIcon.navigation.sized(16)
-                        .foregroundStyle(.primary)
-                        .frame(width: 44, height: 44)
-                        .background(.regularMaterial)
-                        .clipShape(Circle())
-                        .overlay(Circle().stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
-                        .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
-                }
-                .accessibilityLabel(String(localized: "center_on_location"))
-                .accessibilityIdentifier("btn_map_recenter")
+                divider
+                iconCell(icon: .navigation, action: onRecenter)
+                    .accessibilityLabel(String(localized: "center_on_location"))
+                    .accessibilityIdentifier("btn_map_recenter")
             }
 
-            // Reset to default view
-            Button(action: onReset) {
-                LucideIcon.map.sized(16)
-                    .foregroundStyle(.primary)
-                    .frame(width: 44, height: 44)
-                    .background(.regularMaterial)
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
-                    .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
+            if showsResetBearing {
+                divider
+                iconCell(icon: .compass, action: onResetBearing)
+                    .accessibilityLabel(String(localized: "reset_map_view"))
+                    .accessibilityIdentifier("btn_map_reset_bearing")
             }
-            .accessibilityLabel(String(localized: "reset_map_view"))
-            .accessibilityIdentifier("btn_map_reset")
 
-            // Expand to fullscreen
-            Button(action: onExpand) {
-                LucideIcon.maximize2.sized(16)
-                    .foregroundStyle(.primary)
-                    .frame(width: 44, height: 44)
-                    .background(.regularMaterial)
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
-                    .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
-            }
-            .accessibilityLabel(Text(String(localized: "a11y_expand_map")))
-            .accessibilityIdentifier("btn_map_expand")
+            divider
+            iconCell(icon: .maximize2, action: onExpand)
+                .accessibilityLabel(Text(String(localized: "a11y_expand_map")))
+                .accessibilityIdentifier("btn_map_expand")
         }
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
+        )
+        .shadow(color: .black.opacity(0.18), radius: 6, y: 2)
+        .animation(.spring(response: 0.3, dampingFraction: 0.85), value: showsResetBearing)
+        .animation(.spring(response: 0.3, dampingFraction: 0.85), value: showsRecenter)
         .padding(.trailing, 16)
+    }
+
+    private var divider: some View {
+        Rectangle()
+            .fill(Color.primary.opacity(0.10))
+            .frame(width: 28, height: 0.5)
+    }
+
+    private func iconCell(icon: LucideIcon, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            icon.sized(16)
+                .foregroundStyle(.primary)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func textCell(label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(label)
+                .font(.system(size: 13, weight: .bold))
+                .foregroundStyle(.primary)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }

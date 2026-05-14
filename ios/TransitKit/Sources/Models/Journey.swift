@@ -93,9 +93,11 @@ struct TransitLeg: Identifiable {
 // MARK: - IntermediateStop
 
 struct IntermediateStop: Identifiable {
-    let id: String   // stopId
+    let id: String   // stopId (MOTIS raw, può essere prefissato)
     let name: String
     let time: String // "HH:MM"
+    let lat: Double
+    let lng: Double
 }
 
 // MARK: - WalkingLeg
@@ -105,4 +107,6 @@ struct WalkingLeg: Identifiable {
     let fromStop: PlannerStop
     let toStop: PlannerStop
     let walkSeconds: Int
+    /// Metri a piedi (da MOTIS `distance`, fallback walkSeconds * 1.2 m/s).
+    let distanceMeters: Int
 }

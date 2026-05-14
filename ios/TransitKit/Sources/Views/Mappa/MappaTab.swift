@@ -22,6 +22,7 @@ struct MappaTab: View {
     @Environment(ScheduleStore.self) var store
     @Environment(VehicleStore.self) var vehicleStore
     @Environment(DeepLinkRouter.self) var router
+    @Environment(LocationManager.self) var locationManager
 
     // MARK: Map state
     @State var mapRegion: MKCoordinateRegion
@@ -74,9 +75,16 @@ struct MappaTab: View {
     /// and on camera-end so new vehicles pan into view without jumping.
     @State var displayedVehicles: [GtfsRtVehicle] = []
 
+    // MARK: Initial centering
+    @State var didCenterOnDevice = false
+
     // MARK: Vehicle follow
     /// True while the map camera is locked to the selected vehicle's live position.
     @State var isFollowingVehicle = false
+
+    // MARK: 3D toggle
+    /// 3D mode flag. TODO: wire to TransitMapView for live pitch update.
+    @State var is3D: Bool = true
     /// True when the active route overlay was auto-selected by tapping a vehicle
     /// (vs. manually via line picker). Determines whether closing the vehicle card
     /// should also tear down the route overlay.
@@ -142,9 +150,12 @@ struct MappaTab: View {
                 HStack {
                     Spacer()
                     MapControlsColumn(
+                        is3D: is3D,
+                        onToggle3D: { is3D.toggle() },
                         showsRecenter: config.features.enableGeolocation,
                         onRecenter: recenterOnDefault,
-                        onReset: resetToDefaultView,
+                        showsResetBearing: false,
+                        onResetBearing: resetToDefaultView,
                         onExpand: {
                             withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
                                 isExpanded = true
@@ -157,9 +168,12 @@ struct MappaTab: View {
             // MARK: Expanded controls (right + close bottom-center)
             if isExpanded {
                 MapExpandedControls(
+                    is3D: is3D,
+                    onToggle3D: { is3D.toggle() },
                     showsRecenter: config.features.enableGeolocation,
                     onRecenter: recenterOnDefault,
-                    onReset: resetToDefaultView,
+                    showsResetBearing: false,
+                    onResetBearing: resetToDefaultView,
                     onCollapse: {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
                             isExpanded = false
@@ -211,12 +225,22 @@ struct MappaTab: View {
                 )
             }
         }
+        .onAppear {
+            guard !didCenterOnDevice,
+                  let loc = locationManager.location,
+                  config.features.enableGeolocation else { return }
+            didCenterOnDevice = true
+            mapRegion = MKCoordinateRegion(
+                center: loc.coordinate,
+                span: MKCoordinateSpan(latitudeDelta: 0.012, longitudeDelta: 0.012)
+            )
+        }
         .toolbar(.hidden, for: .navigationBar)
         .toolbar(isExpanded ? .hidden : .visible, for: .tabBar)
         .navigationDestination(item: $navigationDestinationStop) { stop in
             StopDetailView(stop: stop)
         }
-        .sheet(isPresented: $showLinePicker) {
+        .fullScreenCover(isPresented: $showLinePicker) {
             LinePickerSheet { route in
                 // Manual line selection — stop any active vehicle follow.
                 isFollowingVehicle = false
@@ -237,6 +261,24 @@ struct MappaTab: View {
                 center: CLLocationCoordinate2D(latitude: stop.lat, longitude: stop.lng),
                 span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
             )
+        }
+        .task(id: router.pendingMapPreviewRouteId) {
+            guard let rid = router.pendingMapPreviewRouteId else { return }
+            let pendingDir = router.pendingMapPreviewDirectionId
+            router.pendingMapPreviewRouteId = nil
+            router.pendingMapPreviewDirectionId = nil
+            // Wait up to 3s for the route catalog to load on cold start.
+            for _ in 0..<30 {
+                if store.route(forId: rid) != nil { break }
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+            guard let route = store.route(forId: rid) else { return }
+            isFollowingVehicle = false
+            routeSelectedByVehicle = false
+            selectedVehicle = nil
+            selectedStop = nil
+            selectRoute(route, directionId: pendingDir ?? route.directions.first?.directionId)
+            fitMapToRoute(route)
         }
         .task(id: router.pendingMapPreviewVehicleId) {
             guard let vid = router.pendingMapPreviewVehicleId else { return }
@@ -288,9 +330,10 @@ struct MappaTab: View {
             refreshSelectedVehicle()
         }
         .accessibilityIdentifier("mappa_tab")
-        .sheet(item: $tripSheetTarget) { target in
+        .fullScreenCover(item: $tripSheetTarget) { target in
             NavigationStack {
                 TripDetailView(departure: target.departure, fromStop: target.fromStop)
+                    .navigationBarBackButtonHidden(true)
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing) {
                             Button(String(localized: "action_chiudi")) {

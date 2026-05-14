@@ -1,27 +1,62 @@
 import SwiftUI
 
+private let journeyTimeFormatter: DateFormatter = {
+    let f = DateFormatter()
+    f.dateFormat = "HH:mm"
+    return f
+}()
+
 // MARK: - JourneyDetailView
-// Full timeline of a journey. 3-column layout: time | node | content.
+//
+// Timeline 3 colonne (orario | nodo | contenuto). Layout portato da Movete:
+// - boardRow / middleSection collassabile / alightRow per ogni TransitLeg
+// - TransferConnectorRow tra due transit legs alla stessa fermata
+// - WalkingLegView con DashedVerticalLine + footprints + minuti + metri
+// - intermediate stops espanse di default per journey diretti (1 transit leg)
+// - EndpointRow bookend (PARTENZA/ARRIVO) quando primo/ultimo leg è camminata
 
 struct JourneyDetailView: View {
     let journey: Journey
+    /// Bookend "Da:..." sopra timeline quando primo leg è walking.
+    var originName: String? = nil
+    /// Bookend "A:..." sotto timeline quando ultimo leg è walking.
+    var destinationName: String? = nil
+
     @State private var expandedLegs: Set<UUID> = []
+    @State private var showFullscreenMap = false
 
     private var defaultExpandedLegs: Set<UUID> {
         journey.transitLegs.count == 1 ? [journey.transitLegs[0].id] : []
     }
 
-    private var subtitle: String {
-        let dur = "\(journey.durationMinutes) min"
-        guard journey.transfers > 0 else { return dur }
-        let ch = journey.transfers == 1 ? "1 change" : "\(journey.transfers) changes"
-        return "\(dur) · \(ch)"
+    private var headerSubtitle: String {
+        let dur = "\(journey.durationMinutes) \(String(localized: "min_abbrev"))"
+        let changes: String = {
+            switch journey.transfers {
+            case 0:  return String(localized: "planner_direct")
+            case 1:  return String(localized: "planner_change_one")
+            default: return String(format: NSLocalizedString("planner_change_count", comment: ""), journey.transfers)
+            }
+        }()
+        let walk: String = journey.totalWalkSeconds > 90
+            ? " · " + String(format: NSLocalizedString("planner_walking_total", comment: ""), journey.totalWalkSeconds / 60)
+            : ""
+        return "\(dur) · \(changes)\(walk)"
     }
 
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
                 heroHeader
+
+                // Mappa overview compatta — tap per fullscreen
+                mapPreview
+                    .padding(.bottom, 16)
+
+                // Bookend partenza
+                if case .walking = journey.legs.first, let name = originName {
+                    EndpointRow(time: journey.departureTime, name: name, role: .origin)
+                }
 
                 ForEach(Array(journey.legs.enumerated()), id: \.element.id) { idx, leg in
                     switch leg {
@@ -39,8 +74,8 @@ struct JourneyDetailView: View {
                             leg: t,
                             isFirst: idx == 0,
                             isLast: idx == journey.legs.count - 1,
-                            isDirectTransfer: prevTransit?.alightStop.id == t.boardStop.id,
-                            isBeforeTransfer: nextTransit?.boardStop.id == t.alightStop.id,
+                            isDirectTransfer: prevTransit?.alightStop.id == t.boardStop.id && prevTransit != nil,
+                            isBeforeTransfer: nextTransit?.boardStop.id == t.alightStop.id && nextTransit != nil,
                             isExpanded: expandedLegs.contains(t.id),
                             onToggleExpand: {
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
@@ -53,6 +88,11 @@ struct JourneyDetailView: View {
                         WalkingLegView(leg: w)
                     }
                 }
+
+                // Bookend arrivo
+                if case .walking = journey.legs.last, let name = destinationName {
+                    EndpointRow(time: journey.arrivalTime, name: name, role: .destination)
+                }
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 32)
@@ -60,28 +100,62 @@ struct JourneyDetailView: View {
         .navigationTitle(String(localized: "planner_journey"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarRole(.editor)
+        .toolbar(.hidden, for: .tabBar)
         .onAppear {
             if expandedLegs.isEmpty { expandedLegs = defaultExpandedLegs }
         }
+        .navigationDestination(isPresented: $showFullscreenMap) {
+            JourneyMapView(journey: journey)
+                .ignoresSafeArea(edges: .bottom)
+                .navigationTitle(String(localized: "planner_route_map"))
+                .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+
+    // MARK: - Map preview
+
+    private var mapPreview: some View {
+        ZStack(alignment: .topTrailing) {
+            JourneyMapView(journey: journey, fixedTier: .city)
+                .allowsHitTesting(false)
+                .frame(height: 200)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color(.separator), lineWidth: 0.5)
+                )
+
+            LucideIcon.maximize2.sized(13)
+                .foregroundStyle(.primary)
+                .frame(width: 32, height: 32)
+                .background(.regularMaterial, in: Circle())
+                .padding(10)
+                .allowsHitTesting(false)
+        }
+        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .onTapGesture {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            showFullscreenMap = true
+        }
+        .accessibilityIdentifier("journey_map_preview")
     }
 
     private var heroHeader: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text(journey.departureTime, style: .time)
-                    .font(.system(size: 28, weight: .bold))
-                Image(systemName: "arrow.right")
-                    .font(.system(size: 18, weight: .semibold))
+                Text(journeyTimeFormatter.string(from: journey.departureTime))
+                    .font(.system(size: 28, weight: .bold).monospacedDigit())
+                LucideIcon.arrowRight.sized(16)
                     .foregroundStyle(.secondary)
-                Text(journey.arrivalTime, style: .time)
-                    .font(.system(size: 28, weight: .bold))
+                Text(journeyTimeFormatter.string(from: journey.arrivalTime))
+                    .font(.system(size: 28, weight: .bold).monospacedDigit())
             }
-            Text(subtitle)
+            Text(headerSubtitle)
                 .font(.system(size: 15))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 4)
         .padding(.top, 16)
         .padding(.bottom, 20)
     }
@@ -89,11 +163,83 @@ struct JourneyDetailView: View {
 
 // MARK: - Layout constants
 
-private let kTimeW: CGFloat = 46
-private let kNodeW: CGFloat = 14
-private let kLineW: CGFloat = 2.5
-private let kDotD: CGFloat = 12
+private let kTimeW:  CGFloat = 46
+private let kNodeW:  CGFloat = 14
+private let kLineW:  CGFloat = 2.5
+private let kDotD:   CGFloat = 12
 private let kColGap: CGFloat = 12
+
+// MARK: - EndpointRow
+//
+// Bookend partenza/arrivo per i journey che iniziano o finiscono con una
+// camminata: mostra il nome del posto selezionato dall'utente con l'orario
+// canonical del journey, allineato alle 3 colonne della timeline.
+
+private struct EndpointRow: View {
+    enum Role { case origin, destination }
+    let time: Date
+    let name: String
+    let role: Role
+
+    // Allineamento verticale: il dot deve sedere sulla stessa baseline del
+    // nome (Text body 15pt). La mini-label PARTENZA/ARRIVO è 11pt sopra il
+    // nome — alta circa 18pt incluso il padding spacing(2) + cap-height SF.
+    // Time + dot pushati giù di 18pt per allinearsi al nome (non al label).
+    private let labelOffset: CGFloat = 18
+
+    var body: some View {
+        HStack(alignment: .top, spacing: kColGap) {
+            Text(journeyTimeFormatter.string(from: time))
+                .font(.system(size: 13, weight: .semibold).monospacedDigit())
+                .foregroundStyle(.primary)
+                .frame(width: kTimeW, alignment: .trailing)
+                .padding(.top, labelOffset)
+
+            VStack(spacing: 0) {
+                if role == .destination {
+                    Rectangle()
+                        .fill(Color(.tertiaryLabel))
+                        .frame(width: kLineW)
+                        .frame(maxHeight: .infinity)
+                }
+                Group {
+                    if role == .origin {
+                        Circle().fill(AppTheme.accent)
+                    } else {
+                        Circle()
+                            .strokeBorder(Color(.label), lineWidth: 2)
+                            .background(Circle().fill(Color(.systemBackground)))
+                    }
+                }
+                .frame(width: kDotD, height: kDotD)
+                .padding(.top, role == .origin ? labelOffset : 0)
+                .padding(.bottom, role == .destination ? labelOffset : 0)
+                if role == .origin {
+                    Rectangle()
+                        .fill(Color(.tertiaryLabel))
+                        .frame(width: kLineW)
+                        .frame(maxHeight: .infinity)
+                }
+            }
+            .frame(width: kNodeW, alignment: .center)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(role == .origin
+                     ? String(localized: "planner_endpoint_departure")
+                     : String(localized: "planner_endpoint_arrival"))
+                    .font(.system(size: 11, weight: .semibold))
+                    .kerning(0.6)
+                    .foregroundStyle(.tertiary)
+                Text(name)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(.primary)
+                    .lineLimit(2)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.vertical, 6)
+    }
+}
 
 // MARK: - TransitLegView
 
@@ -112,19 +258,22 @@ private struct TransitLegView: View {
             : Color(hex: "#\(leg.routeColor)")
     }
 
-    private func tf(_ d: Date) -> String {
-        let f = DateFormatter(); f.dateFormat = "HH:mm"; return f.string(from: d)
-    }
+    private func tf(_ d: Date) -> String { journeyTimeFormatter.string(from: d) }
 
     var body: some View {
         VStack(spacing: 0) {
             boardRow
             middleSection
             alightRow
-            if isBeforeTransfer {
-                TransferConnectorRow()
-            }
+            if isBeforeTransfer { TransferConnectorRow() }
         }
+    }
+
+    // Padding-top comune che allinea verticalmente time + dot + stop name.
+    // 10pt = lascia spazio per il gap dalla riga precedente (walking/transfer).
+    // 0 per il primo leg o transfer diretti (dove non c'è gap sopra).
+    private var topOffset: CGFloat {
+        (isFirst || isDirectTransfer) ? 0 : 10
     }
 
     private var boardRow: some View {
@@ -133,19 +282,24 @@ private struct TransitLegView: View {
                 Color.clear.frame(width: kTimeW, height: 1)
             } else {
                 Text(tf(leg.boardTime))
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold).monospacedDigit())
                     .frame(width: kTimeW, alignment: .trailing)
-                    .padding(.top, 1)
+                    .padding(.top, topOffset + 2)
             }
 
-            VStack(spacing: 0) {
-                if !isFirst && !isDirectTransfer {
-                    Rectangle()
-                        .fill(Color(.tertiaryLabel))
-                        .frame(width: kLineW, height: 10)
+            // ZStack: linea continua come sfondo, dot/rect in foreground.
+            ZStack(alignment: .top) {
+                // Background: rect colorato che parte sotto il dot e va in fondo
+                // alla row → garantisce continuità con middleSection.
+                VStack(spacing: 0) {
+                    Color.clear.frame(width: kLineW, height: topOffset + kDotD)
+                    Rectangle().fill(tColor).frame(width: kLineW)
+                        .frame(maxHeight: .infinity)
                 }
-                Circle().fill(tColor).frame(width: kDotD, height: kDotD)
-                Rectangle().fill(tColor).frame(width: kLineW).frame(minHeight: 14)
+                // Foreground: dot pieno al topOffset (allineato col stop name).
+                Circle().fill(tColor)
+                    .frame(width: kDotD, height: kDotD)
+                    .padding(.top, topOffset)
             }
             .frame(width: kNodeW, alignment: .center)
 
@@ -161,42 +315,48 @@ private struct TransitLegView: View {
                         textColor: leg.routeTextColor.isEmpty ? nil : "#\(leg.routeTextColor)",
                         size: .small
                     )
-                    Text("→ \(leg.headsign)")
-                        .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                    if !leg.headsign.isEmpty {
+                        HStack(spacing: 4) {
+                            LucideIcon.arrowRight.sized(11)
+                                .foregroundStyle(.tertiary)
+                            Text(leg.headsign)
+                                .font(.system(size: 13))
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                        }
+                    }
                 }
                 .padding(.top, (isFirst || isDirectTransfer) ? 0 : 2)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.top, (isFirst || isDirectTransfer) ? 0 : 10)
+            .padding(.top, topOffset)
         }
     }
 
     private var middleSection: some View {
         HStack(alignment: .top, spacing: kColGap) {
             Color.clear.frame(width: kTimeW, height: 1)
-
             Rectangle()
                 .fill(tColor)
                 .frame(width: kLineW)
                 .frame(width: kNodeW, alignment: .center)
+                .frame(maxHeight: .infinity)
 
             VStack(alignment: .leading, spacing: 0) {
                 if !leg.intermediateStops.isEmpty {
                     Button(action: onToggleExpand) {
                         HStack(spacing: 4) {
-                            Image(systemName: "chevron.down")
-                                .font(.system(size: 11, weight: .bold))
+                            LucideIcon.chevronDown.sized(11)
                                 .rotationEffect(isExpanded ? .degrees(0) : .degrees(-90))
                                 .animation(.spring(response: 0.25, dampingFraction: 0.8), value: isExpanded)
-                            Text("\(leg.intermediateStops.count) stops")
+                                .foregroundStyle(.secondary)
+                            Text(intermediateStopsLabel)
                                 .font(.system(size: 13))
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    .padding(.vertical, 10)
                     .buttonStyle(.plain)
+                    .padding(.vertical, 10)
 
                     if isExpanded {
                         VStack(alignment: .leading, spacing: 8) {
@@ -210,7 +370,7 @@ private struct TransitLegView: View {
                                         .foregroundStyle(.secondary)
                                     Spacer()
                                     Text(stop.time)
-                                        .font(.system(size: 12))
+                                        .font(.system(size: 12).monospacedDigit())
                                         .foregroundStyle(.tertiary)
                                 }
                             }
@@ -226,23 +386,37 @@ private struct TransitLegView: View {
         }
     }
 
+    private var intermediateStopsLabel: String {
+        let n = leg.intermediateStops.count
+        return n == 1
+            ? String(localized: "planner_intermediate_one")
+            : String(format: NSLocalizedString("planner_intermediate_count", comment: ""), n)
+    }
+
     private var alightRow: some View {
         HStack(alignment: .top, spacing: kColGap) {
             Text(tf(leg.alightTime))
-                .font(.system(size: 13, weight: .semibold))
+                .font(.system(size: 13, weight: .semibold).monospacedDigit())
                 .frame(width: kTimeW, alignment: .trailing)
-                .padding(.top, 1)
+                .padding(.top, 12)
 
-            VStack(spacing: 0) {
-                Rectangle().fill(tColor).frame(width: kLineW).frame(minHeight: 14)
+            // ZStack: linea continua come sfondo, circle in foreground.
+            ZStack(alignment: .top) {
+                // Background: linea colorata che parte dal top della row e
+                // termina visivamente sotto il centro del circle (allineato
+                // al nome stop alight). Sotto il circle è trasparente (così
+                // la prossima leg/gap inizia pulito).
+                VStack(spacing: 0) {
+                    Rectangle().fill(tColor).frame(width: kLineW)
+                        .frame(height: 10 + kDotD / 2)
+                    Color.clear.frame(width: kLineW).frame(maxHeight: .infinity)
+                }
+                // Foreground: circle al level del nome stop (padding 10).
                 Circle()
                     .strokeBorder(tColor, lineWidth: 2)
+                    .background(Circle().fill(Color(.systemBackground)))
                     .frame(width: kDotD, height: kDotD)
-                if !isLast && !isBeforeTransfer {
-                    Rectangle()
-                        .fill(Color(.tertiaryLabel))
-                        .frame(width: kLineW, height: 10)
-                }
+                    .padding(.top, 10)
             }
             .frame(width: kNodeW, alignment: .center)
 
@@ -261,21 +435,14 @@ private struct TransferConnectorRow: View {
         HStack(alignment: .center, spacing: kColGap) {
             Color.clear.frame(width: kTimeW, height: 1)
 
-            VStack(spacing: 3) {
-                ForEach(0..<4, id: \.self) { _ in
-                    Rectangle()
-                        .fill(Color(.tertiaryLabel))
-                        .frame(width: 1.5, height: 4)
-                }
-            }
-            .frame(width: kNodeW, alignment: .center)
+            DashedVerticalLine()
+                .frame(width: kNodeW, alignment: .center)
 
             HStack(spacing: 5) {
-                Image(systemName: "arrow.triangle.2.circlepath")
-                    .font(.system(size: 11))
-                    .foregroundStyle(Color(.secondaryLabel))
-                Text("planner_change")
-                    .font(.system(size: 12))
+                LucideIcon.repeat2.sized(13)
+                    .foregroundStyle(.secondary)
+                Text(String(localized: "planner_transfer_line"))
+                    .font(.system(size: 13))
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -293,26 +460,51 @@ private struct WalkingLegView: View {
         HStack(alignment: .center, spacing: kColGap) {
             Color.clear.frame(width: kTimeW, height: 1)
 
-            VStack(spacing: 3) {
-                ForEach(0..<4, id: \.self) { _ in
-                    Rectangle()
-                        .fill(Color(.tertiaryLabel))
-                        .frame(width: 1.5, height: 4)
-                }
-            }
-            .frame(width: kNodeW, alignment: .center)
+            DashedVerticalLine()
+                .frame(width: kNodeW, alignment: .center)
 
             HStack(spacing: 6) {
-                Image(systemName: "figure.walk")
-                    .font(.system(size: 16))
-                    .foregroundStyle(Color(.secondaryLabel))
-                let mins = max(1, leg.walkSeconds / 60)
-                Text("\(mins) min walk")
-                    .font(.system(size: 13))
+                LucideIcon.footprints.sized(14)
                     .foregroundStyle(.secondary)
+                Text(String(format: NSLocalizedString("planner_walking_minutes", comment: ""),
+                            max(1, leg.walkSeconds / 60)))
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.secondary)
+                if leg.distanceMeters >= 50 {
+                    Text("·")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.tertiary)
+                    Text("\(leg.distanceMeters) m")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.tertiary)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, 10)
         }
+    }
+}
+
+// MARK: - DashedVerticalLine
+//
+// Linea verticale tratteggiata via Path stroke dash — più elegante dello stack
+// di Rectangle. Identica a `movete/.../DashedVerticalLine`.
+
+private struct DashedVerticalLine: View {
+    var color: Color = Color(.tertiaryLabel).opacity(0.85)
+    var lineWidth: CGFloat = 1.5
+    var dash: [CGFloat] = [3, 3]
+    var minHeight: CGFloat = 22
+
+    var body: some View {
+        GeometryReader { geo in
+            Path { path in
+                let x = geo.size.width / 2
+                path.move(to: CGPoint(x: x, y: 0))
+                path.addLine(to: CGPoint(x: x, y: geo.size.height))
+            }
+            .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, dash: dash))
+        }
+        .frame(minHeight: minHeight)
     }
 }

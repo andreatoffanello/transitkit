@@ -1588,6 +1588,68 @@
         }
       }
     },
+    "home_section_favorites": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favorite stops"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermate preferite"
+          }
+        },
+        "es-419": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paradas favoritas"
+          }
+        }
+      }
+    },
+    "home_section_nearby": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stops near you"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermate vicino a te"
+          }
+        },
+        "es-419": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paradas cerca de ti"
+          }
+        }
+      }
+    },
+    "map_switch_to_2d": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Switch to 2D" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Passa a 2D" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Cambiar a 2D" } }
+      }
+    },
+    "map_switch_to_3d": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Switch to 3D" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Passa a 3D" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Cambiar a 3D" } }
+      }
+    },
     "info_data_last_updated": {
       "extractionState": "manual",
       "localizations": {
@@ -1952,6 +2014,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld rutas encontradas"
+          }
+        }
+      }
+    },
+    "line_picker_live_now": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Live now"
+          }
+        },
+        "es-419": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En vivo"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In servizio ora"
+          }
+        }
+      }
+    },
+    "line_picker_schedule_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schedule only"
+          }
+        },
+        "es-419": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo horario"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo orario"
           }
         }
       }
@@ -5084,6 +5192,150 @@
         }
       }
     },
+    "tab_alerts": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Alerts" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Avisos" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Avvisi" } }
+      }
+    },
+    "alerts_filter_all": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "All" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Todos" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Tutti" } }
+      }
+    },
+    "alerts_filter_favorites": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Favorites" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Favoritos" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Preferiti" } }
+      }
+    },
+    "alerts_filter_route": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Line" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Línea" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Linea" } }
+      }
+    },
+    "alerts_empty_no_favorites_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No favorite lines yet" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Aún no hay líneas favoritas" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Nessuna linea preferita" } }
+      }
+    },
+    "alerts_empty_no_favorites_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Mark lines as favorite to filter alerts." } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Marca líneas como favoritas para filtrar los avisos." } },
+        "it": { "stringUnit": { "state": "translated", "value": "Aggiungi linee ai preferiti per filtrare gli avvisi." } }
+      }
+    },
+    "alerts_empty_favorites_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Your lines look clear" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Tus líneas están sin avisos" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Le tue linee sono regolari" } }
+      }
+    },
+    "alerts_empty_favorites_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No active alerts on your favorite lines." } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "No hay avisos activos en tus líneas favoritas." } },
+        "it": { "stringUnit": { "state": "translated", "value": "Nessun avviso attivo sulle tue linee preferite." } }
+      }
+    },
+    "alerts_empty_route_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No alerts on this line" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Sin avisos en esta línea" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Nessun avviso su questa linea" } }
+      }
+    },
+    "alerts_empty_route_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "This line has no active disruptions." } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Esta línea no tiene incidencias activas." } },
+        "it": { "stringUnit": { "state": "translated", "value": "Questa linea non ha disservizi attivi." } }
+      }
+    },
+    "line_detail_in_service": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%lld IN SERVICE" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "%lld EN SERVICIO" } },
+        "it": { "stringUnit": { "state": "translated", "value": "%lld IN SERVIZIO" } }
+      }
+    },
+    "line_detail_no_buses_this_direction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No buses on this direction right now" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "No hay autobuses en esta dirección" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Nessun bus in viaggio in questa direzione" } }
+      }
+    },
+    "line_detail_n_in_opposite_direction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%lld in opposite direction — tap to switch" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "%lld en dirección opuesta — toca para cambiar" } },
+        "it": { "stringUnit": { "state": "translated", "value": "%lld in direzione opposta — tocca per passare" } }
+      }
+    },
+    "vehicle_next_stop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "NEXT STOP" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "PRÓXIMA PARADA" } },
+        "it": { "stringUnit": { "state": "translated", "value": "PROSSIMA FERMATA" } }
+      }
+    },
+    "vehicle_next_stop_unknown": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Unknown" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Desconocida" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Sconosciuta" } }
+      }
+    },
+    "vehicle_label_format": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Bus %@" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Autobús %@" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Vettura %@" } }
+      }
+    },
+    "add_line_to_favorites": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Add line to favorites" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Añadir línea a favoritos" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Aggiungi linea ai preferiti" } }
+      }
+    },
+    "remove_line_from_favorites": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Remove line from favorites" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Quitar línea de favoritos" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Rimuovi linea dai preferiti" } }
+      }
+    },
     "alerts_empty_title": {
       "extractionState": "manual",
       "localizations": {
@@ -5774,6 +6026,29 @@
         }
       }
     },
+    "home_operator_routes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d routes"
+          }
+        },
+        "es-419": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d líneas"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d linee"
+          }
+        }
+      }
+    },
     "home_footer_disclaimer": {
       "extractionState": "manual",
       "localizations": {
@@ -5941,19 +6216,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enable location"
+            "value": "Continue"
           }
         },
         "es-419": {
           "stringUnit": {
             "state": "translated",
-            "value": "Activar ubicación"
+            "value": "Continuar"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Attiva posizione"
+            "value": "Continua"
           }
         }
       }
@@ -6148,19 +6423,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "From"
+            "value": "Where from?"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Da"
+            "value": "Da dove parti?"
           }
         },
         "es-419": {
           "stringUnit": {
             "state": "translated",
-            "value": "Desde"
+            "value": "¿Desde dónde?"
           }
         }
       }
@@ -6171,21 +6446,125 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "To"
+            "value": "Where to?"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "A"
+            "value": "Dove vai?"
           }
         },
         "es-419": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hacia"
+            "value": "¿A dónde?"
           }
         }
+      }
+    },
+    "planner_my_location": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "My location" } },
+        "it": { "stringUnit": { "state": "translated", "value": "La mia posizione" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Mi ubicación" } }
+      }
+    },
+    "planner_location_active": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Location active" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Posizione attiva" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Ubicación activa" } }
+      }
+    },
+    "planner_location_unavailable": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Enable location to use this option" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Attiva la posizione per usare questa opzione" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Activa la ubicación para usar esta opción" } }
+      }
+    },
+    "planner_pick_on_map": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Choose on map" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Scegli sulla mappa" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Elegir en el mapa" } }
+      }
+    },
+    "planner_pick_on_map_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Drop a pin anywhere" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Lascia un pin dove vuoi" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Coloca un pin donde quieras" } }
+      }
+    },
+    "planner_no_results": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "No results" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Nessun risultato" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Sin resultados" } }
+      }
+    },
+    "planner_confirm_location": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Confirm location" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Conferma posizione" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Confirmar ubicación" } }
+      }
+    },
+    "planner_map_nearest_stop": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Nearest stop" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Fermata più vicina" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Parada más cercana" } }
+      }
+    },
+    "planner_map_nearest_stop_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Nearest transit stop to your point" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Fermata transit più vicina al punto" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Parada de transporte más cercana al punto" } }
+      }
+    },
+    "planner_map_drag_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Drag the map to move the pin" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Trascina la mappa per spostare il pin" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Arrastra el mapa para mover el pin" } }
+      }
+    },
+    "planner_map_selected_location": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Selected location" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Posizione selezionata" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Ubicación seleccionada" } }
+      }
+    },
+    "map_center_on_me": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Center on my location" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Centra sulla mia posizione" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Centrar en mi ubicación" } }
+      }
+    },
+    "planner_swap_label": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Swap origin and destination" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Inverti origine e destinazione" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Invertir origen y destino" } }
       }
     },
     "planner_from_placeholder": {
@@ -6194,19 +6573,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "From…"
+            "value": "Departure"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Da…"
+            "value": "Partenza"
           }
         },
         "es-419": {
           "stringUnit": {
             "state": "translated",
-            "value": "Desde…"
+            "value": "Salida"
           }
         }
       }
@@ -6217,19 +6596,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "To…"
+            "value": "Destination"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "A…"
+            "value": "Destinazione"
           }
         },
         "es-419": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hacia…"
+            "value": "Destino"
           }
         }
       }
@@ -6579,6 +6958,102 @@
         }
       }
     },
+    "min_abbrev": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "min" } },
+        "it": { "stringUnit": { "state": "translated", "value": "min" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "min" } }
+      }
+    },
+    "planner_direct": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "direct" } },
+        "it": { "stringUnit": { "state": "translated", "value": "diretto" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "directo" } }
+      }
+    },
+    "planner_endpoint_departure": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "DEPARTURE" } },
+        "it": { "stringUnit": { "state": "translated", "value": "PARTENZA" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "SALIDA" } }
+      }
+    },
+    "planner_endpoint_arrival": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "ARRIVAL" } },
+        "it": { "stringUnit": { "state": "translated", "value": "ARRIVO" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "LLEGADA" } }
+      }
+    },
+    "planner_walking_total": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%d min walking" } },
+        "it": { "stringUnit": { "state": "translated", "value": "%d min a piedi" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "%d min a pie" } }
+      }
+    },
+    "planner_walking_minutes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%d min walking" } },
+        "it": { "stringUnit": { "state": "translated", "value": "%d min a piedi" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "%d min a pie" } }
+      }
+    },
+    "planner_intermediate_one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "1 intermediate stop" } },
+        "it": { "stringUnit": { "state": "translated", "value": "1 fermata intermedia" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "1 parada intermedia" } }
+      }
+    },
+    "planner_intermediate_count": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%d intermediate stops" } },
+        "it": { "stringUnit": { "state": "translated", "value": "%d fermate intermedie" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "%d paradas intermedias" } }
+      }
+    },
+    "planner_transfer_line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Transfer" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Cambio linea" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Transbordo" } }
+      }
+    },
+    "today_short": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Today" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Oggi" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Hoy" } }
+      }
+    },
+    "tomorrow_short": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Tomorrow" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Domani" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Mañana" } }
+      }
+    },
+    "planner_route_map": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Route map" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Percorso" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Recorrido" } }
+      }
+    },
     "planner_change_one": {
       "extractionState": "manual",
       "localizations": {
@@ -6621,6 +7096,52 @@
           "stringUnit": {
             "state": "translated",
             "value": "%d cambios"
+          }
+        }
+      }
+    },
+    "planner_depart_from_here": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Depart from here"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parti da qui"
+          }
+        },
+        "es-419": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salir desde aquí"
+          }
+        }
+      }
+    },
+    "planner_arrive_here": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrive here"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arriva qui"
+          }
+        },
+        "es-419": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Llegar aquí"
           }
         }
       }

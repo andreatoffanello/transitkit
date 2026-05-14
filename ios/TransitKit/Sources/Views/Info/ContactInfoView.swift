@@ -68,10 +68,10 @@ struct ContactInfoView: View {
                     }
                 }
 
-                Spacer(minLength: 32)
             }
             .padding(.horizontal, 16)
             .padding(.top, 8)
+            .padding(.bottom, 32)
         }
         .background(AppTheme.background.ignoresSafeArea())
         .navigationTitle(String(localized: "services_section_contact"))

@@ -10,13 +10,30 @@ struct LocationPrimerView: View {
 
     var body: some View {
         ZStack {
-            // Same ghost map background as Home for visual continuity
+            // Solid background base — same del theme — sotto al ghost map così
+            // il testo ha sempre un fondo pulito su cui appoggiarsi.
+            AppTheme.background.ignoresSafeArea()
+
+            // Ghost map background — molto leggero per non competere col testo.
             Image("OperatorBackground")
                 .resizable()
                 .aspectRatio(contentMode: .fill)
+                .opacity(0.08)
                 .ignoresSafeArea()
-                .opacity(0.18)
-                .overlay(Color.black.opacity(0.15).ignoresSafeArea())
+
+            // Fade radiale verso il centro per dare un'isola di leggibilità
+            // attorno a icona/titolo senza nascondere la texture ai bordi.
+            RadialGradient(
+                colors: [
+                    AppTheme.background.opacity(0.85),
+                    AppTheme.background.opacity(0.0)
+                ],
+                center: .center,
+                startRadius: 60,
+                endRadius: 360
+            )
+            .ignoresSafeArea()
+            .allowsHitTesting(false)
 
             VStack(spacing: 24) {
                 Spacer()

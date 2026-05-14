@@ -16,8 +16,12 @@ struct HomeTab: View {
     @State private var selectedMainStop: ResolvedStop?
     @State private var showSettings = false
     @State private var showAlertList = false
+    @State private var showServizi = false
     @AppStorage("hasSeenLocationPrimer") private var hasSeenLocationPrimer = false
     @State private var showLocationPrimer = false
+
+    // MARK: Journey planner
+    @State private var plannerLaunch: PlannerLaunch? = nil
 
     // MARK: - Greeting
 
@@ -110,8 +114,12 @@ struct HomeTab: View {
                         homeMinimalHeader
 
                         VStack(spacing: 20) {
+                            PlannerHomeBox { origin, dest, when in
+                                plannerLaunch = PlannerLaunch(origin: origin, destination: dest, when: when)
+                            }
                             favoritesSection
                             nearbyStopsSection
+                            operatorInfoCard
                             footerDisclaimer
                         }
                         .padding(.horizontal, 16)
@@ -173,9 +181,19 @@ struct HomeTab: View {
                     .accessibilityLabel(String(localized: "tab_settings"))
                 }
             }
-            .sheet(isPresented: $showSettings) { SettingsTab() }
-            .sheet(isPresented: $showAlertList) {
+            .fullScreenCover(isPresented: $showSettings) { SettingsTab() }
+            .fullScreenCover(isPresented: $showAlertList) {
                 NavigationStack { AlertListView() }
+            }
+            .fullScreenCover(isPresented: $showServizi) {
+                if let config { ServiziTab(config: config) }
+            }
+            .navigationDestination(item: $plannerLaunch) { launch in
+                PlannerScreen(
+                    initialOrigin: launch.origin,
+                    initialDestination: launch.destination,
+                    initialWhen: launch.when
+                )
             }
             .navigationDestination(item: $selectedMainStop) { stop in
                 StopDetailView(stop: stop)
@@ -196,7 +214,7 @@ struct HomeTab: View {
             }
             if let config {
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(config.name)
+                    Text(config.brandName ?? config.name)
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(AppTheme.textPrimary)
                     if !config.region.isEmpty {
@@ -281,7 +299,7 @@ struct HomeTab: View {
     @ViewBuilder
     private var favoritesSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionHeader(String(localized: "favorites"))
+            sectionHeader(String(localized: "home_section_favorites"), icon: .star)
 
             if favoriteStops.isEmpty {
                 onboardingCard
@@ -352,17 +370,13 @@ struct HomeTab: View {
             let nearby = nearbyStopsWithDistance.filter { $0.1 <= 400 }
             if !nearby.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
-                    sectionHeader(String(localized: "nearby_you"))
-                    VStack(spacing: 8) {
+                    sectionHeader(String(localized: "home_section_nearby"), icon: .mapPin)
+                    VStack(spacing: 4) {
                         ForEach(nearby, id: \.0.id) { (stop, distance) in
-                            Button {
-                                selectedMainStop = stop
-                            } label: {
-                                stopCard(stop, showLiveBadge: true, distanceMeters: distance)
-                            }
-                            .buttonStyle(.plain)
+                            nearbyStopRow(stop, distanceMeters: distance)
                         }
                     }
+                    .adaptiveGlass(in: RoundedRectangle(cornerRadius: 14), withShadow: true)
                 }
             }
         default:
@@ -371,7 +385,37 @@ struct HomeTab: View {
     }
 
 
-    // MARK: - Stop Card (shared for favorites and nearby)
+    // MARK: - Nearby Compact Row
+
+    private func nearbyStopRow(_ stop: ResolvedStop, distanceMeters: Double) -> some View {
+        Button {
+            selectedMainStop = stop
+        } label: {
+            HStack(spacing: 10) {
+                stopPinIcon(transitTypes: stop.transitTypes).image
+                    .resizable()
+                    .frame(width: 14, height: 14)
+                    .foregroundStyle(AppTheme.textSecondary)
+                Text(stop.name)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .lineLimit(1)
+                Spacer()
+                Text(walkingTime(meters: distanceMeters))
+                    .font(.system(size: 13))
+                    .foregroundStyle(AppTheme.textSecondary)
+                LucideIcon.chevronRight.sized(11)
+                    .foregroundStyle(AppTheme.textTertiary)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("home_nearby_stop_\(stop.id)")
+    }
+
+    // MARK: - Stop Card (favorites)
 
     private func stopCard(_ stop: ResolvedStop, showLiveBadge: Bool, distanceMeters: Double? = nil) -> some View {
         let departures = store.upcomingDepartures(forStopId: stop.id, limit: 3)
@@ -415,7 +459,7 @@ struct HomeTab: View {
                                 LiveBadge()
                             }
                             TimelineView(.periodic(from: .now, by: 30)) { _ in
-                                TimeDisplay(departure: dep)
+                                TimeDisplay(departure: dep, relativeThreshold: 1440)
                             }
                         }
                         .padding(.vertical, 6)
@@ -491,12 +535,96 @@ struct HomeTab: View {
 
     // MARK: - Helpers
 
-    private func sectionHeader(_ title: String) -> some View {
-        Text(title)
-            .font(.footnote.weight(.semibold))
-            .foregroundStyle(AppTheme.textTertiary)
-            .textCase(.uppercase)
-            .kerning(0.5)
+    private func sectionHeader(_ title: String, icon: LucideIcon? = nil) -> some View {
+        HStack(spacing: 7) {
+            if let icon {
+                icon.sized(14)
+                    .foregroundStyle(AppTheme.textSecondary)
+            }
+            Text(title)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(AppTheme.textPrimary)
+        }
+        .padding(.leading, 2)
+    }
+
+    // MARK: - Operator Info Card
+
+    @ViewBuilder
+    private var operatorInfoCard: some View {
+        if let config {
+            let liveCount = vehicleStore.vehicles.count
+            let routeCount = store.routes.count
+
+            Button {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                showServizi = true
+            } label: {
+            HStack(spacing: 14) {
+                // Logo reale dell'operatore sorgente — questa card attribuisce
+                // i dati al servizio pubblico (AppalCART), non al brand bianco
+                // dell'app. Fallback al gradient+bus se l'asset manca.
+                Group {
+                    if UIImage(named: "SourceOperatorLogo") != nil {
+                        Image("SourceOperatorLogo")
+                            .resizable()
+                            .scaledToFit()
+                    } else {
+                        ZStack {
+                            LinearGradient(
+                                colors: [AppTheme.accent, Color(hex: config.theme.primaryColor)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                            LucideIcon.bus.sized(20)
+                                .foregroundStyle(.white)
+                        }
+                    }
+                }
+                .frame(width: 44, height: 44)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                VStack(alignment: .leading, spacing: 2) {
+                    // Nome ufficiale dell'agenzia (non il brandName del white-label).
+                    Text(config.name)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(AppTheme.textPrimary)
+                    Text(config.fullName)
+                        .font(.system(size: 11))
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 0)
+
+                VStack(alignment: .trailing, spacing: 4) {
+                    if liveCount > 0 {
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(AppTheme.realtimeGreen)
+                                .frame(width: 6, height: 6)
+                            Text("\(liveCount)")
+                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                .foregroundStyle(AppTheme.realtimeGreen)
+                        }
+                    }
+                    if routeCount > 0 {
+                        Text(String(format: String(localized: "home_operator_routes"), routeCount))
+                            .font(.system(size: 11))
+                            .foregroundStyle(AppTheme.textTertiary)
+                    }
+                }
+
+                LucideIcon.chevronRight.sized(14)
+                    .foregroundStyle(AppTheme.textTertiary)
+            }
+            .padding(14)
+            .adaptiveGlass(in: RoundedRectangle(cornerRadius: 14), withShadow: true)
+            }
+            .buttonStyle(PressableCardStyle())
+            .accessibilityIdentifier("home_operator_info_card")
+            .accessibilityLabel(String(localized: "services_title"))
+        }
     }
 
     // MARK: - Footer Disclaimer
@@ -512,4 +640,13 @@ struct HomeTab: View {
                 .padding(.top, 8)
         }
     }
+}
+
+// MARK: - PlannerLaunch
+
+struct PlannerLaunch: Identifiable, Hashable {
+    let id = UUID()
+    let origin: PlannerLocation
+    let destination: PlannerLocation
+    let when: WhenSelection
 }

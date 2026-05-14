@@ -25,8 +25,7 @@ struct MapActiveRouteChip: View {
                             .foregroundStyle(.secondary)
                     }
                 }
-                Image(systemName: "xmark")
-                    .font(.caption2.weight(.bold))
+                LucideIcon.x.sized(14)
                     .foregroundStyle(.secondary)
                     .frame(width: 18, height: 18)
                     .background(Color.primary.opacity(0.08), in: Circle())

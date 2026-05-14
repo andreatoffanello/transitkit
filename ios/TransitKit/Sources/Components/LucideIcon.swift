@@ -15,6 +15,7 @@ enum LucideIcon: String, CaseIterable {
     case home = "lucide-layout-dashboard"
     case search = "lucide-search"
     case star = "lucide-star"
+    case starFilled = "lucide-star-filled"
     case starOff = "lucide-star-off"
     case settings = "lucide-settings"
     case clock = "lucide-clock"
@@ -34,7 +35,12 @@ enum LucideIcon: String, CaseIterable {
     case x = "lucide-x"
     case circleX = "lucide-circle-x"
     case refreshCw = "lucide-refresh-cw"
+    case repeat2 = "lucide-repeat-2"
+    case footprints = "lucide-footprints"
+    case arrowRight = "lucide-arrow-right"
+    case arrowUpDown = "lucide-arrow-up-down"
     case info = "lucide-info"
+    case grid2x2Plus = "lucide-grid-2x2-plus"
     case list = "lucide-list"
 
     // Status / Indicators

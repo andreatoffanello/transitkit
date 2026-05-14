@@ -17,6 +17,7 @@ struct EmptyStateView: View {
     let icon: LucideIcon
     let title: String
     var subtitle: String = ""
+    var tint: Color = AppTheme.accent
 
     var body: some View {
         VStack(spacing: 16) {
@@ -25,7 +26,7 @@ struct EmptyStateView: View {
                 Circle()
                     .fill(
                         RadialGradient(
-                            colors: [AppTheme.accent.opacity(0.10), .clear],
+                            colors: [tint.opacity(0.10), .clear],
                             center: .center,
                             startRadius: 0,
                             endRadius: 60
@@ -33,15 +34,15 @@ struct EmptyStateView: View {
                     )
                     .frame(width: 120, height: 120)
 
-                // Main accent-tinted circle
+                // Main tinted circle
                 Circle()
-                    .fill(AppTheme.accent.opacity(0.08))
+                    .fill(tint.opacity(0.08))
                     .frame(width: 80, height: 80)
 
                 // Icon
                 icon.image
                     .font(.system(.title, weight: .light))
-                    .foregroundStyle(AppTheme.accent)
+                    .foregroundStyle(tint)
             }
 
             Text(title)

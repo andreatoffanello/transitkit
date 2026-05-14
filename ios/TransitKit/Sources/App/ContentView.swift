@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Root tab bar container. Five tabs: Home, Orari, Linee, Mappa, Servizi.
-/// Settings is accessible as a sheet from Home.
+/// Settings accessible as sheet from Home. Planner accessible from Home quick-block.
 /// Each tab view manages its own NavigationStack internally.
 struct ContentView: View {
     let config: OperatorConfig
@@ -65,29 +65,20 @@ struct ContentView: View {
                 .tag(3)
                 .accessibilityIdentifier("tab_map")
 
-            // MARK: Tab 4 — Planner
-            PlannerTab()
+            // MARK: Tab 4 — Avvisi
+            NavigationStack {
+                AlertListView()
+            }
                 .tabItem {
                     Label {
-                        Text(String(localized: "tab_planner"))
+                        Text(String(localized: "tab_alerts"))
                     } icon: {
-                        LucideIcon.navigation.image
+                        LucideIcon.bell.image
                     }
                 }
+                .badge(alertStore.activeAlerts.count)
                 .tag(4)
-                .accessibilityIdentifier("tab_planner")
-
-            // MARK: Tab 5 — Servizi
-            ServiziTab(config: config)
-                .tabItem {
-                    Label {
-                        Text(String(localized: "tab_services"))
-                    } icon: {
-                        LucideIcon.info.image
-                    }
-                }
-                .tag(5)
-                .accessibilityIdentifier("tab_services")
+                .accessibilityIdentifier("tab_alerts")
         }
         .environment(\.vehiclePositionsUrl, config.gtfsRt?.vehiclePositionsUrl)
         .onChange(of: router.pendingRoute) { _, route in
@@ -104,6 +95,9 @@ struct ContentView: View {
         }
         .onChange(of: router.pendingMapPreviewVehicleId) { _, vid in
             if vid != nil { selectedTab = 3 }
+        }
+        .onChange(of: router.pendingMapPreviewRouteId) { _, rid in
+            if rid != nil { selectedTab = 3 }
         }
         .onChange(of: router.pendingMapOpen) { _, id in
             if id != nil {
@@ -141,7 +135,7 @@ struct ContentView: View {
                 .animation(.spring(response: 0.35, dampingFraction: 0.85), value: toastPresenter.pendingAlert?.id)
             }
         }
-        .sheet(item: $toastDetailAlert) { alert in
+        .fullScreenCover(item: $toastDetailAlert) { alert in
             NavigationStack {
                 AlertDetailView(alert: alert)
             }

@@ -49,25 +49,25 @@ enum LineBadgeSize {
 
     var vPadding: CGFloat {
         switch self {
-        case .small:  3
-        case .medium: 4
-        case .large:  5
+        case .small:  5
+        case .medium: 6
+        case .large:  8
         }
     }
 
     var minWidth: CGFloat {
         switch self {
-        case .small:  24
-        case .medium: 32
-        case .large:  40
+        case .small:  20
+        case .medium: 26
+        case .large:  34
         }
     }
 
     var cornerRadius: CGFloat {
         switch self {
-        case .small:  4
-        case .medium: 6
-        case .large:  6
+        case .small:  8
+        case .medium: 10
+        case .large:  12
         }
     }
 
@@ -156,12 +156,16 @@ struct LineBadge: View {
                 .font(.system(size: size.fontSize, weight: .bold))
                 .foregroundStyle(fgColor)
                 .lineLimit(1)
-                .fixedSize(horizontal: true, vertical: false)
         }
         .padding(.horizontal, size.hPadding)
         .padding(.vertical, size.vPadding)
         .frame(minWidth: size.minWidth)
         .background(bgColor, in: RoundedRectangle(cornerRadius: size.cornerRadius, style: .continuous))
+        // Propaga la richiesta di dimensione naturale a TUTTO il badge.
+        // Senza questo, parent con layoutPriority maggiore (es. destinationStack
+        // in DepartureRow) schiacciava la cornice e il RoundedRectangle clippava
+        // i nomi lunghi (es. "SFPLS" → "FPLS").
+        .fixedSize(horizontal: true, vertical: false)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(String(format: NSLocalizedString("line_badge_a11y", comment: ""), name))
     }

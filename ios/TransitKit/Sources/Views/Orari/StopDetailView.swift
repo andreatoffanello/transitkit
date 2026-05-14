@@ -1,6 +1,12 @@
 import SwiftUI
 import MapKit
 
+private enum PlannerEntry: Identifiable {
+    case origin(ResolvedStop)
+    case destination(ResolvedStop)
+    var id: String { switch self { case .origin: "origin"; case .destination: "destination" } }
+}
+
 /// Full stop detail screen: inline 3D map header + hero expand overlay showing departures.
 /// THE MOST IMPORTANT VIEW — shows next departures, full schedule by day, line filtering, dock indicators.
 ///
@@ -15,13 +21,13 @@ struct StopDetailView: View {
     @State private var showFullSchedule = false
     @State private var showMoreDepartures = false
     @State private var filterLine: String?
-    @State private var linesExpanded = false
     @Environment(FavoritesManager.self) private var favoritesManager
 
     @State private var mapExpanded: Bool = false
     @State private var expandedMapPosition: MapCameraPosition = .automatic
     @State private var showMapAppPicker = false
     @State private var mapReady = false
+    @State private var plannerEntry: PlannerEntry? = nil
     /// Incremented every 30s to force re-evaluation of departure times and remove past entries.
     @State private var refreshTick: Int = 0
 
@@ -73,14 +79,6 @@ struct StopDetailView: View {
         stop.lineNames
     }
 
-    /// Line badges with route data for the header.
-    private var lineBadges: [(name: String, route: APIRoute?)] {
-        stop.lineNames.map { name in
-            let route = store.routes.first { $0.name == name }
-            return (name, route)
-        }
-    }
-
     // MARK: - Body
 
     var body: some View {
@@ -98,11 +96,7 @@ struct StopDetailView: View {
                 ExpandedMapOverlay(
                     stop: stop,
                     expandedMapPosition: $expandedMapPosition,
-                    mapExpanded: $mapExpanded,
-                    showMapAppPicker: $showMapAppPicker,
-                    openInAppleMaps: openInAppleMaps,
-                    openInGoogleMaps: openInGoogleMaps,
-                    openInWaze: openInWaze
+                    mapExpanded: $mapExpanded
                 )
                 .transition(
                     .asymmetric(
@@ -117,7 +111,7 @@ struct StopDetailView: View {
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.hidden, for: .navigationBar)
+        .adaptiveNavBarBackground()
         .toolbar(.hidden, for: .tabBar)
         .toolbar(.visible, for: .navigationBar)
         .toolbar {
@@ -134,7 +128,17 @@ struct StopDetailView: View {
                 Button {
                     favoritesManager.toggle(stop.id)
                 } label: {
-                    Image(systemName: favoritesManager.isFavorite(stop.id) ? "bookmark.fill" : "bookmark")
+                    let isFav = favoritesManager.isFavorite(stop.id)
+                    Group {
+                        if isFav {
+                            LucideIcon.starFilled.sized(18)
+                                .foregroundStyle(AppTheme.accent)
+                        } else {
+                            LucideIcon.star.sized(18)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .contentTransition(.symbolEffect(.replace))
                 }
                 .accessibilityLabel(favoritesManager.isFavorite(stop.id)
                     ? String(localized: "remove_from_favorites")
@@ -142,8 +146,28 @@ struct StopDetailView: View {
                 .accessibilityIdentifier("btn_favorite")
             }
         }
+        .confirmationDialog(Text(String(localized: "open_in_prompt")), isPresented: $showMapAppPicker) {
+            Button("Apple Maps") { openInAppleMaps() }
+            if UIApplication.shared.canOpenURL(URL(string: "comgooglemaps://")!) {
+                Button("Google Maps") { openInGoogleMaps() }
+            }
+            if UIApplication.shared.canOpenURL(URL(string: "waze://")!) {
+                Button("Waze") { openInWaze() }
+            }
+            Button(String(localized: "cancel"), role: .cancel) { }
+        }
         .fullScreenCover(isPresented: $showFullSchedule) {
             FullScheduleSheet(stop: stop)
+        }
+        .fullScreenCover(item: $plannerEntry) { entry in
+            NavigationStack {
+                switch entry {
+                case .origin(let s):
+                    PlannerScreen(initialOrigin: .stop(s))
+                case .destination(let s):
+                    PlannerScreen(initialDestination: .stop(s))
+                }
+            }
         }
         .onAppear {
             mapPosition = flyInStartCamera
@@ -231,56 +255,53 @@ struct StopDetailView: View {
             // Service alerts affecting this stop (if any)
             StopAlertsSection(stop: stop)
 
-            // Lines section
-            linesSection
-
-            // Next departures header + filter chips — always rendered when data is present
-            if !allDayGroups.isEmpty || store.isLoading {
-                HStack {
-                    Text(String(localized: "next_departures"))
-                        .font(.headline)
-                        .foregroundStyle(AppTheme.textPrimary)
-                    Spacer()
-                }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 8)
-
-                // Line filter chips (if multiple lines) — shown even when selected line has no upcoming deps
-                if availableLines.count > 1 {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            FilterChip(
-                                label: String(localized: "filter_all"),
-                                isSelected: filterLine == nil,
-                                action: {
-                                    withAnimation(.smooth(duration: 0.2)) { filterLine = nil }
-                                }
-                            )
-                            .opacity(filterLine != nil ? 0.35 : 1.0)
-                            .animation(.smooth(duration: 0.2), value: filterLine)
-                            .accessibilityIdentifier("btn_filter_all_lines")
-
-                            ForEach(availableLines, id: \.self) { line in
-                                let route = store.routes.first { $0.name == line }
-                                let isSelected = filterLine == line
-                                LineFilterChip(
-                                    lineName: line,
-                                    routeColor: route?.color ?? "#666666",
-                                    isSelected: isSelected
-                                ) {
-                                    withAnimation(.smooth(duration: 0.2)) {
-                                        filterLine = (filterLine == line) ? nil : line
-                                    }
-                                }
-                                .opacity(filterLine != nil && !isSelected ? 0.35 : 1.0)
-                                .animation(.smooth(duration: 0.2), value: filterLine)
-                                .accessibilityIdentifier("btn_filter_line_\(line)")
+            // Line badge filter row — badges act as filter chips; single tap selects/deselects
+            if availableLines.count >= 1 {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        if availableLines.count > 1 {
+                            Button {
+                                withAnimation(.smooth(duration: 0.2)) { filterLine = nil }
+                            } label: {
+                                Text(String(localized: "filter_all"))
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundStyle(filterLine == nil ? .white : AppTheme.textSecondary)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 5)
+                                    .background(
+                                        filterLine == nil ? AppTheme.accent : AppTheme.bgSecondary,
+                                        in: RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    )
                             }
+                            .buttonStyle(.plain)
+                            .accessibilityIdentifier("btn_filter_all_lines")
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 10)
+
+                        ForEach(availableLines, id: \.self) { line in
+                            let route = store.routes.first { $0.name == line }
+                            let isSelected = filterLine == line
+                            Button {
+                                withAnimation(.smooth(duration: 0.2)) {
+                                    filterLine = (filterLine == line) ? nil : line
+                                }
+                            } label: {
+                                LineBadge(
+                                    name: line,
+                                    color: route?.color ?? "#666666",
+                                    textColor: route?.textColor ?? "#FFFFFF",
+                                    transitType: route?.resolvedTransitType ?? .bus,
+                                    size: .medium
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .opacity(filterLine != nil && !isSelected ? 0.3 : 1.0)
+                            .animation(.smooth(duration: 0.2), value: filterLine)
+                            .accessibilityIdentifier("btn_filter_line_\(line)")
+                        }
                     }
+                    .padding(.horizontal, 20)
                 }
+                .padding(.bottom, 14)
             }
 
             // Departure rows, empty states
@@ -296,12 +317,13 @@ struct StopDetailView: View {
                         HStack(spacing: 4) {
                             LucideIcon.chevronDown.sized(11)
                             Text(String(format: NSLocalizedString("show_more", comment: ""), extraCount))
-                                .font(.system(size: 13, weight: .medium))
+                                .font(.system(size: 13, weight: .semibold))
                         }
                         .foregroundStyle(AppTheme.accent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
-                        .contentShape(Rectangle())
+                        .background(AppTheme.accent.opacity(0.06))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
                     .buttonStyle(.plain)
                     .padding(.horizontal, 16)
@@ -374,7 +396,24 @@ struct StopDetailView: View {
 
             Spacer()
 
-            Button { openInMaps() } label: {
+            Menu {
+                Button {
+                    plannerEntry = .origin(stop)
+                } label: {
+                    Label { Text(String(localized: "planner_depart_from_here")) } icon: { LucideIcon.navigation.sized(16) }
+                }
+                Button {
+                    plannerEntry = .destination(stop)
+                } label: {
+                    Label { Text(String(localized: "planner_arrive_here")) } icon: { LucideIcon.mapPin.sized(16) }
+                }
+                Divider()
+                Button {
+                    openInMaps()
+                } label: {
+                    Label { Text(String(localized: "a11y_navigate_to_stop")) } icon: { LucideIcon.map.sized(16) }
+                }
+            } label: {
                 LucideIcon.navigation.sized(18)
                     .foregroundStyle(AppTheme.accent)
                     .frame(width: 44, height: 44)
@@ -387,53 +426,6 @@ struct StopDetailView: View {
         .padding(.horizontal, 20)
         .padding(.top, 20)
         .padding(.bottom, 12)
-    }
-
-    // MARK: - Lines Section
-
-    private var linesSection: some View {
-        let allBadges = lineBadges
-        let compactLimit = 8
-
-        return VStack(alignment: .leading, spacing: 0) {
-            Button {
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    linesExpanded.toggle()
-                }
-            } label: {
-                FlowLayout(spacing: 6) {
-                    let visible = linesExpanded ? allBadges : Array(allBadges.prefix(compactLimit))
-                    ForEach(visible, id: \.name) { badge in
-                        LineBadge(
-                            name: badge.name,
-                            color: badge.route.flatMap(\.color) ?? "#666666",
-                            textColor: badge.route.flatMap(\.textColor) ?? "#FFFFFF",
-                            transitType: badge.route.map { TransitType(gtfsRouteType: $0.transitType) } ?? .bus,
-                            size: .medium
-                        )
-                    }
-                    if allBadges.count > compactLimit {
-                        HStack(spacing: 3) {
-                            if !linesExpanded {
-                                Text("+\(allBadges.count - compactLimit)")
-                                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                                    .foregroundStyle(AppTheme.textSecondary)
-                            }
-                            (linesExpanded ? LucideIcon.x : LucideIcon.chevronDown).sized(9)
-                                .foregroundStyle(AppTheme.textTertiary)
-                        }
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(AppTheme.textTertiary.opacity(0.12), in: RoundedRectangle(cornerRadius: 4))
-                    }
-                }
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(Text(String(localized: "a11y_show_all_lines")))
-            .accessibilityIdentifier("btn_expand_lines")
-        }
-        .padding(.horizontal, 20)
-        .padding(.bottom, 16)
     }
 
     // MARK: - Next Departures
@@ -455,7 +447,7 @@ struct StopDetailView: View {
                     let isFirst = index == 0
 
                     NavigationLink(value: TripTarget(departure: dep, fromStop: stop)) {
-                        DepartureRow(departure: dep, isFirst: isFirst)
+                        DepartureRow(departure: dep, isFirst: isFirst, hideBadge: filterLine != nil)
                             .padding(.horizontal, 20)
                             .contentShape(Rectangle())
                     }

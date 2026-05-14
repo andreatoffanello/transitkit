@@ -136,6 +136,7 @@ struct AboutView: View {
         .background(AppTheme.background.ignoresSafeArea())
         .navigationTitle(String(localized: "nav_title_about"))
         .navigationBarTitleDisplayMode(.large)
+        .toolbar(.hidden, for: .tabBar)
         .accessibilityIdentifier("about_view")
     }
 

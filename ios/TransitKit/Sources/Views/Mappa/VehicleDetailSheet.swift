@@ -183,8 +183,7 @@ struct VehicleDetailSheet: View {
             }
 
             if vehicle.wheelchairAccessible == .accessible {
-                Image(systemName: "figure.roll")
-                    .font(.system(size: 12, weight: .semibold))
+                LucideIcon.accessibility.sized(24)
                     .foregroundStyle(AppTheme.accent)
                     .frame(width: 22, height: 22)
                     .background(AppTheme.accent.opacity(0.12))
@@ -193,12 +192,13 @@ struct VehicleDetailSheet: View {
             }
 
             Button(action: onDismiss) {
-                Image(systemName: "xmark")
-                    .font(.system(size: 12, weight: .semibold))
+                LucideIcon.x.sized(16)
                     .foregroundStyle(AppTheme.textSecondary)
                     .frame(width: 26, height: 26)
                     .background(AppTheme.textPrimary.opacity(0.08))
                     .clipShape(Circle())
+                    .frame(width: 44, height: 44)
+                    .contentShape(Circle())
             }
         }
     }
@@ -209,8 +209,7 @@ struct VehicleDetailSheet: View {
     private var metaRow: some View {
         HStack(spacing: 8) {
             if let dir = directionLabel {
-                Image(systemName: "arrow.right")
-                    .font(.system(size: 11))
+                LucideIcon.chevronRight.sized(14)
                     .foregroundStyle(AppTheme.textTertiary)
                 Text(dir)
                     .font(.subheadline)
@@ -230,8 +229,7 @@ struct VehicleDetailSheet: View {
     private var stopRow: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
-                Image(systemName: "mappin.circle.fill")
-                    .font(.system(size: 12))
+                LucideIcon.mapPin.sized(14)
                     .foregroundStyle(AppTheme.textTertiary)
                 Text(stopRowLabel)
                     .font(.caption)
@@ -282,6 +280,17 @@ struct VehicleDetailSheet: View {
                     .font(.system(.subheadline, weight: .bold))
                     .foregroundStyle(AppTheme.textSecondary)
             }
+        case .hoursMinutes(let h, let m):
+            HStack(alignment: .lastTextBaseline, spacing: 2) {
+                Text("\(h)h")
+                    .font(.system(.subheadline, weight: .bold).monospacedDigit())
+                    .foregroundStyle(AppTheme.textPrimary)
+                if m > 0 {
+                    Text("\(m)'")
+                        .font(.system(.footnote, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(AppTheme.textSecondary)
+                }
+            }
         case .absolute(let time):
             Text(time)
                 .font(.system(.headline, weight: .semibold).monospacedDigit())
@@ -329,13 +338,13 @@ struct VehicleDetailSheet: View {
     private var actionsRow: some View {
         HStack(spacing: 10) {
             actionButton(
-                systemImage: isFollowing ? "location.fill" : "location",
+                icon: .navigation,
                 title: String(localized: isFollowing ? "vehicle_unfollow" : "vehicle_follow"),
                 filled: isFollowing,
                 action: onToggleFollow
             )
             actionButton(
-                systemImage: "list.bullet.rectangle",
+                icon: .list,
                 title: String(localized: "vehicle_open_trip"),
                 filled: false,
                 action: onOpenTrip
@@ -344,11 +353,10 @@ struct VehicleDetailSheet: View {
     }
 
     @ViewBuilder
-    private func actionButton(systemImage: String, title: String, filled: Bool, action: @escaping () -> Void) -> some View {
+    private func actionButton(icon: LucideIcon, title: String, filled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 6) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 13, weight: .semibold))
+                icon.sized(13)
                 Text(title)
                     .font(.subheadline.weight(.semibold))
                     .lineLimit(1)
@@ -365,10 +373,9 @@ struct VehicleDetailSheet: View {
     // MARK: - Occupancy
 
     @ViewBuilder
-    private func occupancyBadge(label: String, icon: String) -> some View {
+    private func occupancyBadge(label: String, icon: LucideIcon) -> some View {
         HStack(spacing: 4) {
-            Image(systemName: icon)
-                .font(.system(size: 11, weight: .semibold))
+            icon.sized(11)
             Text(label)
                 .font(.caption.weight(.semibold))
         }
@@ -392,16 +399,16 @@ struct VehicleDetailSheet: View {
         }
     }
 
-    private func occupancyIcon(_ status: OccupancyStatus) -> String {
+    private func occupancyIcon(_ status: OccupancyStatus) -> LucideIcon {
         switch status {
-        case .empty, .manySeatsAvailable: return "person"
-        case .fewSeatsAvailable:          return "person.2"
-        case .standingRoomOnly:           return "person.3"
-        case .crushedStandingRoomOnly,
-             .full:                       return "person.3.fill"
+        case .empty, .manySeatsAvailable,
+             .fewSeatsAvailable,
+             .standingRoomOnly,
+             .crushedStandingRoomOnly,
+             .full:                       return .users
         case .notAcceptingPassengers,
-             .notBoardable:               return "nosign"
-        case .noDataAvailable:            return "questionmark.circle"
+             .notBoardable:               return .x
+        case .noDataAvailable:            return .info
         }
     }
 }

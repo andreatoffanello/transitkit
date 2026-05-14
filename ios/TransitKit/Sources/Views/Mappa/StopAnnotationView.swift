@@ -187,8 +187,7 @@ struct StopPreviewCard: View {
                 }
                 Spacer()
                 Button(action: onDismiss) {
-                    Image(systemName: "xmark")
-                        .font(.caption.weight(.bold))
+                    LucideIcon.x.sized(14)
                         .foregroundStyle(.secondary)
                         .frame(width: 28, height: 28)
                         .background(Color(.secondarySystemFill), in: Circle())

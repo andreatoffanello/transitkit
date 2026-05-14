@@ -28,6 +28,10 @@ class ScheduleStore {
     private(set) var routeStopSequences: [String: String] = [:]
     private(set) var tripIdsByRouteId: [String: Set<String>] = [:]
     private(set) var routeIdByTripId: [String: String] = [:]
+    /// Maps tripId → directionId (0/1). Derived from `APIDeparture.headsign`
+    /// matched against `APIRoute.directions[*].headsign`. Linee circolari
+    /// (1 direction) collassano sempre su 0.
+    private(set) var directionByTripId: [String: Int] = [:]
 
     private var loader: ScheduleLoader
     private(set) var apiUrl: String?
@@ -144,14 +148,25 @@ class ScheduleStore {
         tripIdsByRouteId = tripMap
 
         var routeByTrip: [String: String] = [:]
+        var directionByTrip: [String: Int] = [:]
         for stop in response.stops {
             for dep in stop.departures {
-                if !dep.tripId.isEmpty && !dep.routeId.isEmpty {
-                    routeByTrip[dep.tripId] = dep.routeId
+                guard !dep.tripId.isEmpty, !dep.routeId.isEmpty else { continue }
+                routeByTrip[dep.tripId] = dep.routeId
+                // Match headsign against route directions to resolve directionId.
+                // Linee circolari (route.directions.count == 1) collapsano su 0.
+                if let route = routeById[dep.routeId] {
+                    if route.directions.count <= 1 {
+                        directionByTrip[dep.tripId] = 0
+                    } else if let head = dep.headsign,
+                              let dir = route.directions.first(where: { $0.headsign == head }) {
+                        directionByTrip[dep.tripId] = dir.directionId
+                    }
                 }
             }
         }
         routeIdByTripId = routeByTrip
+        directionByTripId = directionByTrip
     }
 
     // MARK: - Departures for a stop
@@ -234,6 +249,12 @@ class ScheduleStore {
 
     func stop(forId stopId: String) -> ResolvedStop? {
         stopById[stopId] ?? stopByGtfsId[stopId]
+    }
+
+    /// Returns the directionId (0/1) for a given tripId, or nil if unresolved.
+    /// Used by LineDetail to filter live vehicle cards by selected direction.
+    func direction(forTripId tripId: String) -> Int? {
+        directionByTripId[tripId]
     }
 
     func stopsForRoute(_ routeId: String, directionId: Int) -> [ResolvedStop] {

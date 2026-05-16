@@ -239,6 +239,31 @@ class ScheduleStore {
         Set(routes.map { TransitType(gtfsRouteType: $0.transitType) })
     }
 
+    /// Builds the (Departure, ResolvedStop) pair needed by `TripDetailView` from
+    /// just a GTFS trip id. Picks the earliest stop in the trip so the trip
+    /// detail view scrolls from the start of the run; the view itself centers
+    /// the live vehicle position on top of that. Returns nil if the trip isn't
+    /// represented in the cached schedule.
+    func firstDepartureAndStop(forTripId tripId: String) -> (Departure, ResolvedStop)? {
+        guard !tripId.isEmpty, let response = scheduleResponse else { return nil }
+        var earliest: (apiStop: APIStop, dep: APIDeparture)?
+        for apiStop in response.stops {
+            guard let dep = apiStop.departures.first(where: { $0.tripId == tripId })
+            else { continue }
+            if let current = earliest {
+                if dep.departureTime < current.dep.departureTime {
+                    earliest = (apiStop, dep)
+                }
+            } else {
+                earliest = (apiStop, dep)
+            }
+        }
+        guard let pick = earliest,
+              let resolved = stop(forId: pick.apiStop.id) else { return nil }
+        let route = routeById[pick.dep.routeId]
+        return (Departure(from: pick.dep, route: route), resolved)
+    }
+
     func route(forId routeId: String) -> APIRoute? {
         routeById[routeId]
     }

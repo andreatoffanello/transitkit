@@ -1,0 +1,25 @@
+appId: com.transitkit.appalcart
+---
+# Verifica: selezione di una fermata GTFS dalla lista (kind=.stop)
+# Dopo conferma: destination deve essere il nome fermata + icona signpost,
+# NON il pin libero / coordinate geocodate.
+
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+
+# Tap destination field (riga 2 del planner card sulla home)
+- tapOn:
+    point: "50%, 26%"
+- waitForAnimationToEnd
+
+- takeScreenshot: flows/screenshots/stop_picker_opened
+
+# Le fermate "VICINO A TE" sono visibili — tap sulla prima fermata della lista
+# (sotto la sezione "VICINO A TE")
+- tapOn:
+    point: "50%, 50%"
+- waitForAnimationToEnd:
+    timeout: 4000
+
+- takeScreenshot: flows/screenshots/stop_picker_result

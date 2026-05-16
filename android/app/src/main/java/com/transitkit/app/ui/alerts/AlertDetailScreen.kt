@@ -83,7 +83,7 @@ fun AlertDetailScreen(
                         Icon(
                             painterResource(LucideIcons.ChevronLeft),
                             contentDescription = stringResource(R.string.cd_indietro),
-                            tint = colors.accent,
+                            tint = colors.textPrimary,
                         )
                     }
                 },

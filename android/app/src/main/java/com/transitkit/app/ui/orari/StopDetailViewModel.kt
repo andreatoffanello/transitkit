@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.transitkit.app.data.model.Departure
 import com.transitkit.app.data.model.ResolvedDeparture
+import com.transitkit.app.data.model.ResolvedStop
 import com.transitkit.app.data.model.toDeparture
 import com.transitkit.app.data.model.ServiceAlert
 import com.transitkit.app.data.repository.ScheduleRepository
@@ -47,10 +48,27 @@ class StopDetailViewModel @Inject constructor(
         try { URLDecoder.decode(raw, StandardCharsets.UTF_8.name()) } catch (_: Exception) { raw }
     }
 
-    /** Active service alerts that include this stop among their affected entities. */
-    val stopAlerts: StateFlow<List<ServiceAlert>> = alertStore.byStopId
-        .map { it[stopId].orEmpty() }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    /** Active service alerts that affect this stop **or** any of the routes
+     *  that serve it. Matches the Movete scope: a stop is "relevant" when
+     *  either its station id is listed in the alert's `affectedStopIds`, or
+     *  any line passing through this stop appears in `affectedRouteIds`. */
+    val stopAlerts: StateFlow<List<ServiceAlert>> = combine(
+        alertStore.activeAlerts,
+        scheduleRepository.stops.map { stops -> stops.firstOrNull { it.id == stopId } },
+    ) { alerts, stop ->
+        if (stop == null) return@combine emptyList()
+        val stationIds = (stop.gtfsStopIds + stop.id).toSet()
+        val routeIdsForStop = stop.routeIds.toSet()
+        alerts.filter { a ->
+            a.affectedStopIds.any { it in stationIds } || a.isRelevant(routeIdsForStop)
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Schedule route index — used by `AlertCard` to render affected-line badges. */
+    val routesById: StateFlow<Map<String, com.transitkit.app.data.model.ScheduleRoute>> =
+        scheduleRepository.routes
+            .map { it.associateBy { r -> r.id } }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     /** Resolved human-readable stop name from the schedule store. Available
      *  once the schedule loads; null until then. Used by the detail top bar
@@ -118,6 +136,14 @@ class StopDetailViewModel @Inject constructor(
 
     val stopLocation: StateFlow<Pair<Double, Double>?> = scheduleRepository.stops
         .map { stops -> stops.find { it.id == stopId }?.let { it.lat to it.lon } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /** Stop completo risolto dal schedule store — usato dalla hero map per
+     *  passarlo al [com.transitkit.app.ui.mappa.StopSymbolLayer] e mantenere
+     *  così la PARITÀ del marker con la mappa principale (single source of
+     *  truth: stesso bitmap, stesse soglie zoom, stesso glyph metro). */
+    val resolvedStop: StateFlow<ResolvedStop?> = scheduleRepository.stops
+        .map { stops -> stops.firstOrNull { it.id == stopId } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /** Maps routeId → stop sequence string ("Fermata A · Fermata B · …") — mirrors iOS scheduleStore.routeStopSequences. */

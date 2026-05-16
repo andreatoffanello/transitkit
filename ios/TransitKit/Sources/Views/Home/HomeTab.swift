@@ -119,7 +119,8 @@ struct HomeTab: View {
                             }
                             favoritesSection
                             nearbyStopsSection
-                            operatorInfoCard
+                            operatorInfoSection
+                            serviziLinkSection
                             footerDisclaimer
                         }
                         .padding(.horizontal, 16)
@@ -289,13 +290,6 @@ struct HomeTab: View {
         }
     }
 
-    private func walkingTime(meters: Double) -> String {
-        let minutes = Int((meters / 80.0).rounded(.up))
-        if minutes <= 1 { return String(localized: "walking_1_min") }
-        if minutes > 10 { return String(localized: "walking_10_plus_min") }
-        return String(format: String(localized: "walking_n_min"), minutes)
-    }
-
     @ViewBuilder
     private var favoritesSection: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -320,8 +314,9 @@ struct HomeTab: View {
 
     // MARK: - Nearby Stops (GPS)
 
-    /// Returns the 3 closest stops to the user's location, paired with meters.
+    /// Closest stops to the user's location, paired with meters, ordered ascending.
     /// No distance cutoff — the soft "far from transit" state is decided by the view.
+    /// Returns up to 8 candidates: the horizontal scroll trims by the 400 m filter.
     private var nearbyStopsWithDistance: [(ResolvedStop, Double)] {
         guard let location = locationManager.location else { return [] }
         let userLat = location.coordinate.latitude
@@ -334,8 +329,18 @@ struct HomeTab: View {
                 return (stop, dist)
             }
             .sorted { $0.1 < $1.1 }
-            .prefix(3)
+            .prefix(8)
             .map { ($0.0, $0.1) }
+    }
+
+    /// Resolves the list of routes serving a given stop, deduplicated by id and
+    /// ordered to match `stop.lineNames` (the operator's canonical order). Used
+    /// by `NearbyStopCard` to render line badges under the stop name.
+    private func routesAtStop(_ stop: ResolvedStop) -> [APIRoute] {
+        stop.lineNames.compactMap { lineName in
+            store.routes.first { $0.name == lineName }
+        }
+        .uniqued(by: \.id)
     }
 
     private var enableLocationChip: some View {
@@ -371,48 +376,27 @@ struct HomeTab: View {
             if !nearby.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
                     sectionHeader(String(localized: "home_section_nearby"), icon: .mapPin)
-                    VStack(spacing: 4) {
-                        ForEach(nearby, id: \.0.id) { (stop, distance) in
-                            nearbyStopRow(stop, distanceMeters: distance)
+                    // Horizontal scroll, edge-to-edge so the first card aligns with
+                    // the section title and the last one peeks past the right edge.
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHStack(spacing: 10) {
+                            ForEach(nearby, id: \.0.id) { (stop, distance) in
+                                NearbyStopCard(
+                                    stop: stop,
+                                    distanceMeters: distance,
+                                    routes: routesAtStop(stop),
+                                    onTap: { selectedMainStop = stop }
+                                )
+                            }
                         }
+                        .padding(.vertical, 2) // breathing room for shadow
                     }
-                    .adaptiveGlass(in: RoundedRectangle(cornerRadius: 14), withShadow: true)
+                    .scrollClipDisabled()
                 }
             }
         default:
             EmptyView()
         }
-    }
-
-
-    // MARK: - Nearby Compact Row
-
-    private func nearbyStopRow(_ stop: ResolvedStop, distanceMeters: Double) -> some View {
-        Button {
-            selectedMainStop = stop
-        } label: {
-            HStack(spacing: 10) {
-                stopPinIcon(transitTypes: stop.transitTypes).image
-                    .resizable()
-                    .frame(width: 14, height: 14)
-                    .foregroundStyle(AppTheme.textSecondary)
-                Text(stop.name)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(AppTheme.textPrimary)
-                    .lineLimit(1)
-                Spacer()
-                Text(walkingTime(meters: distanceMeters))
-                    .font(.system(size: 13))
-                    .foregroundStyle(AppTheme.textSecondary)
-                LucideIcon.chevronRight.sized(11)
-                    .foregroundStyle(AppTheme.textTertiary)
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("home_nearby_stop_\(stop.id)")
     }
 
     // MARK: - Stop Card (favorites)
@@ -551,15 +535,35 @@ struct HomeTab: View {
     // MARK: - Operator Info Card
 
     @ViewBuilder
-    private var operatorInfoCard: some View {
+    private var operatorInfoSection: some View {
         if let config {
-            let liveCount = vehicleStore.vehicles.count
-            let routeCount = store.routes.count
+            VStack(alignment: .leading, spacing: 10) {
+                // Section heading + attribution copy: positions the card below
+                // as "the people who actually move the city", not a disclaimer.
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(String(localized: "home_operators_section_title"))
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(AppTheme.textPrimary)
+                    Text(String(format: String(localized: "home_operators_attribution"), config.name))
+                        .font(.system(size: 12))
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.leading, 2)
 
-            Button {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                showServizi = true
-            } label: {
+                operatorInfoCard(config: config)
+            }
+        }
+    }
+
+    private func operatorInfoCard(config: OperatorConfig) -> some View {
+        let liveCount = vehicleStore.vehicles.count
+        let routeCount = store.routes.count
+
+        return Button {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            showServizi = true
+        } label: {
             HStack(spacing: 14) {
                 // Logo reale dell'operatore sorgente — questa card attribuisce
                 // i dati al servizio pubblico (AppalCART), non al brand bianco
@@ -584,47 +588,97 @@ struct HomeTab: View {
                 .frame(width: 44, height: 44)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
 
-                VStack(alignment: .leading, spacing: 2) {
-                    // Nome ufficiale dell'agenzia (non il brandName del white-label).
+                VStack(alignment: .leading, spacing: 3) {
                     Text(config.name)
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(AppTheme.textPrimary)
-                    Text(config.fullName)
-                        .font(.system(size: 11))
-                        .foregroundStyle(AppTheme.textSecondary)
-                        .lineLimit(1)
-                }
-
-                Spacer(minLength: 0)
-
-                VStack(alignment: .trailing, spacing: 4) {
                     if liveCount > 0 {
-                        HStack(spacing: 4) {
+                        HStack(spacing: 5) {
                             Circle()
                                 .fill(AppTheme.realtimeGreen)
                                 .frame(width: 6, height: 6)
-                            Text("\(liveCount)")
-                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            Text(String(format: String(localized: "home_operators_live_count"), liveCount))
+                                .font(.system(size: 11, weight: .semibold))
                                 .foregroundStyle(AppTheme.realtimeGreen)
+                            if routeCount > 0 {
+                                Text("·")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(AppTheme.textTertiary)
+                                Text(String(format: String(localized: "home_operator_routes"), routeCount))
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(AppTheme.textTertiary)
+                            }
                         }
-                    }
-                    if routeCount > 0 {
+                    } else if routeCount > 0 {
                         Text(String(format: String(localized: "home_operator_routes"), routeCount))
+                            .font(.system(size: 11))
+                            .foregroundStyle(AppTheme.textTertiary)
+                    } else {
+                        Text(String(localized: "home_operators_schedule_only"))
                             .font(.system(size: 11))
                             .foregroundStyle(AppTheme.textTertiary)
                     }
                 }
+
+                Spacer(minLength: 0)
 
                 LucideIcon.chevronRight.sized(14)
                     .foregroundStyle(AppTheme.textTertiary)
             }
             .padding(14)
             .adaptiveGlass(in: RoundedRectangle(cornerRadius: 14), withShadow: true)
-            }
-            .buttonStyle(PressableCardStyle())
-            .accessibilityIdentifier("home_operator_info_card")
-            .accessibilityLabel(String(localized: "services_title"))
         }
+        .buttonStyle(PressableCardStyle())
+        .accessibilityIdentifier("home_operator_info_card")
+        .accessibilityLabel(String(localized: "services_title"))
+    }
+
+    // MARK: - Servizi link
+
+    /// Tile linking to the full "Servizi" screen (services, fares, accessibility,
+    /// contacts, operator). Lives in Home now that the tab-bar slot is reserved
+    /// for the live alerts counter — the operator card above also opens Servizi,
+    /// but this tile gives users an explicit, labelled entry point.
+    @ViewBuilder
+    private var serviziLinkSection: some View {
+        Button {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            showServizi = true
+        } label: {
+            HStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(AppTheme.accent.opacity(0.12))
+                    LucideIcon.grid2x2Plus.sized(20)
+                        .foregroundStyle(AppTheme.accent)
+                }
+                .frame(width: 40, height: 40)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(String(localized: "tab_services"))
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(AppTheme.textPrimary)
+                    Text(String(localized: "home_servizi_subtitle"))
+                        .font(.system(size: 12))
+                        .foregroundStyle(AppTheme.textSecondary)
+                        .lineLimit(1)
+                }
+
+                Spacer()
+
+                LucideIcon.chevronRight.sized(14)
+                    .foregroundStyle(AppTheme.textTertiary)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(AppTheme.bgSecondary)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("btn_home_servizi")
     }
 
     // MARK: - Footer Disclaimer

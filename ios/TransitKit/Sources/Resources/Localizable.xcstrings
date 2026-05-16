@@ -4893,6 +4893,14 @@
         }
       }
     },
+    "home_servizi_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Fares, accessibility, contact" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Tarifas, accesibilidad, contacto" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Tariffe, accessibilità, contatti" } }
+      }
+    },
     "tab_settings": {
       "extractionState": "manual",
       "localizations": {
@@ -5312,6 +5320,22 @@
         "it": { "stringUnit": { "state": "translated", "value": "Sconosciuta" } }
       }
     },
+    "vehicle_live_tracking": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "LIVE TRACKING" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "EN VIVO" } },
+        "it": { "stringUnit": { "state": "translated", "value": "TRACCIATO LIVE" } }
+      }
+    },
+    "vehicle_speed_kmh": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%d km/h" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "%d km/h" } },
+        "it": { "stringUnit": { "state": "translated", "value": "%d km/h" } }
+      }
+    },
     "vehicle_label_format": {
       "extractionState": "manual",
       "localizations": {
@@ -5704,6 +5728,126 @@
         }
       }
     },
+    "alert_cause_technical": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Technical problem" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Problema técnico" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Problema tecnico" } }
+      }
+    },
+    "alert_cause_strike": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Strike" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Huelga" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Sciopero" } }
+      }
+    },
+    "alert_cause_demonstration": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Demonstration" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Manifestación" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Manifestazione" } }
+      }
+    },
+    "alert_cause_accident": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Accident" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Accidente" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Incidente" } }
+      }
+    },
+    "alert_cause_holiday": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Holiday" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Festivo" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Festività" } }
+      }
+    },
+    "alert_cause_weather": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Weather" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Clima" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Meteo" } }
+      }
+    },
+    "alert_cause_maintenance": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Maintenance" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Mantenimiento" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Manutenzione" } }
+      }
+    },
+    "alert_cause_construction": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Construction" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Obras" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Lavori in corso" } }
+      }
+    },
+    "alert_cause_police": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Police activity" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Operativo policial" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Attività della polizia" } }
+      }
+    },
+    "alert_cause_medical": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Medical emergency" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Emergencia médica" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Emergenza medica" } }
+      }
+    },
+    "alert_default_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Service alert" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Aviso de servicio" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Avviso di servizio" } }
+      }
+    },
+    "alerts_filter_mine": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "My lines" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "Mis líneas" } },
+        "it": { "stringUnit": { "state": "translated", "value": "Le mie linee" } }
+      }
+    },
+    "alerts_your_line_badge": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "YOUR LINE" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "TU LÍNEA" } },
+        "it": { "stringUnit": { "state": "translated", "value": "TUA LINEA" } }
+      }
+    },
+    "stop_alerts_chip_one": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "1 alert on this stop" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "1 aviso en esta parada" } },
+        "it": { "stringUnit": { "state": "translated", "value": "1 avviso su questa fermata" } }
+      }
+    },
+    "stop_alerts_chip_other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "%lld alerts on this stop" } },
+        "es-419": { "stringUnit": { "state": "translated", "value": "%lld avisos en esta parada" } },
+        "it": { "stringUnit": { "state": "translated", "value": "%lld avvisi su questa fermata" } }
+      }
+    },
     "alert_severity_severe": {
       "extractionState": "manual",
       "localizations": {
@@ -6026,6 +6170,98 @@
         }
       }
     },
+    "home_operators_section_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Who moves the city"
+          }
+        },
+        "es-419": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quién mueve la ciudad"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chi muove la città"
+          }
+        }
+      }
+    },
+    "home_operators_attribution": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schedules, routes and live vehicles come straight from %@."
+          }
+        },
+        "es-419": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Horarios, líneas y vehículos en vivo provienen directamente de %@."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orari, linee e mezzi live arrivano direttamente da %@."
+          }
+        }
+      }
+    },
+    "home_operators_live_count": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d live now"
+          }
+        },
+        "es-419": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d en vivo"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d in tempo reale"
+          }
+        }
+      }
+    },
+    "home_operators_schedule_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scheduled times"
+          }
+        },
+        "es-419": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo horarios"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo orari pianificati"
+          }
+        }
+      }
+    },
     "home_operator_routes": {
       "extractionState": "manual",
       "localizations": {
@@ -6055,19 +6291,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Official %@ data · Unofficial app"
+            "value": "Independent app · Official %@ data"
           }
         },
         "es-419": {
           "stringUnit": {
             "state": "translated",
-            "value": "Datos oficiales %@ · App no oficial"
+            "value": "App independiente · Datos oficiales %@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dati ufficiali %@ · App non ufficiale"
+            "value": "App indipendente · Dati ufficiali %@"
           }
         }
       }

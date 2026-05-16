@@ -33,12 +33,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.data.model.ResolvedStop
@@ -92,24 +90,6 @@ internal fun StaggeredStopCard(
             .padding(horizontal = 14.dp, vertical = 14.dp)
             .semantics { contentDescription = "stop_row_${stop.id}" },
     ) {
-        // Stop leading icon — signpost (or mode icon for rail/ferry-only stops).
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(colors.accent.copy(alpha = 0.10f)),
-        ) {
-            Icon(
-                painter = painterResource(com.transitkit.app.ui.components.stopIcon(stop.transitTypes)),
-                contentDescription = null,
-                tint = colors.accent,
-                modifier = Modifier.size(18.dp),
-            )
-        }
-
-        Spacer(Modifier.width(12.dp))
-
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = stop.name,
@@ -149,15 +129,6 @@ internal fun StaggeredStopCard(
                 }
             }
         }
-
-        Icon(
-            painter = painterResource(LucideIcons.Star),
-            contentDescription = stringResource(R.string.cd_salva_fermata),
-            tint = colors.textTertiary,
-            modifier = Modifier
-                .size(18.dp)
-                .padding(end = 4.dp),
-        )
 
         Icon(
             painter = painterResource(LucideIcons.ChevronRight),

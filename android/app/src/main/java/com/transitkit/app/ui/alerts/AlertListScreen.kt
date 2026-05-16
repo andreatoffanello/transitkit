@@ -2,11 +2,11 @@ package com.transitkit.app.ui.alerts
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,49 +17,68 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
-import com.transitkit.app.data.model.AlertEffect
 import com.transitkit.app.data.model.AlertSeverity
 import com.transitkit.app.data.model.ServiceAlert
+
+private enum class AlertFilter { Mine, All }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlertListScreen(
-    onBack: () -> Unit,
+    onBack: (() -> Unit)? = null,
     onNavigateToAlert: (alertId: String) -> Unit,
     viewModel: AlertsViewModel = hiltViewModel(),
 ) {
     val alerts by viewModel.alerts.collectAsStateWithLifecycle()
-    val sorted = alerts.sortedWith(
-        compareByDescending<ServiceAlert> { it.severity.raw }
-            .thenBy { localizedHeader(it) }
-    )
+    val routesById by viewModel.routesById.collectAsStateWithLifecycle()
+    val myLineIds by viewModel.favoriteRouteIds.collectAsStateWithLifecycle()
     val colors = TransitTheme.colors
+
+    var filter by rememberSaveable { mutableStateOf(AlertFilter.Mine) }
+    LaunchedEffect(myLineIds) {
+        if (myLineIds.isEmpty() && filter == AlertFilter.Mine) {
+            filter = AlertFilter.All
+        }
+    }
+
+    val myAlerts = alerts.filter { it.isRelevant(myLineIds) }
+    val orderedAll = alerts.sortedWith(
+        compareByDescending<ServiceAlert> { it.isRelevant(myLineIds) }
+            .thenByDescending { it.firstActiveStart ?: 0L }
+    )
+    val visible = if (filter == AlertFilter.Mine) myAlerts else orderedAll
 
     Scaffold(
         topBar = {
@@ -72,12 +91,14 @@ fun AlertListScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            painterResource(LucideIcons.ChevronLeft),
-                            contentDescription = stringResource(R.string.cd_indietro),
-                            tint = colors.accent,
-                        )
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                painterResource(LucideIcons.ChevronLeft),
+                                contentDescription = stringResource(R.string.cd_indietro),
+                                tint = colors.textPrimary,
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.background),
@@ -85,29 +106,129 @@ fun AlertListScreen(
         },
         containerColor = colors.background,
     ) { padding ->
-        if (sorted.isEmpty()) {
-            AlertEmptyState(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            FilterRow(
+                filter = filter,
+                mineCount = myAlerts.size,
+                allCount = alerts.size,
+                showMineChip = myLineIds.isNotEmpty(),
+                onSelect = { filter = it },
             )
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                    horizontal = 16.dp,
-                    vertical = 16.dp,
-                ),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                items(sorted, key = { it.id }) { alert ->
-                    AlertRow(
-                        alert = alert,
-                        onClick = { onNavigateToAlert(alert.id) },
-                    )
+
+            when {
+                visible.isEmpty() -> AlertEmptyState(
+                    modifier = Modifier.fillMaxSize(),
+                )
+                else -> LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    items(visible, key = { it.id }) { alert ->
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            if (filter == AlertFilter.All
+                                && myLineIds.isNotEmpty()
+                                && alert.isRelevant(myLineIds)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.alerts_your_line_badge),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        letterSpacing = 0.5.sp,
+                                    ),
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFD97706),
+                                    modifier = Modifier.padding(horizontal = 4.dp),
+                                )
+                            }
+                            AlertCard(
+                                alert = alert,
+                                routesById = routesById,
+                                onClick = { onNavigateToAlert(alert.id) },
+                            )
+                        }
+                    }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FilterRow(
+    filter: AlertFilter,
+    mineCount: Int,
+    allCount: Int,
+    showMineChip: Boolean,
+    onSelect: (AlertFilter) -> Unit,
+) {
+    val colors = TransitTheme.colors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        if (showMineChip) {
+            AlertFilterPill(
+                title = stringResource(R.string.alerts_filter_mine),
+                count = mineCount,
+                isSelected = filter == AlertFilter.Mine,
+                onClick = { onSelect(AlertFilter.Mine) },
+                testTagId = "filter_mine",
+            )
+        }
+        AlertFilterPill(
+            title = stringResource(R.string.alerts_filter_all),
+            count = allCount,
+            isSelected = filter == AlertFilter.All,
+            onClick = { onSelect(AlertFilter.All) },
+            testTagId = "filter_all",
+        )
+        Spacer(Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun AlertFilterPill(
+    title: String,
+    count: Int,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    testTagId: String,
+) {
+    val colors = TransitTheme.colors
+    val pillBg = if (isSelected) colors.accent.copy(alpha = 0.18f) else colors.bgSecondary.copy(alpha = 0.5f)
+    val pillBorder = if (isSelected) colors.accent.copy(alpha = 0.5f) else colors.glassBorder
+    Surface(
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .semantics { testTag = testTagId },
+        shape = CircleShape,
+        color = pillBg,
+        border = BorderStroke(1.dp, pillBorder),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text(
+                title,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                color = if (isSelected) colors.textPrimary else colors.textSecondary,
+            )
+            Surface(
+                shape = CircleShape,
+                color = if (isSelected) colors.accent.copy(alpha = 0.28f) else colors.bgSecondary,
+            ) {
+                Text(
+                    "$count",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (isSelected) colors.textPrimary else colors.textTertiary,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp),
+                )
             }
         }
     }
@@ -129,7 +250,7 @@ private fun AlertEmptyState(modifier: Modifier = Modifier) {
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                painter = painterResource(LucideIcons.ChevronRight),
+                painter = painterResource(LucideIcons.Bell),
                 contentDescription = null,
                 tint = colors.accent,
                 modifier = Modifier.size(32.dp),
@@ -151,69 +272,7 @@ private fun AlertEmptyState(modifier: Modifier = Modifier) {
     }
 }
 
-@Composable
-internal fun AlertRow(
-    alert: ServiceAlert,
-    onClick: () -> Unit,
-) {
-    val colors = TransitTheme.colors
-    Card(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(
-                BorderStroke(1.dp, colors.glassBorder),
-                RoundedCornerShape(14.dp),
-            ),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = colors.bgSecondary),
-        elevation = CardDefaults.cardElevation(0.dp),
-    ) {
-        Row(
-            modifier = Modifier.padding(14.dp),
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Box(
-                modifier = Modifier
-                    .padding(top = 6.dp)
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(severityColor(alert.severity)),
-            )
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = localizedHeader(alert),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colors.textPrimary,
-                )
-                val subtitle = alertSubtitle(alert)
-                if (!subtitle.isNullOrEmpty()) {
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        text = subtitle,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colors.textTertiary,
-                        maxLines = 1,
-                    )
-                }
-            }
-
-            Icon(
-                painter = painterResource(LucideIcons.ChevronRight),
-                contentDescription = null,
-                tint = colors.textTertiary,
-                modifier = Modifier
-                    .padding(top = 4.dp)
-                    .size(14.dp),
-            )
-        }
-    }
-}
-
-// -- Shared helpers (also used by AlertDetailScreen) ---------------------------
+// -- Shared helpers retained for AlertDetailScreen + StopDetailAlerts -----------
 
 /** Picks the localized header from the per-language map, using resolved() semantics. */
 internal fun localizedHeader(alert: ServiceAlert): String =
@@ -232,35 +291,9 @@ internal fun Map<String, String>.resolvedAlertText(): String {
 internal fun severityColor(severity: AlertSeverity): Color {
     val colors = TransitTheme.colors
     return when (severity) {
-        AlertSeverity.SEVERE  -> Color(0xFFDC2626) // red-600
-        AlertSeverity.WARNING -> Color(0xFFD97706) // amber-600
+        AlertSeverity.SEVERE  -> Color(0xFFDC2626)
+        AlertSeverity.WARNING -> Color(0xFFD97706)
         AlertSeverity.INFO    -> colors.accent
         AlertSeverity.UNKNOWN -> colors.textTertiary
     }
-}
-
-@Composable
-internal fun alertSubtitle(alert: ServiceAlert): String? {
-    val parts = mutableListOf<String>()
-    if (alert.affectedRouteIds.isNotEmpty()) {
-        parts += stringResource(R.string.alerts_affected_routes_count, alert.affectedRouteIds.size)
-    }
-    if (alert.affectedStopIds.isNotEmpty()) {
-        parts += stringResource(R.string.alerts_affected_stops_count, alert.affectedStopIds.size)
-    }
-    if (parts.isNotEmpty()) return parts.joinToString(" · ")
-    return effectLabel(alert.effect)
-}
-
-@Composable
-internal fun effectLabel(effect: AlertEffect): String? = when (effect) {
-    AlertEffect.NO_SERVICE          -> stringResource(R.string.alert_effect_no_service)
-    AlertEffect.REDUCED_SERVICE     -> stringResource(R.string.alert_effect_reduced_service)
-    AlertEffect.SIGNIFICANT_DELAYS  -> stringResource(R.string.alert_effect_delays)
-    AlertEffect.DETOUR              -> stringResource(R.string.alert_effect_detour)
-    AlertEffect.STOP_MOVED          -> stringResource(R.string.alert_effect_stop_moved)
-    AlertEffect.ADDITIONAL_SERVICE  -> stringResource(R.string.alert_effect_additional)
-    AlertEffect.MODIFIED_SERVICE    -> stringResource(R.string.alert_effect_modified)
-    AlertEffect.ACCESSIBILITY_ISSUE -> stringResource(R.string.alert_effect_accessibility)
-    AlertEffect.NO_EFFECT, AlertEffect.UNKNOWN_EFFECT, AlertEffect.OTHER_EFFECT -> null
 }

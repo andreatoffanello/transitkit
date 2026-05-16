@@ -458,7 +458,7 @@ fun FareInfoScreen(
                 title = { Text(stringResource(R.string.info_section_tariffe), fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(painterResource(LucideIcons.ChevronLeft), contentDescription = stringResource(R.string.cd_indietro), tint = TransitTheme.colors.accent)
+                        Icon(painterResource(LucideIcons.ChevronLeft), contentDescription = stringResource(R.string.cd_indietro), tint = TransitTheme.colors.textPrimary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = TransitTheme.colors.background),
@@ -641,7 +641,7 @@ fun OperatorInfoScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.info_section_operatore), fontWeight = FontWeight.SemiBold) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(painterResource(LucideIcons.ChevronLeft), contentDescription = stringResource(R.string.cd_indietro), tint = TransitTheme.colors.accent) } },
+                navigationIcon = { IconButton(onClick = onBack) { Icon(painterResource(LucideIcons.ChevronLeft), contentDescription = stringResource(R.string.cd_indietro), tint = TransitTheme.colors.textPrimary) } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = TransitTheme.colors.background),
             )
         },

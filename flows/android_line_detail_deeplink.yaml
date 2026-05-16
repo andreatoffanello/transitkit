@@ -1,0 +1,11 @@
+appId: com.transitkit.appalcart
+---
+# Verifica: deeplink a LineDetail apre la schermata linea con mappa hero
+
+- launchApp:
+    clearState: false
+- openLink: "transitkit://line/3"
+- waitForAnimationToEnd
+
+# Nome o badge linea B deve essere visibile
+- assertVisible: "B"

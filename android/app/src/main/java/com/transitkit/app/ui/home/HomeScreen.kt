@@ -5,7 +5,7 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -46,7 +47,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -54,6 +59,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -68,6 +74,7 @@ import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.data.model.AlertSeverity
 import com.transitkit.app.data.model.Departure
 import com.transitkit.app.data.model.ResolvedStop
+import com.transitkit.app.data.model.ScheduleRoute
 import com.transitkit.app.data.model.ServiceAlert
 import com.transitkit.app.ui.components.DepartureTimeState
 import com.transitkit.app.ui.components.LineBadge
@@ -76,6 +83,9 @@ import com.transitkit.app.ui.components.LiveIndicator
 import com.transitkit.app.ui.components.TimeDisplay
 import com.transitkit.app.ui.components.departureTimeState
 import com.transitkit.app.ui.components.stopIcon
+import com.transitkit.app.ui.planner.PlannerViewModel
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
 fun HomeScreen(
@@ -83,8 +93,13 @@ fun HomeScreen(
     onNavigateToLinee: () -> Unit = {},
     onNavigateToMappa: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
+    onNavigateToAbout: () -> Unit = {},
     onNavigateToAlerts: () -> Unit = {},
+    onNavigateToServizi: () -> Unit = {},
     onNavigateToStop: (stopId: String, stopName: String) -> Unit = { _, _ -> },
+    onNavigateToPlanner: () -> Unit = {},
+    onNavigateToLocationPicker: (role: String) -> Unit = {},
+    plannerViewModel: PlannerViewModel,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -98,6 +113,8 @@ fun HomeScreen(
     val nearbyStops by viewModel.nearbyStops.collectAsStateWithLifecycle()
     val nearbyDepartures by viewModel.nearbyDepartures.collectAsStateWithLifecycle()
     val liveTripIds by viewModel.liveTripIds.collectAsStateWithLifecycle()
+    val liveVehicleCount by viewModel.liveVehicleCount.collectAsStateWithLifecycle()
+    val routesByName by viewModel.routesByName.collectAsStateWithLifecycle()
     val activeAlerts by viewModel.activeAlerts.collectAsStateWithLifecycle()
     val shouldShowPrimer by viewModel.shouldShowLocationPrimer.collectAsStateWithLifecycle()
 
@@ -123,12 +140,16 @@ fun HomeScreen(
         val lm = context.getSystemService(android.location.LocationManager::class.java)
         val listener = android.location.LocationListener { loc ->
             viewModel.updateLocation(loc.latitude, loc.longitude)
+            plannerViewModel.updateGpsLocation(loc.latitude, loc.longitude)
         }
         if (locationPermissionGranted && lm != null) {
             try {
                 (lm.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
                     ?: lm.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER))
-                    ?.let { viewModel.updateLocation(it.latitude, it.longitude) }
+                    ?.let {
+                        viewModel.updateLocation(it.latitude, it.longitude)
+                        plannerViewModel.updateGpsLocation(it.latitude, it.longitude)
+                    }
                 listOf(
                     android.location.LocationManager.GPS_PROVIDER,
                     android.location.LocationManager.NETWORK_PROVIDER,
@@ -217,6 +238,16 @@ fun HomeScreen(
             }
 
             item {
+                PlannerHomeBox(
+                    nearbyStops = nearbyStops,
+                    plannerViewModel = plannerViewModel,
+                    onNavigateToLocationPicker = onNavigateToLocationPicker,
+                    onNavigateToPlanner = onNavigateToPlanner,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                )
+            }
+
+            item {
                 FavoritesSection(
                     stops = resolvedFavoriteStops,
                     departures = favoriteDepartures,
@@ -231,8 +262,7 @@ fun HomeScreen(
             item {
                 NearbySection(
                     nearbyStops = nearbyStops,
-                    nearbyDepartures = nearbyDepartures,
-                    liveTripIds = liveTripIds,
+                    routesByName = routesByName,
                     permissionGranted = locationPermissionGranted,
                     onEnableLocation = {
                         val canRequest = androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale(
@@ -251,15 +281,32 @@ fun HomeScreen(
                         }
                     },
                     onStopClick = { stop -> onNavigateToStop(stop.id, stop.name) },
-                    operatorTimezone = viewModel.operatorConfig.timezone,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    modifier = Modifier.padding(vertical = 4.dp),
+                )
+            }
+
+            if (config != null) {
+                item {
+                    OperatorReferenceSection(
+                        config = config,
+                        liveVehicleCount = liveVehicleCount,
+                        onClick = onNavigateToAbout,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    )
+                }
+            }
+
+            item {
+                HomeServiziLink(
+                    onClick = onNavigateToServizi,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                 )
             }
 
             item {
                 HomeFooterDisclaimer(
                     operatorName = config?.name ?: "",
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                 )
             }
         }
@@ -323,22 +370,20 @@ private fun HomeMinimalHeader(
                     .clip(CircleShape),
             )
         }
-        config?.let {
-            Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Text(
+                text = stringResource(R.string.app_name),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.textPrimary,
+            )
+            val region = config?.region?.takeIf { r -> r.isNotBlank() }
+            if (region != null) {
                 Text(
-                    text = it.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colors.textPrimary,
+                    text = region,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = colors.textSecondary,
                 )
-                val region = it.region?.takeIf { r -> r.isNotBlank() }
-                if (region != null) {
-                    Text(
-                        text = region,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = colors.textSecondary,
-                    )
-                }
             }
         }
         Spacer(modifier = Modifier.weight(1f))
@@ -439,7 +484,10 @@ private fun FavoritesSection(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        SectionHeader(text = stringResource(R.string.section_preferiti))
+        SectionHeader(
+            text = stringResource(R.string.home_section_favorites),
+            icon = LucideIcons.Star,
+        )
         if (stops.isEmpty()) {
             EmptyFavoritesCard(onBrowseStops = onBrowseStops)
         } else {
@@ -459,28 +507,45 @@ private fun FavoritesSection(
 @Composable
 private fun NearbySection(
     nearbyStops: List<Pair<ResolvedStop, Double>>,
-    nearbyDepartures: Map<String, List<Departure>>,
-    liveTripIds: Set<String>,
+    routesByName: Map<String, ScheduleRoute>,
     permissionGranted: Boolean,
     onEnableLocation: () -> Unit,
     onStopClick: (ResolvedStop) -> Unit,
-    operatorTimezone: String,
     modifier: Modifier = Modifier,
 ) {
     when {
-        !permissionGranted -> EnableLocationChip(onClick = onEnableLocation, modifier = modifier)
+        !permissionGranted -> EnableLocationChip(
+            onClick = onEnableLocation,
+            modifier = modifier.padding(horizontal = 16.dp),
+        )
         nearbyStops.isNotEmpty() -> {
+            // Movete-parity: horizontal scroll of fixed-width cards. Header
+            // sits flush with the section padding; the LazyRow is edge-to-edge
+            // so the last card peeks past the right edge as an affordance.
             Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                SectionHeader(text = stringResource(R.string.section_vicino_a_te))
-                nearbyStops.forEach { (stop, distance) ->
-                    StopCard(
-                        stop = stop,
-                        departures = nearbyDepartures[stop.id] ?: emptyList(),
-                        liveTripIds = liveTripIds,
-                        operatorTimezone = operatorTimezone,
-                        distanceMeters = distance,
-                        onClick = { onStopClick(stop) },
-                    )
+                SectionHeader(
+                    text = stringResource(R.string.home_section_nearby),
+                    icon = LucideIcons.MapPin,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+                androidx.compose.foundation.lazy.LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                        horizontal = 16.dp,
+                        vertical = 2.dp,
+                    ),
+                ) {
+                    items(nearbyStops, key = { it.first.id }) { (stop, distance) ->
+                        val routes = remember(stop.routeNames, routesByName) {
+                            stop.routeNames.mapNotNull { routesByName[it] }.distinctBy { it.id }
+                        }
+                        NearbyStopCard(
+                            stop = stop,
+                            distanceMeters = distance,
+                            routes = routes,
+                            onClick = { onStopClick(stop) },
+                        )
+                    }
                 }
             }
         }
@@ -489,15 +554,84 @@ private fun NearbySection(
 }
 
 @Composable
-private fun SectionHeader(text: String) {
-    Text(
-        text = text.uppercase(),
-        style = MaterialTheme.typography.labelMedium,
-        fontWeight = FontWeight.Bold,
-        letterSpacing = 0.5.sp,
-        color = TransitTheme.colors.textTertiary,
-        modifier = Modifier.padding(top = 12.dp, bottom = 2.dp),
-    )
+private fun NearbyStopRow(
+    stop: ResolvedStop,
+    distanceMeters: Double,
+    onClick: () -> Unit,
+) {
+    val colors = TransitTheme.colors
+    val haptic = LocalHapticFeedback.current
+    val distanceLabel = walkingTimeLabel(distanceMeters)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                onClick()
+            }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Icon(
+            painter = painterResource(LucideIcons.BusFront),
+            contentDescription = null,
+            tint = colors.accent,
+            modifier = Modifier.size(14.dp),
+        )
+        Text(
+            text = stop.name,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium,
+            color = colors.textPrimary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = distanceLabel,
+            style = MaterialTheme.typography.labelSmall,
+            color = colors.textSecondary,
+        )
+        Icon(
+            painter = painterResource(LucideIcons.ChevronRight),
+            contentDescription = null,
+            tint = colors.textTertiary,
+            modifier = Modifier.size(14.dp),
+        )
+    }
+}
+
+@Composable
+private fun SectionHeader(
+    text: String,
+    @androidx.annotation.DrawableRes icon: Int? = null,
+    modifier: Modifier = Modifier,
+) {
+    // iOS parity (item #10): sentence case, 15sp SemiBold textPrimary,
+    // icon inline 14dp textSecondary. Niente .uppercase(), niente
+    // letterSpacing che simula UPPERCASE.
+    val colors = TransitTheme.colors
+    Row(
+        modifier = modifier.padding(top = 12.dp, bottom = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        if (icon != null) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = colors.textSecondary,
+                modifier = Modifier.size(14.dp),
+            )
+        }
+        Text(
+            text = text,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.textPrimary,
+        )
+    }
 }
 
 @Composable
@@ -569,7 +703,6 @@ private fun StopCard(
         shape = RoundedCornerShape(14.dp),
         color = colors.glassFill,
         tonalElevation = 1.dp,
-        border = if (isImminent) BorderStroke(1.5.dp, colors.accent.copy(alpha = 0.6f)) else null,
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
@@ -639,7 +772,9 @@ private fun StopCardDepartureRow(
 ) {
     val colors = TransitTheme.colors
     val rawTime = departure.realtimeDepartureTime ?: departure.departureTime
-    val timeState = departureTimeState(rawTime, operatorTimezone)
+    // Home preferred stops: always-relative threshold (24h) — wrap-around gestisce
+    // partenze del giorno successivo.
+    val timeState = departureTimeState(rawTime, operatorTimezone, relativeThreshold = 1440)
 
     Row(
         modifier = Modifier
@@ -663,15 +798,14 @@ private fun StopCardDepartureRow(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
-        if (isLive) {
-            LiveIndicator(animated = true)
-        }
-        TimeDisplay(state = timeState)
+        // Live dot ora INLINE col countdown dentro TimeDisplay — niente
+        // LiveIndicator pulse separato (era animazione infinita in LazyColumn).
+        TimeDisplay(state = timeState, liveDot = isLive)
     }
 }
 
 @Composable
-private fun walkingTimeLabel(meters: Double): String {
+internal fun walkingTimeLabel(meters: Double): String {
     val minutes = kotlin.math.ceil(meters / 80.0).toInt()
     return when {
         minutes <= 1 -> stringResource(R.string.walking_1_min)
@@ -686,6 +820,205 @@ private fun isWithinFiveMinutes(dep: Departure, tz: String): Boolean {
         is DepartureTimeState.Departing -> true
         is DepartureTimeState.Minutes -> state.minutes in 0..5
         else -> false
+    }
+}
+
+// ---------------------------------------------------------------------------
+// PlannerHomeBox — two-row Da/A card, parità Movete PlannerHomeBox.
+// ---------------------------------------------------------------------------
+
+private val _hhmmHome = SimpleDateFormat("HH:mm", Locale.getDefault())
+
+@Composable
+private fun PlannerHomeBox(
+    nearbyStops: List<Pair<ResolvedStop, Double>>,
+    plannerViewModel: PlannerViewModel,
+    onNavigateToLocationPicker: (role: String) -> Unit,
+    onNavigateToPlanner: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = TransitTheme.colors
+    val haptic = LocalHapticFeedback.current
+    val shape = RoundedCornerShape(14.dp)
+
+    val homeOrigin by plannerViewModel.homeOrigin.collectAsStateWithLifecycle()
+    val homeDestination by plannerViewModel.homeDestination.collectAsStateWithLifecycle()
+    val whenSel by plannerViewModel.whenSelection.collectAsStateWithLifecycle()
+
+    // Auto-fill origin from nearest stop when not yet set.
+    LaunchedEffect(nearbyStops) {
+        if (plannerViewModel.homeOrigin.value == null && nearbyStops.isNotEmpty()) {
+            plannerViewModel.setHomeOrigin(
+                com.transitkit.app.data.model.PlannerLocation.fromStop(nearbyStops.first().first)
+            )
+        }
+    }
+
+    // Auto-navigate to planner once both fields are set.
+    LaunchedEffect(homeDestination) {
+        if (homeDestination != null && plannerViewModel.homeOrigin.value != null) {
+            plannerViewModel.setOrigin(plannerViewModel.homeOrigin.value)
+            plannerViewModel.setDestination(homeDestination)
+            plannerViewModel.clearHomeState()
+            onNavigateToPlanner()
+        }
+    }
+
+    val bothFilled = homeOrigin != null && homeDestination != null
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(colors.bgSecondary, shape)
+            .semantics { testTag = "planner_home_box" },
+    ) {
+        // Row Da (origin) — icon column has dot + dashed line below
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .clickable {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onNavigateToLocationPicker("origin")
+                }
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            OrigDestIconColumn(
+                role = OrigDestRole.Origin,
+                accent = colors.accent,
+                modifier = Modifier.size(width = 28.dp, height = 56.dp),
+            )
+            Text(
+                text = homeOrigin?.name ?: stringResource(R.string.planner_from),
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = if (homeOrigin != null) FontWeight.SemiBold else FontWeight.Normal,
+                color = if (homeOrigin != null) colors.textPrimary else colors.textTertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+        }
+
+        // No divider between From and To — keeps the dashed line continuous.
+
+        // Row A (destination) — icon column has dashed line above + ring
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .clickable {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onNavigateToLocationPicker("destination")
+                }
+                .padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            OrigDestIconColumn(
+                role = OrigDestRole.Destination,
+                accent = colors.accent,
+                modifier = Modifier.size(width = 28.dp, height = 56.dp),
+            )
+            Text(
+                text = homeDestination?.name ?: stringResource(R.string.planner_to),
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = if (homeDestination != null) FontWeight.SemiBold else FontWeight.Normal,
+                color = if (homeDestination != null) colors.textPrimary else colors.textTertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+            if (bothFilled) {
+                androidx.compose.material3.IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        plannerViewModel.swapHomeStops()
+                    },
+                    modifier = Modifier.size(36.dp),
+                ) {
+                    Icon(
+                        painter = painterResource(LucideIcons.ArrowUpDown),
+                        contentDescription = "Swap",
+                        tint = colors.accent,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
+        }
+
+    }
+        // ── When chip row — inline mode select + time/date pickers ──────────
+        com.transitkit.app.ui.planner.WhenChipRow(
+            selection = whenSel,
+            onSelectionChange = plannerViewModel::setWhenSelection,
+        )
+    }
+}
+
+// ── Origin/Destination icon column (dot + dashed connector) ───────────────────
+
+private enum class OrigDestRole { Origin, Destination }
+
+@Composable
+private fun OrigDestIconColumn(
+    role: OrigDestRole,
+    accent: Color,
+    modifier: Modifier = Modifier,
+) {
+    Canvas(modifier = modifier) {
+        val cx = size.width / 2f
+        val cy = size.height / 2f
+        val dotRadius = 5.dp.toPx()
+        val ringStroke = 2.dp.toPx()
+        val lineStroke = 1.5.dp.toPx()
+        val gap = 3.dp.toPx()
+        val dashOn = 3.dp.toPx()
+        val dashOff = 3.dp.toPx()
+        val dashEffect = PathEffect.dashPathEffect(floatArrayOf(dashOn, dashOff), 0f)
+
+        when (role) {
+            OrigDestRole.Origin -> {
+                // Solid dot
+                drawCircle(color = accent, radius = dotRadius, center = Offset(cx, cy))
+                // Dashed line: below dot to bottom of column
+                val lineStart = cy + dotRadius + gap
+                val lineEnd = size.height
+                drawLine(
+                    color = accent,
+                    start = Offset(cx, lineStart),
+                    end = Offset(cx, lineEnd),
+                    strokeWidth = lineStroke,
+                    cap = StrokeCap.Round,
+                    pathEffect = dashEffect,
+                )
+            }
+            OrigDestRole.Destination -> {
+                // Dashed line: top of column to above ring
+                val lineStart = 0f
+                val lineEnd = cy - dotRadius - gap
+                drawLine(
+                    color = accent,
+                    start = Offset(cx, lineStart),
+                    end = Offset(cx, lineEnd),
+                    strokeWidth = lineStroke,
+                    cap = StrokeCap.Round,
+                    pathEffect = dashEffect,
+                )
+                // Outline ring
+                drawCircle(
+                    color = accent,
+                    radius = dotRadius,
+                    center = Offset(cx, cy),
+                    style = Stroke(width = ringStroke),
+                )
+            }
+        }
     }
 }
 
@@ -768,6 +1101,184 @@ private fun HomeFooterDisclaimer(
 }
 
 // ---------------------------------------------------------------------------
+// OperatorReferenceSection — the bottom "credits" block on Home: a small
+// headline + attribution copy, with `OperatorReferenceCard` underneath. Mirrors
+// the Movete "Chi muove la città" pattern so the operator gets visible
+// authorship instead of just a buried disclaimer.
+// ---------------------------------------------------------------------------
+
+@Composable
+private fun OperatorReferenceSection(
+    config: OperatorConfig,
+    liveVehicleCount: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = TransitTheme.colors
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Column(
+            modifier = Modifier.padding(start = 2.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.home_operators_section_title),
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.textPrimary,
+            )
+            Text(
+                text = stringResource(R.string.home_operators_attribution, config.name),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.textSecondary,
+            )
+        }
+        OperatorReferenceCard(
+            config = config,
+            liveVehicleCount = liveVehicleCount,
+            onClick = onClick,
+        )
+    }
+}
+
+@Composable
+private fun OperatorReferenceCard(
+    config: OperatorConfig,
+    liveVehicleCount: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = TransitTheme.colors
+    val context = LocalContext.current
+    // iOS parity (item #15): logo reale operatore invece di initials gradient.
+    // Asset `operator_logo` viene caricato runtime via resources getIdentifier
+    // (white-label: cambia operatore = swap dell'asset).
+    val operatorLogoRes = remember(context) {
+        context.resources.getIdentifier("operator_logo", "drawable", context.packageName)
+            .takeIf { it != 0 }
+    }
+    val initials = remember(config.name) {
+        val words = config.name.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
+        when {
+            words.size >= 2 -> "${words[0].first()}${words[1].first()}".uppercase()
+            words.size == 1 -> words[0].take(2).uppercase()
+            else -> "?"
+        }
+    }
+    val subtitle = config.region?.takeIf { it.isNotBlank() }
+        ?: config.country.takeIf { it.isNotBlank() }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(colors.bgSecondary)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        if (operatorLogoRes != null) {
+            androidx.compose.foundation.Image(
+                painter = painterResource(operatorLogoRes),
+                contentDescription = config.name,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(10.dp)),
+                contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+            )
+        } else {
+            // Fallback: initials su gradient — solo se l'asset manca.
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(
+                        Brush.linearGradient(listOf(colors.accent, colors.primary))
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = initials,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                )
+            }
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = config.name,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.textPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                if (liveVehicleCount > 0) {
+                    com.transitkit.app.ui.components.LiveIndicator(size = 6.dp)
+                    Text(
+                        text = stringResource(R.string.home_operator_card_live, liveVehicleCount),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colors.realtimeGreen,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    if (subtitle != null) {
+                        Text(
+                            text = "·",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = colors.textTertiary,
+                        )
+                        Text(
+                            text = subtitle,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = colors.textSecondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                } else {
+                    Text(
+                        text = stringResource(R.string.home_operator_card_no_live),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colors.textSecondary,
+                    )
+                    if (subtitle != null) {
+                        Text(
+                            text = "·",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = colors.textTertiary,
+                        )
+                        Text(
+                            text = subtitle,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = colors.textSecondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+            }
+        }
+        Icon(
+            painter = painterResource(LucideIcons.ChevronRight),
+            contentDescription = null,
+            tint = colors.textTertiary,
+            modifier = Modifier.size(18.dp),
+        )
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Branded loading screen — shown on cold start while schedule loads
 // ---------------------------------------------------------------------------
 
@@ -819,5 +1330,63 @@ private fun BrandedLoadingScreen(config: OperatorConfig) {
                 color = colors.textTertiary,
             )
         }
+    }
+}
+
+/**
+ * Tile linking to the full "Servizi" screen (info, fares, accessibility,
+ * contacts, operator). Lives in Home now that the tab-bar slot is reserved
+ * for the live alerts counter.
+ */
+@Composable
+private fun HomeServiziLink(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = TransitTheme.colors
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(colors.bgSecondary)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(colors.accent.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(LucideIcons.Grid2x2Plus),
+                contentDescription = null,
+                tint = colors.accent,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(R.string.tab_servizi),
+                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.bodyLarge,
+                color = colors.textPrimary,
+            )
+            Text(
+                text = stringResource(R.string.home_servizi_subtitle),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.textSecondary,
+                maxLines = 1,
+            )
+        }
+        Icon(
+            painter = painterResource(LucideIcons.ChevronRight),
+            contentDescription = null,
+            tint = colors.textTertiary,
+            modifier = Modifier.size(16.dp),
+        )
     }
 }

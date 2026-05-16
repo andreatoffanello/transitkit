@@ -14,8 +14,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.googlefonts.Font
-import androidx.compose.ui.text.googlefonts.GoogleFont
 import androidx.compose.ui.unit.sp
 import com.transitkit.app.R
 
@@ -147,21 +145,18 @@ private fun buildDarkColorScheme(accent: Color, primary: Color): ColorScheme =
     )
 
 // ---------------------------------------------------------------------------
-// Typography — Inter via Google Fonts
+// Typography — Inter (bundled static fonts in res/font/)
 // ---------------------------------------------------------------------------
+// Bundling Inter avoids the downloadable-font runtime races and the silent
+// fallback to Roboto when Google Play Services / its fonts provider isn't
+// reachable (typical on `google_apis` AVDs without Play Store).
 
-private val fontsProvider = GoogleFont.Provider(
-    providerAuthority = "com.google.android.gms.fonts",
-    providerPackage = "com.google.android.gms",
-    certificates = R.array.com_google_android_gms_fonts_certs,
-)
-private val interFont = GoogleFont("Inter")
 val InterFontFamily = FontFamily(
-    Font(googleFont = interFont, fontProvider = fontsProvider, weight = FontWeight.Light),
-    Font(googleFont = interFont, fontProvider = fontsProvider, weight = FontWeight.Normal),
-    Font(googleFont = interFont, fontProvider = fontsProvider, weight = FontWeight.Medium),
-    Font(googleFont = interFont, fontProvider = fontsProvider, weight = FontWeight.SemiBold),
-    Font(googleFont = interFont, fontProvider = fontsProvider, weight = FontWeight.Bold),
+    androidx.compose.ui.text.font.Font(R.font.inter_light,    FontWeight.Light),
+    androidx.compose.ui.text.font.Font(R.font.inter_regular,  FontWeight.Normal),
+    androidx.compose.ui.text.font.Font(R.font.inter_medium,   FontWeight.Medium),
+    androidx.compose.ui.text.font.Font(R.font.inter_semibold, FontWeight.SemiBold),
+    androidx.compose.ui.text.font.Font(R.font.inter_bold,     FontWeight.Bold),
 )
 
 private val transitTypography = Typography(
@@ -208,8 +203,21 @@ fun TransitKitTheme(
         MaterialTheme(
             colorScheme = colorScheme,
             typography = transitTypography,
-            content = content,
-        )
+        ) {
+            // CRUCIALE: MaterialTheme NON propaga automaticamente LocalTextStyle.
+            // Senza questo, ogni Text() che usa solo (fontSize / fontWeight)
+            // senza `style = MaterialTheme.typography.X` ricade su Roboto di
+            // sistema invece che su Inter. Forziamo LocalTextStyle = bodyLarge
+            // (Inter Regular 16sp) come default; le typography variants restano
+            // comunque accessibili via `style = MaterialTheme.typography.X`.
+            CompositionLocalProvider(
+                androidx.compose.material3.LocalTextStyle provides transitTypography.bodyLarge.copy(
+                    fontFamily = InterFontFamily,
+                ),
+            ) {
+                content()
+            }
+        }
     }
 }
 

@@ -24,16 +24,26 @@ struct VehicleLiveCard: View {
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(String(localized: "vehicle_next_stop"))
+                    Text(nextStopCaption)
                         .font(.system(size: 10, weight: .semibold))
                         .kerning(0.6)
                         .foregroundStyle(AppTheme.textTertiary)
-                    Text(nextStopName ?? String(localized: "vehicle_next_stop_unknown"))
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(AppTheme.textPrimary)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    if let next = nextStopName {
+                        Text(next)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(AppTheme.textPrimary)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        // No upcoming stop known — we still want to communicate
+                        // the vehicle is being tracked, not that we lost it.
+                        Text(String(localized: "vehicle_next_stop_unknown"))
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(AppTheme.textSecondary)
+                            .lineLimit(1)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }
             }
             .padding(14)
@@ -54,6 +64,15 @@ struct VehicleLiveCard: View {
     private var vehicleTitle: String {
         let label = vehicle.label.isEmpty ? vehicle.id : vehicle.label
         return String(format: String(localized: "vehicle_label_format"), label)
+    }
+
+    /// The caption above the next stop name flips to "LIVE TRACKING" when no
+    /// next stop is known, mirroring Movete's pattern — the card never reads
+    /// as broken when the feed lacks `current_stop_id`.
+    private var nextStopCaption: String {
+        nextStopName != nil
+            ? String(localized: "vehicle_next_stop")
+            : String(localized: "vehicle_live_tracking")
     }
 }
 

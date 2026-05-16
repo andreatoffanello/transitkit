@@ -1,0 +1,39 @@
+appId: com.transitkit.appalcart
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Setto destination per avere swap button visibile
+- tapOn:
+    point: "50%, 28%"
+- waitForAnimationToEnd
+
+- tapOn:
+    point: "50%, 55%"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Sono in PlannerScreen, torno indietro per vedere swap icon nella home
+- tapOn:
+    point: "10%, 8%"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+- takeScreenshot: flows/screenshots/swap_icon
+
+# Tap "Ora" chip per aprire WhenView
+- tapOn:
+    point: "85%, 26%"
+- waitForAnimationToEnd:
+    timeout: 2500
+
+- takeScreenshot: flows/screenshots/when_view_default
+
+# Tap "Arriva entro"
+- tapOn: "Arriva entro"
+- waitForAnimationToEnd:
+    timeout: 1500
+
+- takeScreenshot: flows/screenshots/when_view_arrive

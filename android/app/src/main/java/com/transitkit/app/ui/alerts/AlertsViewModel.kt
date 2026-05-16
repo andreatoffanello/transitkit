@@ -7,21 +7,25 @@ import com.transitkit.app.data.model.ScheduleRoute
 import com.transitkit.app.data.model.ServiceAlert
 import com.transitkit.app.data.repository.ScheduleRepository
 import com.transitkit.app.data.store.AlertStore
+import com.transitkit.app.data.store.FavoritesStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 /**
  * Exposes the currently-active alerts plus resolver maps for routes/stops so
- * AlertDetailScreen can chip-render affected entities without touching stores directly.
+ * AlertListScreen / AlertDetailScreen can chip-render affected entities and
+ * filter by the user's favourite lines without touching stores directly.
  */
 @HiltViewModel
 class AlertsViewModel @Inject constructor(
     private val alertStore: AlertStore,
     private val scheduleRepository: ScheduleRepository,
+    favoritesStore: FavoritesStore,
 ) : ViewModel() {
 
     val alerts: StateFlow<List<ServiceAlert>> = alertStore.activeAlerts
@@ -41,4 +45,9 @@ class AlertsViewModel @Inject constructor(
                 stops.associateBy { it.id }
             }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
         }
+
+    /** User's favourite route ids, exposed as a Set for O(1) `isRelevant(...)` checks. */
+    val favoriteRouteIds: StateFlow<Set<String>> = favoritesStore.favoriteRouteIds
+        .map { it.toSet() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
 }

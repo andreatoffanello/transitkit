@@ -83,10 +83,15 @@ class HomeViewModel @Inject constructor(
         .map { it.keys }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
 
+    /** Numero totale di veicoli live osservati sul feed GTFS-RT. */
+    val liveVehicleCount: StateFlow<Int> = vehicleStore.vehicles
+        .map { it.size }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
     /** Currently-active service alerts, surfaced in the Today card on Home. */
     val activeAlerts: StateFlow<List<ServiceAlert>> = alertStore.activeAlerts
 
-    /** Up to 3 closest stops with distance in meters (not capped by radius). */
+    /** Closest stops within 400 m of the user, sorted ascending, capped at 8 cards. */
     val nearbyStops: StateFlow<List<Pair<ResolvedStop, Double>>> = combine(
         _userLocation,
         scheduleRepository.stops,
@@ -101,8 +106,15 @@ class HomeViewModel @Inject constructor(
         }
             .filter { it.second <= 400.0 }
             .sortedBy { it.second }
-            .take(3)
+            .take(8)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Quick lookup of `ScheduleRoute` by short name — used by NearbyStopCard
+     *  to render line badges next to each stop. Kept in the ViewModel so the
+     *  Composable doesn't have to filter the routes list on every recomposition. */
+    val routesByName: StateFlow<Map<String, ScheduleRoute>> = scheduleRepository.routes
+        .map { routes -> routes.associateBy { it.name } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     fun updateLocation(lat: Double, lon: Double) {
         _userLocation.value = lat to lon

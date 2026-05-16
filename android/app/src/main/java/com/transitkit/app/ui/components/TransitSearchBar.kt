@@ -1,4 +1,4 @@
-package com.transitkit.app.ui.orari
+package com.transitkit.app.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,18 +30,30 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
 
+/**
+ * The one and only search field for the app. Same shape and rhythm wherever the
+ * user types a query — stop search, line search, line picker on the map. Built
+ * on BasicTextField because Material's filled/outlined fields don't match the
+ * 24dp pill we use elsewhere.
+ *
+ * [a11yTag] feeds the semantics content description so Maestro flows can
+ * target a specific instance (e.g. `search_lines`, `search_stops`).
+ */
 @Composable
-internal fun OrariSearchBar(
+fun TransitSearchBar(
     query: String,
     placeholder: String,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    a11yTag: String? = null,
+    capitalization: KeyboardCapitalization = KeyboardCapitalization.None,
 ) {
     val colors = TransitTheme.colors
     val focusManager = LocalFocusManager.current
@@ -78,11 +90,14 @@ internal fun OrariSearchBar(
                 singleLine = true,
                 textStyle = TextStyle(color = colors.textPrimary, fontSize = 15.sp),
                 cursorBrush = SolidColor(colors.accent),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = capitalization,
+                    imeAction = ImeAction.Search,
+                ),
                 keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .semantics { contentDescription = "search_schedules" },
+                    .let { m -> if (a11yTag != null) m.semantics { contentDescription = a11yTag } else m },
             )
         }
         if (query.isNotEmpty()) {

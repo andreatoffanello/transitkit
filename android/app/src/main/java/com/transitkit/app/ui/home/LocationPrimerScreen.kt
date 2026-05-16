@@ -20,8 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.LocationOn
+import com.transitkit.app.config.LucideIcons
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -72,27 +71,35 @@ fun LocationPrimerScreen(
         label = "pulse_alpha"
     )
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    // iOS parity (item #16): background leggibile.
+    //  - Base solida AppTheme.background (no overlay scuro).
+    //  - Ghost map molto attenuata (alpha 0.08, era 0.18 + overlay nero).
+    //  - RadialGradient centrale come "isola di leggibilità" attorno a
+    //    icona/titolo: surface 85% → trasparente, fade fino a 360dp.
+    val bg = TransitTheme.colors.background
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(bg),
+    ) {
         Image(
             painter = painterResource(id = R.drawable.operator_background),
             contentDescription = null,
             contentScale = ContentScale.Crop,
-            alpha = 0.18f,
+            alpha = 0.08f,
             modifier = Modifier.fillMaxSize()
         )
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
-                    Brush.verticalGradient(
+                    Brush.radialGradient(
                         colorStops = arrayOf(
-                            0.0f to Color.Black.copy(alpha = 0.04f),
-                            0.30f to Color.Transparent,
-                            0.50f to Color.Black.copy(alpha = 0.10f),
-                            0.75f to Color.Black.copy(alpha = 0.40f),
-                            1.0f to Color.Black.copy(alpha = 0.65f)
-                        )
+                            0.0f to bg.copy(alpha = 0.85f),
+                            0.6f to bg.copy(alpha = 0.30f),
+                            1.0f to bg.copy(alpha = 0.0f),
+                        ),
+                        radius = 900f, // pixels ≈ 360dp on xxhdpi
                     )
                 )
         )
@@ -127,7 +134,7 @@ fun LocationPrimerScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.LocationOn,
+                        painter = painterResource(LucideIcons.MapPin),
                         contentDescription = null,
                         tint = TransitTheme.colors.accent,
                         modifier = Modifier.size(30.dp)

@@ -131,11 +131,41 @@ fun MappaScreen(
         previewApplied = true
     }
 
-    // Camera state (viewport) — movete parity
+    // Initial camera — center on the device's last-known location (zoomed in,
+    // 3D pitch) when permission allows; fall back to the operator's configured
+    // map center at the city-overview zoom otherwise.
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val initialCamera = remember {
+        val hasPermission = context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+        val userLoc = if (hasPermission) {
+            val lm = context.getSystemService(android.location.LocationManager::class.java)
+            try {
+                lm?.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
+                    ?: lm?.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
+            } catch (_: SecurityException) { null }
+        } else null
+
+        if (userLoc != null) {
+            Triple(
+                Point.fromLngLat(userLoc.longitude, userLoc.latitude),
+                MapZoomLevels.userDefaultEntry,
+                45.0,
+            )
+        } else {
+            Triple(
+                Point.fromLngLat(mapCenter.longitude(), mapCenter.latitude()),
+                MapZoomLevels.cityDefaultEntry,
+                45.0,
+            )
+        }
+    }
+
     val viewportState = rememberMapViewportState {
         setCameraOptions {
-            center(Point.fromLngLat(mapCenter.longitude(), mapCenter.latitude()))
-            zoom(defaultZoom.toDouble())
+            center(initialCamera.first)
+            zoom(initialCamera.second)
+            pitch(initialCamera.third)
         }
     }
 
@@ -146,9 +176,9 @@ fun MappaScreen(
     // Camera snapshot polled 300ms (viewportState doesn't expose Compose state).
     // Tracks zoom/bearing/pitch + bounding box for viewport-filtering.
     // FOLLOW-UP: polling `while(true) delay(300)` — audit segnalato. Non fixato qui.
-    var currentZoom by remember { mutableStateOf(defaultZoom.toDouble()) }
+    var currentZoom by remember { mutableStateOf(initialCamera.second) }
     var currentBearing by remember { mutableStateOf(0.0) }
-    var currentPitch by remember { mutableStateOf(0.0) }
+    var currentPitch by remember { mutableStateOf(initialCamera.third) }
 
     LaunchedEffect(Unit) {
         var lastLat = 0.0
@@ -335,6 +365,9 @@ fun MappaScreen(
                 },
             )
 
+            // Native blue puck — Mapbox renders it above every other layer.
+            UserLocationPuck()
+
             MapEffect(Unit) { mapView ->
                 mapView.mapboxMap.setPrefetchZoomDelta(4)
             }
@@ -375,23 +408,13 @@ fun MappaScreen(
         }
 
         // -----------------------------------------------------------------------
-        // FABs — vertically centered, right-aligned.
+        // Map controls — pill verticale unificato, allineato al centro.
+        // Bottoni: 2D/3D · Recenter · Reset bearing (cond.).
         // -----------------------------------------------------------------------
 
-        MappaFabColumn(
+        MappaTabControlsPill(
             is3D = is3D,
-            onResetView = {
-                scope.launch {
-                    viewportState.flyTo(
-                        CameraOptions.Builder()
-                            .center(Point.fromLngLat(mapCenter.longitude(), mapCenter.latitude()))
-                            .zoom(defaultZoom.toDouble())
-                            .pitch(0.0)
-                            .bearing(0.0)
-                            .build()
-                    )
-                }
-            },
+            currentBearing = currentBearing,
             onRecenter = {
                 scope.launch {
                     viewportState.flyTo(
@@ -407,6 +430,15 @@ fun MappaScreen(
                     viewportState.flyTo(
                         CameraOptions.Builder()
                             .pitch(if (is3D) 0.0 else 45.0)
+                            .build()
+                    )
+                }
+            },
+            onResetBearing = {
+                scope.launch {
+                    viewportState.flyTo(
+                        CameraOptions.Builder()
+                            .bearing(0.0)
                             .build()
                     )
                 }

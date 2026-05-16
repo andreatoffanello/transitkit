@@ -1,0 +1,14 @@
+appId: com.transitkit.appalcart
+---
+# Verifica: app si lancia, 5 tab visibili, tab "Planner" RIMOSSO
+
+- launchApp:
+    clearState: false
+- assertVisible: "Home"
+- assertVisible: "Schedules"
+- assertVisible: "Routes"
+- assertVisible: "Map"
+- assertVisible: "Services"
+
+# Planner tab DEVE essere assente dalla bottom nav
+- assertNotVisible: "Planner"

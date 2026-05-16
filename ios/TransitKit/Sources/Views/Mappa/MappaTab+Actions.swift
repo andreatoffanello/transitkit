@@ -27,7 +27,7 @@ extension MappaTab {
             stops: currentTier == .city ? [] : renderedStops,
             vehicles: displayedVehicles,
             polylines: cachedRoutePolylines,
-            initialPitch: 45,
+            pitch: is3D ? 45.0 : 0.0,
             zoomLevel: zoomLevel,
             tier: currentTier,
             selectedStopId: selectedStop?.id,

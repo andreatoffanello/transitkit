@@ -1,0 +1,28 @@
+appId: com.transitkit.appalcart
+---
+# Verifica: tab Mappa — pill FAB unificato con 3 pulsanti (reset view, recentra, toggle 3D)
+
+- launchApp:
+    clearState: false
+
+# Deeplink diretto alla mappa
+- openLink: "transitkit://map"
+- waitForAnimationToEnd
+
+# Verifica i 3 bottoni del pill FAB
+- assertVisible:
+    id: "btn_map_reset_view"
+- assertVisible:
+    id: "btn_map_recenter"
+- assertVisible:
+    id: "btn_map_toggle_3d"
+
+# Tap reset view
+- tapOn:
+    id: "btn_map_reset_view"
+- waitForAnimationToEnd
+
+# Tap recentra
+- tapOn:
+    id: "btn_map_recenter"
+- waitForAnimationToEnd

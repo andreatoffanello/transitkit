@@ -1,0 +1,16 @@
+appId: com.transitkit.appalcart
+---
+# Verifica: PlannerQuickBlock in HomeScreen naviga al Planner con origine precompilata
+
+- launchApp:
+    clearState: false
+
+# HomeScreen già visibile (startDestination)
+# Tap sul PlannerQuickBlock glass card
+- tapOn:
+    id: "planner_quick_block"
+- waitForAnimationToEnd
+
+# Schermata Planner aperta — verifica campo origine precompilato
+# (se c'è una fermata vicina, mostra il nome; altrimenti "From…")
+- assertVisible: "From…"

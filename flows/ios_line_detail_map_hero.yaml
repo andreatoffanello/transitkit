@@ -1,0 +1,20 @@
+appId: com.transitkit.appalcart
+---
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      text: "Home"
+    timeout: 6000
+- openLink: "transitkit://line/3"
+- extendedWaitUntil:
+    visible:
+      text: "B"
+    timeout: 5000
+- assertVisible:
+    id: "btn_line_map"
+- extendedWaitUntil:
+    visible:
+      id: "btn_expand_line_map"
+    timeout: 3000
+- assertVisible: "Fermate servite"

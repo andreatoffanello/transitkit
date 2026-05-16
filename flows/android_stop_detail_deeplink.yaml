@@ -1,0 +1,9 @@
+appId: com.transitkit.appalcart
+---
+# Verifica: deeplink a StopDetail apre la schermata fermata corretta
+
+- launchApp:
+    clearState: false
+- openLink: "transitkit://stop/appalcart_asu_appalachian_heights"
+- waitForAnimationToEnd
+- assertVisible: "ASU Appalachian Heights"

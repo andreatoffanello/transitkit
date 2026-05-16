@@ -36,12 +36,13 @@ Documentazione operativa completa: [README](https://github.com/andreatoffanello/
 - Bundle ID: `com.transitkit.{OPERATOR_ID}` (white-label: es. `com.transitkit.appalcart`)
 - iOS xcodeproj: `ios/TransitKit.xcodeproj`
 - UDID simulatore iOS 18: `4302AFD9-496E-4586-A5D0-D6BAC735FFFD` (`transitkit-dev`, iPhone 16 Pro)
-- Location simulatore: `41.9009,12.5017` (Roma — Termini) — applicata automaticamente post-boot
+- UDID simulatore iOS 26: `E25FE58E-7059-457F-A0A9-8B1E3D59145D` (`transitkit-dev-26`, iPhone 16 Pro)
+- Location simulatori/emulatore: applicata da `scripts/setup-dev.sh [operator_id]` leggendo `shared/operators/<op>/config.json` → `map.centerLat/centerLng`. Default `appalcart` → Boone, NC (`36.2168,-81.6746`). Su iOS la posizione `simctl location set` è in-memory: rilanciare lo script dopo ogni reboot del simulatore.
 - AVD Android: `transitkit-dev` (Pixel 6, API 34 — white-label: es. com.transitkit.appalcart)
 - Package Android: `com.transitkit.{OPERATOR_ID}`
 
 **Regole ferree:**
-- MAI lanciare/installare app su simulatori diversi da `transitkit-dev`.
+- MAI lanciare/installare app su simulatori diversi da `transitkit-dev` e `transitkit-dev-26`.
 - MAI usare `booted` come target simctl — sempre `$UDID`.
 - Il Bundle ID cambia per operatore: verificare sempre `{OPERATOR_ID}` prima di `simctl launch`.
 - MAI lanciare/installare app su emulatori Android diversi da `transitkit-dev`.
@@ -136,6 +137,7 @@ Framework iOS white-label per app di trasporto pubblico.
 | Ruolo | Nome progetto | Modello | iOS |
 |-------|--------------|---------|-----|
 | Principale | `transitkit-dev` | iPhone 16 Pro | 18.5 |
+| iOS 26 test | `transitkit-dev-26` | iPhone 16 Pro | 26.2 |
 
 ```bash
 # Setup tramite script (una volta per Mac) — usa questo
@@ -145,7 +147,8 @@ bash scripts/setup-dev.sh
 xcrun simctl create "transitkit-dev" "com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro" "com.apple.CoreSimulator.SimRuntime.iOS-18-5"
 
 # Lookup UDID
-UDID="4302AFD9-496E-4586-A5D0-D6BAC735FFFD"   # transitkit-dev (pinned — evita ambiguità con cloni omonimi)
+UDID="4302AFD9-496E-4586-A5D0-D6BAC735FFFD"      # transitkit-dev (iOS 18.5 — pinned)
+UDID26="E25FE58E-7059-457F-A0A9-8B1E3D59145D"    # transitkit-dev-26 (iOS 26.2 — pinned)
 ```
 
 ### Android

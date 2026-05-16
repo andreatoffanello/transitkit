@@ -7,6 +7,7 @@ import com.transitkit.app.data.model.ResolvedStop
 import com.transitkit.app.data.model.ScheduleRoute
 import com.transitkit.app.data.repository.ScheduleRepository
 import com.transitkit.app.data.store.SearchHistoryStore
+import com.transitkit.app.data.store.VehicleStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -31,8 +32,15 @@ data class OrariUiState(
 class OrariViewModel @Inject constructor(
     private val repository: ScheduleRepository,
     private val historyStore: SearchHistoryStore,
+    private val vehicleStore: VehicleStore,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
+
+    /** Mappa routeId → numero di veicoli live correnti — per badge statico
+     *  in LineeScreen (item #17 iOS spec). */
+    val liveCountByRouteId: StateFlow<Map<String, Int>> = vehicleStore.vehiclesByRouteId
+        .map { byRoute -> byRoute.mapValues { it.value.size } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     private val _searchQuery = savedStateHandle.getStateFlow("search_query", "")
     val searchQuery: StateFlow<String> = _searchQuery

@@ -1,6 +1,5 @@
 package com.transitkit.app.ui.servizi
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -54,6 +53,7 @@ fun ServiziScreen(
     onNavigateToAccessibility: () -> Unit = {},
     onNavigateToContact: () -> Unit = {},
     onNavigateToOperator: (OperatorConfig) -> Unit = {},
+    onBack: (() -> Unit)? = null,
     viewModel: ServiziViewModel = hiltViewModel(),
 ) {
     val config = viewModel.operatorConfig
@@ -70,6 +70,17 @@ fun ServiziScreen(
                         fontWeight = FontWeight.Bold,
                         color = colors.textPrimary,
                     )
+                },
+                navigationIcon = {
+                    if (onBack != null) {
+                        androidx.compose.material3.IconButton(onClick = onBack) {
+                            androidx.compose.material3.Icon(
+                                painter = androidx.compose.ui.res.painterResource(LucideIcons.ChevronLeft),
+                                contentDescription = stringResource(R.string.cd_indietro),
+                                tint = colors.textPrimary,
+                            )
+                        }
+                    }
                 },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.largeTopAppBarColors(
@@ -176,8 +187,7 @@ private fun ServicesCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = colors.bgSecondary),
-        border = BorderStroke(1.dp, colors.glassBorder),
-        elevation = CardDefaults.cardElevation(0.dp),
+        elevation = CardDefaults.cardElevation(1.dp),
     ) {
         Column {
             services.forEachIndexed { index, service ->
@@ -280,8 +290,7 @@ private fun FaresSummaryCard(fares: FareInfo, onClick: () -> Unit) {
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = colors.bgSecondary),
-        border = BorderStroke(1.dp, colors.glassBorder),
-        elevation = CardDefaults.cardElevation(0.dp),
+        elevation = CardDefaults.cardElevation(1.dp),
     ) {
         Row(
             modifier = Modifier
@@ -350,8 +359,7 @@ private fun AccessibilitySummaryCard(
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = colors.bgSecondary),
-        border = BorderStroke(1.dp, colors.glassBorder),
-        elevation = CardDefaults.cardElevation(0.dp),
+        elevation = CardDefaults.cardElevation(1.dp),
     ) {
         Row(
             modifier = Modifier
@@ -413,8 +421,7 @@ private fun ContactSummaryCard(contact: ContactConfig, onClick: () -> Unit) {
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = colors.bgSecondary),
-        border = BorderStroke(1.dp, colors.glassBorder),
-        elevation = CardDefaults.cardElevation(0.dp),
+        elevation = CardDefaults.cardElevation(1.dp),
     ) {
         Column {
             val rows = buildList {
@@ -477,8 +484,7 @@ private fun AboutOperatorCard(config: OperatorConfig, onClick: () -> Unit) {
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = colors.bgSecondary),
-        border = BorderStroke(1.dp, colors.glassBorder),
-        elevation = CardDefaults.cardElevation(0.dp),
+        elevation = CardDefaults.cardElevation(1.dp),
     ) {
         Row(
             modifier = Modifier

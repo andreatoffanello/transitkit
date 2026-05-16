@@ -83,7 +83,6 @@ struct MappaTab: View {
     @State var isFollowingVehicle = false
 
     // MARK: 3D toggle
-    /// 3D mode flag. TODO: wire to TransitMapView for live pitch update.
     @State var is3D: Bool = true
     /// True when the active route overlay was auto-selected by tapping a vehicle
     /// (vs. manually via line picker). Determines whether closing the vehicle card
@@ -230,9 +229,13 @@ struct MappaTab: View {
                   let loc = locationManager.location,
                   config.features.enableGeolocation else { return }
             didCenterOnDevice = true
+            // Re-centre on the user but keep the operator-configured zoom level —
+            // hardcoding a tight span here used to zoom past the level where
+            // Apple Maps streams tiles for sparser areas (e.g. Boone NC), leaving
+            // the map empty/beige.
             mapRegion = MKCoordinateRegion(
                 center: loc.coordinate,
-                span: MKCoordinateSpan(latitudeDelta: 0.012, longitudeDelta: 0.012)
+                span: Self.spanForZoom(config.map.defaultZoom)
             )
         }
         .toolbar(.hidden, for: .navigationBar)

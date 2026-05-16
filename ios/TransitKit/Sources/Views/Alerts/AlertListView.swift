@@ -2,8 +2,10 @@ import SwiftUI
 
 // MARK: - AlertListView
 
-/// Full list of currently-active service alerts. Top filter bar: All / Favorites / Specific line.
-/// Sorted by severity (severe → warning → info → unknown), then alphabetically.
+/// List of currently-active service alerts. Two filter pills with counters:
+/// "My lines" (default when the user has favourites) and "All".
+/// Cards in the "All" view are reordered so alerts relevant to the user's
+/// favourite routes float to the top, each carrying a "YOUR LINE" overline.
 struct AlertListView: View {
     @Environment(AlertStore.self) private var alertStore
     @Environment(ScheduleStore.self) private var store
@@ -11,32 +13,37 @@ struct AlertListView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isPresented) private var isPresented
 
-    enum Filter: Equatable {
-        case all
-        case favorites
-        case route(String) // routeId
+    enum Filter: Equatable { case mine, all }
+
+    @State private var filter: Filter = .mine
+
+    private var myLineIds: Set<String> {
+        Set(favoritesManager.favoriteRouteIds)
     }
 
-    @State private var filter: Filter = .all
+    private var activeAlerts: [GtfsRtAlert] {
+        alertStore.activeAlerts
+    }
 
-    private var filteredAlerts: [GtfsRtAlert] {
-        let base: [GtfsRtAlert]
-        switch filter {
-        case .all:
-            base = alertStore.activeAlerts
-        case .favorites:
-            let favs = Set(favoritesManager.favoriteRouteIds)
-            guard !favs.isEmpty else { return [] }
-            base = alertStore.activeAlerts.filter { !$0.affectedRouteIds.isDisjoint(with: favs) }
-        case .route(let rid):
-            base = alertStore.activeAlerts.filter { $0.affectedRouteIds.contains(rid) }
+    private var myAlerts: [GtfsRtAlert] {
+        let favs = myLineIds
+        guard !favs.isEmpty else { return [] }
+        return activeAlerts.filter { $0.isRelevant(forRoutes: favs) }
+    }
+
+    /// In the "All" view: relevant-first, then most-recent first.
+    private var orderedAllAlerts: [GtfsRtAlert] {
+        let favs = myLineIds
+        return activeAlerts.sorted { lhs, rhs in
+            let lhsRelevant = lhs.isRelevant(forRoutes: favs)
+            let rhsRelevant = rhs.isRelevant(forRoutes: favs)
+            if lhsRelevant != rhsRelevant { return lhsRelevant }
+            return (lhs.firstActiveStart ?? 0) > (rhs.firstActiveStart ?? 0)
         }
-        return base.sorted { lhs, rhs in
-            if lhs.severity.rawValue != rhs.severity.rawValue {
-                return lhs.severity.rawValue > rhs.severity.rawValue
-            }
-            return lhs.headerText.resolved().localizedCompare(rhs.headerText.resolved()) == .orderedAscending
-        }
+    }
+
+    private var visibleAlerts: [GtfsRtAlert] {
+        filter == .mine ? myAlerts : orderedAllAlerts
     }
 
     var body: some View {
@@ -56,29 +63,8 @@ struct AlertListView: View {
                 }
             }
         }
-    }
-
-    // MARK: Content
-
-    @ViewBuilder
-    private var content: some View {
-        if filteredAlerts.isEmpty {
-            emptyState
-        } else {
-            ScrollView {
-                LazyVStack(spacing: 12) {
-                    ForEach(filteredAlerts) { alert in
-                        NavigationLink {
-                            AlertDetailView(alert: alert)
-                        } label: {
-                            alertRow(alert)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 16)
-            }
+        .onAppear {
+            if myLineIds.isEmpty { filter = .all }
         }
     }
 
@@ -87,13 +73,24 @@ struct AlertListView: View {
     @ViewBuilder
     private var filterBar: some View {
         HStack(spacing: 8) {
-            filterPill(label: String(localized: "alerts_filter_all"), isActive: filter == .all) {
+            if !myLineIds.isEmpty {
+                filterPill(
+                    title: String(localized: "alerts_filter_mine"),
+                    count: myAlerts.count,
+                    isActive: filter == .mine
+                ) {
+                    filter = .mine
+                }
+                .accessibilityIdentifier("filter_mine")
+            }
+            filterPill(
+                title: String(localized: "alerts_filter_all"),
+                count: activeAlerts.count,
+                isActive: filter == .all
+            ) {
                 filter = .all
             }
-            filterPill(label: String(localized: "alerts_filter_favorites"), isActive: filter == .favorites) {
-                filter = .favorites
-            }
-            routePicker
+            .accessibilityIdentifier("filter_all")
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 16)
@@ -107,177 +104,100 @@ struct AlertListView: View {
         .sensoryFeedback(.selection, trigger: filter)
     }
 
-    private func filterPill(label: String, isActive: Bool, action: @escaping () -> Void) -> some View {
+    private func filterPill(
+        title: String,
+        count: Int,
+        isActive: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
-            Text(label)
-                .font(.system(size: 13, weight: isActive ? .semibold : .medium))
-                .foregroundStyle(isActive ? AppTheme.textPrimary : AppTheme.textSecondary)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
-                .background(
-                    Capsule().fill(isActive ? AppTheme.accent.opacity(0.18) : AppTheme.bgSecondary.opacity(0.5))
-                )
-                .overlay(
-                    Capsule().strokeBorder(
-                        isActive ? AppTheme.accent.opacity(0.5) : AppTheme.glassBorder,
-                        lineWidth: 1
-                    )
-                )
-        }
-        .buttonStyle(.plain)
-    }
-
-    private var routePicker: some View {
-        Menu {
-            ForEach(store.routes, id: \.id) { route in
-                Button {
-                    filter = .route(route.id)
-                } label: {
-                    Label(route.longName ?? route.name, systemImage: filter == .route(route.id) ? "checkmark" : "")
-                }
-            }
-        } label: {
             HStack(spacing: 6) {
-                Text(routePickerLabel)
-                    .font(.system(size: 13, weight: routePickerIsActive ? .semibold : .medium))
-                    .foregroundStyle(routePickerIsActive ? AppTheme.textPrimary : AppTheme.textSecondary)
-                LucideIcon.chevronDown.sized(12)
-                    .foregroundStyle(routePickerIsActive ? AppTheme.textPrimary : AppTheme.textSecondary)
+                Text(title)
+                    .font(.system(size: 13, weight: isActive ? .semibold : .medium))
+                    .foregroundStyle(isActive ? AppTheme.textPrimary : AppTheme.textSecondary)
+                Text("\(count)")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(isActive ? AppTheme.textPrimary : AppTheme.textTertiary)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 1)
+                    .background(
+                        Capsule().fill(
+                            isActive
+                                ? AppTheme.accent.opacity(0.28)
+                                : AppTheme.bgSecondary
+                        )
+                    )
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 7)
             .background(
-                Capsule().fill(routePickerIsActive ? AppTheme.accent.opacity(0.18) : AppTheme.bgSecondary.opacity(0.5))
+                Capsule().fill(isActive ? AppTheme.accent.opacity(0.18) : AppTheme.bgSecondary.opacity(0.5))
             )
             .overlay(
                 Capsule().strokeBorder(
-                    routePickerIsActive ? AppTheme.accent.opacity(0.5) : AppTheme.glassBorder,
+                    isActive ? AppTheme.accent.opacity(0.5) : AppTheme.glassBorder,
                     lineWidth: 1
                 )
             )
         }
-        .accessibilityIdentifier("alerts_filter_route_menu")
+        .buttonStyle(.plain)
     }
 
-    private var routePickerIsActive: Bool {
-        if case .route = filter { return true }
-        return false
-    }
-
-    private var routePickerLabel: String {
-        if case .route(let rid) = filter, let route = store.route(forId: rid) {
-            return route.name
-        }
-        return String(localized: "alerts_filter_route")
-    }
-
-    // MARK: Row
-
-    private func alertRow(_ alert: GtfsRtAlert) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            severityDot(for: alert.severity)
-                .padding(.top, 6)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(alert.headerText.resolved())
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(AppTheme.textPrimary)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
-                if let sub = alertSubtitle(alert), !sub.isEmpty {
-                    Text(sub)
-                        .font(.caption)
-                        .foregroundStyle(AppTheme.textTertiary)
-                        .lineLimit(1)
-                }
-            }
-
-            Spacer(minLength: 0)
-
-            LucideIcon.chevronRight.sized(14)
-                .foregroundStyle(AppTheme.textTertiary)
-                .padding(.top, 4)
-        }
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(AppTheme.bgSecondary)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(AppTheme.glassBorder, lineWidth: 1)
-        )
-    }
+    // MARK: Content
 
     @ViewBuilder
-    private var emptyState: some View {
-        switch filter {
-        case .favorites where favoritesManager.favoriteRouteIds.isEmpty:
+    private var content: some View {
+        if filter == .mine && myLineIds.isEmpty {
             EmptyStateView(
                 icon: .star,
                 title: String(localized: "alerts_empty_no_favorites_title"),
                 subtitle: String(localized: "alerts_empty_no_favorites_subtitle")
             )
-        case .favorites:
-            EmptyStateView(
-                icon: .check,
-                title: String(localized: "alerts_empty_favorites_title"),
-                subtitle: String(localized: "alerts_empty_favorites_subtitle")
-            )
-        case .route:
-            EmptyStateView(
-                icon: .check,
-                title: String(localized: "alerts_empty_route_title"),
-                subtitle: String(localized: "alerts_empty_route_subtitle")
-            )
-        case .all:
-            EmptyStateView(
-                icon: .check,
-                title: String(localized: "alerts_empty_title"),
-                subtitle: String(localized: "alerts_empty_subtitle")
-            )
-        }
-    }
-
-    // MARK: Helpers
-
-    private func alertSubtitle(_ alert: GtfsRtAlert) -> String? {
-        let routes = alert.affectedRouteIds.count
-        let stops = alert.affectedStopIds.count
-        var parts: [String] = []
-        if routes > 0 { parts.append(String(format: String(localized: "alerts_affected_routes_count"), routes)) }
-        if stops > 0 { parts.append(String(format: String(localized: "alerts_affected_stops_count"), stops)) }
-        if parts.isEmpty, let effect = effectLabel(alert.effect) { return effect }
-        return parts.joined(separator: " · ")
-    }
-
-    private func effectLabel(_ effect: AlertEffect) -> String? {
-        switch effect {
-        case .noService:          return String(localized: "alert_effect_no_service")
-        case .reducedService:     return String(localized: "alert_effect_reduced_service")
-        case .significantDelays:  return String(localized: "alert_effect_delays")
-        case .detour:             return String(localized: "alert_effect_detour")
-        case .stopMoved:          return String(localized: "alert_effect_stop_moved")
-        case .additionalService:  return String(localized: "alert_effect_additional")
-        case .modifiedService:    return String(localized: "alert_effect_modified")
-        case .accessibilityIssue: return String(localized: "alert_effect_accessibility")
-        case .noEffect, .unknownEffect, .otherEffect: return nil
+        } else if visibleAlerts.isEmpty {
+            emptyState
+        } else {
+            ScrollView {
+                LazyVStack(spacing: 10) {
+                    ForEach(visibleAlerts) { alert in
+                        VStack(alignment: .leading, spacing: 4) {
+                            if filter == .all
+                                && !myLineIds.isEmpty
+                                && alert.isRelevant(forRoutes: myLineIds) {
+                                Text(String(localized: "alerts_your_line_badge"))
+                                    .font(.caption2.weight(.bold))
+                                    .kerning(0.5)
+                                    .foregroundStyle(.orange)
+                                    .padding(.horizontal, 4)
+                            }
+                            NavigationLink {
+                                AlertDetailView(alert: alert)
+                            } label: {
+                                AlertCard(alert: alert)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+            }
         }
     }
 
     @ViewBuilder
-    private func severityDot(for severity: AlertSeverity) -> some View {
-        Circle()
-            .fill(severityColor(severity))
-            .frame(width: 8, height: 8)
-    }
-
-    private func severityColor(_ severity: AlertSeverity) -> Color {
-        switch severity {
-        case .severe:  return .red
-        case .warning: return .orange
-        case .info:    return AppTheme.accent
-        case .unknown: return AppTheme.textTertiary
-        }
+    private var emptyState: some View {
+        EmptyStateView(
+            icon: .check,
+            title: String(
+                localized: filter == .mine
+                    ? "alerts_empty_favorites_title"
+                    : "alerts_empty_title"
+            ),
+            subtitle: String(
+                localized: filter == .mine
+                    ? "alerts_empty_favorites_subtitle"
+                    : "alerts_empty_subtitle"
+            )
+        )
     }
 }

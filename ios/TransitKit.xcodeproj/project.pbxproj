@@ -45,6 +45,7 @@
 		43CCFBB0C53FA0CAFAF94AF0 /* Journey.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDBE8C8BFED37B7CFCFCB0CA /* Journey.swift */; };
 		448380EE7003795E0300450E /* GtfsRtDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D89EE35213444EB1DF6A8D93 /* GtfsRtDecoder.swift */; };
 		491FDF8B12CE9F19466E062B /* AlertListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E57AC28DB956ECD7D1B2D59C /* AlertListView.swift */; };
+		5073C13E80A5BCDE7B111C6E /* AlertCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B407E0D58946BADE35443FA3 /* AlertCard.swift */; };
 		522D52776600CC2D56493829 /* VehicleAnnotationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71858BFF6C4A52232A37DF83 /* VehicleAnnotationView.swift */; };
 		52C01EFE8203A5A377A4FA1D /* DeepLinkRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47BE6CB2EB2867D87CA8D146 /* DeepLinkRouter.swift */; };
 		55D510B450C4C199DE9AD92B /* ContactInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8C00F56368F459460E633A3 /* ContactInfoView.swift */; };
@@ -98,8 +99,10 @@
 		D394E8A32DE3511A87B2106F /* LucideIcon.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA2061CA100464E2D083D514 /* LucideIcon.swift */; };
 		D6C160C0BF1074C786C11059 /* MappaTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F3436F501268CE8E925D853 /* MappaTab.swift */; };
 		D857E1BA67F87AB9B67C117C /* JourneyCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC2AA53B798B757635860574 /* JourneyCard.swift */; };
+		D8ED0445D2DBD9191891E1FF /* NearbyStopCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5FCD75A1F947E7E5EFEC41 /* NearbyStopCard.swift */; };
 		DC3D72EDB297D1729CA65084 /* AlertToastOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECFB7E48F2DE54F148E94DA8 /* AlertToastOverlay.swift */; };
 		E0D813D49D272A48BC20356E /* AlertDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64FC603D174889581AD1AD62 /* AlertDetailView.swift */; };
+		E116BEC58F6BBEB1525D02F8 /* GtfsRtAlertHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5D343A8FB05F1DBD0C60466 /* GtfsRtAlertHelpers.swift */; };
 		E62409BCCA6B200BBC229935 /* AccessibilityInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE07B73091451AC01AF8469A /* AccessibilityInfoView.swift */; };
 		EB792D0FA0D15A4CB61D3AA2 /* ColorUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8AB69082C727FD94B52155A /* ColorUtils.swift */; };
 		EBA5682D3A08121DE7FDFAF0 /* ServiceDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A747722BEC4DD248EFCC62BF /* ServiceDetailView.swift */; };
@@ -182,6 +185,7 @@
 		9EF3176A50EBF273C1004513 /* JourneyMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyMapView.swift; sourceTree = "<group>"; };
 		A171D8A0D7B978020D89F7F7 /* ConnectionsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionsStore.swift; sourceTree = "<group>"; };
 		A338B0B04B601C99D134BD22 /* LinePickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinePickerSheet.swift; sourceTree = "<group>"; };
+		A5D343A8FB05F1DBD0C60466 /* GtfsRtAlertHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GtfsRtAlertHelpers.swift; sourceTree = "<group>"; };
 		A7410BEEC0AEB17E6FFB2785 /* FilterChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterChip.swift; sourceTree = "<group>"; };
 		A747722BEC4DD248EFCC62BF /* ServiceDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceDetailView.swift; sourceTree = "<group>"; };
 		A8AB69082C727FD94B52155A /* ColorUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorUtils.swift; sourceTree = "<group>"; };
@@ -190,6 +194,8 @@
 		AF29A33249EEAAC16698F765 /* RouteOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteOverlay.swift; sourceTree = "<group>"; };
 		B10BEFD5CA21B9EBA3ADE1D7 /* LineBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineBadge.swift; sourceTree = "<group>"; };
 		B1BB2090BF4778297476635A /* OverflowBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverflowBadge.swift; sourceTree = "<group>"; };
+		B407E0D58946BADE35443FA3 /* AlertCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertCard.swift; sourceTree = "<group>"; };
+		BF5FCD75A1F947E7E5EFEC41 /* NearbyStopCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NearbyStopCard.swift; sourceTree = "<group>"; };
 		C69F73160D11EE306A2190B7 /* StopCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopCard.swift; sourceTree = "<group>"; };
 		C8C00F56368F459460E633A3 /* ContactInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactInfoView.swift; sourceTree = "<group>"; };
 		CC2AA53B798B757635860574 /* JourneyCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyCard.swift; sourceTree = "<group>"; };
@@ -328,6 +334,7 @@
 		3249C6F15F3583889B1B4EC5 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				A5D343A8FB05F1DBD0C60466 /* GtfsRtAlertHelpers.swift */,
 				D89EE35213444EB1DF6A8D93 /* GtfsRtDecoder.swift */,
 				CDBE8C8BFED37B7CFCFCB0CA /* Journey.swift */,
 				0063DBA25418907674264AFF /* PlannerLocation.swift */,
@@ -397,6 +404,7 @@
 		60EFC292E37EACAFBB533A9B /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				B407E0D58946BADE35443FA3 /* AlertCard.swift */,
 				ECFB7E48F2DE54F148E94DA8 /* AlertToastOverlay.swift */,
 				33103B5EDE272DE94D3F38FD /* DepartureRow.swift */,
 				0406584969AA537889762B68 /* DockIndicators.swift */,
@@ -424,6 +432,7 @@
 			children = (
 				9C2048933225A12B749A4D7F /* HomeTab.swift */,
 				30FCB0337BA7C83B21D94CEA /* LocationPrimerView.swift */,
+				BF5FCD75A1F947E7E5EFEC41 /* NearbyStopCard.swift */,
 				488752BF581F957A86F7D779 /* PlannerHomeBox.swift */,
 			);
 			path = Home;
@@ -652,6 +661,7 @@
 			files = (
 				CCEAFD601CAE70A4485CB7F4 /* AboutView.swift in Sources */,
 				E62409BCCA6B200BBC229935 /* AccessibilityInfoView.swift in Sources */,
+				5073C13E80A5BCDE7B111C6E /* AlertCard.swift in Sources */,
 				E0D813D49D272A48BC20356E /* AlertDetailView.swift in Sources */,
 				491FDF8B12CE9F19466E062B /* AlertListView.swift in Sources */,
 				41D7758909CF2E3B14B6EB55 /* AlertStore.swift in Sources */,
@@ -673,6 +683,7 @@
 				75BF9DB9D7CF61A90CEBA2E4 /* FlowLayout.swift in Sources */,
 				8DBC5753F101243CDB368805 /* FullScheduleSheet.swift in Sources */,
 				6CE652E0DDE136C66F6F0FED /* GlassCard.swift in Sources */,
+				E116BEC58F6BBEB1525D02F8 /* GtfsRtAlertHelpers.swift in Sources */,
 				448380EE7003795E0300450E /* GtfsRtDecoder.swift in Sources */,
 				B6E1C290F802C76A2679A05A /* HeadsignNormalizer.swift in Sources */,
 				189C94AE0BF1C9D3D6AB86F9 /* HomeTab.swift in Sources */,
@@ -706,6 +717,7 @@
 				D6C160C0BF1074C786C11059 /* MappaTab.swift in Sources */,
 				35DDCCA972E0C2BE475258E8 /* MarqueeLabel.swift in Sources */,
 				41C27602529E673926D375E4 /* MarqueeText.swift in Sources */,
+				D8ED0445D2DBD9191891E1FF /* NearbyStopCard.swift in Sources */,
 				1DB7D0A77B4D8DE7DAAB9604 /* OperatorConfig.swift in Sources */,
 				B513766EF6F25125E6EB8868 /* OperatorInfoView.swift in Sources */,
 				2BCA1D7672AA34A413EA9F64 /* OrariTab.swift in Sources */,

@@ -1,0 +1,33 @@
+appId: com.transitkit.appalcart
+---
+# Verifica MOTIS routing end-to-end: 2 stop selezionati dalla lista
+# "VICINO A TE", check che apparano journey reali o errore esplicito
+# (non più crash silenzioso da -1011).
+
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+
+# Tap su origin (prima riga del planner)
+- tapOn:
+    point: "50%, 17%"
+- waitForAnimationToEnd
+
+# In LocationPickerView, tap su prima fermata "VICINO A TE"
+- tapOn:
+    point: "50%, 42%"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Tornati alla home; tap su destination
+- tapOn:
+    point: "50%, 22%"
+- waitForAnimationToEnd
+
+# In LocationPickerView, tap su seconda fermata "VICINO A TE" (più in basso)
+- tapOn:
+    point: "50%, 50%"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+- takeScreenshot: flows/screenshots/motis_smoke_result

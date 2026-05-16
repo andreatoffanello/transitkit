@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -14,12 +15,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.data.model.ScheduleRoute
@@ -52,9 +58,9 @@ private data class LineBadgeDims(
 )
 
 private fun LineBadgeSize.dims(): LineBadgeDims = when (this) {
-    LineBadgeSize.Small -> LineBadgeDims(11.sp, 12.dp, 6.dp, 3.dp, 24.dp, 4.dp, 3.dp)
-    LineBadgeSize.Medium -> LineBadgeDims(13.sp, 14.dp, 8.dp, 4.dp, 32.dp, 6.dp, 5.dp)
-    LineBadgeSize.Large -> LineBadgeDims(15.sp, 16.dp, 10.dp, 5.dp, 40.dp, 6.dp, 6.dp)
+    LineBadgeSize.Small  -> LineBadgeDims(11.sp, 12.dp,  6.dp, 5.dp, 20.dp,  8.dp, 3.dp)
+    LineBadgeSize.Medium -> LineBadgeDims(13.sp, 14.dp,  8.dp, 6.dp, 26.dp, 10.dp, 5.dp)
+    LineBadgeSize.Large  -> LineBadgeDims(15.sp, 16.dp, 10.dp, 8.dp, 34.dp, 12.dp, 6.dp)
 }
 
 /**
@@ -117,10 +123,16 @@ fun LineBadge(
     val d = size.dims()
     val bg = parseHexColor(colorHex, fallback = Color(0xFF3B82F6))
     val fg = resolveTextColor(textColorHex, background = bg)
-    val cd = "Linea $name"
+    val cd = stringResource(com.transitkit.app.R.string.cd_line_format, name)
 
     Row(
+        // wrapContentWidth(unbounded = true) garantisce che il badge claimi la
+        // sua larghezza intrinseca anche quando il parent applica weight o un
+        // width più stretto — equivalente del fixedSize(horizontal: true) iOS.
+        // Senza, nomi a 4-5 char ("SFPLS", "NOPOP") venivano clippati dal
+        // background pill ristretto dal parent destination column.
         modifier = modifier
+            .wrapContentWidth(unbounded = true)
             .defaultMinSize(minWidth = d.minWidth)
             .background(bg, RoundedCornerShape(d.radius))
             .padding(horizontal = d.padH, vertical = d.padV)
@@ -144,6 +156,14 @@ fun LineBadge(
             fontSize = d.fontSize,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
+            style = TextStyle(
+                platformStyle = PlatformTextStyle(includeFontPadding = false),
+                lineHeight = 1.em,
+                lineHeightStyle = LineHeightStyle(
+                    alignment = LineHeightStyle.Alignment.Center,
+                    trim = LineHeightStyle.Trim.Both,
+                ),
+            ),
         )
     }
 }

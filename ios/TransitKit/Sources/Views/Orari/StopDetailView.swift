@@ -16,12 +16,17 @@ private enum PlannerEntry: Identifiable {
 struct StopDetailView: View {
     let stop: ResolvedStop
     @Environment(ScheduleStore.self) private var store
+    @Environment(AlertStore.self) private var alertStore
     @Environment(DeepLinkRouter.self) private var router
     @State private var mapPosition: MapCameraPosition = .automatic
     @State private var showFullSchedule = false
     @State private var showMoreDepartures = false
     @State private var filterLine: String?
     @Environment(FavoritesManager.self) private var favoritesManager
+
+    /// Anchor id for the bottom AVVISI section — used by the chip below the
+    /// map header to scroll the user down to the inline alert cards.
+    private let alertsAnchorId = "stop-alerts-section"
 
     @State private var mapExpanded: Bool = false
     @State private var expandedMapPosition: MapCameraPosition = .automatic
@@ -79,18 +84,47 @@ struct StopDetailView: View {
         stop.lineNames
     }
 
+    // MARK: - Alerts (stopId OR any of the stop's lines)
+
+    /// Route ids served by this stop, resolved from `lineNames` via the schedule store.
+    /// Used to surface alerts that affect a route stopping here even when the alert's
+    /// `affectedStopIds` doesn't list this station explicitly.
+    private var stopRouteIds: Set<String> {
+        Set(stop.lineNames.compactMap { name in
+            store.routes.first(where: { $0.name == name })?.id
+        })
+    }
+
+    private var relevantAlerts: [GtfsRtAlert] {
+        let routeIds = stopRouteIds
+        let stationIds = Set([stop.id] + stop.gtfsStopIds)
+        return alertStore.activeAlerts.filter { a in
+            !a.affectedStopIds.isDisjoint(with: stationIds)
+                || a.isRelevant(forRoutes: routeIds)
+        }
+    }
+
     // MARK: - Body
 
     var body: some View {
         ZStack {
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 0) {
-                    mapHeader
-                    stopInlineContent
+            ScrollViewReader { proxy in
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        mapHeader
+                        if !relevantAlerts.isEmpty {
+                            alertsChip(scrollProxy: proxy)
+                                .padding(.horizontal, 16)
+                                .padding(.top, 12)
+                        }
+                        stopInlineContent
+                        StopAlertsSection(alerts: relevantAlerts)
+                            .id(alertsAnchorId)
+                    }
                 }
+                .background(AppTheme.background.ignoresSafeArea())
+                .ignoresSafeArea(edges: .top)
             }
-            .background(AppTheme.background.ignoresSafeArea())
-            .ignoresSafeArea(edges: .top)
 
             if mapExpanded {
                 ExpandedMapOverlay(
@@ -251,9 +285,6 @@ struct StopDetailView: View {
         return VStack(spacing: 0) {
             // Stop name header
             inlineStopHeader
-
-            // Service alerts affecting this stop (if any)
-            StopAlertsSection(stop: stop)
 
             // Line badge filter row — badges act as filter chips; single tap selects/deselects
             if availableLines.count >= 1 {
@@ -484,5 +515,46 @@ struct StopDetailView: View {
     private func openInWaze() {
         let url = URL(string: "waze://?ll=\(stopCoordinate.latitude),\(stopCoordinate.longitude)&navigate=false")!
         UIApplication.shared.open(url)
+    }
+
+    // MARK: - Alerts chip (jumps to bottom AVVISI section)
+
+    @ViewBuilder
+    private func alertsChip(scrollProxy: ScrollViewProxy) -> some View {
+        let count = relevantAlerts.count
+        Button {
+            withAnimation(.smooth(duration: 0.5)) {
+                scrollProxy.scrollTo(alertsAnchorId, anchor: .top)
+            }
+        } label: {
+            HStack(spacing: 8) {
+                LucideIcon.alertTriangle.sized(14)
+                    .foregroundStyle(.orange)
+                Text(
+                    count == 1
+                        ? String(localized: "stop_alerts_chip_one")
+                        : String(format: NSLocalizedString("stop_alerts_chip_other", comment: ""), count)
+                )
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(AppTheme.textPrimary)
+                Spacer(minLength: 0)
+                LucideIcon.chevronDown.sized(11)
+                    .foregroundStyle(AppTheme.textSecondary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(AppTheme.bgSecondary)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Color.orange.opacity(0.4), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .sensoryFeedback(.selection, trigger: count)
+        .accessibilityIdentifier("stop_alerts_chip")
     }
 }

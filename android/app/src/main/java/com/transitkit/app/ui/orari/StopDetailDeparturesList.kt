@@ -1,9 +1,7 @@
 package com.transitkit.app.ui.orari
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -26,12 +24,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -45,7 +43,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -73,6 +70,8 @@ internal fun DeparturesList(
     operatorTimezone: String = "UTC",
     stopSequenceByRouteId: Map<String, String> = emptyMap(),
     onNavigateToTrip: (Departure) -> Unit = {},
+    listState: LazyListState = rememberLazyListState(),
+    trailingContent: LazyListScope.() -> Unit = {},
 ) {
     val colors = TransitTheme.colors
     val haptic = LocalHapticFeedback.current
@@ -82,127 +81,13 @@ internal fun DeparturesList(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
+        state = listState,
         contentPadding = PaddingValues(bottom = 88.dp),
     ) {
-        // Transit type label + "Prossime partenze" header — mirrors iOS StopDetailView
-        if (availableRoutes.isNotEmpty()) {
-            item {
-                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-                    // Transit type chips (Bus, Tram, etc.)
-                    val transitTypes = availableRoutes.map { it.transitType }.distinct().sorted()
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        transitTypes.forEach { type ->
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            ) {
-                                Icon(
-                                    painter = painterResource(transitTypeIcon(type)),
-                                    contentDescription = null,
-                                    tint = colors.textSecondary,
-                                    modifier = Modifier.size(14.dp),
-                                )
-                                Text(
-                                    text = transitTypeName(type),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = colors.textSecondary,
-                                )
-                            }
-                        }
-                    }
-                    Spacer(Modifier.height(10.dp))
-                    LineBadgeRow(
-                        routes = availableRoutes,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    Text(
-                        text = stringResource(R.string.prossime_partenze),
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = colors.textPrimary,
-                    )
-                }
-            }
-        }
-        if (availableRoutes.size > 1) {
-            item {
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    modifier = Modifier.padding(bottom = 8.dp),
-                ) {
-                    item {
-                        val anySelected = selectedRoute != null
-                        val tuttiAlpha by animateFloatAsState(
-                            targetValue = if (anySelected) 0.35f else 1f,
-                            animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
-                            label = "tuttiAlpha",
-                        )
-                        FilterChip(
-                            selected = selectedRoute == null,
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                onRouteSelected(null)
-                            },
-                            modifier = Modifier.alpha(tuttiAlpha),
-                            label = {
-                                Text(
-                                    stringResource(R.string.filter_all),
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 12.sp,
-                                )
-                            },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = colors.accent,
-                                selectedLabelColor = Color.White,
-                                containerColor = colors.accent.copy(alpha = 0.18f),
-                                labelColor = colors.accent,
-                            ),
-                            border = null,
-                            shape = RoundedCornerShape(20.dp),
-                        )
-                    }
-                    items(availableRoutes, key = { it.routeId }) { route ->
-                        val chipColor = route.routeColor.takeIf { it.isNotBlank() }
-                            ?.let { runCatching { it.toColor() }.getOrNull() }
-                            ?: TransitTheme.colors.accent
-                        val routeTextColor = route.routeTextColor.takeIf { it.isNotBlank() }
-                            ?.let { runCatching { it.toColor() }.getOrNull() }
-                            ?: contrastOn(chipColor)
-                        val isThisSelected = selectedRoute == route.routeId
-                        val anySelected = selectedRoute != null
-                        val chipAlpha by animateFloatAsState(
-                            targetValue = if (anySelected && !isThisSelected) 0.35f else 1f,
-                            animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
-                            label = "chipAlpha",
-                        )
-                        FilterChip(
-                            selected = isThisSelected,
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                onRouteSelected(route.routeId)
-                            },
-                            modifier = Modifier.alpha(chipAlpha),
-                            label = {
-                                Text(
-                                    route.routeName,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 12.sp,
-                                )
-                            },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = chipColor,
-                                selectedLabelColor = routeTextColor,
-                                containerColor = colors.accent.copy(alpha = 0.18f),
-                                labelColor = colors.accent,
-                            ),
-                            border = null,
-                            shape = RoundedCornerShape(20.dp),
-                        )
-                    }
-                }
-            }
-        }
+        // NB: la filter header (transit type + LineBadgeRow + "Upcoming
+        // departures") è renderizzata in [StopDetailScreen] sopra il when
+        // (state) — sempre visibile anche in caso di Empty/Error/Loading così
+        // l'utente può sempre tappare "Tutti" per ripulire il filtro.
         item {
             Text(
                 text = stringResource(R.string.label_oggi),
@@ -309,6 +194,8 @@ internal fun DeparturesList(
                 }
             }
         }
+
+        trailingContent()
     }
 }
 
@@ -326,4 +213,80 @@ internal fun transitTypeName(type: Int): String = when (type) {
     2 -> "Treno"
     4 -> "Ferry"
     else -> "Bus"
+}
+
+/**
+ * Header sezione partenze: transit type label + filter row (badges = filter)
+ * + "Upcoming departures" titolo. Sempre visibile sopra qualsiasi state
+ * (Success / Empty / Loading / Error) così l'utente può sempre tappare
+ * "Tutti" per ripulire il filtro.
+ */
+@Composable
+internal fun StopFilterHeader(
+    availableRoutes: List<ResolvedDeparture>,
+    selectedRoute: String?,
+    onRouteSelected: (String?) -> Unit,
+) {
+    if (availableRoutes.isEmpty()) return
+    val colors = TransitTheme.colors
+    val haptic = LocalHapticFeedback.current
+    Column(modifier = Modifier.padding(top = 12.dp)) {
+        val transitTypes = availableRoutes.map { it.transitType }.distinct().sorted()
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            transitTypes.forEach { type ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Icon(
+                        painter = painterResource(transitTypeIcon(type)),
+                        contentDescription = null,
+                        tint = colors.textSecondary,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Text(
+                        text = transitTypeName(type),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colors.textSecondary,
+                    )
+                }
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+        // Badge row full-width con fade destro — indica che è scrollabile.
+        Box(modifier = Modifier.fillMaxWidth()) {
+            LineBadgeRow(
+                routes = availableRoutes,
+                selectedRouteId = selectedRoute,
+                onRouteSelected = { id ->
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onRouteSelected(id)
+                },
+                contentPadding = PaddingValues(start = 16.dp, end = 40.dp),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        androidx.compose.ui.graphics.Brush.horizontalGradient(
+                            colorStops = arrayOf(
+                                0.75f to Color.Transparent,
+                                1.0f to colors.background,
+                            )
+                        )
+                    )
+            )
+        }
+        Spacer(Modifier.height(10.dp))
+        Text(
+            text = stringResource(R.string.prossime_partenze),
+            modifier = Modifier.padding(horizontal = 16.dp),
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            color = colors.textPrimary,
+        )
+    }
 }

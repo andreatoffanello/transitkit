@@ -11,6 +11,7 @@ struct LineDetailView: View {
     @Environment(FavoritesManager.self) private var favoritesManager
     @Environment(DeepLinkRouter.self) private var router
     @State private var selectedDirectionId: Int = 0
+    @State private var pushedTrip: TripTarget?
 
     private var lineColor: Color { Color(hex: route.color ?? "#000000") }
 
@@ -65,7 +66,15 @@ struct LineDetailView: View {
                             oppositeDirectionCount: oppositeDirectionCount,
                             lineColor: lineColor,
                             onVehicleTap: { vehicle in
-                                router.pendingMapPreviewVehicleId = vehicle.id
+                                // Tap mirrors Movete: drill into the trip timeline so the
+                                // user follows this vehicle stop-by-stop. Fall back to the
+                                // map preview only if the trip isn't in the loaded
+                                // schedule (rare race during cold start).
+                                if let pair = store.firstDepartureAndStop(forTripId: vehicle.tripId) {
+                                    pushedTrip = TripTarget(departure: pair.0, fromStop: pair.1)
+                                } else {
+                                    router.pendingMapPreviewVehicleId = vehicle.id
+                                }
                             },
                             onSwitchDirection: {
                                 guard let other = route.directions
@@ -137,6 +146,9 @@ struct LineDetailView: View {
         .navigationDestination(for: ResolvedStop.self) { stop in
             StopDetailView(stop: stop)
         }
+        .navigationDestination(item: $pushedTrip) { target in
+            TripDetailView(departure: target.departure, fromStop: target.fromStop)
+        }
         .onAppear {
             if let dirId = router.pendingDirectionId,
                route.directions.contains(where: { $0.directionId == dirId }) {
@@ -159,63 +171,19 @@ struct LineDetailView: View {
     private var lineAlertsSection: some View {
         let alerts = alertStore.alerts(forRouteId: route.id)
         if !alerts.isEmpty {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 8) {
-                    LucideIcon.alertTriangle.sized(14)
-                        .foregroundStyle(AppTheme.accent)
-                    Text(String(localized: "stop_detail_alerts_section").uppercased())
-                        .font(.caption.weight(.semibold))
-                        .kerning(0.6)
-                        .foregroundStyle(AppTheme.textTertiary)
-                    Spacer()
-                }
-                .padding(.horizontal, 20)
-
-                VStack(spacing: 8) {
-                    ForEach(alerts) { alert in
-                        NavigationLink {
-                            AlertDetailView(alert: alert)
-                        } label: {
-                            HStack(spacing: 10) {
-                                Circle()
-                                    .fill(alertDotColor(alert.severity))
-                                    .frame(width: 8, height: 8)
-                                Text(alert.headerText.resolved())
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundStyle(AppTheme.textPrimary)
-                                    .lineLimit(2)
-                                    .multilineTextAlignment(.leading)
-                                Spacer(minLength: 0)
-                                LucideIcon.chevronRight.sized(14)
-                                    .foregroundStyle(AppTheme.textTertiary)
-                            }
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 12)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .fill(AppTheme.bgSecondary)
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .strokeBorder(AppTheme.glassBorder, lineWidth: 1)
-                            )
-                        }
-                        .buttonStyle(.plain)
+            VStack(spacing: 8) {
+                ForEach(alerts) { alert in
+                    NavigationLink {
+                        AlertDetailView(alert: alert)
+                    } label: {
+                        AlertCard(alert: alert)
                     }
+                    .buttonStyle(.plain)
                 }
-                .padding(.horizontal, 16)
             }
+            .padding(.horizontal, 16)
             .padding(.top, 8)
-            .padding(.bottom, 4)
-        }
-    }
-
-    private func alertDotColor(_ severity: AlertSeverity) -> Color {
-        switch severity {
-        case .severe:  return .red
-        case .warning: return .orange
-        case .info:    return AppTheme.accent
-        case .unknown: return AppTheme.textTertiary
+            .padding(.bottom, 8)
         }
     }
 

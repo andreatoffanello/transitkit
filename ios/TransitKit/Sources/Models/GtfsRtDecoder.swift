@@ -100,6 +100,7 @@ struct GtfsRtAlert: Identifiable, Equatable {
     let activePeriods: [AlertTimeRange]       // empty = always active
     let severity: AlertSeverity
     let effect: AlertEffect
+    let cause: AlertCause                     // GTFS-RT Cause; UNKNOWN_CAUSE when feed omits it
     let headerText: [String: String]
     let descriptionText: [String: String]
     let affectedStopIds: Set<String>
@@ -111,6 +112,36 @@ struct GtfsRtAlert: Identifiable, Equatable {
         if activePeriods.isEmpty { return true }
         return activePeriods.contains { $0.contains(epoch) }
     }
+
+    /// Earliest active-period start (epoch seconds), used to sort recent alerts first.
+    var firstActiveStart: UInt64? {
+        activePeriods.compactMap(\.start).min()
+    }
+
+    func isRelevant(forStop stopId: String) -> Bool {
+        affectedStopIds.contains(stopId)
+    }
+
+    func isRelevant(forRoutes routeIds: Set<String>) -> Bool {
+        !affectedRouteIds.isDisjoint(with: routeIds)
+    }
+}
+
+/// GTFS-RT Cause enum. Mirrors the protobuf values; `unknownCause` is the
+/// default when the feed omits the field.
+enum AlertCause: UInt64 {
+    case unknownCause = 1
+    case otherCause = 2
+    case technicalProblem = 3
+    case strike = 4
+    case demonstration = 5
+    case accident = 6
+    case holiday = 7
+    case weather = 8
+    case maintenance = 9
+    case construction = 10
+    case policeActivity = 11
+    case medicalEmergency = 12
 }
 
 // MARK: - Minimal protobuf binary decoders
@@ -494,6 +525,7 @@ private func decodeAlertEntity(_ data: Data) -> GtfsRtAlert? {
         activePeriods: a.activePeriods,
         severity: a.severity,
         effect: a.effect,
+        cause: a.cause,
         headerText: a.headerText,
         descriptionText: a.descriptionText,
         affectedStopIds: a.affectedStopIds,
@@ -507,6 +539,7 @@ private struct AlertPayload {
     var activePeriods: [AlertTimeRange] = []
     var severity: AlertSeverity = .unknown
     var effect: AlertEffect = .unknownEffect
+    var cause: AlertCause = .unknownCause
     var headerText: [String: String] = [:]
     var descriptionText: [String: String] = [:]
     var affectedStopIds: Set<String> = []
@@ -526,7 +559,7 @@ private func decodeAlertPayload(_ data: Data) -> AlertPayload {
             payload.affectedStopIds.formUnion(stops)
             payload.affectedRouteIds.formUnion(routes)
         case (6, 0):
-            _ = r.readVarint() // cause — we don't use it yet
+            payload.cause = AlertCause(rawValue: r.readVarint()) ?? .unknownCause
         case (7, 0):
             payload.effect = AlertEffect(rawValue: r.readVarint()) ?? .unknownEffect
         case (8, 2):

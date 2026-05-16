@@ -11,23 +11,25 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -53,7 +55,6 @@ import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.config.toColor
 import com.transitkit.app.data.model.ResolvedDeparture
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun FullScheduleSheet(
     stopName: String,
@@ -63,7 +64,6 @@ internal fun FullScheduleSheet(
     val colors = TransitTheme.colors
     val sortedGroups = remember(departuresByGroup) { departuresByGroup.keys.toList() }
 
-    // Ephemeral sheet-local state — not worth ViewModel storage
     var selectedGroup by remember(sortedGroups) { mutableStateOf(sortedGroups.firstOrNull()) }
     var filterRouteId by remember { mutableStateOf<String?>(null) }
 
@@ -75,19 +75,29 @@ internal fun FullScheduleSheet(
     }
     val availableRoutes = remember(groupDepartures) { groupDepartures.distinctBy { it.routeId } }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = colors.background,
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = colors.background,
     ) {
-        // Header
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.statusBars),
+        ) {
+        // Header with back chevron
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+                .padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            IconButton(
+                onClick = onDismiss,
+                modifier = Modifier.semantics { contentDescription = "btn_close_schedule" },
+            ) {
+                Icon(painterResource(LucideIcons.ChevronLeft), contentDescription = null, tint = colors.textPrimary)
+            }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     stringResource(R.string.orario_completo),
@@ -102,12 +112,6 @@ internal fun FullScheduleSheet(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-            }
-            IconButton(
-                onClick = onDismiss,
-                modifier = Modifier.semantics { contentDescription = "btn_close_schedule" },
-            ) {
-                Icon(painterResource(LucideIcons.X), contentDescription = null, tint = colors.textTertiary)
             }
         }
 
@@ -268,7 +272,8 @@ internal fun FullScheduleSheet(
                 }
             }
         }
-    }
+        } // end Column
+    } // end Surface
 }
 
 /** Maps a sorted weekday-key back to a human label. */

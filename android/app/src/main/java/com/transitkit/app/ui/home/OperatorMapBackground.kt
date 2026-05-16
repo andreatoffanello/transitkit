@@ -2,58 +2,79 @@ package com.transitkit.app.ui.home
 
 import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
+import android.graphics.Shader
 import android.os.Build
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.transitkit.app.R
 import com.transitkit.app.config.TransitTheme
+import kotlinx.coroutines.isActive
 
 /**
- * Operator map background per la Home. Composizione a 4 layer (ispirata a
- * VeniceGlow di civici) — parità con iOS Metal shader `mapGlowEffect`.
+ * Operator map background — parità con `VeniceMapBackground` di DoVe (civici).
  *
- * Ogni layer è la stessa immagine mappa con:
- *  - blur SwiftUI/Compose reale diverso (28 / 12 / 4 / 0 dp)
- *  - sharpness uniform diverso (0.0 fog → 1.0 crisp) per lo shader
- *  - opacity per-layer calibrata light/dark mode
+ * Ottimizzazioni applicate (in commento dove sono):
+ *  - **Quick win #1**: tempo avanza a ~30 fps tramite `withFrameNanos` con
+ *    accumulator (33 ms budget). Le onde sin operano a 0.5–1.6 rad/s: un cap
+ *    a 30 fps non si distingue percettivamente da 60+ fps ma dimezza il
+ *    workload GPU dello shader.
+ *  - **Quick win #2**: shader stack renderizzato a metà risoluzione (¼ pixel)
+ *    e upscalato 2× via `graphicsLayer`. Il fragment shader è dominante e
+ *    l'effetto è blurry/ambient — l'upscale è invisibile.
+ *  - **Quick win #3**: blur del layer fog ridotto da 28dp a 12dp. Il kernel
+ *    blur scala ~lineare col raggio; dimezzare il raggio dimezza il sample
+ *    window. Resta percepibilmente foggy.
+ *  - **3 layer** invece di 4 (era ridondante: il "medium fog" non aggiungeva
+ *    profondità percepibile rispetto al deep fog + forming).
+ *  - **FBM a 3 ottave** invece di 4 — risparmio ~25% sample per pixel.
+ *  - **Blur via `RenderEffect.createChainEffect`** invece di `Modifier.blur`
+ *    separato: una sola pass invece di due.
+ *  - **`paused: Boolean`** per pausa esplicita quando il background è coperto
+ *    (sheet aperto, navigation modale). `time` accumulato preservato.
  *
- * Lo shader (AGSL su API 33+) colora in varianti dell'accent operatore:
- * base + versione più luminosa (+18% bianco) + versione chiara aerea (+42% bianco).
- * Breathing fbm + color waves + visibilità sharpness-dipendente + glow additivo.
- *
- * Su API < 33: fallback statico (Image desaturata + radial gradient) senza AGSL.
+ * Fallback API < 33: Image desaturata statica.
  */
 @Composable
-fun OperatorMapBackground(modifier: Modifier = Modifier) {
+fun OperatorMapBackground(
+    modifier: Modifier = Modifier,
+    paused: Boolean = false,
+) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        OperatorMapBackgroundLayered(modifier)
+        OperatorMapBackgroundLayered(modifier = modifier, paused = paused)
     } else {
         OperatorMapBackgroundFallback(modifier)
     }
 }
 
-// AGSL shader - parità con ios/Shaders/MapBackground.metal
+// ── AGSL shader ──────────────────────────────────────────────────────────────
+
 private const val AGSL_MAP_GLOW = """
 uniform shader composable;
 uniform float2 size;
@@ -78,11 +99,12 @@ float vnoise(float2 p) {
     return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
 }
 
+// 3 ottave invece di 4 — stessa qualità percepita, meno sample.
 float fbm(float2 p) {
     float v = 0.0;
     float a = 0.5;
     float2 shift = float2(100.0);
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 3; i++) {
         v += a * vnoise(p);
         p = p * 2.0 + shift;
         a *= 0.5;
@@ -98,12 +120,10 @@ half4 main(float2 position) {
 
     float2 uv = position / size;
 
-    // Base + 2 varianti più luminose
     half3 accent       = half3(half(accentR), half(accentG), half(accentB));
     half3 accentBright = mix(accent, half3(1.0), half(0.18));
     half3 accentLight  = mix(accent, half3(1.0), half(0.42));
 
-    // Color waves
     float wave1 = sin(uv.x * 5.0 + uv.y * 3.0 - time * 1.4) * 0.5 + 0.5;
     float wave2 = sin(-uv.x * 4.0 + uv.y * 6.0 + time * 1.0) * 0.5 + 0.5;
     float dist  = length(uv - float2(0.5, 0.4));
@@ -113,21 +133,18 @@ half4 main(float2 position) {
     half3 col1 = mix(accent, accentBright, half(wave1));
     half3 finalColor = mix(col1, accentLight, half(wave3 * 0.4 + wave4 * 0.3));
 
-    // Breathing
     float2 nc1 = uv * 2.5 + float2(time * 0.12, time * 0.08);
     float breath1 = fbm(nc1);
     float2 nc2 = uv * 1.2 + float2(-time * 0.07, time * 0.10);
     float breath2 = fbm(nc2 + 50.0);
     float breathing = breath1 * 0.6 + breath2 * 0.4;
 
-    // Sharpness-dependent visibility
     float loThresh = mix(0.15, 0.40, sharpness);
     float hiThresh = mix(0.35, 0.60, sharpness);
     float visibility = smoothstep(loThresh, hiThresh, breathing);
     float minVis = mix(0.25, 0.0, sharpness);
     visibility = max(visibility, minVis);
 
-    // Glow
     float glow = wave1 * 0.3 + wave2 * 0.3 + wave3 * 0.2 + wave4 * 0.2;
     glow += pow(wave1 * wave2 * wave3, 0.5) * 0.5;
     glow = pow(glow, 0.6);
@@ -138,105 +155,148 @@ half4 main(float2 position) {
 }
 """
 
-@androidx.annotation.RequiresApi(Build.VERSION_CODES.TIRAMISU)
+// ── Layer config — 3 layer (fog / forming / crisp) ───────────────────────────
+
+private data class GlowLayer(
+    val sharpness: Float,
+    val blurDp: Float,
+    val opacityLight: Float,
+    val opacityDark: Float,
+)
+
+private val glowLayers = listOf(
+    GlowLayer(sharpness = 0.0f, blurDp = 12f, opacityLight = 0.55f, opacityDark = 0.70f),
+    GlowLayer(sharpness = 0.6f, blurDp = 6f,  opacityLight = 0.40f, opacityDark = 0.50f),
+    GlowLayer(sharpness = 1.0f, blurDp = 0f,  opacityLight = 0.36f, opacityDark = 0.48f),
+)
+
+// Quick win #1: ~30 fps cap.
+private const val FRAME_BUDGET_NS = 33_000_000L
+
+// ── Public composable ────────────────────────────────────────────────────────
+
 @Composable
-private fun OperatorMapBackgroundLayered(modifier: Modifier = Modifier) {
+private fun OperatorMapBackgroundLayered(
+    modifier: Modifier = Modifier,
+    paused: Boolean = false,
+) {
     val isDark = isSystemInDarkTheme()
     val accent = TransitTheme.colors.accent
 
-    val infinite = rememberInfiniteTransition(label = "shaderTime")
-    val time by infinite.animateFloat(
-        initialValue = 0f,
-        targetValue = 1000f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1_000_000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "time"
-    )
+    var time by remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(paused) {
+        if (paused) return@LaunchedEffect
+        var prev: Long = -1L
+        var accumulated = 0L
+        while (isActive) {
+            withFrameNanos { now ->
+                if (prev < 0L) prev = now
+                val delta = now - prev
+                prev = now
+                accumulated += delta
+                if (accumulated >= FRAME_BUDGET_NS) {
+                    time += accumulated / 1_000_000_000f
+                    accumulated = 0L
+                }
+            }
+        }
+    }
 
-    Box(modifier = modifier.fillMaxSize()) {
-        // Layer 1: Deep fog — blur grande, sempre presente
-        MapShaderLayer(
-            time = time,
-            sharpness = 0.0f,
-            accent = accent,
-            blurRadius = 28.dp,
-            layerOpacity = if (isDark) 0.70f else 0.55f
-        )
-        // Layer 2: Medium fog
-        MapShaderLayer(
-            time = time,
-            sharpness = 0.3f,
-            accent = accent,
-            blurRadius = 12.dp,
-            layerOpacity = if (isDark) 0.50f else 0.42f
-        )
-        // Layer 3: Forming lines
-        MapShaderLayer(
-            time = time,
-            sharpness = 0.7f,
-            accent = accent,
-            blurRadius = 4.dp,
-            layerOpacity = if (isDark) 0.45f else 0.36f
-        )
-        // Layer 4: Crisp lines — peak breathing only
-        MapShaderLayer(
-            time = time,
-            sharpness = 1.0f,
-            accent = accent,
-            blurRadius = 0.dp,
-            layerOpacity = if (isDark) 0.50f else 0.38f
-        )
+    // Quick win #2: render a metà risoluzione + upscale 2×.
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .clipToBounds()
+            .clearAndSetSemantics { },
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    scaleX = 2f
+                    scaleY = 2f
+                    transformOrigin = TransformOrigin(0f, 0f)
+                }
+                .layout { measurable, constraints ->
+                    val halfW = constraints.maxWidth / 2
+                    val halfH = constraints.maxHeight / 2
+                    val placeable = measurable.measure(Constraints.fixed(halfW, halfH))
+                    layout(constraints.maxWidth, constraints.maxHeight) {
+                        placeable.place(0, 0)
+                    }
+                },
+        ) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                glowLayers.forEach { layer ->
+                    ShaderMapLayer(
+                        time = time,
+                        sharpness = layer.sharpness,
+                        accent = accent,
+                        blurDp = layer.blurDp.dp,
+                        layerOpacity = if (isDark) layer.opacityDark else layer.opacityLight,
+                    )
+                }
+            }
+        }
     }
 }
 
-@androidx.annotation.RequiresApi(Build.VERSION_CODES.TIRAMISU)
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-private fun MapShaderLayer(
+private fun ShaderMapLayer(
     time: Float,
     sharpness: Float,
     accent: Color,
-    blurRadius: androidx.compose.ui.unit.Dp,
+    blurDp: Dp,
     layerOpacity: Float,
 ) {
     val shader = remember { RuntimeShader(AGSL_MAP_GLOW) }
+    val density = LocalDensity.current.density
+    val blurPx = blurDp.value * density
+
     Image(
         painter = painterResource(id = R.drawable.operator_background),
         contentDescription = null,
         contentScale = ContentScale.Crop,
         modifier = Modifier
             .fillMaxSize()
-            .then(if (blurRadius.value > 0f) Modifier.blur(blurRadius) else Modifier)
+            .alpha(layerOpacity)
             .graphicsLayer {
-                this.alpha = layerOpacity
-                shader.setFloatUniform("size", this.size.width, this.size.height)
+                shader.setFloatUniform("size", size.width, size.height)
                 shader.setFloatUniform("time", time)
                 shader.setFloatUniform("sharpness", sharpness)
                 shader.setFloatUniform("accentR", accent.red)
                 shader.setFloatUniform("accentG", accent.green)
                 shader.setFloatUniform("accentB", accent.blue)
-                renderEffect = RenderEffect
-                    .createRuntimeShaderEffect(shader, "composable")
-                    .asComposeRenderEffect()
-            }
+
+                val shaderFx = RenderEffect.createRuntimeShaderEffect(shader, "composable")
+                renderEffect = if (blurPx > 0f) {
+                    // Quick win #6: blur in chain con lo shader → single pass.
+                    RenderEffect.createChainEffect(
+                        RenderEffect.createBlurEffect(blurPx, blurPx, Shader.TileMode.DECAL),
+                        shaderFx,
+                    )
+                } else {
+                    shaderFx
+                }.asComposeRenderEffect()
+            },
     )
 }
 
-/** Fallback API < 33: semplice image desaturata senza shader. */
+/** Fallback API < 33: Image desaturata statica. */
 @Composable
 private fun OperatorMapBackgroundFallback(modifier: Modifier = Modifier) {
     val isDark = isSystemInDarkTheme()
     val inkAlpha = if (isDark) 0.22f else 0.28f
     val desaturate = remember { ColorMatrix().apply { setToSaturation(0f) } }
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize().clipToBounds().clearAndSetSemantics { }) {
         Image(
             painter = painterResource(id = R.drawable.operator_background),
             contentDescription = null,
             contentScale = ContentScale.Crop,
             alpha = inkAlpha,
             colorFilter = ColorFilter.colorMatrix(desaturate),
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         )
     }
 }

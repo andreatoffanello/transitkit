@@ -1,0 +1,98 @@
+appId: com.transitkit.appalcart
+---
+# E2E: verifica TUTTE le combinazioni di origin/destination nel planner.
+# - userLocation (origine auto-detected dalla GPS)
+# - place (pin libero su mappa)
+# - stop (fermata GTFS canonica)
+#
+# Combinazioni testate:
+#  1. userLocation → place      (autofill + map pick destination)
+#  2. place → place             (cambio origin via map, dest già place)
+#  3. stop → place              (origin fermata, dest pin libero)
+#  4. place → stop              (swap: pin libero origin, fermata dest)
+
+- launchApp:
+    clearState: true
+
+- waitForAnimationToEnd
+
+# ============================================================
+# COMBO 1: userLocation → place
+# Origin è auto-popolata con "La mia posizione" dal LocationManager
+# Tap destination → "Scegli sulla mappa" → conferma pin libero
+# ============================================================
+
+# Tap destination field (riga 2 del planner card sulla home)
+- tapOn:
+    point: "50%, 26%"
+- waitForAnimationToEnd
+
+# Tap "Scegli sulla mappa"
+- tapOn: "Scegli sulla mappa"
+- waitForAnimationToEnd
+
+- takeScreenshot: flows/screenshots/combo1_map_picker
+
+# Conferma posizione libera
+- tapOn: "Conferma posizione"
+- waitForAnimationToEnd:
+    timeout: 4000
+
+# Ora dovrebbe essere su PlannerScreen con origin=userLocation, dest=place
+- takeScreenshot: flows/screenshots/combo1_result
+
+# ============================================================
+# COMBO 2: place → place (cambio anche origin)
+# Tap su origin field, "Scegli sulla mappa", conferma altro punto
+# ============================================================
+
+# Tap su origin field (prima riga input header del PlannerScreen)
+- tapOn:
+    point: "30%, 19%"
+- waitForAnimationToEnd
+
+- tapOn: "Scegli sulla mappa"
+- waitForAnimationToEnd
+
+- takeScreenshot: flows/screenshots/combo2_map_picker_origin
+
+# Sposta leggermente la mappa per scegliere un punto diverso
+- swipe:
+    start: "50%, 50%"
+    end: "30%, 30%"
+    duration: 600
+
+- waitForAnimationToEnd:
+    timeout: 2000
+
+- tapOn: "Conferma posizione"
+- waitForAnimationToEnd:
+    timeout: 4000
+
+- takeScreenshot: flows/screenshots/combo2_result_place_place
+
+# ============================================================
+# COMBO 3: stop → place (cambio solo origin a una fermata)
+# Tap su origin field, ricerca testo "Boone", seleziona uno stop
+# ============================================================
+
+- tapOn:
+    point: "30%, 19%"
+- waitForAnimationToEnd
+
+# Digita per filtrare fermate
+- tapOn:
+    point: "50%, 12%"
+- inputText: "Boone"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+- takeScreenshot: flows/screenshots/combo3_search
+
+# Tap sul primo risultato (fermata)
+- tapOn:
+    point: "50%, 30%"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+- takeScreenshot: flows/screenshots/combo3_result_stop_place

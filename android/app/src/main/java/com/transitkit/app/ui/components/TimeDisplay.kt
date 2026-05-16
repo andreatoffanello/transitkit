@@ -11,9 +11,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,7 +23,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -31,20 +32,31 @@ import com.transitkit.app.config.TransitTheme
 // -----------------------------------------------------------------------------
 // TimeDisplay — single source of truth for departure-time rendering.
 // -----------------------------------------------------------------------------
-// Layout (parity iOS):
+// Layout:
 //
-//   row 1 — countdown        "5'"   (or pulsing dot when departing now)
+//   row 1 — countdown        "5m" / "1h 23'" / "2h"  (or pulsing arrow if now)
+//           [liveDot]        opt. green dot inline when realtime
 //   row 2 — scheduled/actual "16:20"  (monospaced, secondary color)
 //
-// When the departure is more than 60 min away the countdown collapses to the
-// absolute clock time alone. Past departures render in a tertiary tint.
+// Threshold:
+//   relativeThreshold = 60   (default) — partenze >= 60 min mostrano orario
+//                                       assoluto; tra 60 e 1440 nuovo case
+//                                       HoursMinutes ("1h 23'").
+//   relativeThreshold = 1440             tutto relativo entro 24h.
+//
+// Wrap-around:
+//   departureMinutes < nowMinutes - 60 → diff += 1440 (next day occurrence).
 // -----------------------------------------------------------------------------
 
 sealed class DepartureTimeState {
-    /** Departure > 60 min away — show the clock only. */
+    /** Fallback / past threshold — clock only. */
     data class Absolute(val clock: String) : DepartureTimeState()
-    /** Countdown (1-60 min). */
+    /** Countdown 1-59 min — rendered as "Xm". */
     data class Minutes(val minutes: Int, val clock: String) : DepartureTimeState()
+    /** 60-1439 min, with non-zero remainder — rendered as "Xh Y'". */
+    data class HoursMinutes(val hours: Int, val minutes: Int, val clock: String) : DepartureTimeState()
+    /** 60-1439 min, exact hour — rendered as "Xh". */
+    data class Hours(val hours: Int, val clock: String) : DepartureTimeState()
     /** Departing right now (0 min). */
     data class Departing(val clock: String) : DepartureTimeState()
     /** Already gone — dimmed tertiary tint. */
@@ -57,17 +69,29 @@ sealed class DepartureTimeState {
  * @param departureMinutes scheduled (or realtime-adjusted) minute of day
  * @param nowMinutes       current minute of day in operator timezone
  * @param clockHHmm        already-formatted "HH:mm" string for the departure
+ * @param relativeThreshold soglia (min) oltre cui mostrare orario assoluto.
+ *   Default 60. Passa 1440 per "sempre relativo entro 24h".
  */
 fun computeDepartureTimeState(
     departureMinutes: Int,
     nowMinutes: Int,
     clockHHmm: String,
+    relativeThreshold: Int = 60,
 ): DepartureTimeState {
-    val diff = departureMinutes - nowMinutes
+    var diff = departureMinutes - nowMinutes
+    // Wrap-around: partenze "passate" di più di 60 min sono trattate come
+    // prossima occorrenza il giorno successivo.
+    if (diff < -60) diff += 1440
     return when {
         diff < 0 -> DepartureTimeState.Passed(clockHHmm)
         diff == 0 -> DepartureTimeState.Departing(clockHHmm)
-        diff <= 60 -> DepartureTimeState.Minutes(diff, clockHHmm)
+        diff < 60 -> DepartureTimeState.Minutes(diff, clockHHmm)
+        diff < relativeThreshold -> {
+            val h = diff / 60
+            val m = diff % 60
+            if (m == 0) DepartureTimeState.Hours(h, clockHHmm)
+            else DepartureTimeState.HoursMinutes(h, m, clockHHmm)
+        }
         else -> DepartureTimeState.Absolute(clockHHmm)
     }
 }
@@ -77,10 +101,13 @@ fun computeDepartureTimeState(
  * string, using the operator timezone as the reference for "now". Safe to
  * call with any string — returns [DepartureTimeState.Absolute] if parsing
  * fails so the caller always has something to render.
+ *
+ * @param relativeThreshold see [computeDepartureTimeState]
  */
 fun departureTimeState(
     timeStr: String,
     operatorTimezoneId: String = "UTC",
+    relativeThreshold: Int = 60,
 ): DepartureTimeState {
     val hhmm = timeStr.take(5)
     return try {
@@ -89,76 +116,115 @@ fun departureTimeState(
         val tz = java.util.TimeZone.getTimeZone(operatorTimezoneId)
         val cal = java.util.Calendar.getInstance(tz)
         val nowMin = cal.get(java.util.Calendar.HOUR_OF_DAY) * 60 + cal.get(java.util.Calendar.MINUTE)
-        computeDepartureTimeState(depMinutes, nowMin, hhmm)
+        computeDepartureTimeState(depMinutes, nowMin, hhmm, relativeThreshold)
     } catch (_: Exception) {
         DepartureTimeState.Absolute(hhmm)
     }
 }
 
 /**
- * Renders a departure time in the canonical stacked layout: minutes on top,
+ * Renders a departure time in the canonical stacked layout: countdown on top,
  * absolute clock on the bottom. Drop it in wherever a schedule or live-feed
  * departure needs to be shown consistently.
  *
- * - `isEmphasis`: optional — renders the countdown larger and in the accent
- *   color (used for the "next departure" row at the top of the stop detail).
+ * - `isEmphasis`: optional — renders the countdown larger and in accent color
+ *   (used for the "next departure" row at the top of the stop detail).
+ * - `liveDot`: optional — green dot inline a sinistra del countdown, indica
+ *   feed realtime. Niente gap tra dot e digit (stesso frame minWidth=52dp).
  */
 @Composable
 fun TimeDisplay(
     state: DepartureTimeState,
     modifier: Modifier = Modifier,
     isEmphasis: Boolean = false,
+    liveDot: Boolean = false,
 ) {
     val colors = TransitTheme.colors
-    val minutesFont: TextUnit = if (isEmphasis) 20.sp else 17.sp
-    val tickFont: TextUnit = if (isEmphasis) 14.sp else 12.sp
+    val countdownFont: TextUnit = if (isEmphasis) 20.sp else 15.sp
     val clockFont: TextUnit = 11.sp
 
     Column(
-        modifier = modifier,
+        modifier = modifier.defaultMinSize(minWidth = 52.dp),
         horizontalAlignment = Alignment.End,
     ) {
-        when (state) {
-            is DepartureTimeState.Departing -> {
-                DepartingPulse(isEmphasis = isEmphasis)
-                ClockText(state.clock, fontSize = clockFont, tint = colors.textSecondary)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            // Live dot inline — mai durante Departing (l'arrow pulse già lo segnala)
+            // e mai per Passed (partenza è già andata, no point).
+            val showLiveDot = liveDot
+                && state !is DepartureTimeState.Departing
+                && state !is DepartureTimeState.Passed
+            if (showLiveDot) {
+                Box(
+                    modifier = Modifier
+                        .size(7.dp)
+                        .background(colors.realtimeGreen, CircleShape),
+                )
             }
-            is DepartureTimeState.Minutes -> {
-                Row(verticalAlignment = Alignment.Bottom) {
+            when (state) {
+                is DepartureTimeState.Departing -> {
+                    DepartingPulse(isEmphasis = isEmphasis)
+                }
+                is DepartureTimeState.Minutes -> {
                     Text(
-                        text = "${state.minutes}",
-                        fontSize = minutesFont,
+                        text = "${state.minutes}m",
+                        fontSize = countdownFont,
                         fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace,
                         color = if (state.minutes <= 5) colors.realtimeGreen else colors.textPrimary,
                     )
+                }
+                is DepartureTimeState.Hours -> {
                     Text(
-                        text = "'",
-                        fontSize = tickFont,
+                        text = "${state.hours}h",
+                        fontSize = countdownFont,
                         fontWeight = FontWeight.Bold,
-                        color = if (state.minutes <= 5) colors.realtimeGreen else colors.textSecondary,
+                        color = colors.textPrimary,
                     )
                 }
-                ClockText(state.clock, fontSize = clockFont, tint = colors.textSecondary)
+                is DepartureTimeState.HoursMinutes -> {
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(
+                            text = "${state.hours}h",
+                            fontSize = countdownFont,
+                            fontWeight = FontWeight.Bold,
+                            color = colors.textPrimary,
+                        )
+                        Spacer(Modifier.width(2.dp))
+                        Text(
+                            text = "${state.minutes}m",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = colors.textSecondary,
+                        )
+                    }
+                }
+                is DepartureTimeState.Absolute -> {
+                    Text(
+                        text = state.clock,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.textPrimary,
+                    )
+                }
+                is DepartureTimeState.Passed -> {
+                    Text(
+                        text = state.clock,
+                        fontSize = 13.sp,
+                        color = colors.textTertiary,
+                    )
+                }
             }
-            is DepartureTimeState.Absolute -> {
-                // Far-future: clock as the primary glyph, no row 2.
-                Text(
-                    text = state.clock,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    fontFamily = FontFamily.Monospace,
-                    color = colors.textPrimary,
-                )
-            }
-            is DepartureTimeState.Passed -> {
-                Text(
-                    text = state.clock,
-                    fontSize = 13.sp,
-                    fontFamily = FontFamily.Monospace,
-                    color = colors.textTertiary,
-                )
-            }
+        }
+        // Clock secondario solo per i case relativi (Minutes / Hours / HoursMinutes
+        // / Departing). Absolute e Passed sono già un orario, niente duplicazione.
+        when (state) {
+            is DepartureTimeState.Departing -> ClockText(state.clock, clockFont, colors.textSecondary)
+            is DepartureTimeState.Minutes -> ClockText(state.clock, clockFont, colors.textSecondary)
+            is DepartureTimeState.Hours -> ClockText(state.clock, clockFont, colors.textSecondary)
+            is DepartureTimeState.HoursMinutes -> ClockText(state.clock, clockFont, colors.textSecondary)
+            is DepartureTimeState.Absolute, is DepartureTimeState.Passed -> Unit
         }
     }
 }
@@ -187,7 +253,7 @@ private fun DepartingPulse(isEmphasis: Boolean) {
                 .background(colors.realtimeGreen, CircleShape),
         )
         Text(
-            text = "\u2192",
+            text = "→",
             fontSize = if (isEmphasis) 20.sp else 17.sp,
             fontWeight = FontWeight.Bold,
             color = colors.realtimeGreen,
@@ -205,7 +271,6 @@ private fun ClockText(
         text = clock,
         fontSize = fontSize,
         fontWeight = FontWeight.Medium,
-        fontFamily = FontFamily.Monospace,
         color = tint,
     )
 }

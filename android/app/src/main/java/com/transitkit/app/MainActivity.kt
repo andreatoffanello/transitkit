@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.core.view.WindowCompat
 import com.transitkit.app.config.LucideIcons
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -37,12 +39,16 @@ import androidx.navigation.compose.rememberNavController
 import com.transitkit.app.config.OperatorConfig
 import com.transitkit.app.config.TransitKitTheme
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.LocalHideBottomBarRequests
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.transitkit.app.ui.alerts.AlertDetailScreen
 import com.transitkit.app.ui.alerts.AlertListScreen
 import com.transitkit.app.ui.alerts.AlertToastHost
+import com.transitkit.app.ui.alerts.AlertsViewModel
 import com.transitkit.app.ui.home.HomeScreen
 import com.transitkit.app.ui.linee.LineeScreen
 import com.transitkit.app.ui.mappa.MappaScreen
@@ -58,6 +64,8 @@ import com.transitkit.app.ui.servizi.ServiceDetailScreen
 import com.transitkit.app.ui.servizi.ServiziScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.transitkit.app.ui.planner.JourneyDetailScreen
+import com.transitkit.app.ui.planner.LocationPickerMapScreen
+import com.transitkit.app.ui.planner.LocationPickerScreen
 import com.transitkit.app.ui.planner.PlannerScreen
 import com.transitkit.app.ui.planner.PlannerViewModel
 import com.transitkit.app.ui.settings.AboutScreen
@@ -73,7 +81,11 @@ sealed class Screen(val route: String) {
     object Orari : Screen("orari")
     object Linee : Screen("linee_graph")
     object Mappa : Screen("mappa")
+    /** Service info — no longer in the tab bar, reachable from Home. */
     object Servizi : Screen("servizi")
+    /** Service alerts — global list with Mine/All filter. Tab bar slot
+     *  carries a live counter of currently-active alerts. */
+    object Avvisi : Screen("alerts")
     object Planner : Screen("planner")
 }
 
@@ -87,12 +99,16 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Status bar: paint the surface colour the content uses and draw dark icons so
-        // the old flat grey band disappears. NOT edge-to-edge (project rule).
+        // Status + gesture nav bars share the surface colour so the chrome reads as a
+        // single light frame instead of a dark handle clashing with a light top band.
+        // NOT edge-to-edge (project rule).
         val lightBg = 0xFFF5F7FA.toInt()
         window.statusBarColor = lightBg
-        WindowCompat.getInsetsController(window, window.decorView)
-            .isAppearanceLightStatusBars = true
+        window.navigationBarColor = lightBg
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = true
+            isAppearanceLightNavigationBars = true
+        }
         setContent {
             TransitKitTheme(config = operatorConfig) {
                 TransitKitNavigation(operatorConfig = operatorConfig)
@@ -112,27 +128,35 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
     val labelOrari   = stringResource(R.string.tab_orari)
     val labelLinee   = stringResource(R.string.tab_linee)
     val labelMappa   = stringResource(R.string.tab_mappa)
-    val labelServizi = stringResource(R.string.tab_servizi)
-    val labelPlanner = stringResource(R.string.tab_planner)
+    val labelAvvisi  = stringResource(R.string.tab_alerts)
 
     val items = buildList {
         add(Triple(Screen.Home,    LucideIcons.LayoutDashboard, labelHome))
         add(Triple(Screen.Orari,   LucideIcons.Clock,           labelOrari))
-        add(Triple(Screen.Planner, LucideIcons.Compass,         labelPlanner))
         add(Triple(Screen.Linee,   LucideIcons.Route,           labelLinee))
         if (operatorConfig.features.enableMap) {
             add(Triple(Screen.Mappa, LucideIcons.Map, labelMappa))
         }
-        add(Triple(Screen.Servizi, LucideIcons.Info,            labelServizi))
+        add(Triple(Screen.Avvisi,  LucideIcons.Bell,            labelAvvisi))
     }
+
+    // Live counter of active alerts for the Avvisi tab badge.
+    val alertsViewModel: AlertsViewModel = hiltViewModel()
+    val activeAlerts by alertsViewModel.alerts.collectAsState()
+    val avvisiCount = activeAlerts.size
 
     // Drilled-in destinations (detail screens, settings) must NOT show the root bottom nav.
     val tabRoutes = remember(items) { items.map { it.first.route }.toSet() }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val currentRoute = currentDestination?.route
-    val showBottomBar = currentRoute in tabRoutes
+    // Full-screen overlays inside a tab destination can request the tab bar
+    // be hidden (see [HideBottomBarWhileVisible]). Counter, not boolean,
+    // so multiple overlays compose without races on dismiss.
+    val hideBottomBarRequests = remember { mutableStateOf(0) }
+    val showBottomBar = currentRoute in tabRoutes && hideBottomBarRequests.value == 0
 
+    CompositionLocalProvider(LocalHideBottomBarRequests provides hideBottomBarRequests) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
@@ -140,8 +164,21 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                 NavigationBar(containerColor = colors.tabBarBg) {
                     items.forEach { (screen, icon, label) ->
                         val isSelected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
+                        val showBadge = screen == Screen.Avvisi && avvisiCount > 0
                         NavigationBarItem(
-                            icon = { Icon(painterResource(icon), contentDescription = label) },
+                            icon = {
+                                if (showBadge) {
+                                    BadgedBox(
+                                        badge = {
+                                            Badge { Text(avvisiCount.toString(), maxLines = 1) }
+                                        },
+                                    ) {
+                                        Icon(painterResource(icon), contentDescription = label)
+                                    }
+                                } else {
+                                    Icon(painterResource(icon), contentDescription = label)
+                                }
+                            },
                             label = { Text(label, maxLines = 1) },
                             selected = isSelected,
                             onClick = {
@@ -155,7 +192,7 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = colors.accent,
                                 selectedTextColor = colors.accent,
-                                indicatorColor = colors.accent.copy(alpha = 0.15f),
+                                indicatorColor = colors.accent.copy(alpha = 0.22f),
                                 unselectedIconColor = colors.tabInactive,
                                 unselectedTextColor = colors.tabInactive,
                             ),
@@ -213,20 +250,40 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                     onNavigateToSettings = {
                         navController.navigate(ROUTE_SETTINGS_FROM_HOME)
                     },
+                    onNavigateToAbout = {
+                        navController.navigate("about_from_home")
+                    },
                     onNavigateToAlerts = {
-                        navController.navigate("alerts")
+                        navController.navigate(Screen.Avvisi.route) {
+                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true; restoreState = true
+                        }
+                    },
+                    onNavigateToServizi = {
+                        navController.navigate(Screen.Servizi.route)
                     },
                     onNavigateToStop = { stopId, stopName ->
                         val encodedId = URLEncoder.encode(stopId, StandardCharsets.UTF_8.name())
                         val encodedName = URLEncoder.encode(stopName, StandardCharsets.UTF_8.name())
                         navController.navigate("stop/$encodedId?name=$encodedName")
                     },
+                    onNavigateToPlanner = {
+                        navController.navigate(Screen.Planner.route) {
+                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true; restoreState = true
+                        }
+                    },
+                    onNavigateToLocationPicker = { role ->
+                        navController.navigate("location_picker/$role/home")
+                    },
+                    plannerViewModel = plannerViewModel,
                 )
             }
 
             // ── Settings (pushed from Home) ─────────────────────────────────────
             composable(ROUTE_SETTINGS_FROM_HOME) {
                 SettingsScreen(
+                    onBack = { navController.popBackStack() },
                     onNavigateToAbout = { navController.navigate("about_from_home") },
                     onNavigateToOrari = {
                         navController.popBackStack()
@@ -301,6 +358,14 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                             restoreState = false
                         }
                     },
+                    onNavigateToTrip = { tripId, fromStopId, routeColor, headsign, routeName ->
+                        val encodedTripId = URLEncoder.encode(tripId, StandardCharsets.UTF_8.name())
+                        val encodedFromStopId = URLEncoder.encode(fromStopId, StandardCharsets.UTF_8.name())
+                        val encodedColor = URLEncoder.encode(routeColor, StandardCharsets.UTF_8.name())
+                        val encodedHeadsign = URLEncoder.encode(headsign, StandardCharsets.UTF_8.name())
+                        val encodedRouteName = URLEncoder.encode(routeName, StandardCharsets.UTF_8.name())
+                        navController.navigate("trip/$encodedTripId?fromStopId=$encodedFromStopId&routeColor=$encodedColor&headsign=$encodedHeadsign&routeName=$encodedRouteName")
+                    },
                 )
             }
             composable(
@@ -374,21 +439,83 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
             // ── Planner ──────────────────────────────────────────────────────────
             composable(Screen.Planner.route) {
                 PlannerScreen(
+                    onBack = {
+                        // Pop back to Home; if Home isn't in the stack, navigate there.
+                        if (!navController.popBackStack(Screen.Home.route, inclusive = false)) {
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    inclusive = false
+                                }
+                                launchSingleTop = true
+                            }
+                        }
+                    },
                     onNavigateToJourneyDetail = { journey ->
-                        // Store in the ViewModel so the detail screen can retrieve it
-                        // without serializing to the nav back-stack.
                         plannerViewModel.selectJourney(journey)
                         navController.navigate("journey_detail")
+                    },
+                    onNavigateToLocationPicker = { role ->
+                        navController.navigate("location_picker/$role/planner")
                     },
                     viewModel = plannerViewModel,
                 )
             }
+
+            // ── Location picker (origin / destination) ───────────────────────────
+            composable(
+                route = "location_picker/{role}/{source}",
+                arguments = listOf(
+                    navArgument("role") { type = NavType.StringType },
+                    navArgument("source") { type = NavType.StringType },
+                ),
+            ) { backStackEntry ->
+                val role = backStackEntry.arguments?.getString("role") ?: return@composable
+                val source = backStackEntry.arguments?.getString("source") ?: return@composable
+                LocationPickerScreen(
+                    role = role,
+                    source = source,
+                    plannerViewModel = plannerViewModel,
+                    onBack = { navController.popBackStack() },
+                    onNavigateToMapPicker = {
+                        navController.navigate("location_picker_map/$role/$source")
+                    },
+                )
+            }
+
+            // ── Map-based location picker ────────────────────────────────────────
+            composable(
+                route = "location_picker_map/{role}/{source}",
+                arguments = listOf(
+                    navArgument("role") { type = NavType.StringType },
+                    navArgument("source") { type = NavType.StringType },
+                ),
+            ) { backStackEntry ->
+                val role = backStackEntry.arguments?.getString("role") ?: return@composable
+                val source = backStackEntry.arguments?.getString("source") ?: return@composable
+                LocationPickerMapScreen(
+                    role = role,
+                    source = source,
+                    plannerViewModel = plannerViewModel,
+                    onConfirm = {
+                        val targetRoute = if (source == "home") Screen.Home.route else Screen.Planner.route
+                        navController.popBackStack(targetRoute, inclusive = false)
+                    },
+                    onBack = { navController.popBackStack() },
+                )
+            }
+
             composable(route = "journey_detail") {
                 val journey = plannerViewModel.selectedJourney.collectAsState().value
                     ?: run { navController.popBackStack(); return@composable }
+                val origin = plannerViewModel.origin.collectAsState().value
+                val destination = plannerViewModel.destination.collectAsState().value
+                val userLocation = plannerViewModel.currentLocation.collectAsState().value
                 JourneyDetailScreen(
                     journey = journey,
                     onBack = { navController.popBackStack() },
+                    originName = origin?.name,
+                    destinationName = destination?.name,
+                    userLocation = userLocation,
                 )
             }
 
@@ -420,9 +547,10 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                 )
             }
 
-            // ── Servizi ──────────────────────────────────────────────────────────
+            // ── Servizi (drilled-in from Home — no longer a tab) ────────────────
             composable(Screen.Servizi.route) {
                 ServiziScreen(
+                    onBack = { navController.popBackStack() },
                     onNavigateToService = { serviceId ->
                         val encoded = URLEncoder.encode(serviceId, StandardCharsets.UTF_8.name())
                         navController.navigate("service_detail/$encoded")
@@ -486,10 +614,9 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                 )
             }
 
-            // ── Service alerts ───────────────────────────────────────────────────
-            composable("alerts") {
+            // ── Service alerts (root tab) ────────────────────────────────────────
+            composable(Screen.Avvisi.route) {
                 AlertListScreen(
-                    onBack = { navController.popBackStack() },
                     onNavigateToAlert = { alertId ->
                         val encoded = URLEncoder.encode(alertId, StandardCharsets.UTF_8.name())
                         navController.navigate("alert_detail/$encoded")
@@ -517,5 +644,6 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
             },
         )
         }
+    }
     }
 }

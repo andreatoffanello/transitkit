@@ -1,0 +1,27 @@
+appId: com.transitkit.appalcart
+---
+# E2E completo: location già settata a Boone (xcrun simctl location).
+# Autofill origin = userLocation. Tap destination → seleziona Dan'l Boone Inn
+# dalla lista "VICINO A TE" → PlannerScreen apre con journey reali da MOTIS.
+
+- launchApp:
+    clearState: true
+
+- waitForAnimationToEnd
+
+# Tap destination "A..." nel planner card (iOS 26 coordinates)
+- tapOn:
+    point: "50%, 28%"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+- takeScreenshot: flows/screenshots/e2e_picker_opened
+
+# In LocationPickerView, tap su una fermata LONTANA (sotto in lista,
+# non Dan'l Boone Inn che è a 1 min — coinciderebbe con userLocation)
+- tapOn:
+    point: "50%, 55%"
+- waitForAnimationToEnd:
+    timeout: 6000
+
+- takeScreenshot: flows/screenshots/e2e_planner_result

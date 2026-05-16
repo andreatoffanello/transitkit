@@ -1,18 +1,18 @@
 import SwiftUI
 
-/// Service alerts affecting a specific stop, rendered inline within `StopDetailView`.
-/// Self-contained: reads alerts from `AlertStore` via environment.
+/// "AVVISI" section pinned to the bottom of `StopDetailView`. Renders the
+/// rich `AlertCard` shared with the global alert list. The list is computed
+/// by the parent (so the chip at the top and this section stay in sync) —
+/// this view assumes the caller already filtered by stop / line scope.
 struct StopAlertsSection: View {
-    let stop: ResolvedStop
-    @Environment(AlertStore.self) private var alertStore
+    let alerts: [GtfsRtAlert]
 
     var body: some View {
-        let alerts = alertStore.alerts(forStopId: stop.id)
         if !alerts.isEmpty {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
                     LucideIcon.alertTriangle.sized(14)
-                        .foregroundStyle(AppTheme.accent)
+                        .foregroundStyle(.orange)
                     Text(String(localized: "stop_detail_alerts_section").uppercased())
                         .font(.caption.weight(.semibold))
                         .kerning(0.6)
@@ -26,50 +26,15 @@ struct StopAlertsSection: View {
                         NavigationLink {
                             AlertDetailView(alert: alert)
                         } label: {
-                            inlineAlertRow(alert)
+                            AlertCard(alert: alert)
                         }
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 16)
             }
-            .padding(.top, 16)
-            .padding(.bottom, 4)
-        }
-    }
-
-    private func inlineAlertRow(_ alert: GtfsRtAlert) -> some View {
-        HStack(spacing: 10) {
-            Circle()
-                .fill(alertRowDotColor(alert.severity))
-                .frame(width: 8, height: 8)
-            Text(alert.headerText.resolved())
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(AppTheme.textPrimary)
-                .lineLimit(2)
-                .multilineTextAlignment(.leading)
-            Spacer(minLength: 0)
-            LucideIcon.chevronRight.sized(14)
-                .foregroundStyle(AppTheme.textTertiary)
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(AppTheme.bgSecondary)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(AppTheme.glassBorder, lineWidth: 1)
-        )
-    }
-
-    private func alertRowDotColor(_ severity: AlertSeverity) -> Color {
-        switch severity {
-        case .severe:  return .red
-        case .warning: return .orange
-        case .info:    return AppTheme.accent
-        case .unknown: return AppTheme.textTertiary
+            .padding(.top, 24)
+            .padding(.bottom, 16)
         }
     }
 }

@@ -1,0 +1,33 @@
+appId: com.transitkit.appalcart
+---
+# Verifica visiva home dopo refactor:
+# - chip "Ora" fuori card
+# - swap button centrato verticalmente tra le 2 righe (quando entrambi settati)
+
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+
+# Aspetta che autofill GPS popoli l'origin con "La mia posizione"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Tap destination (riga 2 — sotto l'origin riga 1)
+- tapOn:
+    point: "50%, 28%"
+- waitForAnimationToEnd
+
+# Tap una fermata "VICINO A TE" (in lista, posizioni varie iOS 26)
+- tapOn:
+    point: "50%, 55%"
+- waitForAnimationToEnd:
+    timeout: 4000
+
+# Adesso siamo in PlannerScreen (entrambi settati). Torno indietro per
+# vedere lo stato della home con swap button visibile.
+- tapOn:
+    point: "10%, 8%"  # back button
+- waitForAnimationToEnd:
+    timeout: 2000
+
+- takeScreenshot: flows/screenshots/home_swap_visible

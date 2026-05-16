@@ -1,6 +1,8 @@
 import SwiftUI
 
-/// Root tab bar container. Five tabs: Home, Orari, Linee, Mappa, Servizi.
+/// Root tab bar container. Five tabs: Home, Orari, Linee, Mappa, Avvisi.
+/// Avvisi carries a live `.badge(activeAlerts.count)` of active service alerts.
+/// Servizi has moved off the tab bar — reachable from the operator card in Home.
 /// Settings accessible as sheet from Home. Planner accessible from Home quick-block.
 /// Each tab view manages its own NavigationStack internally.
 struct ContentView: View {

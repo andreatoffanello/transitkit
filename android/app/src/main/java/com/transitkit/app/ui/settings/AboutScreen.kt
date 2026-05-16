@@ -37,7 +37,7 @@ fun AboutScreen(
                 title = { Text(stringResource(R.string.about_title), fontWeight = FontWeight.SemiBold, color = colors.textPrimary) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(painterResource(LucideIcons.ChevronLeft), contentDescription = stringResource(R.string.cd_indietro), tint = colors.accent)
+                        Icon(painterResource(LucideIcons.ChevronLeft), contentDescription = stringResource(R.string.cd_indietro), tint = colors.textPrimary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.background),
@@ -172,8 +172,7 @@ private fun AboutCard(content: @Composable () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(colors.bgSecondary)
-            .border(1.dp, colors.glassBorder, RoundedCornerShape(16.dp)),
+            .background(colors.bgSecondary),
     ) {
         content()
     }

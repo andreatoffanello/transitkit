@@ -1,7 +1,6 @@
 package com.transitkit.app.ui.settings
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.Arrangement
@@ -159,11 +158,6 @@ private fun OperatorCard(config: OperatorConfig) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(colors.bgSecondary)
-            .border(
-                width = 1.dp,
-                color = colors.glassBorder,
-                shape = RoundedCornerShape(16.dp),
-            )
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -271,12 +265,7 @@ private fun CardContainer(content: @Composable () -> Unit) {
             .padding(horizontal = 16.dp)
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(colors.bgSecondary)
-            .border(
-                width = 1.dp,
-                color = colors.glassBorder,
-                shape = RoundedCornerShape(16.dp),
-            ),
+            .background(colors.bgSecondary),
     ) {
         content()
     }
@@ -289,6 +278,7 @@ private fun CardContainer(content: @Composable () -> Unit) {
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
+    onBack: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {},
     onNavigateToOrari: () -> Unit = {},
 ) {
@@ -304,15 +294,28 @@ fun SettingsScreen(
             .fillMaxSize()
             .background(colors.background),
     ) {
-        // ── Header ──────────────────────────────────────────────────────────
+        // ── Header (back + title) ───────────────────────────────────────────
         item {
-            Text(
-                text = stringResource(R.string.settings_title),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = colors.textPrimary,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 16.dp),
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 4.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+            ) {
+                androidx.compose.material3.IconButton(onClick = onBack) {
+                    Icon(
+                        painter = painterResource(LucideIcons.ChevronLeft),
+                        contentDescription = stringResource(R.string.cd_indietro),
+                        tint = colors.textPrimary,
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.settings_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = colors.textPrimary,
+                )
+            }
         }
 
         // ── Operator card ────────────────────────────────────────────────────
@@ -421,7 +424,7 @@ fun SettingsScreen(
                 )
             }
             Text(
-                text = stringResource(R.string.settings_lingua_desc),
+                text = stringResource(R.string.settings_lingua_desc, stringResource(R.string.app_name)),
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.textSecondary,
                 modifier = Modifier.padding(horizontal = 32.dp, vertical = 6.dp),

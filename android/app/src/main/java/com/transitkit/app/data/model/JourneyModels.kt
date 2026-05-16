@@ -27,11 +27,28 @@ data class TransitLeg(
     val routeTextColor: String,
     val tripId: String,
     val intermediateStops: List<IntermediateStop>,
+    val headsign: String = "",
+    /** Encoded polyline (Google Algorithm, precision 7 per MOTIS) — null when unavailable. */
+    val polyline: String? = null,
 ) : JourneyLeg()
 
 data class WalkingLeg(
     val fromStop: PlannerStop,
+    val toStop: PlannerStop,
     val walkSeconds: Int,
+    val walkMeters: Int = 0,
+    /** Encoded polyline (Google Algorithm, precision 7 per MOTIS) — null when unavailable. */
+    val polyline: String? = null,
 ) : JourneyLeg()
 
-data class IntermediateStop(val id: String, val name: String, val time: String)
+/** Total walking duration across all walking legs (seconds). */
+val Journey.totalWalkSeconds: Int
+    get() = legs.filterIsInstance<WalkingLeg>().sumOf { it.walkSeconds }
+
+data class IntermediateStop(
+    val id: String,
+    val name: String,
+    val time: String,
+    val lat: Double = 0.0,
+    val lon: Double = 0.0,
+)

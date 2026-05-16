@@ -61,8 +61,19 @@ class RemoteRoutingProvider(
     private fun parseResponse(json: String, origin: PlannerStop, destination: PlannerStop): List<Journey> =
         runCatching {
             val root = JSONObject(json)
-            val arr = root.optJSONArray("itineraries") ?: return emptyList()
-            (0 until arr.length()).mapNotNull { mapItinerary(arr.getJSONObject(it), origin, destination) }
+            val out = mutableListOf<Journey>()
+            // Direct (walk-only) journeys come back when no transit is needed.
+            root.optJSONArray("direct")?.let { arr ->
+                (0 until arr.length()).forEach { i ->
+                    mapItinerary(arr.getJSONObject(i), origin, destination)?.let(out::add)
+                }
+            }
+            root.optJSONArray("itineraries")?.let { arr ->
+                (0 until arr.length()).forEach { i ->
+                    mapItinerary(arr.getJSONObject(i), origin, destination)?.let(out::add)
+                }
+            }
+            out
         }.getOrDefault(emptyList())
 
     private fun mapItinerary(it: JSONObject, origin: PlannerStop, destination: PlannerStop): Journey? {
@@ -80,7 +91,15 @@ class RemoteRoutingProvider(
 
             if (mode == "WALK") {
                 val fromStop = if (idx == 0) origin else plannerStop(from)
-                legs.add(WalkingLeg(fromStop = fromStop, walkSeconds = leg.optInt("duration")))
+                val toStop = if (idx == count - 1) destination else plannerStop(to)
+                legs.add(WalkingLeg(
+                    fromStop = fromStop,
+                    toStop = toStop,
+                    walkSeconds = leg.optInt("duration"),
+                    walkMeters = leg.optInt("distance"),
+                    polyline = leg.optJSONObject("legGeometry")?.optString("points")
+                        ?.takeIf { it.isNotEmpty() },
+                ))
             } else {
                 val boardMs = parseIso(from.optString("departure")) ?: continue
                 val alightMs = parseIso(to.optString("arrival")) ?: continue
@@ -93,6 +112,8 @@ class RemoteRoutingProvider(
                             id = s.optString("stopId"),
                             name = s.optString("name"),
                             time = timeComponent(s.optString("arrival")),
+                            lat = s.optDouble("lat", 0.0),
+                            lon = s.optDouble("lon", 0.0),
                         )
                     }
                 } ?: emptyList()
@@ -107,6 +128,9 @@ class RemoteRoutingProvider(
                     routeTextColor = textColor,
                     tripId = leg.optString("tripId"),
                     intermediateStops = intermediates,
+                    headsign = leg.optString("headsign"),
+                    polyline = leg.optJSONObject("legGeometry")?.optString("points")
+                        ?.takeIf { it.isNotEmpty() },
                 ))
             }
         }

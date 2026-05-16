@@ -8,6 +8,7 @@ object LucideIcons {
     @DrawableRes val AlertTriangle = R.drawable.ic_lucide_alert_triangle
     @DrawableRes val ArrowLeft = R.drawable.ic_lucide_arrow_left
     @DrawableRes val ArrowLeftRight = R.drawable.ic_lucide_arrow_left_right
+    @DrawableRes val ArrowUpDown = R.drawable.ic_lucide_arrow_up_down
     @DrawableRes val ArrowRight = R.drawable.ic_lucide_arrow_right
     @DrawableRes val Bell = R.drawable.ic_lucide_bell
     @DrawableRes val Box = R.drawable.ic_lucide_box
@@ -20,7 +21,9 @@ object LucideIcons {
     @DrawableRes val Compass = R.drawable.ic_lucide_compass
     @DrawableRes val Crosshair = R.drawable.ic_lucide_crosshair
     @DrawableRes val ExternalLink = R.drawable.ic_lucide_external_link
+    @DrawableRes val Footprints = R.drawable.ic_lucide_footprints
     @DrawableRes val Globe = R.drawable.ic_lucide_globe
+    @DrawableRes val Grid2x2Plus = R.drawable.ic_lucide_grid_2x2_plus
     @DrawableRes val Headphones = R.drawable.ic_lucide_headphones
     @DrawableRes val Info = R.drawable.ic_lucide_info
     @DrawableRes val LayoutDashboard = R.drawable.ic_lucide_layout_dashboard
@@ -29,8 +32,11 @@ object LucideIcons {
     @DrawableRes val Mail = R.drawable.ic_lucide_mail
     @DrawableRes val Map = R.drawable.ic_lucide_map
     @DrawableRes val MapPin = R.drawable.ic_lucide_map_pin
+    @DrawableRes val Maximize2 = R.drawable.ic_lucide_maximize_2
+    @DrawableRes val Minimize2 = R.drawable.ic_lucide_minimize_2
     @DrawableRes val Phone = R.drawable.ic_lucide_phone
     @DrawableRes val RefreshCw = R.drawable.ic_lucide_refresh_cw
+    @DrawableRes val Repeat2 = R.drawable.ic_lucide_repeat_2
     @DrawableRes val Route = R.drawable.ic_lucide_route
     @DrawableRes val Search = R.drawable.ic_lucide_search
     @DrawableRes val Settings = R.drawable.ic_lucide_settings

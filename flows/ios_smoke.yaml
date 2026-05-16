@@ -1,0 +1,14 @@
+appId: com.transitkit.appalcart
+---
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      text: "Home"
+    timeout: 6000
+- assertVisible: "Home"
+- assertVisible: "Orari"
+- assertVisible: "Linee"
+- assertVisible: "Mappa"
+- assertVisible: "Servizi"
+- assertNotVisible: "Pianifica"

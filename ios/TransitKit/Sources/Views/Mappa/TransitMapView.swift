@@ -22,7 +22,7 @@ struct TransitMapView: UIViewRepresentable {
     let polylines: [CachedPolyline]
 
     // MARK: Config
-    let initialPitch: Double
+    let pitch: Double
     let zoomLevel: MapZoomLevel
     let tier: MapZoomTier
     let selectedStopId: String?
@@ -49,18 +49,35 @@ struct TransitMapView: UIViewRepresentable {
         map.pointOfInterestFilter = .excludingAll
         map.showsCompass = false
         map.setRegion(region, animated: false)
-        if initialPitch > 0 {
+        if pitch > 0 {
+            // Derive the camera distance from the requested span instead of
+            // reading `camera.altitude` post-`setRegion`. That value used to be
+            // the freshly-constructed MKMapView default (≈ 0/very small) on the
+            // first pass, collapsing the camera to a metre-level zoom on top of
+            // the user dot. `Self.distance(forSpan:)` is the authoritative path.
             let camera = MKMapCamera(
                 lookingAtCenter: region.center,
-                fromDistance: map.camera.altitude,
-                pitch: CGFloat(initialPitch),
+                fromDistance: Self.distance(forSpan: region.span),
+                pitch: CGFloat(pitch),
                 heading: 0
             )
             map.setCamera(camera, animated: false)
         }
         context.coordinator.parent = self
         context.coordinator.lastBindingRegion = region
+        context.coordinator.lastAppliedPitch = pitch
         return map
+    }
+
+    /// Converts an `MKCoordinateSpan` to the line-of-sight distance used by
+    /// `MKMapCamera(fromDistance:)`. Approximation: viewport height in metres
+    /// divided by twice the tangent of half MapKit's nominal vertical FOV
+    /// (~30°). Works for the pitches we care about (0–60°).
+    private static func distance(forSpan span: MKCoordinateSpan) -> CLLocationDistance {
+        let metersPerDegLat = 111_000.0
+        let viewportHeight = span.latitudeDelta * metersPerDegLat
+        // tan(15°) ≈ 0.2679
+        return viewportHeight / (2.0 * 0.2679)
     }
 
     func updateUIView(_ uiView: MKMapView, context: Context) {
@@ -73,11 +90,39 @@ struct TransitMapView: UIViewRepresentable {
         let bindingChanged = coord.lastBindingRegion.map {
             !Self.regionsApproximatelyEqual($0, region)
         } ?? true
-        if !coord.isUpdatingFromMap, bindingChanged {
-            coord.lastBindingRegion = region
-            coord.isUpdatingFromBinding = true
-            uiView.setRegion(region, animated: true)
-            coord.isUpdatingFromBinding = false
+        if !coord.isUpdatingFromMap {
+            if bindingChanged {
+                coord.lastBindingRegion = region
+                coord.isUpdatingFromBinding = true
+                uiView.setRegion(region, animated: false)
+                // setRegion resets pitch; re-apply immediately.
+                if pitch > 0 {
+                    coord.lastAppliedPitch = pitch
+                    uiView.setCamera(MKMapCamera(
+                        lookingAtCenter: region.center,
+                        fromDistance: Self.distance(forSpan: region.span),
+                        pitch: CGFloat(pitch),
+                        heading: uiView.camera.heading
+                    ), animated: false)
+                }
+                coord.isUpdatingFromBinding = false
+            } else if pitch != coord.lastAppliedPitch {
+                // Pitch-only change (3D toggle) — animate directly without
+                // region change. Reuse the live altitude from MapKit since the
+                // span hasn't moved.
+                coord.lastAppliedPitch = pitch
+                let camera = MKMapCamera(
+                    lookingAtCenter: uiView.region.center,
+                    fromDistance: uiView.camera.altitude > 0
+                        ? uiView.camera.altitude
+                        : Self.distance(forSpan: uiView.region.span),
+                    pitch: CGFloat(pitch),
+                    heading: uiView.camera.heading
+                )
+                coord.isUpdatingFromBinding = true
+                uiView.setCamera(camera, animated: true)
+                coord.isUpdatingFromBinding = false
+            }
         }
 
         // Sync annotations (disable implicit CA animations so coordinate updates snap).
@@ -112,6 +157,7 @@ struct TransitMapView: UIViewRepresentable {
         // Tracks the last region value the binding held, so programmatic pitch
         // changes (which alter uiView.region) don't trigger a spurious setRegion.
         var lastBindingRegion: MKCoordinateRegion?
+        var lastAppliedPitch: Double = 0
 
         var stopAnnotations: [String: StopMKAnnotation] = [:]
         var vehicleAnnotations: [String: VehicleMKAnnotation] = [:]
@@ -363,6 +409,9 @@ struct TransitMapView: UIViewRepresentable {
             isUpdatingFromMap = true
             parent.region = mapView.region
             parent.onRegionChange(mapView.region)
+            // Keep lastBindingRegion in sync so pitch-induced perspective span changes
+            // don't look like a binding change and trigger a spurious setRegion.
+            lastBindingRegion = mapView.region
             isUpdatingFromMap = false
         }
     }

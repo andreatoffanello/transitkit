@@ -1,0 +1,29 @@
+appId: com.transitkit.appalcart
+---
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      text: "Home"
+    timeout: 6000
+- openLink: "transitkit://stop/appalcart_asu_appalachian_heights"
+- extendedWaitUntil:
+    visible:
+      text: "ASU Appalachian Heights"
+    timeout: 5000
+- tapOn:
+    id: "btn_navigate_sheet"
+- extendedWaitUntil:
+    visible:
+      text: "Arriva qui"
+    timeout: 3000
+- tapOn: "Arriva qui"
+- extendedWaitUntil:
+    visible:
+      text: "Pianifica viaggio"
+    timeout: 5000
+- extendedWaitUntil:
+    visible:
+      id: "planner_dest_field"
+    timeout: 3000
+- assertVisible: "ASU Appalachian Heights"

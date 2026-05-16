@@ -1,0 +1,13 @@
+appId: com.transitkit.appalcart
+---
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      text: "Home"
+    timeout: 6000
+- openLink: "transitkit://line/3/map"
+- extendedWaitUntil:
+    visible:
+      text: "B"
+    timeout: 5000

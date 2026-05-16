@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,14 +26,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.data.model.ResolvedStop
@@ -58,10 +57,14 @@ internal fun StopTimelineRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(IntrinsicSize.Min)
+            // Movete parity: minimum row height + vertical breathing so the
+            // timeline reads as a comfortable scroll, not a packed list. Without
+            // these, rows collapse to the badges' intrinsic height and the
+            // sequence feels claustrophobic.
+            .heightIn(min = 56.dp)
             .clickable(onClick = onClick)
             .semantics { contentDescription = "line_stop_${stop.id}" }
-            .padding(end = 16.dp),
+            .padding(end = 16.dp, top = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Timeline column: full-height line + circle overlay
@@ -114,23 +117,6 @@ internal fun StopTimelineRow(
             )
             val otherLines = stop.routeNames.filter { it.isNotBlank() && it != currentRouteName }
             if (otherLines.isNotEmpty()) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.padding(top = 2.dp),
-                ) {
-                    Icon(
-                        painter = painterResource(LucideIcons.ArrowLeftRight),
-                        contentDescription = null,
-                        tint = colors.textTertiary,
-                        modifier = Modifier.size(12.dp),
-                    )
-                    Text(
-                        text = stringResource(R.string.label_coincidenza),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = colors.textTertiary,
-                    )
-                }
                 val maxVisible = 4
                 val visible = otherLines.take(maxVisible)
                 val overflow = otherLines.size - visible.size

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">TransitKit</string>
+    <string name="app_name">AppalRider</string>
 
     <!-- Tab bar labels -->
     <string name="tab_home">Inicio</string>
@@ -8,6 +8,7 @@
     <string name="tab_linee">Rutas</string>
     <string name="tab_mappa">Mapa</string>
     <string name="tab_servizi">Servicios</string>
+    <string name="tab_alerts">Avisos</string>
     <string name="tab_info">Info</string>
     <string name="tab_settings">Ajustes</string>
 
@@ -137,6 +138,8 @@
     <string name="fermate_servite">Paradas atendidas</string>
     <string name="stop_count_fermate">%1$d paradas</string>
     <string name="live_count">%1$d en vivo</string>
+    <string name="home_operator_card_live">%1$d vehículos en vivo</string>
+    <string name="home_operator_card_no_live">Sin vehículos en vivo</string>
     <string name="label_coincidenza">Transbordo</string>
 
     <!-- Info — section headers -->
@@ -192,7 +195,7 @@
     <string name="settings_notifiche_desc">Recibe avisos para tus paradas favoritas.</string>
 
     <!-- Settings — language -->
-    <string name="settings_lingua_desc">Cámbialo en Ajustes del sistema → Apps → TransitKit.</string>
+    <string name="settings_lingua_desc">Cámbialo en Ajustes del sistema → Apps → %s.</string>
 
     <!-- Settings — app info -->
     <string name="settings_info_su">Acerca de %s</string>
@@ -201,6 +204,10 @@
     <!-- Settings — accessibility -->
     <string name="cd_fermata_salvata">Parada guardada: %s</string>
     <string name="cd_rimuovi_fermata">Quitar parada %s</string>
+    <string name="cd_line_format">Línea %s</string>
+    <string name="cd_direction_format">dirección %s</string>
+    <string name="cd_departing_now">saliendo ahora</string>
+    <string name="cd_in_minutes">en %d min</string>
 
     <!-- Mappa — dev/config error -->
     <string name="mappa_api_key_missing">Configura MAPS_API_KEY en local.properties para activar el mapa.</string>
@@ -309,6 +316,28 @@
     <string name="alert_severity_info">Información</string>
     <string name="alert_severity_advisory">Aviso</string>
 
+    <string name="alert_cause_technical">Problema técnico</string>
+    <string name="alert_cause_strike">Huelga</string>
+    <string name="alert_cause_demonstration">Manifestación</string>
+    <string name="alert_cause_accident">Accidente</string>
+    <string name="alert_cause_holiday">Festivo</string>
+    <string name="alert_cause_weather">Clima</string>
+    <string name="alert_cause_maintenance">Mantenimiento</string>
+    <string name="alert_cause_construction">Obras</string>
+    <string name="alert_cause_police">Operativo policial</string>
+    <string name="alert_cause_medical">Emergencia médica</string>
+    <string name="alert_default_title">Aviso de servicio</string>
+
+    <string name="alerts_filter_mine">Mis líneas</string>
+    <string name="alerts_filter_all">Todos</string>
+    <string name="home_servizi_subtitle">Tarifas, accesibilidad, contacto</string>
+    <string name="alerts_your_line_badge">TU LÍNEA</string>
+
+    <plurals name="stop_alerts_chip">
+        <item quantity="one">1 aviso en esta parada</item>
+        <item quantity="other">%d avisos en esta parada</item>
+    </plurals>
+
     <!-- Distance formatting -->
     <string name="distance_meters">%1$d m</string>
     <string name="distance_kilometers">%1$s km</string>
@@ -330,7 +359,11 @@
     <string name="walking_1_min">1 min a pie</string>
     <string name="walking_n_min">%d min a pie</string>
     <string name="walking_10_plus_min">10+ min a pie</string>
-    <string name="home_footer_disclaimer">Datos oficiales %1$s · App no oficial</string>
+    <string name="home_footer_disclaimer">App independiente · Datos oficiales %1$s</string>
+    <string name="home_operators_section_title">Quién mueve la ciudad</string>
+    <string name="home_operators_attribution">Horarios, líneas y vehículos en vivo provienen directamente de %1$s.</string>
+    <string name="home_operators_live_count">%1$d en vivo</string>
+    <string name="home_operators_schedule_only">Solo horarios</string>
     <string name="home_enable_location_chip">Activa la ubicación para ver paradas cercanas</string>
     <string name="home_empty_favorites_title">Tus paradas, siempre a mano</string>
     <string name="home_empty_favorites_body">Añade tus paradas habituales para ver los horarios en tiempo real.</string>
@@ -370,4 +403,32 @@
     <string name="done">Listo</string>
     <string name="cancel">Cancelar</string>
     <string name="search_stops">Buscar paradas…</string>
+
+    <!-- iOS parity: home sections (sentence case) -->
+    <string name="home_section_favorites">Paradas favoritas</string>
+    <string name="home_section_nearby">Paradas cerca de ti</string>
+
+    <!-- iOS parity: map controls (pill verticale unificato) -->
+    <string name="map_switch_to_2d">Cambiar a 2D</string>
+    <string name="map_switch_to_3d">Cambiar a 3D</string>
+    <string name="map_recenter">Centrar en mi ubicación</string>
+    <string name="map_reset_bearing">Restablecer orientación</string>
+    <string name="map_expand">Ampliar mapa</string>
+    <string name="map_close_expanded">Cerrar mapa</string>
+
+    <!-- iOS parity: favorite star -->
+    <string name="cd_aggiungi_preferiti">Añadir a favoritos</string>
+
+    <!-- iOS parity: line live count -->
+    <plurals name="lines_live_count">
+        <item quantity="one">%d en vivo</item>
+        <item quantity="other">%d en vivo</item>
+    </plurals>
+
+    <!-- LineDetail Movete parity -->
+    <string name="line_in_servizio">%d en servicio</string>
+    <string name="line_next_stop">Próxima parada: %1$s</string>
+    <string name="vehicle_next_stop_caption">PRÓXIMA PARADA</string>
+    <string name="vehicle_live_tracking">EN VIVO</string>
+    <string name="vehicle_next_stop_unknown">Desconocida</string>
 </resources>

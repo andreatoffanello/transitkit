@@ -1,9 +1,7 @@
 package com.transitkit.app.ui.mappa
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -12,19 +10,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.activity.compose.BackHandler
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,32 +25,33 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.transitkit.app.R
 import com.transitkit.app.config.LocalTransitColors
 import com.transitkit.app.config.LucideIcons
-import androidx.compose.ui.res.painterResource
 import com.transitkit.app.data.model.ScheduleRoute
+import com.transitkit.app.ui.components.HideBottomBarWhileVisible
+import com.transitkit.app.ui.components.LineBadge
+import com.transitkit.app.ui.components.LineBadgeSize
 import com.transitkit.app.ui.components.LiveIndicator
+import com.transitkit.app.ui.components.TransitSearchBar
 
 /**
- * Line-picker sheet. Modelled on movete's `LinePicker` but adapted to transitkit's
- * schedule-route shape: section headers come from GTFS `transitType` integers
- * (0=tram, 1/2=rail/metro, 3=bus, 4=ferry).
+ * Line picker — full-screen overlay shown above the map. Lives inside
+ * [MappaScreen]'s composition so it inherits the activity's status-bar
+ * chrome, and hides the activity tab bar for as long as it's visible via
+ * [HideBottomBarWhileVisible] so the picker reads as a second-level screen.
  *
- * Tap a row → sheet dismisses + caller receives `routeId`. The caller is responsible
- * for updating the view-model and fitting the camera to the route bounds.
+ * Tap a row → caller updates view-model + closes overlay. Back gesture also
+ * dismisses (see [BackHandler]).
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun LinePickerSheet(
     routes: List<ScheduleRoute>,
@@ -65,6 +59,9 @@ internal fun LinePickerSheet(
     onDismiss: () -> Unit,
     onSelectRoute: (routeId: String) -> Unit,
 ) {
+    HideBottomBarWhileVisible()
+    BackHandler(onBack = onDismiss)
+
     val colors = LocalTransitColors.current
     var query by remember { mutableStateOf("") }
 
@@ -85,62 +82,41 @@ internal fun LinePickerSheet(
     //   type 1 = metro, 2 = rail, 0 = tram, 3 = bus, 4 = ferry, other = ALTRO.
     val sectionOrder = listOf(1, 0, 2, 3, 4)
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = colors.background,
-        modifier = Modifier.semantics { testTag = "line_picker_sheet" },
+    Surface(
+        modifier = Modifier
+            .fillMaxSize()
+            .semantics { testTag = "line_picker_sheet" },
+        color = colors.background,
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = stringResource(R.string.mappa_line_picker_title),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = colors.textPrimary,
-                modifier = Modifier.padding(
-                    start = 20.dp,
-                    end = 20.dp,
-                    top = 4.dp,
-                    bottom = 12.dp,
-                ),
-            )
-
-            OutlinedTextField(
-                value = query,
-                onValueChange = { query = it },
-                placeholder = {
-                    Text(
-                        stringResource(R.string.mappa_line_picker_placeholder),
-                        color = colors.textTertiary,
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        painterResource(LucideIcons.Search),
-                        contentDescription = null,
-                        tint = colors.textSecondary,
-                        modifier = Modifier.size(18.dp),
-                    )
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(12.dp),
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Characters,
-                    imeAction = ImeAction.Search,
-                ),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = colors.bgSecondary,
-                    unfocusedContainerColor = colors.bgSecondary,
-                    focusedBorderColor = colors.accent.copy(alpha = 0.5f),
-                    unfocusedBorderColor = Color.Transparent,
-                    cursorColor = colors.accent,
-                    focusedTextColor = colors.textPrimary,
-                    unfocusedTextColor = colors.textPrimary,
-                ),
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-                    .semantics { testTag = "line_picker_search" },
+                    .padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = onDismiss) {
+                    Icon(
+                        painter = painterResource(LucideIcons.ChevronLeft),
+                        contentDescription = stringResource(R.string.cd_indietro),
+                        tint = colors.textPrimary,
+                    )
+                }
+                Text(
+                    text = stringResource(R.string.mappa_line_picker_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.textPrimary,
+                )
+            }
+
+            TransitSearchBar(
+                query = query,
+                placeholder = stringResource(R.string.mappa_line_picker_placeholder),
+                onQueryChange = { query = it },
+                a11yTag = "line_picker_search",
+                capitalization = KeyboardCapitalization.Characters,
+                modifier = Modifier.padding(horizontal = 20.dp),
             )
 
             Spacer(Modifier.height(8.dp))
@@ -232,16 +208,6 @@ private fun LinePickerRow(
     onClick: () -> Unit,
 ) {
     val colors = LocalTransitColors.current
-    val badgeColor = remember(route.color) {
-        if (route.color.isNotBlank())
-            runCatching { Color(android.graphics.Color.parseColor("#${route.color}")) }.getOrNull()
-        else null
-    } ?: colors.accent
-    val textColor = remember(route.textColor, badgeColor) {
-        if (route.textColor.isNotBlank())
-            runCatching { Color(android.graphics.Color.parseColor("#${route.textColor}")) }.getOrNull()
-        else null
-    } ?: contrastingTextColor(badgeColor)
 
     Row(
         modifier = Modifier
@@ -252,22 +218,7 @@ private fun LinePickerRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        // Route color badge — 32dp square, code inside, WCAG-contrasting text.
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(badgeColor),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = route.name.take(4),
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                color = textColor,
-                maxLines = 1,
-            )
-        }
+        LineBadge(route = route, size = LineBadgeSize.Medium)
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = route.longName.ifBlank { route.name },
@@ -302,4 +253,3 @@ private fun LinePickerRow(
         }
     }
 }
-

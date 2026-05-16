@@ -1,0 +1,44 @@
+appId: com.transitkit.appalcart
+---
+# Setup: location simulator a ASU College St Station (36.215706,-81.679642).
+# Target destination: 610 State Farm Rd (36.204979,-81.659981) — sud-est.
+# Distanza ~2km in direzione SE. MOTIS ritorna 5 itinerari multimodali con
+# fino a 5 intermediate stops per leg.
+
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd:
+    timeout: 3000
+
+- tapOn:
+    point: "50%, 28%"
+- waitForAnimationToEnd
+
+- tapOn: "Scegli sulla mappa"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Swipe verso sud-est per arrivare a 610 State Farm Rd.
+# Map è centrata sull'user → drago la mappa verso N-W (swipe top-left) per
+# spostare il pin verso S-E. Distanza ~2km.
+- swipe:
+    start: "85%, 25%"
+    end: "15%, 75%"
+    duration: 900
+
+- waitForAnimationToEnd:
+    timeout: 2500
+
+- tapOn: "Conferma posizione"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+- takeScreenshot: flows/screenshots/jmap_planner_list
+
+# Tap secondo journey (con bus + intermediate stops)
+- tapOn:
+    point: "50%, 52%"
+- waitForAnimationToEnd:
+    timeout: 4000
+
+- takeScreenshot: flows/screenshots/jmap_detail_with_map

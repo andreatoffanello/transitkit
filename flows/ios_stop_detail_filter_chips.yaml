@@ -1,0 +1,29 @@
+appId: com.transitkit.appalcart
+---
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      text: "Home"
+    timeout: 6000
+- openLink: "transitkit://stop/appalcart_asu_college_st_station"
+- extendedWaitUntil:
+    visible:
+      text: "ASU College St Station"
+    timeout: 5000
+- extendedWaitUntil:
+    visible:
+      id: "btn_filter_all_lines"
+    timeout: 3000
+- assertVisible:
+    id: "btn_filter_line_G"
+- tapOn:
+    id: "btn_filter_line_G"
+- assertVisible:
+    id: "btn_filter_line_G"
+- tapOn:
+    id: "btn_filter_line_G"
+- tapOn:
+    id: "btn_filter_all_lines"
+- assertVisible:
+    id: "btn_filter_all_lines"

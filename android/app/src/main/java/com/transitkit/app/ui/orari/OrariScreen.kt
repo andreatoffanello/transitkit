@@ -22,12 +22,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.TransitSearchBar
 
 @Composable
 fun OrariScreen(
@@ -50,6 +53,15 @@ fun OrariScreen(
             .fillMaxSize()
             .background(colors.background),
     ) {
+        Text(
+            text = stringResource(R.string.tab_orari),
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 17.sp,
+            ),
+            color = colors.textPrimary,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+        )
         if (scheduleLoadError != null) {
             Row(
                 modifier = Modifier
@@ -67,10 +79,11 @@ fun OrariScreen(
             }
         }
         // Search bar
-        OrariSearchBar(
+        TransitSearchBar(
             query = searchQuery,
             placeholder = stringResource(R.string.search_placeholder_stops),
             onQueryChange = viewModel::onSearchQueryChanged,
+            a11yTag = "search_schedules",
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
         )
 

@@ -1,5 +1,6 @@
 package com.transitkit.app.data.gtfsrt
 
+import com.transitkit.app.data.model.AlertCause
 import com.transitkit.app.data.model.AlertEffect
 import com.transitkit.app.data.model.AlertSeverity
 import com.transitkit.app.data.model.AlertTimeRange
@@ -465,6 +466,7 @@ class GtfsRtFetcher @Inject constructor(
             activePeriods = p.activePeriods,
             severity = p.severity,
             effect = p.effect,
+            cause = p.cause,
             headerText = p.headerText,
             descriptionText = p.descriptionText,
             affectedStopIds = p.affectedStopIds,
@@ -478,6 +480,7 @@ class GtfsRtFetcher @Inject constructor(
         val activePeriods = mutableListOf<AlertTimeRange>()
         var severity: AlertSeverity = AlertSeverity.UNKNOWN
         var effect: AlertEffect = AlertEffect.UNKNOWN_EFFECT
+        var cause: AlertCause = AlertCause.UNKNOWN_CAUSE
         var headerText: Map<String, String> = emptyMap()
         var descriptionText: Map<String, String> = emptyMap()
         val affectedStopIds = mutableSetOf<String>()
@@ -501,7 +504,7 @@ class GtfsRtFetcher @Inject constructor(
                     }
                 }
                 fieldNumber == ALERT_CAUSE && wireType == WIRE_VARINT -> {
-                    readVarint32(source) // unused today
+                    payload.cause = AlertCause.fromRaw(readVarint32(source))
                 }
                 fieldNumber == ALERT_EFFECT && wireType == WIRE_VARINT -> {
                     payload.effect = AlertEffect.fromRaw(readVarint32(source))

@@ -28,6 +28,26 @@ enum class AlertEffect(val raw: Int) {
     }
 }
 
+/** GTFS-RT Cause enum. UNKNOWN_CAUSE is the default when the feed omits the field. */
+enum class AlertCause(val raw: Int) {
+    UNKNOWN_CAUSE(1),
+    OTHER_CAUSE(2),
+    TECHNICAL_PROBLEM(3),
+    STRIKE(4),
+    DEMONSTRATION(5),
+    ACCIDENT(6),
+    HOLIDAY(7),
+    WEATHER(8),
+    MAINTENANCE(9),
+    CONSTRUCTION(10),
+    POLICE_ACTIVITY(11),
+    MEDICAL_EMERGENCY(12);
+
+    companion object {
+        fun fromRaw(v: Int): AlertCause = values().firstOrNull { it.raw == v } ?: UNKNOWN_CAUSE
+    }
+}
+
 /**
  * One active window during which an alert applies. Either endpoint may be null
  * (±infinity). Values are POSIX epoch seconds.
@@ -50,6 +70,7 @@ data class ServiceAlert(
     val activePeriods: List<AlertTimeRange>,
     val severity: AlertSeverity,
     val effect: AlertEffect,
+    val cause: AlertCause,
     val headerText: Map<String, String>,
     val descriptionText: Map<String, String>,
     val affectedStopIds: Set<String>,
@@ -61,4 +82,13 @@ data class ServiceAlert(
         if (activePeriods.isEmpty()) return true
         return activePeriods.any { it.contains(epoch) }
     }
+
+    /** Earliest active-period start (epoch seconds), used to sort "recent first". */
+    val firstActiveStart: Long?
+        get() = activePeriods.mapNotNull { it.start }.minOrNull()
+
+    fun isRelevant(forStopId: String): Boolean = forStopId in affectedStopIds
+
+    fun isRelevant(forRouteIds: Set<String>): Boolean =
+        affectedRouteIds.any { it in forRouteIds }
 }

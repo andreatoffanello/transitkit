@@ -1,0 +1,45 @@
+appId: com.transitkit.appalcart
+---
+# Journey multimodale ASU College St → 610 State Farm Rd
+# (MOTIS conferma 3+ itineraries WALK + BUS + WALK).
+# Location simulator: 36.215706,-81.679642 (ASU College St)
+# Origin auto = "La mia posizione"
+# Destination = pin libero su 36.204979,-81.659981 ("610 State Farm Rd")
+
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+
+# Tap destination "A..." nel planner card
+- tapOn:
+    point: "50%, 28%"
+- waitForAnimationToEnd
+
+# In LocationPickerView, tap "Scegli sulla mappa"
+- tapOn: "Scegli sulla mappa"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+# Mappa centrata su user location (ASU College St). Trascino a sud-est
+# verso 610 State Farm Rd. Distanza ~1.7km, swipe verso top-right.
+- swipe:
+    start: "70%, 30%"
+    end: "30%, 70%"
+    duration: 800
+
+- waitForAnimationToEnd:
+    timeout: 2500
+
+- tapOn: "Conferma posizione"
+- waitForAnimationToEnd:
+    timeout: 5000
+
+- takeScreenshot: flows/screenshots/multimodal_list
+
+# Tap sul primo journey nella lista per aprire detail
+- tapOn:
+    point: "50%, 38%"
+- waitForAnimationToEnd:
+    timeout: 3000
+
+- takeScreenshot: flows/screenshots/multimodal_detail

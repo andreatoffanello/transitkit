@@ -1,0 +1,13 @@
+appId: com.transitkit.appalcart
+---
+# Verifica: deeplink mappa con preview card fermata — mappa si posiziona sulla fermata
+
+- launchApp:
+    clearState: false
+- openLink: "transitkit://map/stop/appalcart_asu_college_st_station"
+- waitForAnimationToEnd
+
+# Preview card deve apparire
+- assertVisible:
+    id: "stop_preview_card"
+- assertVisible: "ASU College St Station"

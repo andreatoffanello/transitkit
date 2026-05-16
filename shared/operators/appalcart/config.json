@@ -37,7 +37,7 @@
     "enableGeolocation": true,
     "enableFavorites": true,
     "enableNotifications": true,
-    "useRemoteEngine": false
+    "useRemoteEngine": true
   },
   "exclude_patterns": [],
   "terminal_overrides": {},

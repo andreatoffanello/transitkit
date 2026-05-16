@@ -1,0 +1,14 @@
+appId: com.transitkit.appalcart
+---
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      text: "Home"
+    timeout: 6000
+- openLink: "transitkit://map/stop/appalcart_asu_college_st_station"
+- extendedWaitUntil:
+    visible:
+      text: "ASU College St Station"
+    timeout: 5000
+- assertVisible: "ASU College St Station"

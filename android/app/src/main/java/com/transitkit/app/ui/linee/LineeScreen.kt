@@ -9,10 +9,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,9 +30,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -53,13 +48,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.pluralStringResource
@@ -68,7 +61,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -79,6 +71,7 @@ import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitColors
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.data.model.ScheduleRoute
+import com.transitkit.app.ui.components.TransitSearchBar
 import com.transitkit.app.ui.orari.OrariTab
 import com.transitkit.app.ui.orari.OrariViewModel
 import androidx.compose.foundation.lazy.LazyRow
@@ -95,6 +88,7 @@ fun LineeScreen(
     val routes by viewModel.routes.collectAsStateWithLifecycle()
     val stopNamesByRouteId by viewModel.stopNamesByRouteId.collectAsStateWithLifecycle()
     val recentRouteIds by viewModel.recentRouteIds.collectAsStateWithLifecycle()
+    val liveCountByRouteId by viewModel.liveCountByRouteId.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val scheduleLoadError by viewModel.scheduleLoadError.collectAsStateWithLifecycle()
 
@@ -108,6 +102,15 @@ fun LineeScreen(
             .fillMaxSize()
             .background(colors.background),
     ) {
+        Text(
+            text = stringResource(R.string.tab_linee),
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 17.sp,
+            ),
+            color = colors.textPrimary,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+        )
         if (scheduleLoadError != null) {
             Row(
                 modifier = Modifier
@@ -125,9 +128,11 @@ fun LineeScreen(
         }
 
         // Search bar
-        LineeSearchBar(
+        TransitSearchBar(
             query = searchQuery,
+            placeholder = stringResource(R.string.search_placeholder_lines),
             onQueryChange = viewModel::onSearchQueryChanged,
+            a11yTag = "search_lines",
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
         )
 
@@ -146,75 +151,12 @@ fun LineeScreen(
             query = searchQuery,
             colors = colors,
             recentRouteIds = recentRouteIds,
+            liveCountByRouteId = liveCountByRouteId,
             onRouteClick = { routeId ->
                 viewModel.recordRouteVisit(routeId)
                 onNavigateToLine(routeId)
             },
         )
-    }
-}
-
-// ---------------------------------------------------------------------------
-// Search bar
-// ---------------------------------------------------------------------------
-
-@Composable
-private fun LineeSearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = TransitTheme.colors
-    val focusManager = LocalFocusManager.current
-    val isDark = isSystemInDarkTheme()
-    val searchBg = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f)
-    val searchBorder = colors.accent.copy(alpha = 0.4f)
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(searchBg)
-            .border(1.dp, searchBorder, RoundedCornerShape(24.dp))
-            .padding(horizontal = 14.dp, vertical = 11.dp),
-    ) {
-        Icon(painterResource(LucideIcons.Search), contentDescription = null, tint = colors.accent, modifier = Modifier.size(18.dp))
-        Spacer(Modifier.width(8.dp))
-        Box(modifier = Modifier.weight(1f)) {
-            if (query.isEmpty()) {
-                Text(
-                    text = stringResource(R.string.search_placeholder_lines),
-                    style = TextStyle(color = colors.textSecondary, fontSize = 15.sp),
-                )
-            }
-            BasicTextField(
-                value = query,
-                onValueChange = onQueryChange,
-                singleLine = true,
-                textStyle = TextStyle(color = colors.textPrimary, fontSize = 15.sp),
-                cursorBrush = SolidColor(colors.accent),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .semantics { contentDescription = "search_lines" },
-            )
-        }
-        if (query.isNotEmpty()) {
-            Spacer(Modifier.width(4.dp))
-            IconButton(
-                onClick = { onQueryChange("") },
-                modifier = Modifier.size(20.dp),
-            ) {
-                Icon(
-                    painter = painterResource(LucideIcons.X),
-                    contentDescription = stringResource(R.string.search_clear),
-                    tint = colors.textTertiary,
-                    modifier = Modifier.size(16.dp),
-                )
-            }
-        }
     }
 }
 
@@ -229,6 +171,7 @@ private fun LineeContent(
     query: String,
     colors: TransitColors,
     recentRouteIds: List<String> = emptyList(),
+    liveCountByRouteId: Map<String, Int> = emptyMap(),
     onRouteClick: (routeId: String) -> Unit = {},
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -292,7 +235,7 @@ private fun LineeContent(
                         .border(1.dp, colors.glassBorder, RoundedCornerShape(16.dp)),
                 ) {
                     recentRoutes.forEachIndexed { idx, route ->
-                        RouteListItem(route, stopNamesByRouteId[route.id], colors) { onRouteClick(route.id) }
+                        RouteListItem(route, stopNamesByRouteId[route.id], liveCountByRouteId[route.id] ?: 0, colors) { onRouteClick(route.id) }
                         if (idx < recentRoutes.lastIndex) {
                             HorizontalDivider(modifier = Modifier.padding(start = 76.dp), color = colors.separator, thickness = 0.5.dp)
                         }
@@ -368,7 +311,7 @@ private fun LineeContent(
                                     .border(1.dp, colors.glassBorder, RoundedCornerShape(16.dp)),
                             ) {
                                 typeRoutes.forEachIndexed { idx, route ->
-                                    RouteListItem(route, stopNamesByRouteId[route.id], colors) { onRouteClick(route.id) }
+                                    RouteListItem(route, stopNamesByRouteId[route.id], liveCountByRouteId[route.id] ?: 0, colors) { onRouteClick(route.id) }
                                     if (idx < typeRoutes.lastIndex) {
                                         HorizontalDivider(modifier = Modifier.padding(start = 76.dp), color = colors.separator, thickness = 0.5.dp)
                                     }
@@ -395,7 +338,7 @@ private fun LineeContent(
                         .background(colors.bgSecondary)
                         .border(1.dp, colors.glassBorder, shape),
                 ) {
-                    RouteListItem(route, stopNamesByRouteId[route.id], colors) { onRouteClick(route.id) }
+                    RouteListItem(route, stopNamesByRouteId[route.id], liveCountByRouteId[route.id] ?: 0, colors) { onRouteClick(route.id) }
                     if (!isLast) {
                         HorizontalDivider(modifier = Modifier.padding(start = 76.dp), color = colors.separator, thickness = 0.5.dp)
                     }
@@ -428,6 +371,7 @@ private fun SectionLabel(text: String, colors: TransitColors) {
 private fun RouteListItem(
     route: ScheduleRoute,
     stopSequence: String?,
+    liveCount: Int,
     colors: TransitColors,
     onClick: () -> Unit = {},
 ) {
@@ -478,7 +422,7 @@ private fun RouteListItem(
                     fontSize = 11.sp,
                     color = colors.textTertiary,
                     maxLines = 1,
-                    modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE),
+                    overflow = TextOverflow.Ellipsis,
                 )
             } else {
                 route.directions.firstOrNull()?.let { dir ->
@@ -490,7 +434,37 @@ private fun RouteListItem(
             }
         }
 
+        // iOS parity (item #17): live count chip statico, prima della chevron.
+        // STATICO — niente pulse animation. RouteListItem vive in LazyColumn
+        // che ricompone periodicamente (vehicle store refresh); un
+        // `infiniteRepeatable` qui causerebbe layout instability.
+        if (liveCount > 0) {
+            LiveCountStaticBadge(count = liveCount, colors = colors)
+        }
         Icon(painterResource(LucideIcons.ChevronRight), null, tint = colors.textTertiary, modifier = Modifier.size(18.dp))
+    }
+}
+
+@Composable
+private fun LiveCountStaticBadge(count: Int, colors: TransitColors) {
+    Row(
+        modifier = Modifier
+            .background(colors.realtimeGreen.copy(alpha = 0.12f), RoundedCornerShape(50))
+            .padding(horizontal = 8.dp, vertical = 3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(5.dp)
+                .background(colors.realtimeGreen, androidx.compose.foundation.shape.CircleShape),
+        )
+        Text(
+            text = pluralStringResource(R.plurals.lines_live_count, count, count),
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.realtimeGreen,
+        )
     }
 }
 

@@ -62,6 +62,8 @@ targets:
         UIBackgroundModes:
           - fetch
           - remote-notification
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
         CFBundleURLTypes:
           - CFBundleURLSchemes:
               - transitkit

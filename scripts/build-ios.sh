@@ -1,8 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-# Usage: ./scripts/build-ios.sh <operator_id>
-# Copies config.json and schedules.json into the Xcode project, then builds.
+# Usage: ./scripts/build-ios.sh <operator_id> [configuration]
+#   operator_id    — folder name under shared/operators/ and output/
+#   configuration  — Debug | Release (default: Debug — required for local CMS smoke test)
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -12,13 +13,21 @@ RESOURCES_DIR="$IOS_DIR/TransitKit/Sources/Resources"
 # ---------- Validate arguments ----------
 
 if [ $# -lt 1 ]; then
-    echo "Usage: $0 <operator_id>"
-    echo "  operator_id  — folder name under shared/operators/ and output/"
+    echo "Usage: $0 <operator_id> [Debug|Release]"
+    echo "  operator_id    — folder name under shared/operators/ and output/"
+    echo "  configuration  — defaults to Debug (so #if DEBUG hooks engage —"
+    echo "                   PushApiClient targets http://localhost:3000)."
+    echo "                   Pass 'Release' for production-style validation."
     exit 1
 fi
 
 OPERATOR_ID="$1"
-echo "==> Building TransitKit for operator: $OPERATOR_ID"
+CONFIGURATION="${2:-Debug}"
+case "$CONFIGURATION" in
+    Debug|Release) ;;
+    *) echo "ERROR: configuration must be Debug or Release (got '$CONFIGURATION')"; exit 1 ;;
+esac
+echo "==> Building TransitKit for operator: $OPERATOR_ID (configuration: $CONFIGURATION)"
 
 # ---------- Copy config.json ----------
 
@@ -91,10 +100,11 @@ xcodebuild \
     -scheme TransitKit \
     -sdk iphonesimulator \
     -destination "generic/platform=iOS Simulator" \
-    -configuration Release \
+    -configuration "$CONFIGURATION" \
     OPERATOR_ID="$OPERATOR_ID" \
+    CODE_SIGNING_ALLOWED=NO \
     build \
     2>&1 | tail -20
 
 echo ""
-echo "==> Build complete for operator: $OPERATOR_ID"
+echo "==> Build complete for operator: $OPERATOR_ID ($CONFIGURATION)"

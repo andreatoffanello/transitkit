@@ -24,11 +24,16 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -281,13 +286,37 @@ fun SettingsScreen(
     onBack: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {},
     onNavigateToOrari: () -> Unit = {},
+    onNavigateToDeveloperMode: () -> Unit = {},
 ) {
     val favoriteStops by viewModel.favoriteStops.collectAsStateWithLifecycle()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
+    val notificationsBusy by viewModel.notificationsBusy.collectAsStateWithLifecycle()
     val config = viewModel.operatorConfig
     val colors = TransitTheme.colors
     val favoriteList = favoriteStops
     val currentLanguage = java.util.Locale.getDefault().displayLanguage.replaceFirstChar { it.uppercaseChar() }
+
+    // ── Developer-mode 7-tap unlock ─────────────────────────────────────────
+    var versionTaps by remember { mutableStateOf(0) }
+    var developerModeUnlocked by remember { mutableStateOf(false) }
+    LaunchedEffect(versionTaps) {
+        if (versionTaps >= 7 && !developerModeUnlocked) developerModeUnlocked = true
+    }
+
+    // ── POST_NOTIFICATIONS runtime permission (Android 13+) ─────────────────
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) viewModel.onNotificationsPermissionGranted()
+    }
+    val notifPermissionGranted: () -> Boolean = {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            androidx.core.content.ContextCompat.checkSelfPermission(
+                context, android.Manifest.permission.POST_NOTIFICATIONS
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        } else true
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -388,7 +417,20 @@ fun SettingsScreen(
                         trailing = {
                             Switch(
                                 checked = notificationsEnabled,
-                                onCheckedChange = { viewModel.setNotificationsEnabled(it) },
+                                enabled = !notificationsBusy,
+                                onCheckedChange = { wantOn ->
+                                    if (wantOn) {
+                                        if (notifPermissionGranted()) {
+                                            viewModel.onNotificationsPermissionGranted()
+                                        } else {
+                                            permissionLauncher.launch(
+                                                android.Manifest.permission.POST_NOTIFICATIONS
+                                            )
+                                        }
+                                    } else {
+                                        viewModel.onNotificationsDisabled()
+                                    }
+                                },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = Color.White,
                                     checkedTrackColor = colors.accent,
@@ -459,7 +501,21 @@ fun SettingsScreen(
                     icon = LucideIcons.Shield,
                     title = stringResource(R.string.settings_versione),
                     subtitle = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                    onClick = { versionTaps += 1 },
                 )
+                if (developerModeUnlocked) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(start = 46.dp),
+                        color = TransitTheme.colors.separator,
+                        thickness = 0.5.dp,
+                    )
+                    SettingsRow(
+                        icon = LucideIcons.Settings,
+                        title = stringResource(R.string.dev_mode_row_title),
+                        subtitle = stringResource(R.string.dev_mode_row_subtitle),
+                        onClick = onNavigateToDeveloperMode,
+                    )
+                }
             }
             Text(
                 text = stringResource(R.string.settings_disclaimer_body, config.name, config.fullName),

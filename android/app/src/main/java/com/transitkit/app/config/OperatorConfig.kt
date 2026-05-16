@@ -104,6 +104,10 @@ data class OperatorConfig(
     val map: MapConfig,
     val features: FeaturesConfig,
     @Json(name = "routing_endpoint") val routingEndpoint: String? = null,
+    /** Base URL of the transitkit-console CMS used to register test devices,
+     *  e.g. `https://console.transitkit.app`. Optional — when missing the
+     *  developer-mode "Register" button surfaces an error rather than firing. */
+    @Json(name = "console_api_url") val consoleApiUrl: String? = null,
     @Json(name = "gtfs_rt") val gtfsRt: GtfsRtConfig? = null,
     @Json(name = "headsign_map") val headsignMap: Map<String, String>? = null,
     val contact: ContactConfig? = null,

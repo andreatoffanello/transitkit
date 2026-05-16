@@ -6,6 +6,8 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.transitkit.app.data.push.PushNotificationManager
+import dagger.Lazy
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -21,6 +23,9 @@ private val KEY_FAVORITE_ROUTE_IDS = stringPreferencesKey("favorite_route_ids_or
 @Singleton
 class FavoritesStore @Inject constructor(
     @ApplicationContext private val context: Context,
+    // Lazy to avoid initializing Firebase before the user grants notification
+    // permission. Resolved on first toggle of a route favorite.
+    private val pushManager: Lazy<PushNotificationManager>,
 ) {
     // -------------------------------------------------------------------------
     // Stop favorites
@@ -73,6 +78,9 @@ class FavoritesStore @Inject constructor(
                 prefs[KEY_FAVORITE_ROUTE_IDS] = (listOf(routeId) + current).joinToString(",")
             }
         }
+        // Mirror to FCM. PushNotificationManager no-ops if Firebase isn't
+        // configured or the user hasn't granted notification permission.
+        pushManager.get().subscribeRoute(routeId)
     }
 
     suspend fun removeFavoriteRoute(routeId: String) {
@@ -81,5 +89,6 @@ class FavoritesStore @Inject constructor(
                 .split(",").filter { it.isNotEmpty() }
             prefs[KEY_FAVORITE_ROUTE_IDS] = current.filter { it != routeId }.joinToString(",")
         }
+        pushManager.get().unsubscribeRoute(routeId)
     }
 }

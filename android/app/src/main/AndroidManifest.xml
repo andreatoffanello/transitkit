@@ -32,5 +32,21 @@
             </intent-filter>
         </activity>
 
+        <!-- FCM messaging service: token refresh + foreground message receive -->
+        <service
+            android:name=".data.push.TransitKitMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="default" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@android:color/holo_blue_light" />
+
     </application>
 </manifest>

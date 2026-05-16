@@ -480,4 +480,25 @@
     <string name="vehicle_next_stop_caption">PROSSIMA FERMATA</string>
     <string name="vehicle_live_tracking">TRACCIATO LIVE</string>
     <string name="vehicle_next_stop_unknown">Sconosciuta</string>
+
+    <!-- Developer mode (hidden settings panel unlocked by 7-tap on version) -->
+    <string name="dev_mode_row_title">Developer mode</string>
+    <string name="dev_mode_row_subtitle">Registra questo device per le preview CMS</string>
+    <string name="dev_mode_title">Developer mode</string>
+    <string name="dev_mode_device_identity">Identità device</string>
+    <string name="dev_mode_fcm_token">FCM token</string>
+    <string name="dev_mode_no_token">Token FCM non ancora disponibile. Attiva le notifiche in Impostazioni prima.</string>
+    <string name="dev_mode_copy_token">Copia</string>
+    <string name="dev_mode_register_section">Registra come device test</string>
+    <string name="dev_mode_device_label">Etichetta device</string>
+    <string name="dev_mode_register_button">Registra questo device</string>
+    <string name="dev_mode_registering">Registrazione…</string>
+    <string name="dev_mode_register_footnote">L\'operatore vedrà questo device nella lista \"Invia preview\" del CMS.</string>
+    <string name="dev_mode_status">Stato</string>
+    <string name="dev_mode_operator_id">Operator ID</string>
+    <string name="dev_mode_firebase">Firebase</string>
+    <string name="dev_mode_configured">configurato</string>
+    <string name="dev_mode_missing_plist">google-services.json mancante</string>
+    <string name="dev_mode_console_api">Console API</string>
+    <string name="dev_mode_last_error">Ultimo errore</string>
 </resources>

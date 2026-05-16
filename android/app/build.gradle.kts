@@ -9,6 +9,12 @@ plugins {
     alias(libs.plugins.wire)
 }
 
+// google-services is applied at the bottom of the file conditionally —
+// only when the operator-specific google-services.json is present in
+// app/. Missing file is non-fatal so operators without push enabled
+// can still build (PushNotificationManager will gracefully no-op).
+val googleServicesJson = file("google-services.json")
+
 val localProps = Properties()
 val localPropsFile = rootProject.file("local.properties")
 if (localPropsFile.exists()) {
@@ -120,4 +126,17 @@ dependencies {
     implementation(libs.coil.network)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.accompanist.permissions)
+
+    // Firebase Cloud Messaging — wired regardless of whether
+    // google-services.json is present so the code compiles; the
+    // PushNotificationManager guards runtime against missing config.
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging.ktx)
+}
+
+// Apply the google-services plugin only when the operator-specific
+// json is in place. This keeps the build green for operators not yet
+// onboarded to Firebase.
+if (googleServicesJson.exists()) {
+    apply(plugin = "com.google.gms.google-services")
 }

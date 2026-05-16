@@ -19,6 +19,8 @@ moshi = "1.15.2"
 accompanist = "0.37.3"
 mapbox = "11.9.0"
 mapboxCompose = "11.9.0"
+firebase-bom = "33.7.0"
+google-services = "4.4.2"
 
 [libraries]
 # Core
@@ -83,6 +85,10 @@ kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 # Accompanist (permissions)
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist" }
 
+# Firebase (BOM controls version of all firebase-* libs)
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
+firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
@@ -90,3 +96,4 @@ kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "ko
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ksp = { id = "com.google.devtools.ksp", version = "2.1.20-1.0.32" }
 wire = { id = "com.squareup.wire", version.ref = "wire" }
+google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }

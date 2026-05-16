@@ -292,11 +292,17 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                             launchSingleTop = true; restoreState = true
                         }
                     },
+                    onNavigateToDeveloperMode = { navController.navigate("developer_mode") },
                 )
             }
             composable("about_from_home") {
                 AboutScreen(
                     config = operatorConfig,
+                    onBack = { navController.popBackStack() },
+                )
+            }
+            composable("developer_mode") {
+                com.transitkit.app.ui.dev.DeveloperModeScreen(
                     onBack = { navController.popBackStack() },
                 )
             }

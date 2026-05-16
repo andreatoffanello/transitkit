@@ -54,3 +54,6 @@ ios/TransitKit/Sources/Services/TransitKitSecrets.swift
 # each operator manages their own Firebase project independently.
 shared/operators/*/firebase/GoogleService-Info.plist
 shared/operators/*/firebase/google-services.json
+# Build artifact: staged from shared/operators/<op>/firebase/google-services.json
+# by scripts/build-android.sh
+android/app/google-services.json

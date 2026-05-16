@@ -4341,6 +4341,40 @@
         }
       }
     },
+    "settings_notifications_active": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active for this operator's lines and service alerts."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attive per le linee di questo operatore e gli avvisi di servizio."
+          }
+        }
+      }
+    },
+    "settings_notifications_denied": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denied — enable from iOS Settings to receive alerts."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Negate — abilitale dalle Impostazioni di iOS per riceverle."
+          }
+        }
+      }
+    },
     "settings_section_about": {
       "extractionState": "manual",
       "localizations": {

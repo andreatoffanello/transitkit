@@ -3,8 +3,12 @@ import SwiftUI
 
 // MARK: - FavoritesManager
 
-/// Manages favorite stop IDs, persisted in UserDefaults.
+/// Manages favorite stop IDs and route IDs, persisted in UserDefaults.
 /// Uses the `@Observable` pattern for seamless SwiftUI integration.
+///
+/// Route favorites are mirrored to FCM topic subscriptions via
+/// `PushNotificationManager` — toggling a route on/off updates the device's
+/// per-line push subscription. Stops are local-only (no per-stop push v1).
 ///
 /// Usage:
 /// ```swift
@@ -27,13 +31,19 @@ final class FavoritesManager {
     private let stopsKey: String
     private let routesKey: String
     private let defaults: UserDefaults
+    private weak var pushManager: PushNotificationManager?
 
     // MARK: Init
 
-    init(operatorId: String = "default", defaults: UserDefaults = .standard) {
+    init(
+        operatorId: String = "default",
+        defaults: UserDefaults = .standard,
+        pushManager: PushNotificationManager? = nil
+    ) {
         self.stopsKey = "favorites_stops_\(operatorId)"
         self.routesKey = "favorites_routes_\(operatorId)"
         self.defaults = defaults
+        self.pushManager = pushManager
         self.favoriteStopIds = defaults.stringArray(forKey: stopsKey) ?? []
         self.favoriteRouteIds = defaults.stringArray(forKey: routesKey) ?? []
     }
@@ -89,10 +99,12 @@ final class FavoritesManager {
         if let index = favoriteRouteIds.firstIndex(of: routeId) {
             favoriteRouteIds.remove(at: index)
             saveRoutes()
+            Task { [pushManager] in await pushManager?.unsubscribeRoute(routeId) }
             return false
         } else {
             favoriteRouteIds.insert(routeId, at: 0)
             saveRoutes()
+            Task { [pushManager] in await pushManager?.subscribeRoute(routeId) }
             return true
         }
     }

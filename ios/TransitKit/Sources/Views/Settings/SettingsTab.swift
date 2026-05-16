@@ -6,8 +6,13 @@ struct SettingsTab: View {
     @Environment(ScheduleStore.self) private var store
     @Environment(FavoritesManager.self) private var favoritesManager
     @Environment(LocationManager.self) private var locationManager
+    @Environment(PushNotificationManager.self) private var pushManager
 
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
+    @State private var notificationsBusy = false
+    @State private var versionTaps = 0
+    @State private var developerModeUnlocked = false
+    @State private var showDeveloperMode = false
 
     private var config: OperatorConfig? {
         try? ConfigLoader.load()
@@ -51,16 +56,17 @@ struct SettingsTab: View {
                         if config.features.enableNotifications {
                             sectionHeader(String(localized: "settings_section_notifications"))
                             GlassCard(cornerRadius: 16) {
-                                Toggle(isOn: $notificationsEnabled) {
+                                Toggle(isOn: notificationsBinding) {
                                     settingsRow(
                                         icon: .bell,
                                         iconColor: AppTheme.accent,
                                         title: String(localized: "settings_notifications"),
-                                        detail: String(localized: "settings_notifications_footer"),
+                                        detail: notificationsDetailText,
                                         tappable: false
                                     )
                                 }
                                 .tint(AppTheme.accent)
+                                .disabled(notificationsBusy || !pushManager.firebaseConfigured)
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 4)
                             }
@@ -124,6 +130,27 @@ struct SettingsTab: View {
                                         )
                                     }
                                 )
+                                .contentShape(Rectangle())
+                                .onTapGesture { onVersionTapped() }
+
+                                if developerModeUnlocked {
+                                    Rectangle()
+                                        .fill(AppTheme.separatorLine)
+                                        .frame(height: 0.5)
+                                        .padding(.leading, 56)
+                                    Button {
+                                        showDeveloperMode = true
+                                    } label: {
+                                        settingsRow(
+                                            icon: .settings,
+                                            iconColor: AppTheme.accent,
+                                            title: "Developer mode",
+                                            detail: "Register this device for CMS preview",
+                                            tappable: true
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
+                                }
                             }
                         }
 
@@ -146,6 +173,58 @@ struct SettingsTab: View {
             .background(AppTheme.background.ignoresSafeArea())
             .navigationTitle(String(localized: "tab_settings"))
             .navigationBarTitleDisplayMode(.large)
+            .navigationDestination(isPresented: $showDeveloperMode) {
+                DeveloperModeView(
+                    operatorId:    config?.id ?? "unknown",
+                    consoleApiUrl: config?.consoleApiUrl
+                )
+            }
+        }
+        .onAppear {
+            Task { await pushManager.refreshAuthorizationStatus() }
+        }
+    }
+
+    // MARK: - Notifications binding
+
+    private var notificationsBinding: Binding<Bool> {
+        Binding(
+            get: {
+                notificationsEnabled && pushManager.authorizationStatus == .authorized
+            },
+            set: { newValue in
+                notificationsBusy = true
+                Task {
+                    defer { Task { @MainActor in notificationsBusy = false } }
+                    if newValue {
+                        let granted = await pushManager.requestAuthorization()
+                        notificationsEnabled = granted
+                    } else {
+                        await pushManager.disableAndUnsubscribe()
+                        notificationsEnabled = false
+                    }
+                }
+            }
+        )
+    }
+
+    private var notificationsDetailText: String {
+        switch pushManager.authorizationStatus {
+        case .denied:
+            String(localized: "settings_notifications_denied")
+        case .authorized where notificationsEnabled:
+            String(localized: "settings_notifications_active")
+        default:
+            String(localized: "settings_notifications_footer")
+        }
+    }
+
+    // MARK: - Hidden developer mode unlock
+
+    private func onVersionTapped() {
+        versionTaps += 1
+        if versionTaps >= 7 && !developerModeUnlocked {
+            developerModeUnlocked = true
         }
     }
 

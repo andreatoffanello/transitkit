@@ -30,6 +30,31 @@ Documentazione operativa completa: [README](https://github.com/andreatoffanello/
 
 ---
 
+## CMS NOTIFICHE PUSH (repo separato)
+
+Le push notification agli utenti delle app sono gestite da un CMS multi-tenant separato che gli operatori usano per comporre e inviare messaggi.
+
+- **Repo:** https://github.com/andreatoffanello/transitkit-console
+- **Default URL:** `cms.transitkit.app` (TBD finale) — sottodomini custom via CNAME per operatori
+- **Stack:** Nuxt + Supabase + Firebase Cloud Messaging
+- **Modello targeting:** FCM Topics — i favoriti restano lato app (privacy), il server pubblica per topic
+
+**Cosa cambia in `transit-engine` quando integriamo:**
+
+- iOS (`ios/TransitKit/`): Firebase iOS SDK via SPM, capability Push Notifications, `GoogleService-Info.plist` per operatore in `Resources/Operators/{OPERATOR_ID}/`
+- Android (`android/app/`): dipendenza `firebase-messaging-ktx`, `google-services-{OPERATOR_ID}.json` per build flavor, permission `POST_NOTIFICATIONS`
+- Hook subscribe/unsubscribe a topic FCM `{operator_id}_all` e `{operator_id}_line_{line_id}` su consenso push e modifica favoriti
+
+**Convenzione topic FCM:**
+- `{operator_id}_all` → tutti gli utenti dell'app (subscribe automatico al consenso)
+- `{operator_id}_line_{route_id}` → utenti che hanno la linea nei favoriti
+
+**NEVER** mandare i favoriti al server — restano locali (`@AppStorage` iOS, DataStore Android). FCM gestisce subscription internamente.
+
+Documentazione completa: [`transitkit-console/CLAUDE.md`](https://github.com/andreatoffanello/transitkit-console/blob/main/CLAUDE.md).
+
+---
+
 ## IDENTIFICATIVI PROGETTO (pinned — non toccare senza aggiornare la macchina)
 
 - Scheme: `TransitKit`

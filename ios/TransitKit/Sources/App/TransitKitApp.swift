@@ -4,12 +4,14 @@ import SwiftUI
 
 @main
 struct TransitKitApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var store: ScheduleStore?
     @State private var favoritesManager: FavoritesManager?
     @State private var searchHistoryStore: SearchHistoryStore?
     @State private var locationManager = LocationManager()
     @State private var vehicleStore: VehicleStore = VehicleStore(vehiclePositionsUrl: nil)
     @State private var alertStore: AlertStore = AlertStore()
+    @State private var pushManager: PushNotificationManager?
     @State private var operatorConfig: OperatorConfig?
     @State private var loadingConfig: OperatorConfig?
     @State private var configError: String?
@@ -28,7 +30,7 @@ struct TransitKitApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if let store, let favoritesManager, let searchHistoryStore, let operatorConfig {
+                if let store, let favoritesManager, let searchHistoryStore, let operatorConfig, let pushManager {
                     ContentView(config: operatorConfig)
                         .environment(store)
                         .environment(favoritesManager)
@@ -36,6 +38,7 @@ struct TransitKitApp: App {
                         .environment(locationManager)
                         .environment(vehicleStore)
                         .environment(alertStore)
+                        .environment(pushManager)
                         .environment(router)
                         .environment(connectionsStore)
                         .tint(AppTheme.accent)
@@ -135,7 +138,11 @@ struct TransitKitApp: App {
             loadingConfig = config
             let scheduleStore = ScheduleStore(operatorId: config.id, apiUrl: config.apiUrl)
             scheduleStore.configure(with: config)
-            favoritesManager = FavoritesManager(operatorId: config.id)
+            let push = PushNotificationManager(operatorId: config.id)
+            AppDelegate.pushManager = push
+            pushManager = push
+            let favoritesMgr = FavoritesManager(operatorId: config.id, pushManager: push)
+            favoritesManager = favoritesMgr
             searchHistoryStore = SearchHistoryStore(operatorId: config.id)
             await scheduleStore.load()
             store = scheduleStore

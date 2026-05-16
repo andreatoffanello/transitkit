@@ -43,6 +43,26 @@ fi
 cp "$SCHEDULES_SRC" "$RESOURCES_DIR/schedules.json"
 echo "  ✓ Copied schedules.json"
 
+# ---------- Copy GoogleService-Info.plist (optional — push notifications) ----------
+#
+# Each operator that has push notifications enabled drops a copy of their
+# Firebase iOS app's plist at:
+#   shared/operators/<op>/firebase/GoogleService-Info.plist
+#
+# Missing file is non-fatal: the app builds and runs, but
+# PushNotificationManager logs a warning and disables push.
+
+FIREBASE_PLIST_SRC="$ROOT_DIR/shared/operators/$OPERATOR_ID/firebase/GoogleService-Info.plist"
+FIREBASE_PLIST_DST="$RESOURCES_DIR/GoogleService-Info.plist"
+if [ -f "$FIREBASE_PLIST_SRC" ]; then
+    cp "$FIREBASE_PLIST_SRC" "$FIREBASE_PLIST_DST"
+    echo "  ✓ Copied GoogleService-Info.plist"
+else
+    rm -f "$FIREBASE_PLIST_DST"
+    echo "  ⚠ No Firebase plist for $OPERATOR_ID — push notifications will be disabled in the build"
+    echo "    Drop one at: $FIREBASE_PLIST_SRC"
+fi
+
 # ---------- Run XcodeGen (if available and project.yml exists) ----------
 
 if [ -f "$IOS_DIR/project.yml" ]; then

@@ -26,6 +26,10 @@ struct OperatorConfig: Codable {
     let pointsOfSale: [PointOfSale]?
     let privacyUrl: String?
     let routingEndpoint: String?
+    /// Base URL of the transitkit-console CMS used to register test devices,
+    /// e.g. `https://console.transitkit.app`. Optional — when missing the
+    /// developer-mode "Register" button surfaces an error rather than firing.
+    let consoleApiUrl: String?
     let gtfsRt: GtfsRtConfig?
     let headsignMap: [String: String]?
     let services: [ServiceInfo]?

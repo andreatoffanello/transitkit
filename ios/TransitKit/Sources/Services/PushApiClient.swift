@@ -9,6 +9,27 @@ import UIKit
 /// The base URL comes from `OperatorConfig.consoleApiUrl`. When the field
 /// is missing in config.json the client refuses to send.
 enum PushApiClient {
+    /// Resolve the CMS base URL.
+    ///
+    /// - Debug build:   `TRANSITKIT_LOCAL_CONSOLE` env → else `http://localhost:3000`.
+    ///                  The operator's production URL is ignored so the dev
+    ///                  loop never accidentally hits prod.
+    /// - Release build: the operator's `console_api_url` from config.json.
+    ///
+    /// The Info.plist `NSAllowsLocalNetworking` exception covers the http://
+    /// localhost case for Debug.
+    static func resolveBaseUrl(operatorConsoleUrl: String?) -> String? {
+        #if DEBUG
+        if let envOverride = ProcessInfo.processInfo.environment["TRANSITKIT_LOCAL_CONSOLE"],
+           !envOverride.isEmpty {
+            return envOverride
+        }
+        return "http://localhost:3000"
+        #else
+        return operatorConsoleUrl
+        #endif
+    }
+
     struct RegisterTestDeviceRequest: Encodable {
         let operator_id: String
         let fcm_token: String
@@ -40,7 +61,8 @@ enum PushApiClient {
         fcmToken: String,
         label: String
     ) async throws {
-        guard let base = consoleBaseUrl, !base.isEmpty else { throw Failure.missingBaseUrl }
+        let resolved = resolveBaseUrl(operatorConsoleUrl: consoleBaseUrl)
+        guard let base = resolved, !base.isEmpty else { throw Failure.missingBaseUrl }
         guard let url  = URL(string: base.trimmingCharacters(in: .init(charactersIn: "/")) + "/api/test-devices/register") else {
             throw Failure.invalidUrl
         }

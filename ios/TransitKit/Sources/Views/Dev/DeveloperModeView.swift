@@ -94,10 +94,8 @@ struct DeveloperModeView: View {
                 LabeledContent("Operator ID",   value: operatorId)
                 LabeledContent("Authorization", value: authStatusLabel)
                 LabeledContent("Firebase",      value: push.firebaseConfigured ? "configured" : "missing plist")
-                if let consoleApiUrl, !consoleApiUrl.isEmpty {
-                    LabeledContent("Console API", value: consoleApiUrl)
-                        .font(.system(.body, design: .monospaced))
-                }
+                LabeledContent("Console API", value: resolvedConsoleUrl)
+                    .font(.system(.body, design: .monospaced))
                 if let err = push.lastError {
                     LabeledContent("Last error", value: err)
                         .foregroundStyle(AppTheme.realtimeRed)
@@ -113,6 +111,10 @@ struct DeveloperModeView: View {
                 label = PushApiClient.defaultDeviceLabel()
             }
         }
+    }
+
+    private var resolvedConsoleUrl: String {
+        PushApiClient.resolveBaseUrl(operatorConsoleUrl: consoleApiUrl) ?? "—"
     }
 
     private var authStatusLabel: String {

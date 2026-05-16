@@ -49,3 +49,8 @@ android/app/src/main/res/values/secrets.xml
 ios/TransitKit/Sources/Services/TransitKitSecrets.swift
 *.keystore
 *.jks
+
+# Firebase per-operator config — bundle-restricted but kept out of git so
+# each operator manages their own Firebase project independently.
+shared/operators/*/firebase/GoogleService-Info.plist
+shared/operators/*/firebase/google-services.json

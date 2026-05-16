@@ -434,4 +434,24 @@
     <string name="vehicle_next_stop_caption">PROSSIMA FERMATA</string>
     <string name="vehicle_live_tracking">TRACCIATO LIVE</string>
     <string name="vehicle_next_stop_unknown">Sconosciuta</string>
+
+    <!-- Push notification channel -->
+    <string name="notification_channel_default_name">Avvisi e aggiornamenti</string>
+    <string name="notification_channel_default_description">Comunicazioni dell\'operatore: avvisi di servizio, modifiche e novità sulle tue linee.</string>
+
+    <!-- Onboarding stories -->
+    <string name="onb_welcome_title">Benvenuto in AppalRider</string>
+    <string name="onb_welcome_body">Orari, fermate, percorsi e mezzi AppalCART in tempo reale — tutto in un\'app sola.</string>
+    <string name="onb_welcome_cta">Iniziamo</string>
+    <string name="onb_location_title">Trova fermate vicino a te</string>
+    <string name="onb_location_body">Mostriamo le fermate vicine e gli orari più rilevanti. La posizione resta sul telefono — non viene mai mandata a nessuno.</string>
+    <string name="onb_location_cta">Abilita posizione</string>
+    <string name="onb_location_skip">Forse più tardi</string>
+    <string name="onb_notif_title">Solo quello che ti serve</string>
+    <string name="onb_notif_body">Ti avviseremo solo per deviazioni e disservizi sulle linee che usi. Niente spam, mai.</string>
+    <string name="onb_notif_cta">Attiva notifiche</string>
+    <string name="onb_notif_skip">Forse più tardi</string>
+    <string name="onb_done_title">Pronto a partire</string>
+    <string name="onb_done_body">Aggiungi le tue fermate ai preferiti per averle sempre a portata di tap.</string>
+    <string name="onb_done_cta">Inizia</string>
 </resources>

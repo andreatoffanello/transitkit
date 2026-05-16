@@ -1,6 +1,36 @@
 # transit-engine / TransitKit
 
 
+## BRAND PIPELINE (aggiornare loghi/icone/sfondo di un operatore)
+
+Tutti gli asset di brand per un operatore vivono in `shared/operators/{op}/brand/`:
+
+| File | Contenuto | Formato |
+|------|-----------|---------|
+| `app-icon.png` | Icona launcher con sfondo | PNG ≥1000×1000 |
+| `app-icon-foreground.png` | Bus/mascotte trasparente, soggetto nel 66% centrale | PNG ≥1000×1000 con alpha |
+| `operator-logo.jpg\|png` | Logo reale dell'operatore (sfondo opaco ok) | JPG o PNG |
+| `background.png` | Texture portrait per shader e onboarding | PNG |
+
+**Per aggiornare o aggiungere un operatore:**
+```bash
+# 1. Drop dei 4 file in shared/operators/{op}/brand/
+# 2. Un solo comando deploy su tutte le piattaforme:
+bash scripts/deploy-brand.sh {operator_id}
+# 3. Verifica visiva:
+bash scripts/build-ios.sh {operator_id}
+bash scripts/build-android.sh {operator_id}
+```
+
+**Dove finiscono gli asset (già configurato, non toccare):**
+- iOS: `AppIcon.appiconset`, `OperatorLogo.imageset`, `SourceOperatorLogo.imageset`, `OperatorBackground.imageset`
+- Android: `mipmap-*/ic_launcher*.png`, `drawable/app_logo.png`, `drawable/operator_logo.png`, `drawable/operator_background.png`
+- `brandName` (nome UI dell'app, es. "AppalRider") → campo `brandName` in `shared/operators/{op}/config.json` e `ios/.../Resources/config.json`; su Android è `app/src/main/res/values/strings.xml` → `app_name`
+
+Documentazione tecnica completa con mapping iOS/Android: `scripts/deploy-brand.sh` (header del file).
+
+---
+
 ## REALTIME PROXY (dipendenza esterna obbligatoria)
 
 Le feature real-time (posizioni veicoli, ritardi live, alert di servizio) **non** colpiscono più l'upstream dell'operatore direttamente. Tutti i client (iOS, Android, web PWA) passano attraverso un proxy HTTP dedicato:
@@ -35,7 +65,8 @@ Documentazione operativa completa: [README](https://github.com/andreatoffanello/
 Le push notification agli utenti delle app sono gestite da un CMS multi-tenant separato che gli operatori usano per comporre e inviare messaggi.
 
 - **Repo:** https://github.com/andreatoffanello/transitkit-console
-- **Default URL:** `cms.transitkit.app` (TBD finale) — sottodomini custom via CNAME per operatori
+- **Default URL:** `console.transitkit.app` — sottodomini custom via CNAME per operatori
+- **Vercel project:** `andreatoffanellos-projects/transitkit-console` (alias stabile `transitkit-console.vercel.app`)
 - **Stack:** Nuxt + Supabase + Firebase Cloud Messaging
 - **Modello targeting:** FCM Topics — i favoriti restano lato app (privacy), il server pubblica per topic
 

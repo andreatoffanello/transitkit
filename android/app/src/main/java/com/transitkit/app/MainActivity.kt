@@ -68,7 +68,6 @@ import com.transitkit.app.ui.planner.LocationPickerMapScreen
 import com.transitkit.app.ui.planner.LocationPickerScreen
 import com.transitkit.app.ui.planner.PlannerScreen
 import com.transitkit.app.ui.planner.PlannerViewModel
-import com.transitkit.app.ui.settings.AboutScreen
 import com.transitkit.app.ui.settings.SettingsScreen
 import dagger.hilt.android.AndroidEntryPoint
 import java.net.URLDecoder
@@ -250,9 +249,6 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                     onNavigateToSettings = {
                         navController.navigate(ROUTE_SETTINGS_FROM_HOME)
                     },
-                    onNavigateToAbout = {
-                        navController.navigate("about_from_home")
-                    },
                     onNavigateToAlerts = {
                         navController.navigate(Screen.Avvisi.route) {
                             popUpTo(navController.graph.startDestinationId) { saveState = true }
@@ -284,7 +280,6 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
             composable(ROUTE_SETTINGS_FROM_HOME) {
                 SettingsScreen(
                     onBack = { navController.popBackStack() },
-                    onNavigateToAbout = { navController.navigate("about_from_home") },
                     onNavigateToOrari = {
                         navController.popBackStack()
                         navController.navigate(Screen.Orari.route) {
@@ -292,18 +287,6 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                             launchSingleTop = true; restoreState = true
                         }
                     },
-                    onNavigateToDeveloperMode = { navController.navigate("developer_mode") },
-                )
-            }
-            composable("about_from_home") {
-                AboutScreen(
-                    config = operatorConfig,
-                    onBack = { navController.popBackStack() },
-                )
-            }
-            composable("developer_mode") {
-                com.transitkit.app.ui.dev.DeveloperModeScreen(
-                    onBack = { navController.popBackStack() },
                 )
             }
 

@@ -34,6 +34,14 @@ targets:
       - path: TransitKit/Sources/Resources
     settings:
       base:
+        # OPERATOR_ID is overridable from the xcodebuild CLI for white-label
+        # builds (e.g. `xcodebuild ... OPERATOR_ID=acme`). When building from
+        # the Xcode IDE there is no CLI to pass it on, so we default to
+        # `appalcart` here. Without this default the IDE resolves the bundle
+        # id to `com.transitkit.` (empty placeholder) which mismatches the
+        # bundle id baked into GoogleService-Info.plist → Firebase refuses
+        # to configure and FCM never issues a token.
+        OPERATOR_ID: appalcart
         PRODUCT_BUNDLE_IDENTIFIER: com.transitkit.${OPERATOR_ID}
         DEVELOPMENT_TEAM: ""
         INFOPLIST_FILE: TransitKit/Sources/App/Info.plist
@@ -53,10 +61,20 @@ targets:
     info:
       path: TransitKit/Sources/App/Info.plist
       properties:
-        CFBundleDisplayName: "$(PRODUCT_NAME)"
+        # White-label: il display name nello springboard e nei prompt di
+        # sistema è il brand dell'APP (AppalRider), NON dell'operatore
+        # (AppalCART) di cui mostriamo i dati. La localizzazione del brand
+        # name e della usage description in 3 lingue vive in
+        # InfoPlist.xcstrings (en/it/es-419). I valori qui sono i fallback
+        # English usati se la xcstrings non risolve.
+        CFBundleDisplayName: "AppalRider"
         CFBundleShortVersionString: "1.0"
         CFBundleVersion: "1"
-        NSLocationWhenInUseUsageDescription: "Used to find nearby stops."
+        # Apple HIG: la usage description deve spiegare il beneficio per
+        # l'utente in modo specifico, distinguere chiaramente chi accede
+        # alla posizione (AppalRider, l'app) da chi fornisce i dati
+        # (AppalCART, l'operatore), e dare reassurance sulla privacy.
+        NSLocationWhenInUseUsageDescription: "AppalRider uses your location to show AppalCART stops near you and the most relevant upcoming departures. Your location stays on your device — it's never sent to any server."
         UILaunchScreen:
           UIColorName: SystemBackground
         UIBackgroundModes:

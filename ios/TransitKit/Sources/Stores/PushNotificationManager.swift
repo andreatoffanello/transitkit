@@ -51,6 +51,9 @@ final class PushNotificationManager: NSObject {
 
     /// `appalcart_all` etc. — written once we successfully request permission.
     private var allTopic: String { "\(operatorId)_all" }
+    /// `appalcart_preview` — Debug builds only subscribe to this, so the CMS
+    /// can send previews to dev devices without touching the broadcast topic.
+    private var previewTopic: String { "\(operatorId)_preview" }
     private func lineTopic(_ routeId: String) -> String {
         "\(operatorId)_line_\(Self.topicSafe(routeId))"
     }
@@ -67,7 +70,18 @@ final class PushNotificationManager: NSObject {
         configureFirebaseIfPossible()
         UNUserNotificationCenter.current().delegate = self
         Messaging.messaging().delegate = self
-        Task { await refreshAuthorizationStatus() }
+        Task {
+            await refreshAuthorizationStatus()
+            // If push was authorized in a previous session, re-register for
+            // remote notifications. APNs returns the token via AppDelegate,
+            // FCM then fires `didReceiveRegistrationToken` and we re-flush
+            // the topic subscribes (operator-all, preview in Debug, known
+            // routes). Without this, a fresh launch never re-subscribes.
+            if firebaseConfigured, authorizationStatus == .authorized {
+                subscribePendingFlush = true
+                await registerForRemoteNotifications()
+            }
+        }
     }
 
     // MARK: Firebase configuration
@@ -165,6 +179,25 @@ final class PushNotificationManager: NSObject {
         try? await Messaging.messaging().unsubscribe(fromTopic: allTopic)
     }
 
+    /// Debug builds subscribe to a private `_preview` topic so the CMS can
+    /// send previews to dev devices without touching the broadcast topic.
+    /// Release builds never subscribe → real users never receive previews.
+    private func subscribePreviewIfDebug() async {
+        #if DEBUG
+        guard firebaseConfigured else { return }
+        do {
+            try await Messaging.messaging().subscribe(toTopic: previewTopic)
+        } catch {
+            lastError = "Subscribe \(previewTopic) failed: \(error.localizedDescription)"
+        }
+        #endif
+    }
+
+    private func unsubscribeFromPreview() async {
+        guard firebaseConfigured else { return }
+        try? await Messaging.messaging().unsubscribe(fromTopic: previewTopic)
+    }
+
     /// Subscribe to a route-specific topic. Idempotent.
     func subscribeRoute(_ routeId: String) async {
         guard firebaseConfigured, authorizationStatus == .authorized else { return }
@@ -198,6 +231,7 @@ final class PushNotificationManager: NSObject {
     func disableAndUnsubscribe() async {
         guard firebaseConfigured else { return }
         await unsubscribeFromOperatorAll()
+        await unsubscribeFromPreview()
         for routeId in subscribedRoutes {
             try? await Messaging.messaging().unsubscribe(fromTopic: lineTopic(routeId))
         }
@@ -275,6 +309,7 @@ extension PushNotificationManager: @preconcurrency MessagingDelegate {
             if self.subscribePendingFlush, fcmToken != nil {
                 self.subscribePendingFlush = false
                 await self.subscribeToOperatorAll()
+                await self.subscribePreviewIfDebug()
                 await self.resubscribeAllKnownRoutes()
             }
         }

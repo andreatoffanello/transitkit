@@ -7,8 +7,8 @@ White-label transit app engine. Single codebase, per-operator config → branded
 ```
 transit-engine/
 ├── pipeline/          # Python: GTFS → schedules.json
-├── ios/               # SwiftUI white-label app (✅ funzionante)
-├── android/           # Jetpack Compose (🔲 da costruire)
+├── ios/               # SwiftUI white-label app (✅ live, push verified)
+├── android/           # Jetpack Compose (✅ live, push verified)
 ├── web/               # Nuxt web stop pages (🔲 da costruire)
 ├── shared/
 │   └── operators/     # Per-operator: config.json + assets
@@ -42,6 +42,24 @@ cd web && npm run dev
 5. Web: aggiungi entry in `web/server/middleware/operator.ts` + custom domain su Vercel
 
 Vedi `STRATEGY.md` per il quadro completo.
+
+## Push notifications
+
+iOS e Android sono integrati end-to-end con Firebase Cloud Messaging. Modello
+**topic-based**: ogni app si iscrive a `{operator_id}_all`,
+`{operator_id}_line_{routeId}` per ogni linea favoritata, e — nelle sole
+Debug build — a `{operator_id}_preview` per ricevere le anteprime dal CMS.
+I favoriti **restano sul device** (`@AppStorage` iOS / DataStore Android),
+FCM gestisce il fan-out.
+
+Il CMS che compone e invia le notifiche è nel repo separato
+[`transitkit-console`](https://github.com/andreatoffanello/transitkit-console),
+live su [`console.transitkit.app`](https://console.transitkit.app).
+
+Dettagli implementazione:
+- iOS: `ios/TransitKit/Sources/Stores/PushNotificationManager.swift`
+- Android: `android/app/src/main/java/com/transitkit/app/data/push/PushNotificationManager.kt`
+- Convenzioni topic + flow integrazione: sezione "CMS NOTIFICHE PUSH" in `CLAUDE.md`
 
 ## Deployment (Web)
 

@@ -431,4 +431,24 @@
     <string name="vehicle_next_stop_caption">PRÓXIMA PARADA</string>
     <string name="vehicle_live_tracking">EN VIVO</string>
     <string name="vehicle_next_stop_unknown">Desconocida</string>
+
+    <!-- Push notification channel -->
+    <string name="notification_channel_default_name">Avisos y novedades</string>
+    <string name="notification_channel_default_description">Comunicaciones del operador: avisos de servicio, cambios y novedades en tus líneas.</string>
+
+    <!-- Onboarding stories -->
+    <string name="onb_welcome_title">Bienvenido a AppalRider</string>
+    <string name="onb_welcome_body">Horarios, paradas, rutas y autobuses AppalCART en vivo — todo en una sola app.</string>
+    <string name="onb_welcome_cta">Empezamos</string>
+    <string name="onb_location_title">Encuentra paradas cerca</string>
+    <string name="onb_location_body">Mostramos las paradas cercanas y las salidas más relevantes. Tu ubicación se queda en tu teléfono — nunca la enviamos.</string>
+    <string name="onb_location_cta">Activar ubicación</string>
+    <string name="onb_location_skip">Quizás más tarde</string>
+    <string name="onb_notif_title">Solo lo importante</string>
+    <string name="onb_notif_body">Te avisaremos solo de desvíos e incidencias en las rutas que usas. Nada de spam.</string>
+    <string name="onb_notif_cta">Activar notificaciones</string>
+    <string name="onb_notif_skip">Quizás más tarde</string>
+    <string name="onb_done_title">Todo listo</string>
+    <string name="onb_done_body">Agrega tus paradas habituales a favoritos para verlas con un toque.</string>
+    <string name="onb_done_cta">Comenzar</string>
 </resources>

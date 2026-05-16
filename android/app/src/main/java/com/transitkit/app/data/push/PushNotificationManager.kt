@@ -3,6 +3,7 @@ package com.transitkit.app.data.push
 import android.content.Context
 import android.util.Log
 import com.google.firebase.messaging.FirebaseMessaging
+import com.transitkit.app.BuildConfig
 import com.transitkit.app.config.OperatorConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -53,6 +54,7 @@ class PushNotificationManager @Inject constructor(
     private val operatorId: String = topicSafe(config.id)
 
     private val allTopic: String get() = "${operatorId}_all"
+    private val previewTopic: String get() = "${operatorId}_preview"
     private fun lineTopic(routeId: String) = "${operatorId}_line_${topicSafe(routeId)}"
 
     /** Probe Firebase availability. Returns false if google-services.json
@@ -107,6 +109,26 @@ class PushNotificationManager @Inject constructor(
         } catch (_: Exception) { /* best-effort */ }
     }
 
+    /** Debug builds subscribe to a private `_preview` topic so the CMS can
+     *  send previews to dev devices without touching the broadcast topic.
+     *  Release builds never subscribe → real users never receive previews. */
+    private suspend fun subscribePreviewIfDebug() {
+        if (!BuildConfig.DEBUG || !isFirebaseConfigured) return
+        try {
+            FirebaseMessaging.getInstance().subscribeToTopic(previewTopic).await()
+            Log.i(TAG, "Subscribed to $previewTopic (debug build)")
+        } catch (e: Exception) {
+            _lastError.value = "Subscribe $previewTopic failed: ${e.message}"
+        }
+    }
+
+    private suspend fun unsubscribeFromPreview() {
+        if (!isFirebaseConfigured) return
+        try {
+            FirebaseMessaging.getInstance().unsubscribeFromTopic(previewTopic).await()
+        } catch (_: Exception) { /* best-effort */ }
+    }
+
     suspend fun subscribeRoute(routeId: String) {
         if (!isFirebaseConfigured) return
         val topic = lineTopic(routeId)
@@ -131,12 +153,14 @@ class PushNotificationManager @Inject constructor(
         if (!isFirebaseConfigured) return
         ensureToken()
         subscribeToOperatorAll()
+        subscribePreviewIfDebug()
     }
 
     /** Called from the Settings toggle when the user disables push. */
     suspend fun disableAndUnsubscribeAll(knownFavoriteRouteIds: List<String>) {
         if (!isFirebaseConfigured) return
         unsubscribeFromOperatorAll()
+        unsubscribeFromPreview()
         knownFavoriteRouteIds.forEach { unsubscribeRoute(it) }
         try {
             FirebaseMessaging.getInstance().deleteToken().await()

@@ -7,12 +7,10 @@ struct SettingsTab: View {
     @Environment(FavoritesManager.self) private var favoritesManager
     @Environment(LocationManager.self) private var locationManager
     @Environment(PushNotificationManager.self) private var pushManager
+    @Environment(\.dismiss) private var dismiss
 
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
     @State private var notificationsBusy = false
-    @State private var versionTaps = 0
-    @State private var developerModeUnlocked = false
-    @State private var showDeveloperMode = false
 
     private var config: OperatorConfig? {
         try? ConfigLoader.load()
@@ -24,128 +22,37 @@ struct SettingsTab: View {
         return "\(version) (\(build))"
     }
 
+    /// Display name dell'app (AppalRider), localizzato via InfoPlist.xcstrings.
+    /// Diverso da `config.name` (AppalCART) che è il nome dell'operatore di
+    /// cui mostriamo i dati.
+    private var appDisplayName: String {
+        (Bundle.main.localizedInfoDictionary?["CFBundleDisplayName"] as? String)
+            ?? (Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String)
+            ?? "AppalRider"
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(spacing: 20) {
+                LazyVStack(alignment: .leading, spacing: 24) {
                     if let config {
                         operatorCard(config: config)
+                            .padding(.top, 4)
 
                         // MARK: Favorites
                         if config.features.enableFavorites {
-                            sectionHeader(String(localized: "settings_section_favorites"))
-                            GlassCard(cornerRadius: 16) {
-                                NavigationLink {
-                                    FavoritesListView()
-                                } label: {
-                                    settingsRow(
-                                        icon: .star,
-                                        iconColor: .yellow,
-                                        title: String(localized: "settings_favorites"),
-                                        detail: favoritesManager.favoriteStopIds.isEmpty
-                                            ? String(localized: "settings_favorites_none")
-                                            : String(format: NSLocalizedString("settings_favorites_count", comment: ""), favoritesManager.favoriteStopIds.count),
-                                        tappable: true
-                                    )
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-
-                        // MARK: Notifications
-                        if config.features.enableNotifications {
-                            sectionHeader(String(localized: "settings_section_notifications"))
-                            GlassCard(cornerRadius: 16) {
-                                Toggle(isOn: notificationsBinding) {
-                                    settingsRow(
-                                        icon: .bell,
-                                        iconColor: AppTheme.accent,
-                                        title: String(localized: "settings_notifications"),
-                                        detail: notificationsDetailText,
-                                        tappable: false
-                                    )
-                                }
-                                .tint(AppTheme.accent)
-                                .disabled(notificationsBusy || !pushManager.firebaseConfigured)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 4)
-                            }
-                        }
-
-                        // MARK: Language
-                        sectionHeader(String(localized: "settings_section_language"))
-                        GlassCard(cornerRadius: 16) {
-                            settingsRow(
-                                icon: .globe,
-                                iconColor: AppTheme.accent,
-                                title: String(localized: "settings_language"),
-                                tappable: false,
-                                trailing: {
-                                    AnyView(
-                                        Text(currentLanguageLabel)
-                                            .font(.subheadline)
-                                            .foregroundStyle(AppTheme.textTertiary)
-                                    )
-                                }
-                            )
-                        }
-
-                        // MARK: Privacy (Location)
-                        sectionHeader(String(localized: "settings_location_section"))
-                        GlassCard(cornerRadius: 16) {
-                            locationRow
-                        }
-
-                        // MARK: About
-                        sectionHeader(String(localized: "settings_section_about"))
-                        GlassCard(cornerRadius: 16) {
-                            VStack(spacing: 0) {
-                                NavigationLink {
-                                    AboutView(config: config)
-                                } label: {
-                                    settingsRow(
-                                        icon: .info,
-                                        iconColor: AppTheme.textSecondary,
-                                        title: String(localized: "settings_about"),
-                                        tappable: true
-                                    )
-                                }
-                                .buttonStyle(.plain)
-
-                                Rectangle()
-                                    .fill(AppTheme.separatorLine)
-                                    .frame(height: 0.5)
-                                    .padding(.leading, 56)
-
-                                settingsRow(
-                                    icon: .shield,
-                                    iconColor: AppTheme.textTertiary,
-                                    title: String(localized: "settings_version"),
-                                    tappable: false,
-                                    trailing: {
-                                        AnyView(
-                                            Text(appVersion)
-                                                .font(.subheadline)
-                                                .foregroundStyle(AppTheme.textTertiary)
-                                        )
-                                    }
-                                )
-                                .contentShape(Rectangle())
-                                .onTapGesture { onVersionTapped() }
-
-                                if developerModeUnlocked {
-                                    Rectangle()
-                                        .fill(AppTheme.separatorLine)
-                                        .frame(height: 0.5)
-                                        .padding(.leading, 56)
-                                    Button {
-                                        showDeveloperMode = true
+                            section(title: String(localized: "settings_section_favorites")) {
+                                GlassCard(cornerRadius: 16) {
+                                    NavigationLink {
+                                        FavoritesListView()
                                     } label: {
                                         settingsRow(
-                                            icon: .settings,
-                                            iconColor: AppTheme.accent,
-                                            title: "Developer mode",
-                                            detail: "Register this device for CMS preview",
+                                            icon: .star,
+                                            iconColor: .yellow,
+                                            title: String(localized: "settings_favorites"),
+                                            detail: favoritesManager.favoriteStopIds.isEmpty
+                                                ? String(localized: "settings_favorites_none")
+                                                : String(format: NSLocalizedString("settings_favorites_count", comment: ""), favoritesManager.favoriteStopIds.count),
                                             tappable: true
                                         )
                                     }
@@ -154,30 +61,143 @@ struct SettingsTab: View {
                             }
                         }
 
+                        // MARK: Notifications
+                        if config.features.enableNotifications {
+                            section(title: String(localized: "settings_section_notifications")) {
+                                GlassCard(cornerRadius: 16) {
+                                    notificationsRow
+                                }
+                            }
+                        }
+
+                        // MARK: Language
+                        section(title: String(localized: "settings_section_language")) {
+                            GlassCard(cornerRadius: 16) {
+                                settingsRow(
+                                    icon: .globe,
+                                    iconColor: AppTheme.accent,
+                                    title: String(localized: "settings_language"),
+                                    tappable: false,
+                                    trailing: {
+                                        AnyView(
+                                            Text(currentLanguageLabel)
+                                                .font(.subheadline)
+                                                .foregroundStyle(AppTheme.textTertiary)
+                                        )
+                                    }
+                                )
+                            }
+                        }
+
+                        // MARK: Privacy (Location)
+                        section(title: String(localized: "settings_location_section")) {
+                            GlassCard(cornerRadius: 16) {
+                                locationRow
+                            }
+                        }
+
+                        // MARK: About
+                        section(title: String(localized: "settings_section_about")) {
+                            GlassCard(cornerRadius: 16) {
+                                VStack(spacing: 0) {
+                                    if let url = URL(string: config.url) {
+                                        Link(destination: url) {
+                                            settingsRow(
+                                                icon: .globe,
+                                                iconColor: AppTheme.accent,
+                                                title: String(localized: "about_operator_website"),
+                                                detail: config.name,
+                                                tappable: false,
+                                                trailing: {
+                                                    AnyView(
+                                                        LucideIcon.externalLink.sized(14)
+                                                            .foregroundStyle(AppTheme.textTertiary)
+                                                    )
+                                                }
+                                            )
+                                        }
+                                        .buttonStyle(.plain)
+
+                                        rowSeparator
+                                    }
+
+                                    if let privacyUrl = config.privacyUrl,
+                                       let url = URL(string: privacyUrl) {
+                                        Link(destination: url) {
+                                            settingsRow(
+                                                icon: .shield,
+                                                iconColor: AppTheme.accent,
+                                                title: String(localized: "about_privacy_policy"),
+                                                tappable: false,
+                                                trailing: {
+                                                    AnyView(
+                                                        LucideIcon.externalLink.sized(14)
+                                                            .foregroundStyle(AppTheme.textTertiary)
+                                                    )
+                                                }
+                                            )
+                                        }
+                                        .buttonStyle(.plain)
+
+                                        rowSeparator
+                                    }
+
+                                    settingsRow(
+                                        icon: .info,
+                                        iconColor: AppTheme.textTertiary,
+                                        title: String(localized: "settings_version"),
+                                        tappable: false,
+                                        trailing: {
+                                            AnyView(
+                                                Text(appVersion)
+                                                    .font(.subheadline)
+                                                    .foregroundStyle(AppTheme.textTertiary)
+                                                    .monospacedDigit()
+                                            )
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
                         // MARK: Disclaimer
-                        sectionHeader(String(localized: "settings_info_section"))
-                        GlassCard(cornerRadius: 16) {
-                            Text(String(format: String(localized: "settings_disclaimer_body"), config.name, config.fullName))
+                        section(title: String(localized: "settings_info_section")) {
+                            // Args: %1$@ = app name (AppalRider), %2$@ = operator name (AppalCART).
+                            // Reso: "AppalRider is not developed or managed by AppalCART.
+                            // Timetable data is officially provided by AppalCART."
+                            Text(String(format: String(localized: "settings_disclaimer_body"), appDisplayName, config.name))
                                 .font(.system(size: 13))
                                 .foregroundStyle(AppTheme.textSecondary)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 14)
+                                .lineSpacing(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .padding(.horizontal, 4)
                         }
 
                         Spacer(minLength: 40)
                     }
                 }
                 .padding(.horizontal, 16)
-                .padding(.top, 8)
+                .padding(.top, 4)
             }
             .background(AppTheme.background.ignoresSafeArea())
             .navigationTitle(String(localized: "tab_settings"))
             .navigationBarTitleDisplayMode(.large)
-            .navigationDestination(isPresented: $showDeveloperMode) {
-                DeveloperModeView(
-                    operatorId:    config?.id ?? "unknown",
-                    consoleApiUrl: config?.consoleApiUrl
-                )
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                        dismiss()
+                    } label: {
+                        LucideIcon.x.sized(18)
+                            .foregroundStyle(AppTheme.textSecondary)
+                            .frame(width: 32, height: 32)
+                            .background(
+                                Circle().fill(AppTheme.bgSecondary)
+                            )
+                    }
+                    .accessibilityIdentifier("btn_settings_close")
+                    .accessibilityLabel(String(localized: "action_close"))
+                }
             }
         }
         .onAppear {
@@ -219,56 +239,97 @@ struct SettingsTab: View {
         }
     }
 
-    // MARK: - Hidden developer mode unlock
-
-    private func onVersionTapped() {
-        versionTaps += 1
-        if versionTaps >= 7 && !developerModeUnlocked {
-            developerModeUnlocked = true
-        }
-    }
-
     // MARK: - Operator Brand Card
 
+    /// Header card della pagina impostazioni: mostra il brand AppalCART (logo
+    /// operatore = logo app, è una build white-label). Tappabile per richiamo
+    /// di info aggiuntive sull'operatore.
     private func operatorCard(config: OperatorConfig) -> some View {
         GlassCard(cornerRadius: 16) {
             HStack(spacing: 14) {
-                ZStack {
-                    LinearGradient(
-                        colors: [Color(hex: "06845C"), Color(hex: "165F9C")],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                    Text(initials(for: config.name))
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.white)
+                Group {
+                    if UIImage(named: "OperatorLogo") != nil {
+                        Image("OperatorLogo")
+                            .resizable()
+                            .scaledToFit()
+                    } else {
+                        ZStack {
+                            LinearGradient(
+                                colors: [AppTheme.accent, Color(hex: config.theme.primaryColor)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                            LucideIcon.bus.sized(22)
+                                .foregroundStyle(.white)
+                        }
+                    }
                 }
                 .frame(width: 48, height: 48)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(config.name)
-                        .font(.headline)
-                        .fontWeight(.bold)
+                    // Brand dell'APP (AppalRider), non dell'operatore — fonte:
+                    // CFBundleDisplayName localizzato in InfoPlist.xcstrings.
+                    Text(appDisplayName)
+                        .font(.system(size: 17, weight: .bold))
                         .foregroundStyle(AppTheme.textPrimary)
-                    Text(config.region)
-                        .font(.subheadline)
-                        .foregroundStyle(AppTheme.textSecondary)
+                    if !config.region.isEmpty {
+                        Text(config.region)
+                            .font(.system(size: 13))
+                            .foregroundStyle(AppTheme.textSecondary)
+                    }
                 }
 
-                Spacer()
+                Spacer(minLength: 0)
             }
             .padding(16)
         }
     }
 
-    private func initials(for name: String) -> String {
-        let words = name.split(separator: " ").filter { !$0.isEmpty }
-        switch words.count {
-        case 0: return "?"
-        case 1: return String(words[0].prefix(2)).uppercased()
-        default: return "\(words[0].prefix(1))\(words[1].prefix(1))".uppercased()
+    // MARK: - Row separator
+
+    /// Divider tra righe dentro una stessa card. Allineato alla colonna del
+    /// testo (icona 40 + spacing 14 + padding card 16 = 70pt leading).
+    private var rowSeparator: some View {
+        Rectangle()
+            .fill(AppTheme.separatorLine)
+            .frame(height: 0.5)
+            .padding(.leading, 70)
+    }
+
+    // MARK: - Notifications Row
+
+    /// Riga dedicata per il toggle notifiche: stesso pattern di `settingsRow`
+    /// (icona 40×40 + titolo/sottotitolo) con il Toggle in coda, ma senza il
+    /// doppio padding che il wrapping in Toggle introduceva nella vecchia
+    /// implementazione.
+    private var notificationsRow: some View {
+        HStack(spacing: 14) {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(AppTheme.accent.opacity(0.12))
+                .frame(width: 40, height: 40)
+                .overlay(LucideIcon.bell.sized(16).foregroundStyle(AppTheme.accent))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(String(localized: "settings_notifications"))
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(AppTheme.textPrimary)
+                Text(notificationsDetailText)
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.textSecondary)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 12)
+
+            Toggle("", isOn: notificationsBinding)
+                .labelsHidden()
+                .tint(AppTheme.accent)
+                .disabled(notificationsBusy || !pushManager.firebaseConfigured)
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
     }
 
     // MARK: - Settings Row
@@ -377,18 +438,23 @@ struct SettingsTab: View {
         }
     }
 
-    // MARK: - Section Header
+    // MARK: - Section wrapper
 
-    private func sectionHeader(_ title: String) -> some View {
-        HStack {
-            Text(title.uppercased())
-                .font(.caption.weight(.semibold))
-                .kerning(0.6)
-                .foregroundStyle(AppTheme.textTertiary)
-            Spacer()
+    /// Gruppo titolo+contenuto coerente con la Home: sentence case 15sp
+    /// SemiBold textPrimary, leading 2 per restare flush con il padding
+    /// orizzontale delle card.
+    @ViewBuilder
+    private func section<Content: View>(
+        title: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(AppTheme.textPrimary)
+                .padding(.leading, 2)
+            content()
         }
-        .padding(.horizontal, 4)
-        .padding(.top, 4)
     }
 
     // MARK: - Language Label

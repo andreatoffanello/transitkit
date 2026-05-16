@@ -1,5 +1,8 @@
 package com.transitkit.app.ui.settings
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Brush
@@ -24,9 +27,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -50,32 +51,20 @@ import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.data.model.ResolvedStop
 
 // ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/** Generates initials for an operator name — up to 2 uppercase letters. */
-private fun operatorInitials(name: String): String {
-    val words = name.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
-    return when {
-        words.size >= 2 -> "${words[0].first()}${words[1].first()}".uppercase()
-        words.size == 1 -> words[0].take(2).uppercase()
-        else -> "?"
-    }
-}
-
-// ---------------------------------------------------------------------------
-// SettingsRow — flat custom row, iOS-parity: 16dp horizontal / 12dp vertical
+// SettingsRow — flat custom row, iOS-parity: 40dp icon box, 14dp vertical
 // ---------------------------------------------------------------------------
 
 @Composable
 fun SettingsRow(
-     icon: Int,
+    icon: Int,
+    iconTint: Color? = null,
     title: String,
     subtitle: String? = null,
     onClick: (() -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val colors = TransitTheme.colors
+    val accent = iconTint ?: colors.accent
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -83,23 +72,23 @@ fun SettingsRow(
             .semantics {
                 if (subtitle != null) contentDescription = "$title: $subtitle"
             }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             modifier = Modifier
-                .size(32.dp)
-                .background(colors.accent.copy(alpha = 0.12f), RoundedCornerShape(8.dp)),
+                .size(40.dp)
+                .background(accent.copy(alpha = 0.12f), RoundedCornerShape(10.dp)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 painter = painterResource(icon),
                 contentDescription = null,
-                tint = colors.accent,
+                tint = accent,
                 modifier = Modifier.size(16.dp),
             )
         }
-        Spacer(Modifier.width(12.dp))
+        Spacer(Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
@@ -131,18 +120,18 @@ fun SettingsRow(
 }
 
 // ---------------------------------------------------------------------------
-// Section label
+// Section label — sentence case 15sp SemiBold textPrimary, parità Home/iOS
 // ---------------------------------------------------------------------------
 
 @Composable
 private fun SectionLabel(text: String) {
     val colors = TransitTheme.colors
     Text(
-        text = text.uppercase(),
-        style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.5.sp),
+        text = text,
+        fontSize = 15.sp,
         fontWeight = FontWeight.SemiBold,
-        color = colors.textTertiary,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        color = colors.textPrimary,
+        modifier = Modifier.padding(start = 18.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
     )
 }
 
@@ -153,9 +142,13 @@ private fun SectionLabel(text: String) {
 @Composable
 private fun OperatorCard(config: OperatorConfig) {
     val colors = TransitTheme.colors
-    val initials = operatorInitials(config.name)
+    val context = androidx.compose.ui.platform.LocalContext.current
     val subtitle = config.region?.takeIf { it.isNotBlank() }
         ?: config.country.takeIf { it.isNotBlank() }
+    val operatorLogoRes = remember(context) {
+        context.resources.getIdentifier("operator_logo", "drawable", context.packageName)
+            .takeIf { it != 0 }
+    }
 
     Row(
         modifier = Modifier
@@ -166,37 +159,49 @@ private fun OperatorCard(config: OperatorConfig) {
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Avatar
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(
-                    Brush.linearGradient(listOf(colors.accent, colors.primary))
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = initials,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
+        if (operatorLogoRes != null) {
+            Image(
+                painter = painterResource(operatorLogoRes),
+                contentDescription = config.name,
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = androidx.compose.ui.layout.ContentScale.Fit,
             )
+        } else {
+            // Fallback: bus icon su gradient se l'asset operator_logo manca.
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(
+                        Brush.linearGradient(listOf(colors.accent, colors.primary))
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(LucideIcons.BusFront),
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(22.dp),
+                )
+            }
         }
 
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(14.dp))
 
         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            // Brand dell'APP (AppalRider, da R.string.app_name), non dell'operatore.
             Text(
-                text = config.name,
-                style = MaterialTheme.typography.titleMedium,
+                text = stringResource(R.string.app_name),
+                fontSize = 17.sp,
                 fontWeight = FontWeight.Bold,
                 color = colors.textPrimary,
             )
             if (!subtitle.isNullOrBlank()) {
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
+                    fontSize = 13.sp,
                     color = colors.textSecondary,
                 )
             }
@@ -284,9 +289,7 @@ private fun CardContainer(content: @Composable () -> Unit) {
 fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
     onBack: () -> Unit = {},
-    onNavigateToAbout: () -> Unit = {},
     onNavigateToOrari: () -> Unit = {},
-    onNavigateToDeveloperMode: () -> Unit = {},
 ) {
     val favoriteStops by viewModel.favoriteStops.collectAsStateWithLifecycle()
     val notificationsEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
@@ -295,13 +298,6 @@ fun SettingsScreen(
     val colors = TransitTheme.colors
     val favoriteList = favoriteStops
     val currentLanguage = java.util.Locale.getDefault().displayLanguage.replaceFirstChar { it.uppercaseChar() }
-
-    // ── Developer-mode 7-tap unlock ─────────────────────────────────────────
-    var versionTaps by remember { mutableStateOf(0) }
-    var developerModeUnlocked by remember { mutableStateOf(false) }
-    LaunchedEffect(versionTaps) {
-        if (versionTaps >= 7 && !developerModeUnlocked) developerModeUnlocked = true
-    }
 
     // ── POST_NOTIFICATIONS runtime permission (Android 13+) ─────────────────
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -491,37 +487,74 @@ fun SettingsScreen(
 
         item {
             CardContainer {
-                SettingsRow(
-                    icon = LucideIcons.Info,
-                    title = stringResource(R.string.settings_info_su, config.name),
-                    onClick = onNavigateToAbout,
-                )
-                HorizontalDivider(modifier = Modifier.padding(start = 46.dp), color = TransitTheme.colors.separator, thickness = 0.5.dp)
-                SettingsRow(
-                    icon = LucideIcons.Shield,
-                    title = stringResource(R.string.settings_versione),
-                    subtitle = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
-                    onClick = { versionTaps += 1 },
-                )
-                if (developerModeUnlocked) {
+                config.url.takeIf { it.isNotBlank() }?.let { rawUrl ->
+                    SettingsRow(
+                        icon = LucideIcons.Globe,
+                        title = stringResource(R.string.about_sito_web),
+                        subtitle = config.name,
+                        onClick = {
+                            context.startActivity(
+                                Intent(Intent.ACTION_VIEW, Uri.parse(rawUrl))
+                            )
+                        },
+                        trailing = {
+                            Icon(
+                                painter = painterResource(LucideIcons.ExternalLink),
+                                contentDescription = null,
+                                tint = colors.textTertiary,
+                                modifier = Modifier.size(14.dp),
+                            )
+                        },
+                    )
                     HorizontalDivider(
-                        modifier = Modifier.padding(start = 46.dp),
-                        color = TransitTheme.colors.separator,
+                        modifier = Modifier.padding(start = 70.dp),
+                        color = colors.separator,
                         thickness = 0.5.dp,
                     )
+                }
+                config.privacyUrl?.takeIf { it.isNotBlank() }?.let { rawUrl ->
                     SettingsRow(
-                        icon = LucideIcons.Settings,
-                        title = stringResource(R.string.dev_mode_row_title),
-                        subtitle = stringResource(R.string.dev_mode_row_subtitle),
-                        onClick = onNavigateToDeveloperMode,
+                        icon = LucideIcons.Shield,
+                        title = stringResource(R.string.about_privacy_policy),
+                        onClick = {
+                            context.startActivity(
+                                Intent(Intent.ACTION_VIEW, Uri.parse(rawUrl))
+                            )
+                        },
+                        trailing = {
+                            Icon(
+                                painter = painterResource(LucideIcons.ExternalLink),
+                                contentDescription = null,
+                                tint = colors.textTertiary,
+                                modifier = Modifier.size(14.dp),
+                            )
+                        },
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(start = 70.dp),
+                        color = colors.separator,
+                        thickness = 0.5.dp,
                     )
                 }
+                SettingsRow(
+                    icon = LucideIcons.Info,
+                    iconTint = colors.textTertiary,
+                    title = stringResource(R.string.settings_versione),
+                    trailing = {
+                        Text(
+                            text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.textTertiary,
+                        )
+                    },
+                )
             }
             Text(
-                text = stringResource(R.string.settings_disclaimer_body, config.name, config.fullName),
+                // %1$s = app name (AppalRider), %2$s = operator name (AppalCART).
+                text = stringResource(R.string.settings_disclaimer_body, stringResource(R.string.app_name), config.name),
                 style = MaterialTheme.typography.bodySmall,
                 color = colors.textSecondary,
-                modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp),
+                modifier = Modifier.padding(start = 18.dp, end = 18.dp, top = 12.dp, bottom = 8.dp),
             )
             Spacer(modifier = Modifier.height(32.dp))
         }

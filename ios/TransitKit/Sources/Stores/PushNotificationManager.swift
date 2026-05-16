@@ -35,6 +35,11 @@ final class PushNotificationManager: NSObject {
     private(set) var fcmToken: String?
     private(set) var lastError: String?
 
+    /// User has granted permission but we're still waiting for FCM to mint
+    /// a registration token. Once `didReceiveRegistrationToken` fires we
+    /// flush the pending subscribes.
+    private var subscribePendingFlush = false
+
     // MARK: Internals
 
     private let operatorId: String
@@ -105,9 +110,14 @@ final class PushNotificationManager: NSObject {
                 .requestAuthorization(options: [.alert, .badge, .sound])
             await refreshAuthorizationStatus()
             if granted {
+                // Defer the topic subscriptions: they would fail with
+                // "No APNS token specified before fetching FCM Token"
+                // because the APNs token round-trip is asynchronous and
+                // arrives via AppDelegate after registerForRemoteNotifications
+                // returns. We flush the pending subscribes inside
+                // messaging(didReceiveRegistrationToken:) instead.
+                subscribePendingFlush = true
                 await registerForRemoteNotifications()
-                await subscribeToOperatorAll()
-                await resubscribeAllKnownRoutes()
             }
             return granted
         } catch {
@@ -260,6 +270,13 @@ extension PushNotificationManager: @preconcurrency MessagingDelegate {
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         Task { @MainActor in
             self.fcmToken = fcmToken
+            // The APNs ↔ FCM token round-trip is complete. Flush any
+            // subscribes that were queued in requestAuthorization().
+            if self.subscribePendingFlush, fcmToken != nil {
+                self.subscribePendingFlush = false
+                await self.subscribeToOperatorAll()
+                await self.resubscribeAllKnownRoutes()
+            }
         }
     }
 }

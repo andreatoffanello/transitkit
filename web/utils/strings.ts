@@ -165,6 +165,18 @@ export interface AppStrings {
   locating: string
   distanceM: string
   distanceKm: string
+
+  // App download banner
+  downloadApp: string
+
+  // Stop page — navigate / open in maps menu
+  navigate: string
+  openInMaps: string
+  departFromHere: string
+  arriveHere: string
+
+  // Realtime degraded notice (used in UpcomingPanel when GTFS-RT is down)
+  realtimeUnavailable: string
 }
 
 const IT: AppStrings = {
@@ -259,6 +271,12 @@ const IT: AppStrings = {
   share: 'Condividi',
   nextDepartureLabel: 'prossima',
   showMore: 'Mostra altri',
+  downloadApp: 'Scarica app',
+  navigate: 'Naviga',
+  openInMaps: 'Apri in mappe',
+  departFromHere: 'Parti da qui',
+  arriveHere: 'Arriva qui',
+  realtimeUnavailable: 'Orari non in tempo reale',
 }
 
 const EN: AppStrings = {
@@ -353,6 +371,12 @@ const EN: AppStrings = {
   share: 'Share',
   nextDepartureLabel: 'next',
   showMore: 'Show more',
+  downloadApp: 'Get the app',
+  navigate: 'Navigate',
+  openInMaps: 'Open in maps',
+  departFromHere: 'Depart from here',
+  arriveHere: 'Arrive here',
+  realtimeUnavailable: 'Live updates unavailable',
 }
 
 const STRINGS: Record<Locale, AppStrings> = { it: IT, en: EN }

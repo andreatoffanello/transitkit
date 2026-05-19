@@ -8,16 +8,39 @@
           :lat="stop.lat"
           :lng="stop.lng"
           :primary-color="config?.theme?.primaryColor"
+          :aria-open-in-maps="s.openInMaps"
         />
       </template>
-      <div v-else-if="pending" class="w-full skeleton-shimmer" style="height: 220px" />
+      <!-- Hero skeleton: forma prima dei dati — riproduce silhouette del pin Signpost + bottom-corners -->
+      <div
+        v-else-if="pending"
+        class="relative w-full overflow-hidden skeleton-hero"
+        aria-hidden="true"
+      >
+        <div class="absolute inset-0 skeleton-shimmer" />
+        <!-- Pin placeholder al centro -->
+        <div class="absolute inset-0 flex items-center justify-center">
+          <div
+            class="rounded-full border-[3px] border-white"
+            style="width: 30px; height: 30px; background: var(--border); box-shadow: 0 2px 10px rgba(0,0,0,0.18)"
+          />
+        </div>
+        <!-- Expand FAB placeholder -->
+        <div
+          class="absolute bottom-3 right-3 rounded-xl"
+          style="width: 36px; height: 36px; background: rgba(255,255,255,0.6); backdrop-filter: blur(8px)"
+        />
+      </div>
 
       <!-- Identity skeleton -->
-      <div v-if="pending" class="px-4 pt-2 pb-2">
-        <div class="h-7 rounded-lg w-3/4 skeleton-shimmer mb-2" />
-        <div class="flex gap-2">
+      <div v-if="pending" class="px-4 pt-3 pb-2">
+        <div class="flex items-center justify-between gap-3 mb-3">
+          <div class="h-7 rounded-lg w-3/4 skeleton-shimmer" />
+          <div class="h-10 w-10 rounded-full skeleton-shimmer shrink-0" />
+        </div>
+        <div class="flex gap-1.5">
           <div class="h-6 w-12 rounded skeleton-shimmer" />
-          <div class="h-6 w-12 rounded skeleton-shimmer" />
+          <div class="h-6 w-14 rounded skeleton-shimmer" />
           <div class="h-6 w-12 rounded skeleton-shimmer" />
         </div>
       </div>
@@ -69,7 +92,7 @@
             @click="activeTab = 'orario'"
           >
             {{ s.tabSchedule }}
-            <span v-if="isLive" class="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" aria-hidden="true" />
+            <span v-if="isLive" class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: var(--color-live)" aria-hidden="true" />
           </button>
         </div>
 
@@ -283,7 +306,14 @@ const filteredUpcomingDepartures = computed<Departure[]>(() => {
 
 const nextDepartureTodayData = computed<{ time: string; lineName: string; lineColor?: string; lineTextColor?: string } | null>(() => {
   if (!stop.value || !schedules.value) return null
-  const result = getNextDeparture(stop.value.id, schedules.value, now.value, config.value?.timezone, config.value?.headsignMap)
+  const result = getNextDeparture(
+    stop.value.id,
+    schedules.value,
+    now.value,
+    config.value?.timezone,
+    config.value?.headsignMap,
+    filterLine.value,
+  )
   if (!result) return null
   const curNowMin = computeNowMin(now.value)
   if (result.minutesFromMidnight <= curNowMin + 120) return null

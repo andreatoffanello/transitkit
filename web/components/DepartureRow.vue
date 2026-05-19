@@ -1,9 +1,20 @@
 <template>
   <div
-    class="flex items-center gap-3 py-3 px-4 relative transition-colors duration-150"
+    class="py-3 px-4 relative transition-colors duration-150"
     :class="{ 'opacity-40': isPast }"
     :aria-label="rowAriaLabel"
   >
+    <!-- "Prossima" pill — solo per la prima riga upcoming. Posizionata
+         dentro la flex column del row, non absolute, per essere robusta a
+         cambi di layout. -->
+    <div v-if="showNextLabel" class="mb-1.5">
+      <span
+        class="inline-block text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide"
+        style="background-color: var(--color-live); color: #fff; line-height: 1.2"
+      >{{ nextLabel ?? 'prossima' }}</span>
+    </div>
+
+    <div class="flex items-center gap-3">
     <!-- Transit type icon square (line color bg) -->
     <div
       class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
@@ -21,13 +32,12 @@
       :locale="locale"
     />
 
-    <!-- Headsign + dock -->
+    <!-- Headsign + dock — up to 2 lines so the "going where" info stays readable on narrow screens -->
     <span
-      class="flex-1 text-[15px] font-medium truncate"
-      style="color: var(--text-primary)"
+      class="flex-1 text-[15px] font-medium headsign-clamp"
+      style="color: var(--text-primary); line-height: 1.25"
     >
-      {{ departure.headsign }}
-      <span
+      {{ departure.headsign }}<span
         v-if="departure.dock"
         class="text-xs ml-1"
         style="color: var(--text-tertiary)"
@@ -38,7 +48,8 @@
     <div class="flex items-center gap-1.5 shrink-0">
       <span
         v-if="departure.isRealtime"
-        class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shrink-0"
+        class="w-1.5 h-1.5 rounded-full animate-pulse shrink-0"
+        style="background-color: var(--color-live)"
         :aria-label="s.ariaRealtimeData"
         role="img"
       />
@@ -59,7 +70,7 @@
           <span
             v-if="showCountdown && typeof effectiveMinutes === 'number' && effectiveMinutes >= 0 && effectiveMinutes <= 1"
             class="inline-flex items-center justify-center h-6 px-2.5 rounded-md text-xs font-bold"
-            style="background-color: #16a34a; color: #fff"
+            style="background-color: var(--color-live); color: #fff"
           >{{ s.now }}</span>
           <span
             v-else-if="showCountdown && typeof effectiveMinutes === 'number' && effectiveMinutes > 1 && effectiveMinutes <= 30"
@@ -73,6 +84,7 @@
           >{{ departure.time }}</span>
         </template>
       </div>
+    </div>
     </div>
   </div>
 </template>
@@ -89,6 +101,8 @@ const props = defineProps<{
   locale?: string
   showCountdown?: boolean
   isPast?: boolean
+  showNextLabel?: boolean
+  nextLabel?: string
 }>()
 
 const s = computed(() => getStrings(props.locale))
@@ -144,3 +158,15 @@ const rowAriaLabel = computed(() => {
   return `${s.value.lineLabel} ${props.departure.lineName}, ${props.departure.headsign}, ${timeDescription}`
 })
 </script>
+
+<style scoped>
+.headsign-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+</style>

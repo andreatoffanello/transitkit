@@ -27,6 +27,16 @@ export default defineNuxtConfig({
     preset: 'vercel',
   },
 
+  routeRules: {
+    '/stop/**': {
+      isr: 60,
+      headers: { 'cache-control': 'public, s-maxage=60, stale-while-revalidate=600' },
+    },
+    '/lines/**': {
+      isr: 300,
+    },
+  },
+
   typescript: {
     strict: true,
   },

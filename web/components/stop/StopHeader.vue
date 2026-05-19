@@ -14,44 +14,41 @@
 
     <!-- Stop identity -->
     <div class="px-4 pt-2 pb-2">
-      <div class="flex items-start justify-between gap-2">
-        <h1 class="text-[22px] font-bold leading-tight" style="color: var(--text-primary)">
-          {{ stop.name }}
-        </h1>
-        <div class="flex items-center gap-0.5 mt-0.5 shrink-0">
+      <div class="flex items-center justify-between gap-3">
+        <div class="min-w-0 flex-1">
+          <h1 class="text-[22px] font-bold leading-tight" style="color: var(--text-primary)">
+            {{ stop.name }}
+          </h1>
+        </div>
+
+        <div class="flex items-center gap-1.5 shrink-0">
+          <!-- Favorite — Star, parity con iOS/Android -->
           <button
             v-if="config?.features?.enableFavorites"
             type="button"
             :aria-label="isFavorite(stop.id) ? s.removeFromFavorites : s.addToFavorites"
             data-testid="btn_favorite"
-            class="p-2 rounded-lg transition-opacity active:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
+            class="fav-btn rounded-lg p-2 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
+            :class="{ 'fav-active': isFavorite(stop.id) }"
             :style="{ color: isFavorite(stop.id) ? 'var(--color-primary)' : 'var(--text-tertiary)' }"
             @click="$emit('toggle-favorite')"
           >
-            <Bookmark :size="20" :stroke-width="1.75" :fill="isFavorite(stop.id) ? 'currentColor' : 'none'" />
+            <Star :size="20" :stroke-width="1.75" :fill="isFavorite(stop.id) ? 'currentColor' : 'none'" />
           </button>
-          <button
-            v-if="canShare"
-            type="button"
-            :aria-label="s.shareStop"
-            class="p-2 rounded-lg transition-opacity active:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
-            style="color: var(--text-tertiary)"
-            @click="$emit('share')"
+
+          <!-- Navigate primary action — apre maps esterne (parity native quick action) -->
+          <a
+            v-if="stop.lat && stop.lng"
+            :href="`geo:${stop.lat},${stop.lng}?q=${stop.lat},${stop.lng}`"
+            :aria-label="s.navigate"
+            class="navigate-btn inline-flex items-center justify-center rounded-full transition-opacity active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
+            :style="{ color: 'var(--color-primary)', backgroundColor: 'color-mix(in srgb, var(--color-primary) 10%, transparent)' }"
           >
-            <Share2 :size="20" :stroke-width="1.75" />
-          </button>
-          <button
-            v-else
-            type="button"
-            :aria-label="s.copyLink"
-            class="p-2 rounded-lg transition-opacity active:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
-            style="color: var(--text-tertiary)"
-            @click="$emit('copy-link')"
-          >
-            <component :is="copied ? Check : Copy" :size="20" :stroke-width="1.75" />
-          </button>
+            <Navigation :size="18" :stroke-width="2" />
+          </a>
         </div>
       </div>
+
       <!-- Line badges horizontal scroll -->
       <div
         v-if="servingRoutes.length"
@@ -73,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import { Bookmark, Share2, Copy, Check, ChevronLeft } from 'lucide-vue-next'
+import { Star, Navigation, ChevronLeft } from 'lucide-vue-next'
 import type { OperatorConfig, Route, ScheduleStop } from '~/types'
 import type { AppStrings } from '~/utils/strings'
 
@@ -94,3 +91,17 @@ defineEmits<{
   (e: 'copy-link'): void
 }>()
 </script>
+
+<style scoped>
+.fav-btn {
+  transform: scale(1);
+  transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1), color 150ms ease;
+}
+.fav-active {
+  transform: scale(1.12);
+}
+.navigate-btn {
+  width: 40px;
+  height: 40px;
+}
+</style>

@@ -1,6 +1,8 @@
 # TransitKit Web — Mappa per sessioni fresche
 
-PWA Nuxt 3 + Vue 3 + TypeScript strict, SSG su Vercel, white-label per operatore via hostname → config JSON su CDN.
+PWA **Nuxt 4** (4.4.x) + Vue 3.5 + TypeScript strict, SSR + ISR su Vercel (preset `vercel`), white-label per operatore via hostname → config JSON su CDN. Nitro 2.13 sotto.
+
+**Routing & cache.** `/stop/**` ha `routeRules.isr: 60` con `stale-while-revalidate=600` ([nuxt.config.ts](nuxt.config.ts)) — primo scan QR paga il SSR cold, tutti i successivi 60s servono dalla edge Vercel. `/lines/**` ISR 300s. Resto SSR per richiesta.
 
 ## Struttura cartelle
 

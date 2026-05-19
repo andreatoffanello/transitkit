@@ -182,7 +182,8 @@
                     <span class="text-[15px] font-medium truncate" style="color: var(--text-primary)">{{ stop.name }}</span>
                     <span
                       v-if="hasRealtime"
-                      class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse flex-shrink-0"
+                      class="w-1.5 h-1.5 rounded-full animate-pulse flex-shrink-0"
+                      style="background-color: var(--color-live)"
                       aria-hidden="true"
                     />
                   </span>
@@ -221,7 +222,8 @@
                     <span class="text-[15px] font-medium truncate" style="color: var(--text-primary)">{{ stop.name }}</span>
                     <span
                       v-if="hasRealtime"
-                      class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse flex-shrink-0"
+                      class="w-1.5 h-1.5 rounded-full animate-pulse flex-shrink-0"
+                      style="background-color: var(--color-live)"
                       aria-hidden="true"
                     />
                   </span>
@@ -238,7 +240,7 @@
                     <span
                       class="text-xs tabular-nums"
                       :style="recentNextDepartures[stop.stopId]!.minutesFromNow <= 5
-                        ? 'color: #16a34a; font-weight: 600; letter-spacing: -0.01em'
+                        ? 'color: var(--color-live); font-weight: 600; letter-spacing: -0.01em'
                         : 'color: var(--text-tertiary); letter-spacing: -0.01em'"
                     >
                       {{ recentNextDepartures[stop.stopId]!.timeLabel }}

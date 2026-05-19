@@ -2,8 +2,8 @@
   <Teleport to="body">
     <div
       v-if="visible"
-      class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 gap-3"
-      style="height: 44px; background-color: var(--color-primary); color: var(--color-text-on-primary)"
+      class="fixed left-0 right-0 z-30 flex items-center justify-between px-4 gap-3 download-banner"
+      style="background-color: var(--color-primary); color: var(--color-text-on-primary)"
       role="banner"
     >
       <span class="text-sm font-semibold flex-1 truncate">{{ label }}</span>
@@ -50,19 +50,18 @@
 
 <script setup lang="ts">
 import type { AppLinks } from '~/types'
+import { getStrings } from '~/utils/strings'
 
 const props = defineProps<{
   appLinks?: AppLinks
   operatorName?: string
+  locale?: string
 }>()
 
 const STORAGE_KEY = 'app-banner-dismissed'
 const visible = ref(false)
 
-const label = computed(() => {
-  const name = props.operatorName
-  return 'Scarica app'
-})
+const label = computed(() => getStrings(props.locale).downloadApp)
 
 onMounted(() => {
   // Only show if at least one store link is configured
@@ -76,3 +75,25 @@ function dismiss() {
   window.dispatchEvent(new Event('app-banner-dismissed'))
 }
 </script>
+
+<style scoped>
+/* Sticky bottom — sopra la tab bar mobile (h-14 = 56px + safe-area).
+   Su desktop (≥1024px) torna a essere sopra il contenuto, sticky bottom centrato. */
+.download-banner {
+  bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  min-height: 44px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+}
+@media (min-width: 1024px) {
+  .download-banner {
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    border-radius: 12px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+}
+</style>

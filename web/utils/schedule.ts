@@ -207,6 +207,7 @@ export function getNextDeparture(
   nowMs: number,
   timezone?: string,
   headsignMap?: Record<string, string>,
+  lineFilter?: string | null,
 ): Departure | null {
   const stop = scheduleData.stops.find(s => s.id === stopId)
   if (!stop) return null
@@ -218,5 +219,5 @@ export function getNextDeparture(
   const nowMin = computeNowMin(nowMs)
   return deps
     .sort((a, b) => a.minutesFromMidnight - b.minutesFromMidnight)
-    .find(d => d.minutesFromMidnight >= nowMin) ?? null
+    .find(d => d.minutesFromMidnight >= nowMin && (!lineFilter || d.lineName === lineFilter)) ?? null
 }

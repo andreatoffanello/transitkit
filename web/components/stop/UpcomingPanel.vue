@@ -10,7 +10,8 @@
         {{ s.upcomingDepartures }}
         <span
           v-if="isLive"
-          class="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse"
+          class="inline-block w-2 h-2 rounded-full animate-pulse"
+          style="background-color: var(--color-live)"
           aria-hidden="true"
         />
       </h2>
@@ -24,6 +25,17 @@
         <RefreshCw :size="13" :stroke-width="1.75" :class="{ 'animate-spin': realtimeLoading }" />
         {{ s.refresh }}
       </button>
+    </div>
+
+    <!-- Realtime degraded notice — GTFS-RT configured but not live -->
+    <div
+      v-if="hasRealtimeConfigured && !isLive"
+      class="flex items-center gap-2 text-xs py-2 px-3 rounded-lg mb-3"
+      style="background: rgba(245,158,11,0.10); color: var(--text-secondary)"
+      role="status"
+    >
+      <WifiOff :size="13" :stroke-width="1.75" class="shrink-0 text-amber-600 dark:text-amber-400" />
+      <span class="flex-1">{{ s.realtimeUnavailable }}</span>
     </div>
 
     <!-- Line filter chips (only if >1 line) -->
@@ -74,21 +86,14 @@
       class="overflow-hidden divide-y"
       style="background-color: var(--bg-elevated); border-radius: 16px; border: 1px solid var(--border)"
     >
-      <!-- First row: "prossima" pill above -->
-      <div class="relative">
-        <span
-          class="absolute top-2 left-14 text-[10px] font-bold px-1.5 py-0.5 rounded"
-          style="background-color: #16a34a; color: #fff; line-height: 1.2; z-index: 1; pointer-events: none"
-          aria-hidden="true"
-        >{{ s.nextDepartureLabel }}</span>
-        <DepartureRow
-          :departure="filteredUpcomingDepartures[0]!"
-          :now="now"
-          :locale="config?.locale[0]"
-          :show-countdown="true"
-          class="pt-7"
-        />
-      </div>
+      <DepartureRow
+        :departure="filteredUpcomingDepartures[0]!"
+        :now="now"
+        :locale="config?.locale[0]"
+        :show-countdown="true"
+        :show-next-label="true"
+        :next-label="s.nextDepartureLabel"
+      />
       <DepartureRow
         v-for="dep in filteredUpcomingDepartures.slice(1, showAllUpcoming ? undefined : 5)"
         :key="dep.id"
@@ -148,10 +153,11 @@
     <!-- Realtime status -->
     <p
       v-if="isLive"
-      class="text-xs text-green-600 dark:text-green-400 mt-2 flex items-center gap-1.5"
+      class="text-xs mt-2 flex items-center gap-1.5"
+      style="color: var(--color-live)"
       role="status"
     >
-      <span class="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" aria-hidden="true" />
+      <span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: var(--color-live)" aria-hidden="true" />
       {{ s.updatedRealtime }}
     </p>
     <div aria-live="polite" class="sr-only">{{ isLive ? s.updatedRealtime : '' }}</div>
@@ -159,11 +165,11 @@
 </template>
 
 <script setup lang="ts">
-import { RefreshCw, Clock, ChevronDown } from 'lucide-vue-next'
+import { RefreshCw, Clock, ChevronDown, WifiOff } from 'lucide-vue-next'
 import type { OperatorConfig, Departure, Route } from '~/types'
 import type { AppStrings } from '~/utils/strings'
 
-defineProps<{
+const props = defineProps<{
   s: AppStrings
   config: OperatorConfig | null
   servingRoutes: Route[]
@@ -183,4 +189,6 @@ defineEmits<{
   (e: 'update:showAllUpcoming', v: boolean): void
   (e: 'view-schedule'): void
 }>()
+
+const hasRealtimeConfigured = computed(() => Boolean(props.config?.gtfsRt?.trip_updates))
 </script>

@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.wire)
+    id("com.github.triplet.play")
 }
 
 // google-services is applied at the bottom of the file conditionally —
@@ -29,7 +30,7 @@ android {
         applicationId = "com.transitkit.appalcart"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
+        versionCode = 4
         versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -139,4 +140,12 @@ dependencies {
 // onboarded to Firebase.
 if (googleServicesJson.exists()) {
     apply(plugin = "com.google.gms.google-services")
+}
+
+play {
+    val credPath = providers.gradleProperty("playCredentials")
+        .orElse("${System.getProperty("user.home")}/.config/google-play/publisher-key.json")
+    serviceAccountCredentials.set(file(credPath.get()))
+    track.set(providers.gradleProperty("playTrack").orElse("internal"))
+    defaultToAppBundles.set(true)
 }

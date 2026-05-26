@@ -82,6 +82,7 @@ internal fun StopPreviewContent(
     stop: ResolvedStop,
     departures: List<ResolvedDeparture>,
     isLoading: Boolean,
+    operatorTimezoneId: String,
     onClose: () -> Unit,
     onNavigateToStop: (stopId: String) -> Unit = {},
 ) {
@@ -183,7 +184,7 @@ internal fun StopPreviewContent(
             else -> {
                 // Max 3 partenze nel preview — il resto sta nello StopDetail.
                 departures.take(3).forEach { dep ->
-                    SheetDepartureRow(dep)
+                    SheetDepartureRow(dep, operatorTimezoneId)
                 }
             }
         }
@@ -215,7 +216,7 @@ internal fun StopPreviewContent(
 }
 
 @Composable
-private fun SheetDepartureRow(departure: ResolvedDeparture) {
+private fun SheetDepartureRow(departure: ResolvedDeparture, operatorTimezoneId: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -232,6 +233,6 @@ private fun SheetDepartureRow(departure: ResolvedDeparture) {
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        TimeDisplay(state = departureTimeState(departure.departureTime))
+        TimeDisplay(state = departureTimeState(departure.departureTime, operatorTimezoneId))
     }
 }

@@ -144,7 +144,11 @@ struct MappaTab: View {
                 }
             }
 
-            // MARK: Compact controls — centered vertically on right edge
+            // MARK: Compact controls — centered vertically on the *visible* map
+            // area (i.e. excluding the search pill at the top and the tab bar at
+            // the bottom). Without the bottom offset, default ZStack centering
+            // lands ~30pt above the visual center because the tab bar eats
+            // ~85pt of the bottom edge.
             if !isExpanded {
                 HStack {
                     Spacer()
@@ -162,6 +166,7 @@ struct MappaTab: View {
                         }
                     )
                 }
+                .padding(.top, 60)
             }
 
             // MARK: Expanded controls (right + close bottom-center)
@@ -357,12 +362,10 @@ struct MappaTab: View {
     private func makeTripTarget(for selection: VehicleSelection) -> TripTarget? {
         let tripId = selection.vehicle.tripId
         let route = selection.route
-        // Try to match a scheduled departure by tripId — pick the first one.
-        let apiDep: APIDeparture? = store.scheduleResponse?.stops
-            .lazy
-            .flatMap(\.departures)
-            .first(where: { $0.tripId == tripId })
-        guard let apiDep else { return nil }
+        // O(1) lookup via the pre-built `apiDepartureByTripId` index in
+        // ScheduleStore — replaces the previous `stops.lazy.flatMap.first`
+        // scan that ran on the main thread at every vehicle tap.
+        guard let apiDep = store.apiDepartureByTripId[tripId]?.departure else { return nil }
         let dep = Departure(from: apiDep, route: route)
         // Pick the current stop as origin when available; otherwise use the
         // vehicle's nearest stop on the map or the first stop of any direction.

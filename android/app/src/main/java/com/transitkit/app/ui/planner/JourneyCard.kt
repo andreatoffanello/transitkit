@@ -24,10 +24,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.data.model.Journey
@@ -127,9 +129,9 @@ fun JourneyCard(
                 }
                 Spacer(Modifier.weight(1f))
                 val transfersLabel = when (journey.transfers) {
-                    0 -> "Direct"
-                    1 -> "1 transfer"
-                    else -> "${journey.transfers} transfers"
+                    0 -> stringResource(R.string.planner_direct)
+                    1 -> stringResource(R.string.planner_one_transfer)
+                    else -> stringResource(R.string.planner_n_transfers, journey.transfers)
                 }
                 Text(
                     text = transfersLabel,

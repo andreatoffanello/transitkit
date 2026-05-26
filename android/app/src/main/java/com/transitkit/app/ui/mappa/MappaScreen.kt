@@ -104,7 +104,7 @@ fun MappaScreen(
             if (match != null) {
                 val route = viewModel.routes.value.firstOrNull { it.id == match.routeId }
                 val color = route?.color?.takeIf { it.isNotBlank() }?.let { hex ->
-                    runCatching { Color(android.graphics.Color.parseColor("#$hex")) }.getOrNull()
+                    com.transitkit.app.ui.components.parseHexColor(hex, fallback = Color(0xFF06845C))
                 } ?: Color(0xFF06845C)
                 viewModel.clearSelectedStop()
                 viewModel.selectVehicle(match, color)
@@ -131,11 +131,20 @@ fun MappaScreen(
         previewApplied = true
     }
 
-    // Initial camera — center on the device's last-known location (zoomed in,
-    // 3D pitch) when permission allows; fall back to the operator's configured
-    // map center at the city-overview zoom otherwise.
+    // Initial camera — priority order:
+    //  1. Deep link `transitkit://map?lat=&lng=&zoom=&pitch=` (consume + use).
+    //  2. Device's last-known location (zoomed in, 3D pitch) when permission allows.
+    //  3. Operator's configured map center at city-overview zoom.
     val context = androidx.compose.ui.platform.LocalContext.current
     val initialCamera = remember {
+        val deepLinkCam = PendingMapCameraStore.consume()
+        if (deepLinkCam != null) {
+            return@remember Triple(
+                Point.fromLngLat(deepLinkCam.longitude, deepLinkCam.latitude),
+                deepLinkCam.zoom,
+                deepLinkCam.pitch ?: 45.0,
+            )
+        }
         val hasPermission = context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
             android.content.pm.PackageManager.PERMISSION_GRANTED
         val userLoc = if (hasPermission) {
@@ -147,16 +156,20 @@ fun MappaScreen(
         } else null
 
         if (userLoc != null) {
+            // Utente localizzato → zoom alto + pitch 3D (Mapbox emette
+            // fill-extrusion da zoom ~16): vista scenica immediata.
             Triple(
                 Point.fromLngLat(userLoc.longitude, userLoc.latitude),
                 MapZoomLevels.userDefaultEntry,
-                45.0,
+                50.0,
             )
         } else {
+            // Fallback city overview → pitch 0 perché a zoom 13 i building
+            // restano comunque 2D (LOD tile). Pitch alto sarebbe inutile.
             Triple(
                 Point.fromLngLat(mapCenter.longitude(), mapCenter.latitude()),
                 MapZoomLevels.cityDefaultEntry,
-                45.0,
+                0.0,
             )
         }
     }
@@ -167,6 +180,22 @@ fun MappaScreen(
             zoom(initialCamera.second)
             pitch(initialCamera.third)
         }
+    }
+
+    // Deep link camera — `transitkit://map?lat=&lng=&zoom=&pitch=`. Lo store
+    // viene popolato da MainActivity.handleMapDeepLink; qui osserviamo il Flow
+    // e applichiamo + clear. Pattern portato da Movete.
+    // Se l'utente clicca un deep link mentre la mappa è già viva, applichiamo
+    // un flyTo (cold start è gestito sopra via initialCamera + consume).
+    val pendingCamera by PendingMapCameraStore.pending.collectAsStateWithLifecycle()
+    LaunchedEffect(pendingCamera) {
+        val cam = pendingCamera ?: return@LaunchedEffect
+        val builder = CameraOptions.Builder()
+            .center(Point.fromLngLat(cam.longitude, cam.latitude))
+            .zoom(cam.zoom)
+        cam.pitch?.let { builder.pitch(it) }
+        viewportState.flyTo(builder.build())
+        PendingMapCameraStore.consume()
     }
 
     // AtomicLong avoids Compose stale-closure: onMapClickListener captures the ref once
@@ -239,7 +268,8 @@ fun MappaScreen(
     val selectedRoute = selectedRouteId?.let { id -> routes.firstOrNull { it.id == id } }
     val selectedLineColor = remember(selectedRoute?.color) {
         selectedRoute?.color?.takeIf { it.isNotBlank() }?.let { hex ->
-            runCatching { Color(android.graphics.Color.parseColor("#$hex")) }.getOrNull()
+            com.transitkit.app.ui.components.parseHexColor(hex, fallback = Color.Transparent)
+                .takeIf { it != Color.Transparent }
         }
     }
 
@@ -370,19 +400,16 @@ fun MappaScreen(
 
             MapEffect(Unit) { mapView ->
                 mapView.mapboxMap.setPrefetchZoomDelta(4)
+                mapView.applyMaximumFps()
             }
 
-            MapEffect(isDark) { mapView ->
-                val s = mapView.mapboxMap.style
-                if (s != null) {
-                    applyTransitKitStandardStyleConfig(s, isDark)
-                } else {
-                    mapView.mapboxMap.subscribeStyleLoaded {
-                        mapView.mapboxMap.style?.let { loaded ->
-                            applyTransitKitStandardStyleConfig(loaded, isDark)
-                        }
-                    }
-                }
+            MapEffect(isDark, is3D) { mapView ->
+                val styleCancel = applyTransitKitStandardStyleConfig(
+                    mapView,
+                    isDark = isDark,
+                    show3D = is3D,
+                )
+                kotlinx.coroutines.awaitCancellation().also { styleCancel.cancel() }
             }
         }
 
@@ -427,11 +454,14 @@ fun MappaScreen(
             },
             onToggle3D = {
                 scope.launch {
-                    viewportState.flyTo(
-                        CameraOptions.Builder()
-                            .pitch(if (is3D) 0.0 else 45.0)
-                            .build()
-                    )
+                    // Going INTO 3D: ensure zoom ≥ 16.5 so Mapbox Standard emits
+                    // fill-extrusion (sotto zoom ~16 i building restano 2D anche
+                    // con show3dObjects=true — è un LOD del tile, non bug nostro).
+                    // Going OUT to 2D: lascia lo zoom corrente.
+                    val builder = CameraOptions.Builder()
+                        .pitch(if (is3D) 0.0 else 50.0)
+                    if (!is3D && currentZoom < 16.5) builder.zoom(16.5)
+                    viewportState.flyTo(builder.build())
                 }
             },
             onResetBearing = {
@@ -475,7 +505,7 @@ fun MappaScreen(
                         // deeplink time before the schedule resolved the
                         // route. Fall through to stored color or accent last.
                         val vehicleColor: Color = route?.color?.takeIf { it.isNotBlank() }?.let { hex ->
-                            runCatching { Color(android.graphics.Color.parseColor("#$hex")) }.getOrNull()
+                            com.transitkit.app.ui.components.parseHexColor(hex, fallback = storedColor)
                         } ?: storedColor
                         val delaySeconds = vehicle.tripId?.let { tripDelays[it] } ?: 0
                         val stopName = vehicle.currentStopId?.takeIf { it.isNotBlank() }?.let { sid ->
@@ -518,6 +548,7 @@ fun MappaScreen(
                                 stop = stop,
                                 departures = stopDepartures,
                                 isLoading = isDeparturesLoading,
+                                operatorTimezoneId = viewModel.operatorTimezoneId,
                                 onClose = { viewModel.clearSelectedStop() },
                                 onNavigateToStop = onNavigateToStop,
                             )

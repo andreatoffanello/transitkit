@@ -1,18 +1,25 @@
 package com.transitkit.app.ui.home
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.RenderEffect
 import android.graphics.RuntimeShader
 import android.graphics.Shader
 import android.os.Build
+import android.os.PowerManager
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
@@ -22,17 +29,22 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.transitkit.app.R
 import com.transitkit.app.config.TransitTheme
 import kotlinx.coroutines.isActive
@@ -85,7 +97,9 @@ uniform float accentG;
 uniform float accentB;
 
 float hash2(float2 p) {
-    return fract(sin(dot(p, float2(127.1, 311.7))) * 43758.5453);
+    p = fract(p * float2(127.1, 311.7));
+    p += dot(p, p + 74.3);
+    return fract(p.x * p.y);
 }
 
 float vnoise(float2 p) {
@@ -100,13 +114,13 @@ float vnoise(float2 p) {
 }
 
 // 3 ottave invece di 4 — stessa qualità percepita, meno sample.
+// Scaling 2.1 + offset asimmetrico irrazionale decorrela ottave (no banding).
 float fbm(float2 p) {
     float v = 0.0;
     float a = 0.5;
-    float2 shift = float2(100.0);
     for (int i = 0; i < 3; i++) {
         v += a * vnoise(p);
-        p = p * 2.0 + shift;
+        p = p * 2.1 + float2(3.7, 1.9);
         a *= 0.5;
     }
     return v;
@@ -183,9 +197,15 @@ private fun OperatorMapBackgroundLayered(
     val isDark = isSystemInDarkTheme()
     val accent = TransitTheme.colors.accent
 
+    // Auto-pause: powerSave OR thermal severe+ OR lifecycle non resumed OR paused esterno.
+    val isPowerSave = rememberIsPowerSaveMode()
+    val isThermallyConstrained = rememberIsThermallyConstrained()
+    val isResumed = rememberIsResumed()
+    val effectivelyPaused = paused || isPowerSave || isThermallyConstrained || !isResumed
+
     var time by remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(paused) {
-        if (paused) return@LaunchedEffect
+    LaunchedEffect(effectivelyPaused) {
+        if (effectivelyPaused) return@LaunchedEffect
         var prev: Long = -1L
         var accumulated = 0L
         while (isActive) {
@@ -203,6 +223,8 @@ private fun OperatorMapBackgroundLayered(
     }
 
     // Quick win #2: render a metà risoluzione + upscale 2×.
+    // Offscreen compositing: HWUI può fare tile rendering e creare seam
+    // animati sullo shader → forziamo un singolo buffer offscreen.
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -216,6 +238,7 @@ private fun OperatorMapBackgroundLayered(
                     scaleX = 2f
                     scaleY = 2f
                     transformOrigin = TransformOrigin(0f, 0f)
+                    compositingStrategy = CompositingStrategy.Offscreen
                 }
                 .layout { measurable, constraints ->
                     val halfW = constraints.maxWidth / 2
@@ -241,6 +264,70 @@ private fun OperatorMapBackgroundLayered(
     }
 }
 
+// ── State observers per auto-pause ───────────────────────────────────────────
+
+@Composable
+private fun rememberIsPowerSaveMode(): Boolean {
+    val context = LocalContext.current
+    val powerManager = remember(context) {
+        context.getSystemService(Context.POWER_SERVICE) as PowerManager
+    }
+    var isPowerSave by remember { mutableStateOf(powerManager.isPowerSaveMode) }
+    DisposableEffect(context, powerManager) {
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(c: Context?, intent: Intent?) {
+                isPowerSave = powerManager.isPowerSaveMode
+            }
+        }
+        context.registerReceiver(
+            receiver,
+            IntentFilter(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED),
+        )
+        onDispose { context.unregisterReceiver(receiver) }
+    }
+    return isPowerSave
+}
+
+@Composable
+private fun rememberIsThermallyConstrained(): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false
+    val context = LocalContext.current
+    val powerManager = remember(context) {
+        context.getSystemService(Context.POWER_SERVICE) as PowerManager
+    }
+    var constrained by remember {
+        mutableStateOf(powerManager.currentThermalStatus >= PowerManager.THERMAL_STATUS_SEVERE)
+    }
+    DisposableEffect(powerManager) {
+        val listener = PowerManager.OnThermalStatusChangedListener { status ->
+            constrained = status >= PowerManager.THERMAL_STATUS_SEVERE
+        }
+        powerManager.addThermalStatusListener(listener)
+        onDispose { powerManager.removeThermalStatusListener(listener) }
+    }
+    return constrained
+}
+
+@Composable
+private fun rememberIsResumed(): Boolean {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var resumed by remember {
+        mutableStateOf(lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
+    }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> resumed = true
+                Lifecycle.Event.ON_PAUSE -> resumed = false
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    return resumed
+}
+
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 private fun ShaderMapLayer(
@@ -262,6 +349,7 @@ private fun ShaderMapLayer(
             .fillMaxSize()
             .alpha(layerOpacity)
             .graphicsLayer {
+                compositingStrategy = CompositingStrategy.Offscreen
                 shader.setFloatUniform("size", size.width, size.height)
                 shader.setFloatUniform("time", time)
                 shader.setFloatUniform("sharpness", sharpness)
@@ -272,8 +360,10 @@ private fun ShaderMapLayer(
                 val shaderFx = RenderEffect.createRuntimeShaderEffect(shader, "composable")
                 renderEffect = if (blurPx > 0f) {
                     // Quick win #6: blur in chain con lo shader → single pass.
+                    // CLAMP (non DECAL): evita bordi scuri quando il kernel
+                    // blur samples fuori dal source.
                     RenderEffect.createChainEffect(
-                        RenderEffect.createBlurEffect(blurPx, blurPx, Shader.TileMode.DECAL),
+                        RenderEffect.createBlurEffect(blurPx, blurPx, Shader.TileMode.CLAMP),
                         shaderFx,
                     )
                 } else {

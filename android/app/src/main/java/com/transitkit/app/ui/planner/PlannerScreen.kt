@@ -38,8 +38,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -84,14 +84,14 @@ fun PlannerScreen(
     viewModel: PlannerViewModel = hiltViewModel(),
 ) {
     val colors = TransitTheme.colors
-    val origin by viewModel.origin.collectAsState()
-    val destination by viewModel.destination.collectAsState()
-    val whenSel by viewModel.whenSelection.collectAsState()
-    val journeys by viewModel.journeys.collectAsState()
-    val isSearching by viewModel.isSearching.collectAsState()
-    val hasSearched by viewModel.hasSearched.collectAsState()
-    val searchError by viewModel.searchError.collectAsState()
-    val connState by viewModel.connectionsState.collectAsState()
+    val origin by viewModel.origin.collectAsStateWithLifecycle()
+    val destination by viewModel.destination.collectAsStateWithLifecycle()
+    val whenSel by viewModel.whenSelection.collectAsStateWithLifecycle()
+    val journeys by viewModel.journeys.collectAsStateWithLifecycle()
+    val isSearching by viewModel.isSearching.collectAsStateWithLifecycle()
+    val hasSearched by viewModel.hasSearched.collectAsStateWithLifecycle()
+    val searchError by viewModel.searchError.collectAsStateWithLifecycle()
+    val connState by viewModel.connectionsState.collectAsStateWithLifecycle()
 
     LaunchedEffect(connState) {
         if (connState == ConnectionsStore.LoadState.READY) viewModel.onConnectionsReady()
@@ -110,11 +110,12 @@ fun PlannerScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            val cdBack = stringResource(R.string.cd_indietro)
             IconButton(
                 onClick = onBack,
                 modifier = Modifier
                     .size(40.dp)
-                    .semantics { contentDescription = "Back" },
+                    .semantics { contentDescription = cdBack },
             ) {
                 Icon(
                     painterResource(LucideIcons.ArrowLeft),
@@ -131,39 +132,71 @@ fun PlannerScreen(
         }
 
         // ── Input card ────────────────────────────────────────────────────────
-        // Match the Home planner_home_box surface so the From/To card looks
-        // identical across screens (was a M3 surfaceVariant lavender tint).
+        // Layout Movete-parity: icon column (locate-fixed + connector + map-pin)
+        // a sinistra, fields stacked a destra, swap button in fondo.
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = colors.bgSecondary,
             border = BorderStroke(0.5.dp, colors.glassBorder),
             tonalElevation = 0.dp,
         ) {
-            Column(modifier = Modifier.padding(4.dp)) {
-                StopInputRow(
-                    label = stringResource(R.string.planner_from),
-                    location = origin,
-                    isOrigin = true,
-                    onClick = { onNavigateToLocationPicker("origin") },
-                    onClear = { viewModel.setOrigin(null) },
-                )
-                Box(contentAlignment = Alignment.CenterEnd, modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Icon column with vertical connector — same pattern as iOS
+                // PlannerScreen.swift inputHeader (locateFixed + Rectangle + mapPin).
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.width(20.dp),
+                ) {
+                    Icon(
+                        painter = painterResource(LucideIcons.LocateFixed),
+                        contentDescription = null,
+                        tint = colors.accent,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Box(
+                        modifier = Modifier
+                            .padding(vertical = 2.dp)
+                            .width(1.dp)
+                            .height(18.dp)
+                            .background(colors.textTertiary),
+                    )
+                    Icon(
+                        painter = painterResource(LucideIcons.MapPin),
+                        contentDescription = null,
+                        tint = colors.accent,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+
+                Spacer(Modifier.width(12.dp))
+
+                // Stacked field labels — no inline icons (already in icon column).
+                Column(modifier = Modifier.weight(1f)) {
+                    StopInputRow(
+                        label = stringResource(R.string.planner_from),
+                        location = origin,
+                        onClick = { onNavigateToLocationPicker("origin") },
+                        onClear = { viewModel.setOrigin(null) },
+                    )
                     HorizontalDivider(
-                        modifier = Modifier.padding(start = 48.dp),
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                         thickness = 0.5.dp,
                     )
-                    SwapButton(
-                        onClick = { viewModel.swapStops() },
-                        modifier = Modifier.padding(end = 8.dp),
+                    StopInputRow(
+                        label = stringResource(R.string.planner_to),
+                        location = destination,
+                        onClick = { onNavigateToLocationPicker("destination") },
+                        onClear = { viewModel.setDestination(null) },
                     )
                 }
-                StopInputRow(
-                    label = stringResource(R.string.planner_to),
-                    location = destination,
-                    isOrigin = false,
-                    onClick = { onNavigateToLocationPicker("destination") },
-                    onClear = { viewModel.setDestination(null) },
+
+                SwapButton(
+                    onClick = { viewModel.swapStops() },
+                    modifier = Modifier.padding(start = 4.dp),
                 )
             }
         }
@@ -202,12 +235,12 @@ fun PlannerScreen(
                         )
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            "Trip data unavailable",
+                            stringResource(R.string.planner_data_unavailable),
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                             color = colors.textPrimary,
                         )
                         Text(
-                            "Check your connection and try again.",
+                            stringResource(R.string.planner_data_unavailable_hint),
                             style = MaterialTheme.typography.bodySmall,
                             color = colors.textSecondary,
                         )
@@ -229,9 +262,15 @@ fun PlannerScreen(
                     }
                 }
                 searchError != null -> {
+                    val msg = when (searchError!!) {
+                        PlannerViewModel.SearchError.SameStop ->
+                            stringResource(R.string.planner_same_stop)
+                        PlannerViewModel.SearchError.OutOfServiceArea ->
+                            stringResource(R.string.planner_out_of_service_area)
+                    }
                     CenteredMessage {
                         Text(
-                            searchError!!,
+                            msg,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.error,
                         )
@@ -278,7 +317,7 @@ fun PlannerScreen(
                         )
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            "Choose a start and end stop",
+                            stringResource(R.string.planner_choose_stops),
                             style = MaterialTheme.typography.bodyMedium,
                             color = colors.textSecondary,
                         )
@@ -291,12 +330,13 @@ fun PlannerScreen(
 }
 
 // ─── StopInputRow ──────────────────────────────────────────────────────────────
+// Icon è disegnata nella icon column del parent (Surface in PlannerScreen).
+// Questa row ha solo: text + optional clear button.
 
 @Composable
 private fun StopInputRow(
     label: String,
     location: PlannerLocation?,
-    isOrigin: Boolean,
     onClick: () -> Unit,
     onClear: () -> Unit,
 ) {
@@ -304,30 +344,13 @@ private fun StopInputRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 14.dp)
+            .padding(horizontal = 4.dp, vertical = 14.dp)
             .semantics { contentDescription = label },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        // Timeline dot
-        androidx.compose.foundation.Canvas(modifier = Modifier.size(20.dp)) {
-            val r = 6.dp.toPx()
-            val cx = size.width / 2
-            val cy = size.height / 2
-            if (isOrigin) {
-                drawCircle(color = colors.accent, radius = r, center = androidx.compose.ui.geometry.Offset(cx, cy))
-            } else {
-                drawCircle(
-                    color = colors.accent,
-                    radius = r,
-                    center = androidx.compose.ui.geometry.Offset(cx, cy),
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx()),
-                )
-            }
-        }
-
         // Label / location name
         Text(
             text = location?.name ?: label,
@@ -340,10 +363,11 @@ private fun StopInputRow(
             modifier = Modifier.weight(1f),
         )
 
+        val cdClear = stringResource(R.string.cd_clear_location)
         if (location != null) {
             IconButton(
                 onClick = onClear,
-                modifier = Modifier.size(28.dp).semantics { contentDescription = "Clear location" },
+                modifier = Modifier.size(28.dp).semantics { contentDescription = cdClear },
             ) {
                 Icon(
                     painterResource(LucideIcons.X),
@@ -361,6 +385,7 @@ private fun StopInputRow(
 @Composable
 private fun SwapButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = TransitTheme.colors
+    val cdSwap = stringResource(R.string.cd_swap_stops)
     var rotated by remember { mutableStateOf(false) }
     val rotation by animateFloatAsState(
         targetValue = if (rotated) 180f else 0f,
@@ -378,7 +403,7 @@ private fun SwapButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
         modifier = modifier
             .size(32.dp)
             .background(MaterialTheme.colorScheme.surface, CircleShape)
-            .semantics { contentDescription = "Swap origin and destination" },
+            .semantics { contentDescription = cdSwap },
     ) {
         Icon(
             painterResource(LucideIcons.ArrowUpDown),

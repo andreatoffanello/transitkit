@@ -6,7 +6,7 @@ vi.stubGlobal('useState', vi.fn((_, init) => ({ value: init?.() })))
 vi.stubGlobal('useAsyncData', vi.fn())
 vi.stubGlobal('useRuntimeConfig', vi.fn(() => ({
   public: {
-    cdnBase: process.env.CDN_BASE ?? 'https://andreatoffanello.github.io/transitkit-data',
+    cdnBase: process.env.CDN_BASE ?? 'https://andreatoffanello.github.io/transitkit',
   },
 })))
 vi.stubGlobal('$fetch', vi.fn())

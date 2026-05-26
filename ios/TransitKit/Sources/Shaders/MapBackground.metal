@@ -5,8 +5,9 @@ using namespace metal;
 // --- Noise helpers ---
 
 static float hash(float2 p) {
-    float h = dot(p, float2(127.1, 311.7));
-    return fract(sin(h) * 43758.5453);
+    p = fract(p * float2(127.1, 311.7));
+    p += dot(p, p + 74.3);
+    return fract(p.x * p.y);
 }
 
 static float noise(float2 p) {
@@ -22,10 +23,9 @@ static float noise(float2 p) {
 
 static float fbm(float2 p) {
     float v = 0.0, a = 0.5;
-    float2 shift = float2(100.0);
     for (int i = 0; i < 4; i++) {
         v += a * noise(p);
-        p = p * 2.0 + shift;
+        p = p * 2.1 + float2(3.7, 1.9);
         a *= 0.5;
     }
     return v;

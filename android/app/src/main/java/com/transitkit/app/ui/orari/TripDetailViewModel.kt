@@ -9,6 +9,7 @@ import com.transitkit.app.data.model.StopTime
 import com.transitkit.app.data.repository.ScheduleRepository
 import com.transitkit.app.data.store.VehicleStore
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -87,48 +88,52 @@ class TripDetailViewModel @Inject constructor(
                     .filterNotNull()
                     .first()
 
-                // Reconstruct stop sequence from CDN data:
-                // Find all stops that have a departure matching this tripId,
-                // build StopTime list sorted by departure time.
-                val stopTimes = schedule.stops
-                    .flatMap { stop ->
-                        stop.departures
-                            .filter { it.tripId == tripId }
-                            .map { dep ->
-                                StopTime(
+                // Heavy work — three O(stops × deps) scans — runs off the main
+                // thread. Without this, opening a trip detail blocked the UI
+                // for tens of ms on AppalCART-sized schedules (~500 stops ×
+                // ~10 deps each).
+                val result = kotlinx.coroutines.withContext(Dispatchers.Default) {
+                    // Build stopId → stop lookup once.
+                    val stopById = schedule.stops.associateBy { it.id }
+
+                    // Single pass over the schedule: collect every departure
+                    // for this trip + record the currentRouteId. Avoids 3
+                    // separate full-table scans of the previous version.
+                    val tripStops = mutableListOf<StopTime>()
+                    var currentRouteId: String? = null
+                    schedule.stops.forEach { stop ->
+                        stop.departures.forEach { dep ->
+                            if (dep.tripId == tripId) {
+                                if (currentRouteId == null) currentRouteId = dep.routeId
+                                tripStops += StopTime(
                                     stopId = stop.id,
                                     stopName = stop.name,
                                     departureTime = dep.departureTime,
                                     sequenceNumber = timeToMinutes(dep.departureTime),
                                 )
                             }
+                        }
                     }
-                    .sortedBy { it.sequenceNumber }
+                    val stopTimes = tripStops.sortedBy { it.sequenceNumber }
+                    val originIdx = stopTimes.indexOfFirst { it.stopId == fromStopId }.coerceAtLeast(0)
+                    val coincidences = stopTimes.associate { st ->
+                        val others = stopById[st.stopId]?.departures
+                            ?.filter { it.routeId != currentRouteId }
+                            ?.map { it.routeName }
+                            ?.distinct()
+                            ?: emptyList()
+                        st.stopId to others
+                    }
+                    Triple(stopTimes, originIdx, coincidences)
+                }
 
+                val (stopTimes, originIdx, coincidences) = result
                 if (stopTimes.isEmpty()) {
                     _tripState.value = TripState.Error(R.string.trip_error_no_stops)
                     return@launch
                 }
-
-                val originIdx = stopTimes.indexOfFirst { it.stopId == fromStopId }.coerceAtLeast(0)
                 _tripState.value = TripState.Success(stopTimes, originIdx)
-
-                // Build coincidences: for each stop on this trip, find other routes serving it.
-                // Current route is identified by which routeId has this tripId in its departures.
-                val currentRouteId = schedule.stops
-                    .flatMap { it.departures }
-                    .firstOrNull { it.tripId == tripId }
-                    ?.routeId
-
-                _stopCoincidences.value = stopTimes.associate { stopTime ->
-                    val schedStop = schedule.stops.firstOrNull { it.id == stopTime.stopId }
-                    val others = schedStop?.departures
-                        ?.filter { it.routeId != currentRouteId }
-                        ?.map { it.routeName }
-                        ?.distinct()
-                        ?: emptyList()
-                    stopTime.stopId to others
-                }
+                _stopCoincidences.value = coincidences
             } catch (_: Exception) {
                 _tripState.value = TripState.Error(R.string.trip_error_load_failed)
             }

@@ -103,7 +103,7 @@ struct FullScheduleSheet: View {
                                 selectedDayGroup = group
                             }
                         } label: {
-                            Text(group.displayLabel)
+                            Text(label(for: group))
                                 .font(.system(size: 15, weight: isSelected ? .semibold : .medium))
                                 .foregroundStyle(isSelected ? .white : AppTheme.textPrimary)
                                 .padding(.horizontal, 16)
@@ -124,6 +124,17 @@ struct FullScheduleSheet: View {
                 .padding(.vertical, 8)
             }
         }
+    }
+
+    /// Disambiguates duplicate labels (typically "Limited service") with a
+    /// numeric suffix. Without this, an operator with 3 different
+    /// limited-service patterns would show 3 identical chips.
+    private func label(for group: DayGroup) -> String {
+        let base = group.displayLabel
+        let duplicates = sortedDayGroups.filter { $0.displayLabel == base }
+        guard duplicates.count > 1 else { return base }
+        let position = (duplicates.firstIndex(of: group) ?? 0) + 1
+        return "\(base) · \(position)"
     }
 
     // MARK: - Line Filter

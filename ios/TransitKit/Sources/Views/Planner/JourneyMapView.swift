@@ -3,9 +3,11 @@ import MapKit
 import CoreLocation
 
 /// Mappa overview del viaggio. Pattern portato da Movete:
-/// - una polyline per ogni transit leg col colore della linea, passando per
-///   gli intermediate stops (segmenti retti — MOTIS oggi non passa shape GTFS)
-/// - walking leg dashed gray
+/// - una polyline per ogni transit leg col colore della linea. Quando MOTIS
+///   ha restituito `legGeometry.points` (precision 7) viene disegnata la
+///   shape vera lungo le strade; fallback su segmenti retti board → intermediates
+///   → alight quando il polyline è assente
+/// - walking leg dashed gray (anch'essa lungo strade quando MOTIS dà geometry)
 /// - intermediate stops via `StopAnnotationView` (stessi componenti + zoom
 ///   tier della mappa principale)
 /// - pin endpoint start/end (verde/rosso) sopra le polilinee
@@ -136,20 +138,53 @@ struct JourneyMapView: View {
     private func coordsForLeg(_ leg: Leg) -> [CLLocationCoordinate2D] {
         switch leg {
         case .transit(let t):
-            var pts: [CLLocationCoordinate2D] = [
-                CLLocationCoordinate2D(latitude: t.boardStop.lat, longitude: t.boardStop.lng)
-            ]
+            let board  = CLLocationCoordinate2D(latitude: t.boardStop.lat, longitude: t.boardStop.lng)
+            let alight = CLLocationCoordinate2D(latitude: t.alightStop.lat, longitude: t.alightStop.lng)
+            if let encoded = t.shapePolyline {
+                let decoded = decodeGooglePolyline(encoded, precision: 7)
+                if decoded.count >= 2 {
+                    return clampedShape(decoded, board: board, alight: alight)
+                }
+            }
+            // Fallback: segmenti retti board → intermediates → alight
+            var pts: [CLLocationCoordinate2D] = [board]
             pts.append(contentsOf: t.intermediateStops.map {
                 CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lng)
             })
-            pts.append(CLLocationCoordinate2D(latitude: t.alightStop.lat, longitude: t.alightStop.lng))
+            pts.append(alight)
             return pts
         case .walking(let w):
-            return [
-                CLLocationCoordinate2D(latitude: w.fromStop.lat, longitude: w.fromStop.lng),
-                CLLocationCoordinate2D(latitude: w.toStop.lat, longitude: w.toStop.lng)
-            ]
+            let from = CLLocationCoordinate2D(latitude: w.fromStop.lat, longitude: w.fromStop.lng)
+            let to   = CLLocationCoordinate2D(latitude: w.toStop.lat, longitude: w.toStop.lng)
+            if let encoded = w.shapePolyline {
+                let decoded = decodeGooglePolyline(encoded, precision: 7)
+                if decoded.count >= 2 {
+                    return clampedShape(decoded, board: from, alight: to)
+                }
+            }
+            return [from, to]
         }
+    }
+
+    /// Salda gli estremi del polyline decodato alle coordinate canoniche delle
+    /// fermate. MOTIS può emettere il primo/ultimo punto leggermente offset
+    /// rispetto alla posizione GTFS del catalogo (proiezione sulla rete stradale)
+    /// — senza saldatura si vede un gap di pochi metri.
+    private func clampedShape(
+        _ pts: [CLLocationCoordinate2D],
+        board: CLLocationCoordinate2D,
+        alight: CLLocationCoordinate2D
+    ) -> [CLLocationCoordinate2D] {
+        var out: [CLLocationCoordinate2D] = []
+        out.reserveCapacity(pts.count + 2)
+        if !sameCoord(pts.first!, board) { out.append(board) }
+        out.append(contentsOf: pts)
+        if !sameCoord(pts.last!, alight) { out.append(alight) }
+        return out
+    }
+
+    private func sameCoord(_ a: CLLocationCoordinate2D, _ b: CLLocationCoordinate2D) -> Bool {
+        abs(a.latitude - b.latitude) < 9e-6 && abs(a.longitude - b.longitude) < 9e-6
     }
 
     // MARK: - Intermediate stops resolution

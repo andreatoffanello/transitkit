@@ -48,7 +48,9 @@ val Journey.totalWalkSeconds: Int
 data class IntermediateStop(
     val id: String,
     val name: String,
-    val time: String,
+    /** Arrival time at this stop, epoch millis. Formatted at the call site using
+     *  the operator timezone — see `formatEpochTime` in `ui/planner/PlannerFormatting.kt`. */
+    val arrivalTime: Long,
     val lat: Double = 0.0,
     val lon: Double = 0.0,
 )

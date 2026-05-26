@@ -21,6 +21,7 @@ enum LucideIcon: String, CaseIterable {
     case clock = "lucide-clock"
     case mapPin = "lucide-map-pin"
     case mapPinOff = "lucide-map-pin-off"
+    case locateFixed = "lucide-locate-fixed"
     case map = "lucide-map"
     case navigation = "lucide-navigation"
     case signpost = "lucide-signpost"

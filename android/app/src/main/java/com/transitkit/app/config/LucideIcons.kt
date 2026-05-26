@@ -29,6 +29,7 @@ object LucideIcons {
     @DrawableRes val LayoutDashboard = R.drawable.ic_lucide_layout_dashboard
     @DrawableRes val List = R.drawable.ic_lucide_list
     @DrawableRes val ListOrdered = R.drawable.ic_lucide_list_ordered
+    @DrawableRes val LocateFixed = R.drawable.ic_lucide_locate_fixed
     @DrawableRes val Mail = R.drawable.ic_lucide_mail
     @DrawableRes val Map = R.drawable.ic_lucide_map
     @DrawableRes val MapPin = R.drawable.ic_lucide_map_pin

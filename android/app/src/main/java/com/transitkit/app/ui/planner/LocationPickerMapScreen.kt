@@ -247,14 +247,12 @@ fun LocationPickerMapScreen(
                 com.transitkit.app.ui.mappa.UserLocationPuck()
 
                 MapEffect(isDark) { mapView ->
-                    val s = mapView.mapboxMap.style
-                    if (s != null) {
-                        applyTransitKitStandardStyleConfig(s, isDark)
-                    } else {
-                        mapView.mapboxMap.subscribeStyleLoaded {
-                            mapView.mapboxMap.style?.let { applyTransitKitStandardStyleConfig(it, isDark) }
-                        }
-                    }
+                    val styleCancel = applyTransitKitStandardStyleConfig(
+                        mapView,
+                        isDark = isDark,
+                        show3D = false,
+                    )
+                    kotlinx.coroutines.awaitCancellation().also { styleCancel.cancel() }
                 }
                 MapEffect(Unit) { mapView ->
                     mapView.mapboxMap.subscribeCameraChanged {

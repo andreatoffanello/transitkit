@@ -1,6 +1,5 @@
 {
   "id": "appalcart",
-  "apiUrl": "https://transitkit-engine.vercel.app/api",
   "cdnUrl": "https://andreatoffanello.github.io/transitkit",
   "routing_endpoint": "https://api.transitkit.app",
   "name": "AppalCART",
@@ -533,5 +532,10 @@
       },
       "links": []
     }
-  ]
+  ],
+  "appLinks": {
+    "ios": "https://apps.apple.com/app/id000000000",
+    "android": "https://play.google.com/store/apps/details?id=com.transitkit.appalcart"
+  },
+  "privacyUrl": "https://appalcart.transitkit.app/privacy"
 }

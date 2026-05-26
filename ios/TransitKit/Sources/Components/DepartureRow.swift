@@ -22,18 +22,7 @@ struct DepartureRow: View {
     @Environment(ScheduleStore.self) private var scheduleStore
 
     private var timeState: DepartureTimeState {
-        let nowMinutes = scheduleStore.currentMinutesFromMidnight()
-        let diff = departure.minutesFromMidnight - nowMinutes
-
-        if diff < 0 {
-            return .passed(departure.time)
-        } else if diff == 0 {
-            return .departing
-        } else if diff <= 60 {
-            return .minutes(diff)
-        } else {
-            return .absolute(departure.time)
-        }
+        scheduleStore.timeState(for: departure)
     }
 
     private var isDeparted: Bool {

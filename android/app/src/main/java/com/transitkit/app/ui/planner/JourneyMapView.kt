@@ -121,14 +121,15 @@ fun JourneyMapView(
         // Native blue puck — always rendered above every other layer.
         com.transitkit.app.ui.mappa.UserLocationPuck()
 
-        // Match the main map's basemap configuration (no POI/road labels, no
-        // 3D buildings, lightPreset bound to theme).
+        // Match the main map's basemap configuration. `show3D = false` perché
+        // l'overview di journey è 2D (pitch 0) — niente edifici estrusi.
         MapEffect(isDark) { mapView ->
-            val s = mapView.mapboxMap.style
-            if (s != null) applyTransitKitStandardStyleConfig(s, isDark)
-            else mapView.mapboxMap.subscribeStyleLoaded {
-                mapView.mapboxMap.style?.let { applyTransitKitStandardStyleConfig(it, isDark) }
-            }
+            val styleCancel = applyTransitKitStandardStyleConfig(
+                mapView,
+                isDark = isDark,
+                show3D = false,
+            )
+            kotlinx.coroutines.awaitCancellation().also { styleCancel.cancel() }
         }
 
         // Walking dashed — theme-adapted color so it stays legible against the
@@ -194,20 +195,19 @@ fun JourneyMapView(
             }
         }
 
-        // Intermediate stop markers — small white-center, route-color ring.
-        // Coords come directly from MOTIS legGeometry intermediate points.
-        decodedLegs.forEach { (leg, _) ->
-            if (leg !is TransitLeg) return@forEach
+        // Intermediate stop markers — stessa pipeline della mappa principale
+        // (StopSymbolLayer): bitmap dot < neighborhoodMaxZoom, pin signpost
+        // sopra. Componenti unici per leg perché il bitmap è colorato con la
+        // route color e va registrato per id distinto.
+        decodedLegs.forEachIndexed { idx, entry ->
+            val leg = entry.first
+            if (leg !is TransitLeg || leg.intermediateStops.isEmpty()) return@forEachIndexed
             val color = safeRouteColor(parseHexColor(leg.routeColor, fallback = accentColor), isDark)
-            leg.intermediateStops.forEach { stop ->
-                if (stop.lat == 0.0 && stop.lon == 0.0) return@forEach
-                CircleAnnotation(point = Point.fromLngLat(stop.lon, stop.lat)) {
-                    circleColor = Color.White
-                    circleRadius = 3.5
-                    circleStrokeColor = color
-                    circleStrokeWidth = 2.0
-                }
-            }
+            JourneyIntermediateStopsLayer(
+                legKey = "leg${idx}",
+                stops = leg.intermediateStops,
+                routeColor = color,
+            )
         }
 
         // Board / alight pins — colored dot with white stroke.

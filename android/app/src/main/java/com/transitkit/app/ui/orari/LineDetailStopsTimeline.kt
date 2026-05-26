@@ -127,9 +127,9 @@ internal fun StopTimelineRow(
                     visible.forEach { lineName ->
                         val gtfsHex = routeColorByName[lineName]?.takeIf { it.isNotBlank() }
                         val isColored = gtfsHex != null
-                        val badgeColor = gtfsHex
-                            ?.let { runCatching { Color(android.graphics.Color.parseColor("#$it")) }.getOrNull() }
-                            ?: accentColor.copy(alpha = 0.15f)
+                        val badgeColor = gtfsHex?.let {
+                            com.transitkit.app.ui.components.parseHexColor(it, fallback = accentColor.copy(alpha = 0.15f))
+                        } ?: accentColor.copy(alpha = 0.15f)
                         val fgColor = if (isColored) routeBadgeContrast(badgeColor) else accentColor
                         Box(
                             modifier = Modifier

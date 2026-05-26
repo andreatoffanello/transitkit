@@ -121,19 +121,19 @@ class MappaViewModel @Inject constructor(
     /** Vehicles paired with their GTFS route color (falls back to brand accent). */
     val vehiclesWithColor: StateFlow<List<Pair<VehiclePosition, Color>>> =
         combine(_vehicles, scheduleRepository.routes, _selectedRouteId) { vehicleList, routeList, routeId ->
+            val accentFallback = com.transitkit.app.ui.components.parseHexColor(
+                config.theme.accentColor,
+                fallback = Color(0xFF06845C),
+            )
             val routeColorMap = routeList.associate { route ->
                 route.id to if (route.color.isNotBlank())
-                    runCatching {
-                        Color(android.graphics.Color.parseColor("#${route.color}"))
-                    }.getOrNull()
+                    com.transitkit.app.ui.components.parseHexColor(route.color, fallback = accentFallback)
                 else null
             }
             val filtered = if (routeId == null) vehicleList
                            else vehicleList.filter { it.routeId == routeId }
             filtered.map { vehicle ->
-                vehicle to (routeColorMap[vehicle.routeId]
-                    ?: runCatching { Color(android.graphics.Color.parseColor(config.theme.accentColor)) }
-                        .getOrElse { Color(0xFF06845C) })
+                vehicle to (routeColorMap[vehicle.routeId] ?: accentFallback)
             }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 

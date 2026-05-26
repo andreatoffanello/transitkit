@@ -33,6 +33,7 @@ import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.style.MapStyle
 import com.mapbox.maps.plugin.gestures.gestures
+import kotlinx.coroutines.awaitCancellation
 import com.transitkit.app.R
 import com.transitkit.app.config.LocalTransitColors
 import com.transitkit.app.config.LucideIcons
@@ -119,13 +120,14 @@ internal fun StopDetailMapHero(
                 mapView.gestures.quickZoomEnabled = false
             }
             MapEffect(isDark) { mapView ->
-                val applied = mapView.mapboxMap.style
-                if (applied != null) {
-                    applyTransitKitHeroStyleConfig(applied, isDark)
-                } else {
-                    mapView.mapboxMap.subscribeStyleLoaded {
-                        mapView.mapboxMap.style?.let { applyTransitKitHeroStyleConfig(it, isDark) }
-                    }
+                mapView.mapboxMap.style?.let { applyTransitKitHeroStyleConfig(it, isDark) }
+                val cancelable = mapView.mapboxMap.subscribeStyleLoaded {
+                    mapView.mapboxMap.style?.let { applyTransitKitHeroStyleConfig(it, isDark) }
+                }
+                try {
+                    awaitCancellation()
+                } finally {
+                    cancelable.cancel()
                 }
             }
             // ⬇️ Single source of truth: STESSO componente StopSymbolLayer della

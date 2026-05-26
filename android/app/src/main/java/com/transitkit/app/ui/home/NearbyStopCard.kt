@@ -1,6 +1,5 @@
 package com.transitkit.app.ui.home
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -64,9 +63,7 @@ internal fun NearbyStopCard(
             .semantics { contentDescription = "home_nearby_stop_${stop.id}" },
         shape = RoundedCornerShape(14.dp),
         color = colors.glassFill,
-        border = BorderStroke(0.5.dp, colors.glassBorder),
-        tonalElevation = 0.dp,
-        shadowElevation = 1.dp,
+        tonalElevation = 1.dp,
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             // Header: pin icon + stop name (up to 2 lines so taller names don't

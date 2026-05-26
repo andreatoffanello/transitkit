@@ -32,6 +32,10 @@ class ScheduleStore {
     /// matched against `APIRoute.directions[*].headsign`. Linee circolari
     /// (1 direction) collassano sempre su 0.
     private(set) var directionByTripId: [String: Int] = [:]
+    /// Maps tripId → earliest (start-of-run) `(APIStop, APIDeparture)` pair.
+    /// Replaces `O(stops × deps)` scans previously done on the main thread by
+    /// `firstDepartureAndStop(forTripId:)` and `MappaTab.makeTripTarget`.
+    private(set) var apiDepartureByTripId: [String: (apiStop: APIStop, departure: APIDeparture)] = [:]
 
     private var loader: ScheduleLoader
     private(set) var apiUrl: String?
@@ -139,20 +143,20 @@ class ScheduleStore {
             return (route.id, names.joined(separator: sep))
         })
 
+        // Single pass over `response.stops × departures` builds all trip-keyed
+        // indices at once: tripIdsByRouteId, routeIdByTripId, directionByTripId,
+        // and apiDepartureByTripId (earliest stop/departure for each trip).
         var tripMap: [String: Set<String>] = [:]
+        var routeByTrip: [String: String] = [:]
+        var directionByTrip: [String: Int] = [:]
+        var firstDepartureByTrip: [String: (apiStop: APIStop, departure: APIDeparture)] = [:]
         for stop in response.stops {
             for dep in stop.departures {
                 tripMap[dep.routeId, default: []].insert(dep.tripId)
-            }
-        }
-        tripIdsByRouteId = tripMap
 
-        var routeByTrip: [String: String] = [:]
-        var directionByTrip: [String: Int] = [:]
-        for stop in response.stops {
-            for dep in stop.departures {
                 guard !dep.tripId.isEmpty, !dep.routeId.isEmpty else { continue }
                 routeByTrip[dep.tripId] = dep.routeId
+
                 // Match headsign against route directions to resolve directionId.
                 // Linee circolari (route.directions.count == 1) collapsano su 0.
                 if let route = routeById[dep.routeId] {
@@ -163,10 +167,23 @@ class ScheduleStore {
                         directionByTrip[dep.tripId] = dir.directionId
                     }
                 }
+
+                // Track earliest (start-of-run) stop per trip — needed by
+                // `firstDepartureAndStop(forTripId:)` and `MappaTab.makeTripTarget`.
+                // Replaces O(stops × deps) scans on the main thread.
+                if let current = firstDepartureByTrip[dep.tripId] {
+                    if dep.departureTime < current.departure.departureTime {
+                        firstDepartureByTrip[dep.tripId] = (stop, dep)
+                    }
+                } else {
+                    firstDepartureByTrip[dep.tripId] = (stop, dep)
+                }
             }
         }
+        tripIdsByRouteId = tripMap
         routeIdByTripId = routeByTrip
         directionByTripId = directionByTrip
+        apiDepartureByTripId = firstDepartureByTrip
     }
 
     // MARK: - Departures for a stop
@@ -245,23 +262,11 @@ class ScheduleStore {
     /// the live vehicle position on top of that. Returns nil if the trip isn't
     /// represented in the cached schedule.
     func firstDepartureAndStop(forTripId tripId: String) -> (Departure, ResolvedStop)? {
-        guard !tripId.isEmpty, let response = scheduleResponse else { return nil }
-        var earliest: (apiStop: APIStop, dep: APIDeparture)?
-        for apiStop in response.stops {
-            guard let dep = apiStop.departures.first(where: { $0.tripId == tripId })
-            else { continue }
-            if let current = earliest {
-                if dep.departureTime < current.dep.departureTime {
-                    earliest = (apiStop, dep)
-                }
-            } else {
-                earliest = (apiStop, dep)
-            }
-        }
-        guard let pick = earliest,
-              let resolved = stop(forId: pick.apiStop.id) else { return nil }
-        let route = routeById[pick.dep.routeId]
-        return (Departure(from: pick.dep, route: route), resolved)
+        guard !tripId.isEmpty,
+              let entry = apiDepartureByTripId[tripId],
+              let resolved = stop(forId: entry.apiStop.id) else { return nil }
+        let route = routeById[entry.departure.routeId]
+        return (Departure(from: entry.departure, route: route), resolved)
     }
 
     func route(forId routeId: String) -> APIRoute? {
@@ -350,6 +355,21 @@ class ScheduleStore {
         cal.timeZone = operatorTimezone
         let now = Date()
         return cal.component(.hour, from: now) * 60 + cal.component(.minute, from: now)
+    }
+
+    /// Single source of truth for "in how many minutes does this depart".
+    /// Always uses the operator's timezone — never the device's — so countdowns
+    /// stay consistent across views regardless of where the user is.
+    /// Threshold: ≤60 min → minutes countdown, >60 min → absolute clock time.
+    func timeState(for departure: Departure, now: Date = Date()) -> DepartureTimeState {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = operatorTimezone
+        let nowMinutes = cal.component(.hour, from: now) * 60 + cal.component(.minute, from: now)
+        let diff = departure.minutesFromMidnight - nowMinutes
+        if diff < 0 { return .passed(departure.time) }
+        if diff == 0 { return .departing }
+        if diff <= 60 { return .minutes(diff) }
+        return .absolute(departure.time)
     }
 }
 

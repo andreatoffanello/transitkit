@@ -67,6 +67,8 @@ struct OrariTab: View {
             .onAppear { consumePending() }
             .onChange(of: router.pendingStop) { _, _ in consumePending() }
             .onChange(of: router.pendingTrip) { _, _ in consumePending() }
+            .onChange(of: router.pendingSearchQuery) { _, _ in consumeSearch() }
+            .onChange(of: router.pendingSearchScope) { _, _ in consumeSearch() }
         }
     }
 
@@ -83,6 +85,15 @@ struct OrariTab: View {
             path.append(trip.fromStop)
             path.append(trip)
         }
+        consumeSearch()
+    }
+
+    private func consumeSearch() {
+        guard router.pendingSearchScope == .stops,
+              let query = router.pendingSearchQuery else { return }
+        router.pendingSearchQuery = nil
+        path = NavigationPath()
+        searchQuery = query
     }
 
     // MARK: - Search Bar

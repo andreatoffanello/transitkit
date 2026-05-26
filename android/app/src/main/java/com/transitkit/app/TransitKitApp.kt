@@ -4,12 +4,21 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import com.mapbox.common.TelemetryUtils
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
 class TransitKitApp : Application() {
     override fun onCreate() {
         super.onCreate()
+
+        // Mapbox raccoglie eventi di telemetria di default (Device IDs, App
+        // interactions, crash metrics verso Mapbox). Disabilitato per allineare
+        // il binary al Data safety form ("Precise location only") e alla privacy
+        // policy che dichiara "no tracking, no analytics". Va eseguito PRIMA di
+        // istanziare qualunque MapView.
+        TelemetryUtils.setEventsCollectionState(false) { /* no-op */ }
+
         registerDefaultNotificationChannel()
     }
 

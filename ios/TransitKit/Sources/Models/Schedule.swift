@@ -247,7 +247,12 @@ struct DayGroup: Identifiable, Hashable {
             return String(localized: "weekends")
         }
         if days.count == 1 { return days[0].shortName }
-        return days.map(\.shortName).joined(separator: ", ")
+        // "Random" combos (Mon+Sun, Fri+Thu+Sat, etc) are typically game-day,
+        // holiday-, or limited-service schedules from the operator. Surface
+        // a semantic label instead of dumping the raw service_id day list —
+        // those strings ("Monday, Sunday") are unreadable to riders. The
+        // exact days remain visible via the schedule rows below.
+        return String(localized: "limited_service")
     }
 
     static func parse(_ key: String) -> DayGroup {

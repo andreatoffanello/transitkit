@@ -193,6 +193,23 @@ struct PointOfSale: Codable, Identifiable {
     let hours: String?
 }
 
+// MARK: - Environment Injection
+
+/// `@Environment(\.operatorConfig)` — injected once at app bootstrap in
+/// `TransitKitApp.body`. Read by feature views instead of calling
+/// `ConfigLoader.load()` inside computed properties (which would re-decode
+/// the bundle JSON on every body redraw).
+private struct OperatorConfigKey: EnvironmentKey {
+    static let defaultValue: OperatorConfig? = nil
+}
+
+extension EnvironmentValues {
+    var operatorConfig: OperatorConfig? {
+        get { self[OperatorConfigKey.self] }
+        set { self[OperatorConfigKey.self] = newValue }
+    }
+}
+
 // MARK: - Config Loader
 
 enum ConfigLoader {

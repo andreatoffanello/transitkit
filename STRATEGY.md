@@ -1,7 +1,7 @@
 # TransitKit — Product & Business Strategy
 
 > Documento vivo. Aggiornare quando cambiano decisioni architetturali, target, o modello di business.
-> Ultimo aggiornamento: 2026-04-01 (v4 — deep research completata, RFTA disqualificata, nuovi target USA)
+> Ultimo aggiornamento: 2026-05-25 (v5 — deep verification pipeline: USA +3 net-new, Citilink declassato, STP Brindisi squalificato (era in Cotrap), ATAP urgente per gara AMP, BRTA urgente per Keolis takeover, AppalRider live su store ma nessun outreach)
 
 ---
 
@@ -18,10 +18,12 @@ White-label transit SaaS: codebase unico, config per operatore → app iOS + And
 
 | Componente | Stack | Stato |
 |-----------|-------|-------|
-| iOS app | SwiftUI | ✅ Funzionante — RFTA, TCAT |
-| Android app | Jetpack Compose | 🔲 Da costruire |
-| Web stop pages | Nuxt su Vercel | 🔲 Da costruire |
+| iOS app | SwiftUI | ✅ Live App Store — **AppalRider** (operatore AppalCART) |
+| Android app | Jetpack Compose | ✅ Live Play Store — AppalRider |
+| Web stop pages | Nuxt su Vercel | ✅ Live — privacy + QR landing |
 | Pipeline GTFS→JSON | Python | ✅ Funzionante |
+| Realtime proxy | Cloudflare/Hetzner | ✅ Live `rt.transitkit.app` |
+| Push notifications | FCM + APNs | ✅ Wired (CMS separato) |
 
 ### iOS — 4 tab
 1. **Orari** — linee → fermate → orari con countdown
@@ -82,29 +84,70 @@ In ordine di forza reale:
 - Troppo grande (>100 linee, metro di capitale)
 - Ente pubblico puro con procurement rigido
 
-### Pipeline USA — Tier 1A (gol a porta vuota verificati v4)
-| # | Operatore | Città | Linee | Rider/anno | Segnale chiave |
-|---|-----------|-------|-------|------------|----------------|
-| 1 | **AppalCART** | Boone NC | 12 | 1.5M | ETA SPOT 1.5★/994 rating, App State 20k studenti, nessun Transit App, GTFS+RT |
-| 2 | **Corvallis Transit** | Corvallis OR | 9-12 | ~2M | OSU 35k studenti, Connexionz 1.8★/9 rating (morta), GTFS confermato |
-| 3 | **BRTA** | Pittsfield MA | 13 | ~800k | RouteShout abbandonato 2019 (1.6★/246 rating), GTFS confermato |
-| 4 | **Citilink** | Fort Wayne IN | 14 | 1.6M | Token Transit + tracking separati, nessuna app branded fixed-route, GTFS+RT |
-| 5 | **Pullman Transit** | Pullman WA | 10 | 1.4M | PTBusBeacon ufficiale 1.2★/90 rating (broken), WSU 30k studenti, GTFS+RT |
+### Pipeline USA — Tier 1A (verificati v5, 2026-05-25, evidenza puntuale per ognuno)
+| # | Operatore | Città | Linee | Rider/anno | Urgenza | Segnale chiave |
+|---|-----------|-------|-------|------------|---------|----------------|
+| 1 | **ATAP** | Biella/Vercelli IT | ~30 | n/d | 🔥 **17 giu 2026** | Gara AMP Lotto 5 pubblicata 21/05 — app branded come argomento offerta tecnica |
+| 2 | **BRTA** | Pittsfield MA | 13 | ~800k | 🔥 **1 lug 2026** | Director Lambert (dic 2025) caccia ITS rider app via grant; Keolis takeover 01/07 può bundlare |
+| 3 | **Mendocino Transit Authority** | Ukiah/Fort Bragg CA | n/d | n/d | 🔥 2024 SRTDP aperto | RouteShout ancora linkato; SRTDP procurement cycle attivo, GTFS-RT live |
+| 4 | **Pullman Transit** | Pullman WA | 10 | 1.4M | alta | Ops supervisor Brad Rader: "PTBusBeacon non funziona"; community dev replacement 5★ (10 ratings = sweet spot per co-opt) |
+| 5 | **AppalCART** | Boone NC | 12 | 1.42M | media | App demo **AppalRider live su App Store + Play Store** (vedi sotto). ETA SPOT 1.5★/1000 |
+| 6 | **Corvallis Transit** | Corvallis OR | 9-12 | ~2M | media | Connexionz 1.8★/9 confermato; OSU 35k, fare-free dal 2011 |
+| 7 | **Mountain Line** | Morgantown WV | ~10 | 650k | media | WVU 30k; app ufficiale ferma a ottobre 2015 (1.9★/55, vendor scomparso) |
+| 8 | **Manchester Transit Authority** | Manchester NH | 16 | 354k | media | RouteShout 2.0 ancora raccomandato sul sito ufficiale; SNHU pass |
+| 9 | **Lowell Regional Transit Authority** | Lowell MA | 20 | ~800k | media | Fare-free dic 2024 + città universitaria + nessun replacement app visibile → high-impact wedge |
+| 10 | **Coast Transit Authority** | Gulfport-Biloxi MS | 8 | n/d | media | RouteShout unica app raccomandata, pagina dedicata aggiornata, area turistica costiera |
+| 11 | **El Dorado Transit** | Placerville/Sacramento CA | n/d | n/d | media | RouteShout ancora unica app 2025; commuter Sacramento = utenti business con aspettative alte; ridership +28.5% YoY |
+| 12 | **Greeley-Evans Transit** | Greeley CO | n/d | ~600k | bassa | UNC campus, RouteShout attivo, nessuna migrazione annunciata |
+| 13 | **Fort Smith Transit** | Fort Smith AR | 6 | 205k | bassa | RouteShout trap + budget cutting 2026 → ricettivi a savings pitch ($299 < vendor enterprise) |
 
-> **Rimossi dalla lista attiva**: RFTA (Transit App formalmente endorsato + web BusTracker), TCAT (Navi 4.4★/1020 rating),
-> Advance Transit (raccomanda Transit App per nome sul sito), Streamline Bus (app Syncromatics ufficiale gen 2026),
-> Island Explorer (PWA ufficiale NPS), Annapolis Transit (shifting to microtransit).
+> **Silent vendor lock-in (insight wave 2):** il router pubblico RouteShout (`rsrouter.routematch.com/router/selectAgency.jsf`) lista **52 agenzie USA ancora attive**. Molte non sanno di essere abbandonate perché "il sistema funziona" (bus circolano, GTFS arriva). **Shift di pitch:** non "la vostra app è rotta" ma *"i vostri rider non sanno che esiste un'alternativa — e cominciano a saperlo"*. Più efficace perché non costringe l'operatore ad ammettere fallimento.
 
-### Pipeline Italia — Tier 1A (verificati v4, GTFS + no app trip-planning)
-| # | Operatore | Area | Linee | GTFS | Segnale chiave |
-|---|-----------|------|-------|------|----------------|
-| 1 | STP Brindisi | Puglia | ~30 | Transitland + open data (29 versioni, CC-BY-4.0) | myCicero ticketing only, fuori Cotrap, privato, Ostuni/Alberobello |
-| 2 | ATAP | Biella/Vercelli, Piemonte | ~30 | magellanoprogetti.it (100+ versioni, attivissimo) | myCicero+MooneyGo ticketing only, MuoversiPiemonte non è un'app |
-| 3 | SAF Duemila/VCO | VCO, Piemonte | ~18 | Feed Regione Piemonte (verificare linee provinciali incluse) | Lago Maggiore, privato, Alibus VCO è solo shuttle |
+> **Declassati a 1B:** **Citilink** (Fort Wayne IN) — Transit App ufficialmente endorsato da Citilink/NAVINEO a novembre 2025; finestra rientro = scoping "Transit Tomorrow" RFP se include canale rider mobile.
 
-> **Nota:** Il mercato italiano è genuinamente saturo (Pluservice/Cotrap/Teseo/AroundSardinia coprono la maggior parte). Tier 1A certo = 3 operatori. Da re-verificare: Riviera Trasporti (stato app incerto), Autoservizi Preite (Calabria, GTFS regionale da confermare).
+> **Squalificati pre-v5:** RFTA (Transit App formalmente endorsato + web BusTracker), TCAT (Navi 4.4★/1020), Advance Transit (raccomanda Transit App), Streamline Bus (Syncromatics gen 2026), Island Explorer (PWA NPS), Annapolis (microtransit shift).
 
-> **Rimossa:** STP Lecce — Cotrap/Itineris app copre tutti i 60 operatori del consorzio Puglia, aggiornata 01/04/2026.
+### Pipeline Italia — Tier 1A (verificati v5)
+| # | Operatore | Area | Linee | GTFS | Urgenza | Segnale chiave |
+|---|-----------|------|-------|------|---------|----------------|
+| 1 | **ATAP** | Biella/Vercelli, Piemonte | ~30 | magellanoprogetti.it (102+ versioni, daily) | 🔥 **17 giu 2026** | Gara AMP Lotto 5 — vedi sopra USA tabella (è lo stesso operatore) |
+| 2 | **APAM** | Mantova, Lombardia | n/d | nessun GTFS pubblico trovato | media | App 1.6★/2.5★, vendor Convergence1 morto, **biglietteria fisica separata** (no lock-in myCicero) |
+| 3 | **Contram Mobilità** | Macerata, Marche | n/d | Transitland (fermo 2016, da rinegoziare) | media | App 2★, Camerino uni, RT broken 90% — freno: SCpA pubblica = decisione lenta |
+| 4 | **STPS Sondrio** | Valtellina, Lombardia | 35 | presente | media | App fossile 3★/4 recensioni, vendor morto, area montana/turistica |
+| 5 | **ATM Molise** | Campobasso, Molise | 36 | n/d | media | App nuova 2024 ma **solo booking, no trip planning** — gap UX aperto |
+| 6 | **Civitavecchia Servizi Pubblici** | Civitavecchia, Lazio | 15 | n/d | media | Porto da 7M passeggeri/anno (crocieristi), app generica non brandizzata, zero Google Maps coverage |
+| 7 | **Autoservizi Silvestri** | Livigno, Lombardia | 4 | Transitland | bassa | Operatore turistico, comune 1M+ presenze/anno, zero app — bacino piccolo ma high-margin |
+| 8 | **Riviera Trasporti** | Imperia, Liguria | n/d | n/d | bassa | App nuova ottobre 2025 senza rating ancora; turnaround post-concordato — finestra 6-12 mesi, **verificare solvibilità prima** |
+
+> **Condizionato:** SAIS Autolinee Sicilia (30+ interurbane, ticketing Sitrap fossile, no trip planning) — Tier 1A solo se GTFS confermato pubblico, altrimenti 1B.
+
+> **Insight strategico wave 2:** Il mercato IT realmente aggredibile è **~10 operatori totali** (4 wave 1 + 4 wave 2 + 2 condizionati). Dopo i primi 4-6 deal IT serve **espansione EU**. Priorità:
+> 1. **UK** — Bus Open Data Mandate ha forzato GTFS pubblico per *tutti* gli operatori dal 2021 → barriera tecnica zero, mercato 1000+ operatori frammentati
+> 2. **Portogallo** — Carris/STCP grandi, decine di operatori regionali piccoli
+> 3. **Spagna regionale** — ATM Sevilla / Granada / Mallorca / canarie
+
+> **Declassati a 1B:** SAF Duemila + VCO Trasporti S.r.l. (split scoperto in v5: due operatori distinti VCO, entrambi senza app decente ma con asti acquisizione SAF↔Comazzi lug 2025 = priorità più bassa).
+
+> **Squalificati v5:** **STP Brindisi** — è dentro Cotrap dal 2021 (screen v4 sbagliato, l'evidenza era pubblica sul sito Cotrap). App Itineris la copre per biglietteria; vendor ioki/Call Bus STP attivo per on-demand. Trigger rientro: gara ANAC Puglia per "sistema informativo passeggeri STP".
+
+> **Squalificati pre-v5:** STP Lecce (Cotrap/Itineris 60 operatori, agg. 01/04/2026).
+
+### Pattern di scouting emersi (filtri da applicare prima dello screen)
+
+1. **RouteShout 2.0 detector (USA):** se il sito operatore raccomanda ancora RouteShout 2.0 (app ferma aprile 2019, 1.6★) è candidato automatico — funziona come rilevatore passivo di vendor abbandonato. Già applicato a BRTA, Manchester, Fort Smith.
+2. **Cotrap check (IT Puglia/Sud):** verificare **sempre** l'elenco soci https://cotrap.it/ prima di mettere un operatore pugliese in pipeline. L'app Itineris copre i ~60 operatori soci → squalifica automatica.
+3. **myCicero/Pluservice bundle (IT):** squalifica non per qualità app, ma perché ticketing+orari bundlati nella stessa app → sostituirla rompe anche il flusso d'acquisto. **Aggredibili solo operatori che tengono ticketing separato** (es. APAM con biglietti fisici).
+4. **Transit App endorsement check:** controllare https://transitapp.com/agencies + comunicati stampa operatore degli ultimi 18 mesi. Operatori che hanno *endorsato* Transit App (non solo "supportato dall'aggregator") sono fuori scope. Errore v4 su Citilink originato qui.
+5. **Procurement window:** gare/RFP e cambi gestore aprono finestre di settimane, non mesi. Monitorare periodicamente: ANAC IT, RFP portal MA/CT/OR/WA US, AMP Piemonte, GUUE. Esempi attivi: ATAP (17 giu), BRTA (1 lug).
+6. **Community-built replacement detector:** se un rider ha pubblicato indipendentemente un'app per quell'operatore, è proof of pain incontestabile + permission marketing già fatto. Soglia chiave per leggere il segnale:
+   - **<500 download** = vantaggio puro (caso Pullman, 10 ratings) — pain dimostrato, soluzione non scalata
+   - **500-5000** = vantaggio con strategia di co-opt obbligatoria
+   - **>5000** = svantaggio reale (concorrenza gratis effettiva), valutare se rinunciare al lead
+
+   **Mossa obbligatoria prima dell'outreach operatore:** contattare il dev della community app. Offrire co-credit / compenso una tantum / local champion role. Trasforma rivale in canale di distribuzione + insider. **Mai** approcciare l'operatore prima — rischia drama pubblico ("startup vuole sostituire il mio lavoro") che brucia il brand.
+7. **Vendor age >3 anni:** app store listing con ultimo update pre-2023 = vendor effettivamente abbandonato. Pullman (PTBusBeacon), Mountain Line (2015), Manchester (RouteShout 2019), AppalCART (ETA SPOT) hanno tutti questo segnale. Filtro deterministico facile da automatizzare.
+8. **New executive director window (12 mesi):** nuove leadership cercano win visibili veloci → ricettività massima a pitch chiavi-in-mano. BRTA (Lambert, dic 2025) è il caso. Cercabile su LinkedIn + press release operatori.
+9. **Fare-free college town:** Corvallis + Pullman + (parzialmente) AppalCART sono fare-free. Pattern correlato a: high ridership + rider attachment forte + IT budget basso + decisione veloce. Lista pubblica APTA / Eno disponibile.
 
 ### Pipeline Italia — Ferry (separata, dopo i primi clienti TPL)
 Alilaguna (Venezia), Travelmar (Costiera Amalfitana), Alilauro (Golfo Napoli).
@@ -114,12 +157,41 @@ Alilaguna (Venezia), Travelmar (Costiera Amalfitana), Alilauro (Golfo Napoli).
 ## Acquisizione organica
 
 ### Strategia principale: demo app before contract
-1. Costruire app per RFTA o TCAT con GTFS già scaricato
-2. Pubblicare su App Store come "[Città] Bus — Community App"
+1. Costruire app per operatore Tier 1A con GTFS già scaricato
+2. Pubblicare su App Store + Play Store come app community brandizzata
 3. Raccogliere download organici
 4. Outreach: *"X persone hanno scaricato l'app del vostro servizio. Volete renderla ufficiale?"*
 
 Il cold outreach diventa inbound con prova di domanda esistente.
+
+**Stato esecuzione (2026-05-25):**
+- ✅ **AppalRider** (operatore AppalCART, Boone NC) → **live su App Store + Play Store**.
+- ⚠️ **Nessuna azione di distribuzione fatta**: zero seeding studenti App State, zero contenuti SEO/social, nessuna candidatura su subreddit r/AppState, nessun QR alle fermate. Download organici attesi = ~zero senza distribuzione attiva.
+- ⚠️ **Nessuna azione commerciale fatta verso AppalCART**: zero outreach all'exec director, zero contatto Office of Sustainability/Parking & Transportation, nessuna scheda commerciale, nessun materiale di pitch. L'app sullo store da sola non è una proposta — è uno store listing.
+- ⚠️ **Pricing & billing non implementato**: $299/mese è dichiarato in strategia ma manca tutta l'infrastruttura — Paddle vs LemonSqueezy vs Stripe non scelto, account merchant non aperto, subscription product non creato, contratto/MSA non redatto, fattura test mai emessa. Non possiamo prendere soldi anche se AppalCART firmasse domani.
+- **Bloccanti reali in ordine di precedenza**:
+  1. Decidere stack billing (Paddle/LemonSqueezy/Stripe) e aprire account merchant
+  2. Definire forma legale del primo contratto (prestazione occasionale IT vs ditta US? scope of work? SLA?)
+  3. Solo allora il seeding + outreach hanno un endpoint commerciale credibile
+
+**Prossime mosse pianificabili (non ancora fatte):**
+
+*Distribuzione AppalRider:*
+- Seeding r/AppState con post onesto "ho costruito una versione community dell'app bus, feedback?" (≤200 parole, screenshot, no link spammoso)
+- Volantinaggio QR alle fermate principali campus App State
+- Outreach Office of Sustainability + Parking & Transportation App State (co-finanziatore AppalCART al 35.6%)
+
+*Sales verso AppalCART:*
+- Pacchetto pitch (one-pager + demo video screen recording 60s + link app store)
+- Outreach exec director AppalCART con metriche download dopo 2-4 settimane di seeding
+- Proposta commerciale formale: scope, SLA, prezzo, durata, billing
+
+*Infrastruttura billing (PRIMA del primo "yes"):*
+- POC Paddle Merchant of Record (preferito: gestisce tasse US sales tax + EU VAT, no apertura entità US)
+- vs Stripe + manual tax management (più controllo, più overhead)
+- vs LemonSqueezy (MoR alternativo, fee maggiore ma onboarding rapido)
+- Setup subscription product $299/mese, trial 30 giorni gratuito, billing annuale opzionale
+- Template MSA + Order Form (Cluely / Common Paper)
 
 ### Altri canali
 - **SEO**: "come mettere transit su Google Maps", "GTFS piccolo operatore"
@@ -147,34 +219,53 @@ schedules.json (~3MB per operatore)
 
 ## Fasi di sviluppo
 
-**Phase 1 — Demo pubblicabile (ora)**
-- [ ] Home tab iOS con prossime partenze GPS
-- [ ] CDN hosting schedules.json (GitHub Pages)
-- [ ] Pubblicare demo app **AppalCART** su App Store (non ufficiale) — "Boone Bus — Community App"
+**Phase 1 — Demo pubblicabile** ✅ COMPLETATA
+- [x] Home tab iOS con prossime partenze GPS
+- [x] CDN hosting schedules.json (GitHub Pages → static-cdn migration completata)
+- [x] Pubblicare demo app **AppalCART** → AppalRider live su App Store + Play Store
+- [x] Android app (Jetpack Compose) — paritaria con iOS
+- [x] Web stop pages Nuxt (Nuxt 4, privacy + QR landing)
+- [x] Realtime proxy (rt.transitkit.app)
+- [x] Push notifications (APNs + FCM nativi, CMS separato `transitkit-console`)
 
-**Phase 2 — Primo cliente**
-- [ ] Outreach ai Tier 1A con demo live
+**Phase 2 — Primo cliente** 🟡 IN CORSO (sbloccare distribuzione + outreach urgent windows)
+- [ ] **Seeding AppalRider**: r/AppState, QR fermate campus, contatto Office of Sustainability
+- [ ] **Outreach urgent (giugno 2026)**: ATAP entro 10 giu, BRTA entro 20 giu
+- [ ] **Outreach Tier 1A non-urgent**: Pullman, Corvallis, Mountain Line, Manchester, Fort Smith
 - [ ] Convertire primo operatore
-- [ ] Infrastruttura per onboarding (CDN per-operatore, custom domain setup)
+- [ ] Operator panel (alerts/news/push) — già parzialmente esistente in transitkit-console
 
-**Phase 3 — Web + Android**
-- [ ] Web stop pages Nuxt (single Vercel project, host-based routing)
-- [ ] Android app (Jetpack Compose)
-- [ ] Push notifications reali (OneSignal free tier)
-
-**Phase 4 — Scale**
-- [ ] Operator panel (alerts, news, aggiornamenti orari)
-- [ ] Pipeline GTFS auto-update
-- [ ] Altri operatori
+**Phase 3 — Scale**
+- [ ] Pipeline GTFS auto-update (cron daily, diff alerting)
+- [ ] Onboarding self-service operatore (CDN dataset, custom domain DNS setup)
+- [ ] Altri operatori in pipeline
 
 ---
 
-## Fiscal strategy
+## Fiscal & billing strategy
 
+**Modello a regime:**
 - **Phase 0-1**: Nessun revenue → nessuna P.IVA necessaria
 - **First client**: Paddle/LemonSqueezy (estero) o prestazione occasionale (Italia)
 - **2+ clienti** (~7k€/anno): P.IVA forfettaria (5% tasse per 5 anni)
 - **PA italiana**: contratti < 5k€/anno = affidamento diretto, no gara pubblica
+
+**Stato 2026-05-25:** nulla di tutto questo è ancora attivato.
+- Nessun account Paddle/LemonSqueezy/Stripe aperto
+- Nessun subscription product creato
+- Nessun template contrattuale (MSA / Order Form / scope of work)
+- Nessuna fattura test emessa
+- Nessuna scelta tra Paddle MoR vs Stripe + tax manuale vs LemonSqueezy
+
+**Decisione da prendere prima del primo outreach commerciale serio:**
+
+| Stack | Pro | Contro |
+|-------|-----|--------|
+| **Paddle (MoR)** | Gestisce US sales tax + EU VAT, no apertura entità US, no nexus tracking | Fee 5% + $0.50/tx, dashboard meno raffinata di Stripe |
+| **Stripe + tax manuale** | Fee minore, dashboard top, multi-currency nativo | Devo gestire io sales tax USA stato-per-stato (incubo per AppalCART NC), serve commercialista internazionale |
+| **LemonSqueezy** | MoR come Paddle, onboarding rapidissimo (giorni) | Fee 5% + $0.50, ora di proprietà Stripe (futuro incerto su pricing) |
+
+Raccomandazione preliminare: **Paddle** per il primo cliente (massima copertura tax/VAT, minimo overhead amministrativo per developer-founder), riconsiderare Stripe solo dopo 5+ clienti o se Paddle dà problemi reali.
 
 ---
 
@@ -224,6 +315,6 @@ Operator invia dal dashboard
 | GTFS creation | NON nel pacchetto standard | Tool gratuiti esistono, non scala, non è moat |
 | CDN dati | GitHub Pages → Vercel Blob | Costo zero per iniziare |
 | Ferry pipeline | Separata dal TPL | Clienti diversi, ciclo vendita diverso |
-| Prima demo | AppalCART | ETA SPOT 1.5★/994 rating = dolore documentato, 20k studenti, GTFS+RT confermato, nessun Transit App |
+| Prima demo | AppalCART (AppalRider) | ETA SPOT 1.5★/1000 rating = dolore documentato, App State 20k studenti, GTFS+RT confermato, nessun Transit App. App live store ma seeding ancora da fare |
 | Push notifications | APNs + FCM nativi, no OneSignal | Zero costo, ~200 righe backend, niente dipendenze esterne |
 | Dashboard operatore | Phase 2 (non Phase 3) | Bloccante per clienti USA (fuso orario) |

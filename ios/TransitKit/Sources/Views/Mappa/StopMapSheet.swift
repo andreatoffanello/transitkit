@@ -124,7 +124,7 @@ struct StopMapSheet: View {
 
                     Spacer()
 
-                    TimeDisplay(departure: departure)
+                    TimeDisplay(state: store.timeState(for: departure))
                 }
                 .padding(.vertical, 4)
                 .accessibilityIdentifier("sheet_dep_\(departure.lineName)_\(departure.time)")

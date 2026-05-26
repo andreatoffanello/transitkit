@@ -4,12 +4,14 @@ import CoreLocation
 /// Posizione unificata per il journey planner — accetta fermate GTFS,
 /// punti liberi sulla mappa (geocodati) e la posizione GPS dell'utente.
 ///
-/// Il routing engine GTFS richiede stop ID, quindi a query time:
-///   - `.stop` → usa direttamente `stopId`
-///   - `.place` / `.userLocation` → snap alla fermata più vicina al `coordinate`
+/// MOTIS pianifica direttamente da lat/lng e calcola la walking leg fino alla
+/// fermata più vicina, quindi a query time:
+///   - `.stop` → usa `stopId` + lat/lng del stop
+///   - `.place` / `.userLocation` → passa le coordinate scelte dall'utente, niente snap
 ///
-/// La coordinata e il `name` mostrato a UI restano quelli scelti dall'utente —
-/// la fermata di snap è solo un dettaglio implementativo del routing.
+/// Un service-area guard in `PlannerScreen.triggerSearch` rifiuta coordinate libere
+/// oltre una soglia di distanza dalla fermata più vicina (vedi
+/// `maxDistanceFromServiceAreaMeters`).
 struct PlannerLocation: Identifiable, Hashable {
     enum Kind: String, Hashable {
         case stop          // GTFS stop scelta dall'utente

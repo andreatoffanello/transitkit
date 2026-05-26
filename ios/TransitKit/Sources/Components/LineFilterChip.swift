@@ -19,7 +19,12 @@ struct LineFilterChip: View {
                 .foregroundStyle(textColor)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
-                .background(Capsule().fill(Color(hex: routeColor)))
+                // Same RoundedRectangle shape as LineBadge for visual coherence —
+                // every line code in the app shares one shape language.
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(Color(hex: routeColor))
+                )
         }
         .buttonStyle(.plain)
         .animation(.spring(response: 0.25, dampingFraction: 0.8), value: isSelected)

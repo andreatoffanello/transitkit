@@ -169,7 +169,7 @@ describe('useOperator', () => {
   })
 
   it('usa cdnBase da useRuntimeConfig().public.cdnBase per costruire gli URL di fetch', async () => {
-    const expectedCdnBase = 'https://andreatoffanello.github.io/transitkit-data'
+    const expectedCdnBase = 'https://andreatoffanello.github.io/transitkit'
     await useOperator()
     const calls = fetchMock.mock.calls.map(c => String(c[0]))
     expect(calls.every(u => u.startsWith(expectedCdnBase))).toBe(true)

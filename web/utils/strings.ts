@@ -177,6 +177,20 @@ export interface AppStrings {
 
   // Realtime degraded notice (used in UpcomingPanel when GTFS-RT is down)
   realtimeUnavailable: string
+
+  // Bottom tab bar (mobile)
+  tabHome: string
+  tabLines: string
+  tabMap: string
+  tabInfo: string
+  tabSettings: string
+
+  // Home — operator info card (parity native)
+  homeOperatorsTitle: string
+  homeOperatorsAttribution: string // "Dati forniti da {operator}"
+  homeOperatorRoutes: string       // "{n} linee"
+  homeOperatorLiveCount: string    // "{n} mezzi live"
+  homeFooterDisclaimer: string     // "App dei cittadini, non gestita da {operator}"
 }
 
 const IT: AppStrings = {
@@ -277,6 +291,16 @@ const IT: AppStrings = {
   departFromHere: 'Parti da qui',
   arriveHere: 'Arriva qui',
   realtimeUnavailable: 'Orari non in tempo reale',
+  tabHome: 'Home',
+  tabLines: 'Linee',
+  tabMap: 'Mappa',
+  tabInfo: 'Info',
+  tabSettings: 'Impostazioni',
+  homeOperatorsTitle: 'Chi muove la città',
+  homeOperatorsAttribution: 'Orari e mezzi in tempo reale di {operator}',
+  homeOperatorRoutes: '{n} linee',
+  homeOperatorLiveCount: '{n} mezzi live',
+  homeFooterDisclaimer: 'App dei cittadini. Non gestita da {operator}.',
 }
 
 const EN: AppStrings = {
@@ -377,6 +401,16 @@ const EN: AppStrings = {
   departFromHere: 'Depart from here',
   arriveHere: 'Arrive here',
   realtimeUnavailable: 'Live updates unavailable',
+  tabHome: 'Home',
+  tabLines: 'Lines',
+  tabMap: 'Map',
+  tabInfo: 'Info',
+  tabSettings: 'Settings',
+  homeOperatorsTitle: 'Who moves the city',
+  homeOperatorsAttribution: 'Schedules and live vehicles from {operator}',
+  homeOperatorRoutes: '{n} routes',
+  homeOperatorLiveCount: '{n} vehicles live',
+  homeFooterDisclaimer: 'A community app. Not affiliated with {operator}.',
 }
 
 const STRINGS: Record<Locale, AppStrings> = { it: IT, en: EN }

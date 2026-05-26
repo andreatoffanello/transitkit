@@ -88,6 +88,59 @@ internal fun EmptyStateForFilter(routeName: String, onClearFilter: () -> Unit) {
 }
 
 @Composable
+internal fun NotFoundState(
+    title: String,
+    subtitle: String,
+    onBack: () -> Unit,
+) {
+    val colors = TransitTheme.colors
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .background(colors.textTertiary.copy(alpha = 0.12f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(LucideIcons.MapPin),
+                contentDescription = null,
+                tint = colors.textTertiary,
+                modifier = Modifier.size(36.dp),
+            )
+        }
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.textPrimary,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodySmall,
+            color = colors.textSecondary,
+            textAlign = TextAlign.Center,
+        )
+        Button(
+            onClick = onBack,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = colors.accent,
+                contentColor = Color.White,
+            ),
+            shape = RoundedCornerShape(24.dp),
+        ) {
+            Text(stringResource(R.string.action_back_home), fontWeight = FontWeight.SemiBold)
+        }
+    }
+}
+
+@Composable
 internal fun ErrorState(onRetry: () -> Unit) {
     Column(
         modifier = Modifier

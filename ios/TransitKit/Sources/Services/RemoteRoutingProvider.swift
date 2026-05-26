@@ -124,7 +124,8 @@ actor RemoteRoutingProvider {
                 let meters = raw.distance ?? Int(Double(secs) * 1.2) // 4.3 km/h walking speed
                 legs.append(.walking(WalkingLeg(
                     id: UUID(), fromStop: from, toStop: to,
-                    walkSeconds: secs, distanceMeters: meters
+                    walkSeconds: secs, distanceMeters: meters,
+                    shapePolyline: nonEmpty(raw.legGeometry?.points)
                 )))
                 totalWalk += secs
 
@@ -141,12 +142,13 @@ actor RemoteRoutingProvider {
                 let color = normalizeHex(raw.routeColor) ?? "808080"
                 let textColor = normalizeHex(raw.routeTextColor) ?? contrastHex(for: color)
 
-                let inter: [IntermediateStop] = (raw.intermediateStops ?? []).map { p in
+                let inter: [IntermediateStop] = (raw.intermediateStops ?? []).compactMap { p in
+                    guard let ts = parseDate(p.scheduledArrival ?? p.arrival) else { return nil }
                     let s = resolveStop(p, fallback: from)
                     return IntermediateStop(
                         id: s.id,
                         name: s.name,
-                        time: timeComponent(p.scheduledArrival ?? p.arrival ?? ""),
+                        arrivalTime: ts,
                         lat: s.lat,
                         lng: s.lng
                     )
@@ -163,7 +165,8 @@ actor RemoteRoutingProvider {
                     boardTime: board,
                     alightTime: alight,
                     tripId: raw.tripId ?? "",
-                    intermediateStops: inter
+                    intermediateStops: inter,
+                    shapePolyline: nonEmpty(raw.legGeometry?.points)
                 )))
 
             default:
@@ -256,6 +259,11 @@ actor RemoteRoutingProvider {
                 .trimmingCharacters(in: .whitespaces)
     }
 
+    private func nonEmpty(_ s: String?) -> String? {
+        guard let s = s, !s.isEmpty else { return nil }
+        return s
+    }
+
     private func normalizeHex(_ h: String?) -> String? {
         guard let h = h, !h.isEmpty else { return nil }
         let trimmed = h.hasPrefix("#") ? String(h.dropFirst()) : h
@@ -272,12 +280,6 @@ actor RemoteRoutingProvider {
         let lin: (Double) -> Double = { c in c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4) }
         let lum = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
         return lum > 0.179 ? "000000" : "FFFFFF"
-    }
-
-    private func timeComponent(_ iso: String) -> String {
-        let parts = iso.split(separator: "T")
-        guard parts.count == 2 else { return "" }
-        return String(parts[1].prefix(5))
     }
 
     private func parseDate(_ iso: String?) -> Date? {
@@ -346,6 +348,13 @@ private struct MOTISLeg: Decodable {
     let agencyName: String?
     let tripId: String?
     let intermediateStops: [MOTISPlace]?
+    let legGeometry: MOTISLegGeometry?
+}
+
+private struct MOTISLegGeometry: Decodable {
+    let points: String?
+    let length: Int?
+    let precision: Int?
 }
 
 private struct MOTISPlace: Decodable {

@@ -173,14 +173,20 @@ fun LineBadge(
 // -----------------------------------------------------------------------------
 
 /**
- * Parse a GTFS hex color ("#AABBCC" or "AABBCC"). Falls back to [fallback]
- * on any parse failure — feeds sometimes publish blank strings.
+ * Parse a GTFS hex color ("#AABBCC", "AABBCC", "ABC", "AABBCCDD" with alpha,
+ * or 4-char shorthand "ABCD" with alpha). Falls back to [fallback] on any
+ * parse failure — feeds sometimes publish blank strings.
  */
 fun parseHexColor(hex: String?, fallback: Color = Color(0xFF3B82F6)): Color {
     val s = hex?.trim()?.removePrefix("#") ?: return fallback
-    if (s.length != 6 && s.length != 8) return fallback
+    // Expand 3/4-char shorthand: "ABC" → "AABBCC", "ABCD" → "AABBCCDD".
+    val expanded = when (s.length) {
+        3, 4 -> s.map { "$it$it" }.joinToString("")
+        6, 8 -> s
+        else -> return fallback
+    }
     return runCatching {
-        val argb = if (s.length == 6) "FF$s" else s
+        val argb = if (expanded.length == 6) "FF$expanded" else expanded
         Color(argb.toLong(16).toInt())
     }.getOrDefault(fallback)
 }

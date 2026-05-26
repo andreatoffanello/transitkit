@@ -39,7 +39,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -94,20 +96,14 @@ fun LineDetailScreen(
     val routeAlerts by viewModel.routeAlerts.collectAsStateWithLifecycle()
     val routesById by viewModel.routesById.collectAsStateWithLifecycle()
     val isFavorite by viewModel.isFavorite.collectAsStateWithLifecycle()
+    val routeNotFound by viewModel.routeNotFound.collectAsStateWithLifecycle()
     val colors = TransitTheme.colors
 
     val lineColor = remember(route?.color) {
-        val hex = route?.color ?: ""
-        if (hex.isNotBlank())
-            runCatching { Color(android.graphics.Color.parseColor("#$hex")) }.getOrDefault(colors.accent)
-        else colors.accent
+        com.transitkit.app.ui.components.parseHexColor(route?.color, fallback = colors.accent)
     }
     val lineTextColor = remember(route?.textColor, lineColor) {
-        val hex = route?.textColor ?: ""
-        if (hex.isNotBlank()) {
-            runCatching { Color(android.graphics.Color.parseColor("#$hex")) }
-                .getOrDefault(routeBadgeContrast(lineColor))
-        } else routeBadgeContrast(lineColor)
+        com.transitkit.app.ui.components.parseHexColor(route?.textColor, fallback = routeBadgeContrast(lineColor))
     }
 
     Scaffold(
@@ -115,7 +111,16 @@ fun LineDetailScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    route?.let { r ->
+                    if (routeNotFound) {
+                        Text(
+                            text = stringResource(R.string.line_not_found_title),
+                            style = MaterialTheme.typography.titleMedium.copy(fontSize = 15.sp),
+                            fontWeight = FontWeight.SemiBold,
+                            color = colors.textPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    } else route?.let { r ->
                         // Titolo centrato Movete-style: small badge + nome rotta.
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -159,6 +164,7 @@ fun LineDetailScreen(
                     }
                 },
                 actions = {
+                    if (routeNotFound) return@TopAppBar
                     // Favorite toggle — gestisce alert per linea futuro.
                     val favScale by animateFloatAsState(
                         targetValue = if (isFavorite) 1.20f else 1f,
@@ -215,6 +221,21 @@ fun LineDetailScreen(
             )
         },
     ) { innerPadding ->
+        if (routeNotFound) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center,
+            ) {
+                NotFoundState(
+                    title = stringResource(R.string.line_not_found_title),
+                    subtitle = stringResource(R.string.line_not_found_subtitle),
+                    onBack = onBack,
+                )
+            }
+            return@Scaffold
+        }
         if (stops.isEmpty() && route != null) {
             Box(
                 modifier = Modifier
@@ -463,29 +484,44 @@ private fun LiveVehicleCardView(
                         .background(colors.realtimeGreen, CircleShape),
                 )
             }
-            // "PROSSIMA FERMATA" caption + stop name (or "TRACCIATO LIVE"
-            // fallback so the card never reads as broken when the feed lacks
-            // the current_stop_id field).
+            // Quando il feed espone current_stop_id mostriamo "PROSSIMA FERMATA"
+            // + nome fermata. Altrimenti — "1 IN SERVIZIO" implica già che il
+            // bus c'è — usiamo l'età del fix di posizione per onorare il pallino
+            // "live" senza inventare informazione (no "Unknown").
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = if (card.nextStopName != null) {
-                        stringResource(R.string.vehicle_next_stop_caption)
-                    } else {
-                        stringResource(R.string.vehicle_live_tracking)
-                    },
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.6.sp,
-                    color = colors.textTertiary,
-                )
-                Text(
-                    text = card.nextStopName ?: stringResource(R.string.vehicle_next_stop_unknown),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = if (card.nextStopName != null) colors.textPrimary else colors.textSecondary,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                if (card.nextStopName != null) {
+                    Text(
+                        text = stringResource(R.string.vehicle_next_stop_caption),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 0.6.sp,
+                        color = colors.textTertiary,
+                    )
+                    Text(
+                        text = card.nextStopName,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = colors.textPrimary,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.vehicle_last_update_caption),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 0.6.sp,
+                        color = colors.textTertiary,
+                    )
+                    Text(
+                        text = relativeFreshness(card.lastUpdatedEpochSec),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = colors.textSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
     }
@@ -539,5 +575,31 @@ private fun DirectionPicker(
                 )
             }
         }
+    }
+}
+
+// --- Helpers ----------------------------------------------------------------
+
+/**
+ * Età leggibile del fix di posizione di un veicolo — formato corto (`12s fa`,
+ * `3m fa`, `1h fa`). Tick-a ogni secondo finché siamo sotto al minuto, poi ogni
+ * 30s per non sprecare ricomposizioni. Se il feed non espone timestamp, mostra
+ * un em-dash invece di inventare un valore.
+ */
+@Composable
+private fun relativeFreshness(lastUpdatedEpochSec: Long?): String {
+    if (lastUpdatedEpochSec == null) return "—"
+    val nowSec by produceState(initialValue = System.currentTimeMillis() / 1000L, lastUpdatedEpochSec) {
+        while (true) {
+            value = System.currentTimeMillis() / 1000L
+            val ageSec = value - lastUpdatedEpochSec
+            delay(if (ageSec < 60) 1_000L else 30_000L)
+        }
+    }
+    val ageSec = (nowSec - lastUpdatedEpochSec).coerceAtLeast(0L)
+    return when {
+        ageSec < 60 -> stringResource(R.string.vehicle_updated_seconds_ago, ageSec)
+        ageSec < 3_600 -> stringResource(R.string.vehicle_updated_minutes_ago, ageSec / 60)
+        else -> stringResource(R.string.vehicle_updated_hours_ago, ageSec / 3_600)
     }
 }

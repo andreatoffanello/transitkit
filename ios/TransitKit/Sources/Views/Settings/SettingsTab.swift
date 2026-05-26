@@ -8,13 +8,10 @@ struct SettingsTab: View {
     @Environment(LocationManager.self) private var locationManager
     @Environment(PushNotificationManager.self) private var pushManager
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.operatorConfig) private var config
 
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
     @State private var notificationsBusy = false
-
-    private var config: OperatorConfig? {
-        try? ConfigLoader.load()
-    }
 
     private var appVersion: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
@@ -67,25 +64,6 @@ struct SettingsTab: View {
                                 GlassCard(cornerRadius: 16) {
                                     notificationsRow
                                 }
-                            }
-                        }
-
-                        // MARK: Language
-                        section(title: String(localized: "settings_section_language")) {
-                            GlassCard(cornerRadius: 16) {
-                                settingsRow(
-                                    icon: .globe,
-                                    iconColor: AppTheme.accent,
-                                    title: String(localized: "settings_language"),
-                                    tappable: false,
-                                    trailing: {
-                                        AnyView(
-                                            Text(currentLanguageLabel)
-                                                .font(.subheadline)
-                                                .foregroundStyle(AppTheme.textTertiary)
-                                        )
-                                    }
-                                )
                             }
                         }
 
@@ -457,11 +435,4 @@ struct SettingsTab: View {
         }
     }
 
-    // MARK: - Language Label
-
-    private var currentLanguageLabel: String {
-        let preferred = Locale.preferredLanguages.first ?? "en"
-        let locale = Locale(identifier: preferred)
-        return locale.localizedString(forLanguageCode: preferred)?.capitalized ?? preferred
-    }
 }

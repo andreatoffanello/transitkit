@@ -1,0 +1,4 @@
+• New trip planner to plan your journey in one tap
+• Push notifications for your favorite lines and service alerts
+
+Plus various improvements and bug fixes.

@@ -2,7 +2,7 @@ import { resolveOperatorId } from '~/utils/operators'
 
 // Routes che non dipendono da un operatore (legali/standalone).
 // Devono renderizzare anche quando l'host non matcha nessun operatore.
-const OPERATOR_AGNOSTIC_ROUTES = new Set(['/privacy'])
+const OPERATOR_AGNOSTIC_ROUTES = new Set(['/privacy', '/support'])
 
 export default defineNuxtRouteMiddleware((to) => {
   const host = useRequestURL().hostname

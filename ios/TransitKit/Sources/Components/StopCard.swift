@@ -6,20 +6,15 @@ import SwiftUI
 /// Used in stop lists, nearby views, and search results.
 /// Glass morphism style with adaptive light/dark mode.
 ///
-/// Usage:
-/// ```swift
-/// StopCard(
-///     name: "Union Square",
-///     transitTypes: [.bus, .tram],
-///     lines: [("BRT", "#c1cd23", "#000000"), ("12", "#E31837", "#FFFFFF")],
-///     nextDeparture: departure
-/// )
-/// ```
+/// The next-departure time is passed pre-computed (via `ScheduleStore.timeState(for:)`)
+/// so the component stays pure and the operator-timezone calculation lives in one
+/// place across the app.
 struct StopCard: View {
     let name: String
     let transitTypes: [TransitType]
     let lines: [(name: String, color: String, textColor: String)]
-    var nextDeparture: Departure? = nil
+    var nextDepartureState: DepartureTimeState? = nil
+    var nextDepartureA11y: (lineName: String, time: String)? = nil
     var distance: String? = nil
 
     var body: some View {
@@ -70,8 +65,8 @@ struct StopCard: View {
             }
 
             // Next departure time
-            if let dep = nextDeparture {
-                TimeDisplay(departure: dep)
+            if let state = nextDepartureState {
+                TimeDisplay(state: state)
             }
 
             LucideIcon.chevronRight.sized(11)
@@ -92,8 +87,8 @@ struct StopCard: View {
         if !typeNames.isEmpty { parts.append(typeNames) }
         let lineNames = lines.map(\.name).joined(separator: ", ")
         if !lineNames.isEmpty { parts.append(String(format: NSLocalizedString("stop_lines_a11y", comment: ""), lineNames)) }
-        if let dep = nextDeparture {
-            parts.append(String(format: NSLocalizedString("stop_next_a11y", comment: ""), dep.lineName, dep.time))
+        if let a11y = nextDepartureA11y {
+            parts.append(String(format: NSLocalizedString("stop_next_a11y", comment: ""), a11y.lineName, a11y.time))
         }
         return parts.joined(separator: ", ")
     }

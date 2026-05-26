@@ -44,10 +44,14 @@ struct RouteOverlay: MapContent {
 /// Decodes a Google-encoded polyline string into an array of coordinates.
 /// Spec: https://developers.google.com/maps/documentation/utilities/polylinealgorithm
 ///
-/// Called from `MappaTab.recomputeRoutePolylines()` on a background thread.
-func decodeGooglePolyline(_ encoded: String) -> [CLLocationCoordinate2D] {
+/// `precision` is the decimal precision used to encode coordinates: standard
+/// GTFS shapes use 5 (factor 1e5), MOTIS `legGeometry` uses 7 (factor 1e7).
+/// Consecutive duplicate points are dropped — MOTIS emits zero-diff pairs as
+/// sub-segment separators which would render as zero-length artifacts.
+func decodeGooglePolyline(_ encoded: String, precision: Int = 5) -> [CLLocationCoordinate2D] {
     var coordinates: [CLLocationCoordinate2D] = []
     let bytes = Array(encoded.utf8)
+    let factor = pow(10.0, Double(precision))
     var index = 0
     var lat = 0
     var lng = 0
@@ -78,10 +82,15 @@ func decodeGooglePolyline(_ encoded: String) -> [CLLocationCoordinate2D] {
         } while byte >= 0x20
         lng += (result & 1) != 0 ? ~(result >> 1) : (result >> 1)
 
-        coordinates.append(CLLocationCoordinate2D(
-            latitude: Double(lat) / 1e5,
-            longitude: Double(lng) / 1e5
-        ))
+        let pt = CLLocationCoordinate2D(
+            latitude: Double(lat) / factor,
+            longitude: Double(lng) / factor
+        )
+        if let last = coordinates.last,
+           last.latitude == pt.latitude, last.longitude == pt.longitude {
+            continue
+        }
+        coordinates.append(pt)
     }
     return coordinates
 }

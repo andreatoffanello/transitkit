@@ -6,4 +6,5 @@ plugins {
     alias(libs.plugins.ksp) apply false
     alias(libs.plugins.wire) apply false
     alias(libs.plugins.google.services) apply false
+    id("com.github.triplet.play") version "3.12.1" apply false
 }

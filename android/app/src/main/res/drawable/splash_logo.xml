@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Splash screen icon — Android 12+ (windowSplashScreenAnimatedIcon).
+
+Il container di sistema è 288×288 dp e applica una maschera circolare interna
+di ~192 dp. Se passiamo direttamente `ic_launcher_foreground` (108 dp di
+contenuto full-bleed) la maschera taglia i bordi del logo facendolo sembrare
+clippato.
+
+Qui centriamo il foreground a 160 dp dentro il container: resta comodamente
+dentro la safe zone della maschera circolare, e il logo (bus AppalRider)
+viene mostrato intero senza crop.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:gravity="center"
+        android:width="160dp"
+        android:height="160dp">
+        <bitmap
+            android:src="@mipmap/ic_launcher_foreground"
+            android:gravity="center"
+            android:antialias="true"
+            android:filter="true" />
+    </item>
+</layer-list>

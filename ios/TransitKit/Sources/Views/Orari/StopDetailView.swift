@@ -35,6 +35,10 @@ struct StopDetailView: View {
     @State private var plannerEntry: PlannerEntry? = nil
     /// Incremented every 30s to force re-evaluation of departure times and remove past entries.
     @State private var refreshTick: Int = 0
+    /// Memoized active alerts touching this stop or its serving routes.
+    /// Without caching, the underlying `Set` construction + `filter` runs 3 times
+    /// per body (chip presence check, list render, count badge).
+    @State private var relevantAlertsCache: [GtfsRtAlert] = []
 
     private let initialVisibleCount = 5
 
@@ -95,13 +99,30 @@ struct StopDetailView: View {
         })
     }
 
-    private var relevantAlerts: [GtfsRtAlert] {
+    /// Recomputes `relevantAlertsCache`. Driven by `.task(id: relevantAlertsKey)`
+    /// so the filter runs only when the alert feed refreshes (every 60s) or the
+    /// stop changes — not on every body redraw.
+    private func recomputeRelevantAlerts() {
         let routeIds = stopRouteIds
         let stationIds = Set([stop.id] + stop.gtfsStopIds)
-        return alertStore.activeAlerts.filter { a in
+        relevantAlertsCache = alertStore.activeAlerts.filter { a in
             !a.affectedStopIds.isDisjoint(with: stationIds)
                 || a.isRelevant(forRoutes: routeIds)
         }
+    }
+
+    private struct RelevantAlertsKey: Hashable {
+        let stopId: String
+        let lastFetchedAt: Date?
+        let routesCount: Int
+    }
+
+    private var relevantAlertsKey: RelevantAlertsKey {
+        RelevantAlertsKey(
+            stopId: stop.id,
+            lastFetchedAt: alertStore.lastFetchedAt,
+            routesCount: store.routes.count
+        )
     }
 
     // MARK: - Body
@@ -112,13 +133,13 @@ struct StopDetailView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 0) {
                         mapHeader
-                        if !relevantAlerts.isEmpty {
+                        if !relevantAlertsCache.isEmpty {
                             alertsChip(scrollProxy: proxy)
                                 .padding(.horizontal, 16)
                                 .padding(.top, 12)
                         }
                         stopInlineContent
-                        StopAlertsSection(alerts: relevantAlerts)
+                        StopAlertsSection(alerts: relevantAlertsCache)
                             .id(alertsAnchorId)
                     }
                 }
@@ -230,6 +251,7 @@ struct StopDetailView: View {
                 refreshTick &+= 1
             }
         }
+        .task(id: relevantAlertsKey) { recomputeRelevantAlerts() }
     }
 
     // MARK: - Map Header
@@ -521,7 +543,7 @@ struct StopDetailView: View {
 
     @ViewBuilder
     private func alertsChip(scrollProxy: ScrollViewProxy) -> some View {
-        let count = relevantAlerts.count
+        let count = relevantAlertsCache.count
         Button {
             withAnimation(.smooth(duration: 0.5)) {
                 scrollProxy.scrollTo(alertsAnchorId, anchor: .top)

@@ -99,8 +99,13 @@ fun StopDetailScreen(
                     // the caller forgot to pass a display name (e.g. deep
                     // links that only carry the id).
                     val resolvedName = viewModel.resolvedStopName.collectAsStateWithLifecycle().value
+                    val titleText = when {
+                        departuresState is DeparturesState.NotFound -> stringResource(R.string.stop_not_found_title)
+                        resolvedName != null -> resolvedName
+                        else -> stopName
+                    }
                     Text(
-                        text = resolvedName ?: stopName,
+                        text = titleText,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold, fontSize = 15.sp),
@@ -254,6 +259,11 @@ fun StopDetailScreen(
                             EmptyState()
                         }
                     }
+                    is DeparturesState.NotFound -> NotFoundState(
+                        title = stringResource(R.string.stop_not_found_title),
+                        subtitle = stringResource(R.string.stop_not_found_subtitle),
+                        onBack = onBack,
+                    )
                     is DeparturesState.Error -> ErrorState(onRetry = { viewModel.loadDepartures() })
                 }
             }

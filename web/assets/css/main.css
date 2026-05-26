@@ -168,12 +168,7 @@ html.dark .hero-section {
 }
 
 .skeleton-hero {
-  height: 240px;
+  height: 220px;
   border-bottom-left-radius: 20px;
   border-bottom-right-radius: 20px;
-}
-@media (min-width: 640px) {
-  .skeleton-hero {
-    height: 280px;
-  }
 }

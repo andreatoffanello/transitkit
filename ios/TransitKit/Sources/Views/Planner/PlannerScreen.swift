@@ -97,18 +97,17 @@ struct PlannerScreen: View {
     private var inputHeader: some View {
         VStack(spacing: 12) {
             HStack(alignment: .center, spacing: 12) {
-                // Origin/destination icon column
+                // Origin/destination icon column (Movete-style: locate-fixed + map-pin)
                 VStack(spacing: 0) {
-                    Circle()
-                        .fill(AppTheme.accent)
-                        .frame(width: 10, height: 10)
+                    LucideIcon.locateFixed.sized(18)
+                        .foregroundStyle(AppTheme.accent)
                     Rectangle()
                         .fill(Color(.tertiaryLabel))
-                        .frame(width: 1.5, height: 28)
-                    Circle()
-                        .strokeBorder(AppTheme.accent, lineWidth: 2)
-                        .frame(width: 10, height: 10)
+                        .frame(width: 1.5, height: 18)
+                    LucideIcon.mapPin.sized(18)
+                        .foregroundStyle(AppTheme.accent)
                 }
+                .frame(width: 20)
 
                 // Input fields
                 VStack(spacing: 0) {
@@ -265,10 +264,12 @@ struct PlannerScreen: View {
     }
 
     /// Risolve una `PlannerLocation` in una `PlannerStop` per il routing engine.
-    /// - `.stop` → usa direttamente i campi del stop
-    /// - `.place` / `.userLocation` → snap alla fermata GTFS più vicina al coordinate
-    /// Ritorna `nil` se non c'è nessuna fermata caricata.
-    private func resolveStop(_ location: PlannerLocation) -> PlannerStop? {
+    /// - `.stop` → usa direttamente i campi del stop GTFS
+    /// - `.place` / `.userLocation` → coordinate libere (MOTIS pianifica direttamente
+    ///   da lat/lng e calcola la walking leg fino alla fermata più vicina). Il vecchio
+    ///   snap pre-MOTIS è stato rimosso perché mascherava errori "fuori area" snappando
+    ///   silenziosamente coordinate arbitrarie alla fermata geograficamente più vicina.
+    private func resolveStop(_ location: PlannerLocation) -> PlannerStop {
         if location.kind == .stop,
            let stopId = location.stopId,
            let s = store.stops.first(where: { $0.id == stopId }) {
@@ -276,10 +277,40 @@ struct PlannerScreen: View {
         }
         let lat = location.coordinate.latitude
         let lng = location.coordinate.longitude
+        return PlannerStop(
+            id: "coord-\(String(format: "%.6f,%.6f", lat, lng))",
+            name: location.name,
+            lat: lat,
+            lng: lng
+        )
+    }
+
+    /// Soglia massima distanza (metri) tra una coordinata libera e la fermata più
+    /// vicina perché il routing abbia senso. Generoso: cattura "altro continente"
+    /// senza bloccare casi legittimi al limite estremo dell'area di servizio.
+    private static let maxDistanceFromServiceAreaMeters: Double = 50_000
+
+    /// `true` se la location è di tipo coordinata libera (place / userLocation) e
+    /// la fermata più vicina dista oltre `maxDistanceFromServiceAreaMeters`. Le
+    /// `.stop` sono per costruzione dentro l'area di servizio.
+    private func isOutsideServiceArea(_ location: PlannerLocation) -> Bool {
+        guard location.kind != .stop, !store.stops.isEmpty else { return false }
+        let lat = location.coordinate.latitude
+        let lng = location.coordinate.longitude
         guard let nearest = store.stops.min(by: {
             hypot($0.lat - lat, $0.lng - lng) < hypot($1.lat - lat, $1.lng - lng)
-        }) else { return nil }
-        return PlannerStop(id: nearest.id, name: location.name, lat: nearest.lat, lng: nearest.lng)
+        }) else { return false }
+        return haversineMeters(lat1: lat, lng1: lng, lat2: nearest.lat, lng2: nearest.lng)
+            > Self.maxDistanceFromServiceAreaMeters
+    }
+
+    private func haversineMeters(lat1: Double, lng1: Double, lat2: Double, lng2: Double) -> Double {
+        let R = 6_371_000.0
+        let dLat = (lat2 - lat1) * .pi / 180
+        let dLng = (lng2 - lng1) * .pi / 180
+        let a = sin(dLat / 2) * sin(dLat / 2)
+            + cos(lat1 * .pi / 180) * cos(lat2 * .pi / 180) * sin(dLng / 2) * sin(dLng / 2)
+        return 2 * R * asin(min(1, sqrt(a)))
     }
 
     @MainActor
@@ -297,15 +328,21 @@ struct PlannerScreen: View {
             return
         }
         guard connectionsStore.isReady else { return }
-        guard let op = resolveStop(o), let dp = resolveStop(d) else { return }
-        guard op.id != dp.id else {
-            // Coordinate diverse ma stessa fermata GTFS più vicina: caso degenere.
+
+        // Service-area guard: una coordinata libera (place / userLocation) lontana
+        // oltre `maxDistanceFromServiceAreaMeters` dalla fermata più vicina non può
+        // produrre routing sensato. La intercettiamo prima di chiamare MOTIS per
+        // dare un errore chiaro invece di pianificare da una fermata casuale.
+        if isOutsideServiceArea(o) || isOutsideServiceArea(d) {
             searchTask?.cancel(); searchTask = nil
             journeys = []
-            searchError = String(localized: "planner_same_stop")
+            searchError = String(localized: "planner_out_of_service_area")
             hasSearched = true
             return
         }
+
+        let op = resolveStop(o)
+        let dp = resolveStop(d)
 
         searchError = nil; isSearching = true; hasSearched = true
         let when = whenSelection

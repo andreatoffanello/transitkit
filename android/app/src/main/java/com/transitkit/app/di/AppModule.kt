@@ -2,7 +2,6 @@ package com.transitkit.app.di
 
 import android.content.Context
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.transitkit.app.config.OperatorConfig
 import com.transitkit.app.data.api.TransitApiService
 import com.transitkit.app.BuildConfig
@@ -23,10 +22,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideMoshi(): Moshi =
-        Moshi.Builder()
-            .addLast(KotlinJsonAdapterFactory())
-            .build()
+    fun provideMoshi(): Moshi = Moshi.Builder().build()
 
     @Provides
     @Singleton

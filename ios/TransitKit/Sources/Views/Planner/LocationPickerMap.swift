@@ -11,6 +11,7 @@ struct LocationPickerMap: View {
 
     @Environment(LocationManager.self) private var locationManager
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.operatorConfig) private var config
 
     @State private var cameraPosition: MapCameraPosition = .automatic
     @State private var currentCenter: CLLocationCoordinate2D = .init(latitude: 0, longitude: 0)
@@ -18,8 +19,6 @@ struct LocationPickerMap: View {
     @State private var isCameraMoving = false
     @State private var geocodeTask: Task<Void, Never>? = nil
     @State private var moveDebounce: Task<Void, Never>? = nil
-
-    private var config: OperatorConfig? { try? ConfigLoader.load() }
 
     var body: some View {
         ZStack {

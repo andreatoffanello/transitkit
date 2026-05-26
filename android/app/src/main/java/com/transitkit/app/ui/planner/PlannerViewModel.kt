@@ -51,7 +51,9 @@ class PlannerViewModel @Inject constructor(
     private val _isSearching = MutableStateFlow(false)
     val isSearching = _isSearching.asStateFlow()
 
-    private val _searchError = MutableStateFlow<String?>(null)
+    enum class SearchError { SameStop, OutOfServiceArea }
+
+    private val _searchError = MutableStateFlow<SearchError?>(null)
     val searchError = _searchError.asStateFlow()
 
     private val _hasSearched = MutableStateFlow(false)
@@ -100,6 +102,9 @@ class PlannerViewModel @Inject constructor(
     val mapFallbackCenter: Pair<Double, Double> = Pair(config.map.centerLat, config.map.centerLng)
     val mapDefaultZoom: Double = config.map.defaultZoom
 
+    /** Operator timezone ID (e.g. "America/New_York") — drives clock display + picker. */
+    val operatorTimezone: String get() = config.timezone
+
     /** Recently used stops (most recent first), resolved against the loaded stop list. */
     val recentStops: StateFlow<List<ResolvedStop>> = combine(
         searchHistoryStore.recentStopIds,
@@ -142,6 +147,59 @@ class PlannerViewModel @Inject constructor(
                 if (state == ConnectionsStore.LoadState.READY) onConnectionsReady()
             }
         }
+        applyPendingPrefill()
+    }
+
+    /**
+     * Consumes a one-shot prefill set by the deep-link handler in MainActivity.
+     * `whenStr` ("HH:MM") is interpreted in the operator timezone — not the
+     * device TZ — so `transitkit://planner?when=14:30` for AppalCART means
+     * 14:30 New York local, not 14:30 Rome local.
+     */
+    private fun applyPendingPrefill() {
+        val prefill = PendingPlannerPrefillStore.consume() ?: return
+        viewModelScope.launch {
+            // Wait for stops to be ready so we can match names → ResolvedStop.
+            val stops = scheduleRepository.stops
+            val current = stops.value
+            val available = if (current.isNotEmpty()) current else run {
+                scheduleRepository.load()
+                stops.value
+            }
+            fun matchByName(name: String?): PlannerLocation? {
+                if (name.isNullOrBlank()) return null
+                val lower = name.trim().lowercase()
+                val match = available.firstOrNull { it.name.equals(name, ignoreCase = true) }
+                    ?: available.firstOrNull { it.name.lowercase().contains(lower) }
+                return match?.let { PlannerLocation.fromStop(it) }
+            }
+            prefill.from?.let { matchByName(it) }?.also { _origin.value = it }
+            prefill.to?.let { matchByName(it) }?.also { _destination.value = it }
+            prefill.whenStr?.let { whenStr ->
+                parseHhMmInOperatorTz(whenStr, config.timezone)?.let { date ->
+                    _whenSelection.value = WhenSelection(mode = 1, date = date)
+                }
+            }
+            if (_origin.value != null && _destination.value != null) triggerSearch()
+        }
+    }
+
+    private fun parseHhMmInOperatorTz(hhmm: String, tz: String): java.util.Date? {
+        val parts = hhmm.split(":")
+        if (parts.size != 2) return null
+        val hour = parts[0].toIntOrNull() ?: return null
+        val minute = parts[1].toIntOrNull() ?: return null
+        if (hour !in 0..23 || minute !in 0..59) return null
+        val cal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone(tz))
+        cal.set(java.util.Calendar.HOUR_OF_DAY, hour)
+        cal.set(java.util.Calendar.MINUTE, minute)
+        cal.set(java.util.Calendar.SECOND, 0)
+        cal.set(java.util.Calendar.MILLISECOND, 0)
+        // If the requested time is already in the past today, roll to tomorrow.
+        if (cal.timeInMillis < System.currentTimeMillis()) {
+            cal.add(java.util.Calendar.DAY_OF_YEAR, 1)
+        }
+        return cal.time
     }
 
     private val _selectedJourney = MutableStateFlow<Journey?>(null)
@@ -179,10 +237,23 @@ class PlannerViewModel @Inject constructor(
         val o = _origin.value ?: run { reset(); return }
         val d = _destination.value ?: run { reset(); return }
         if (o.lat == d.lat && o.lon == d.lon) {
-            _searchError.value = "Origin and destination are the same"
+            _searchError.value = SearchError.SameStop
+            _hasSearched.value = true
+            _journeys.value = emptyList()
             return
         }
         if (connectionsStore.loadState != ConnectionsStore.LoadState.READY) return
+
+        // Service-area guard: una coordinata libera (Place / CurrentLocation) lontana
+        // oltre `MAX_DISTANCE_FROM_SERVICE_AREA_METERS` dalla fermata più vicima non
+        // può produrre routing sensato — la intercettiamo prima di chiamare MOTIS.
+        if (isOutsideServiceArea(o) || isOutsideServiceArea(d)) {
+            searchJob?.cancel()
+            _searchError.value = SearchError.OutOfServiceArea
+            _hasSearched.value = true
+            _journeys.value = emptyList()
+            return
+        }
 
         // MOTIS routes natively from lat/lon. Stop id is passed through when known
         // for label/ICS resolution downstream, but lat/lon drives the routing query.
@@ -218,6 +289,22 @@ class PlannerViewModel @Inject constructor(
         return stops
             .map { stop -> stop to haversineMeters(lat, lon, stop.lat, stop.lon) }
             .minByOrNull { it.second }
+    }
+
+    /**
+     * `true` se la location è una coordinata libera (Place / CurrentLocation) e la
+     * fermata più vicina dista oltre [MAX_DISTANCE_FROM_SERVICE_AREA_METERS]. Le
+     * Stop sono per costruzione dentro l'area di servizio. Soglia generosa: cattura
+     * "altro continente" senza bloccare casi legittimi al limite dell'area.
+     */
+    private fun isOutsideServiceArea(loc: PlannerLocation): Boolean {
+        if (loc.kind == PlannerLocation.Kind.Stop) return false
+        val nearest = nearestStopWithDistance(loc.lat, loc.lon) ?: return false
+        return nearest.second > MAX_DISTANCE_FROM_SERVICE_AREA_METERS
+    }
+
+    private companion object {
+        const val MAX_DISTANCE_FROM_SERVICE_AREA_METERS = 50_000.0
     }
 
     fun onConnectionsReady() {

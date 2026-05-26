@@ -66,7 +66,7 @@ struct TimeDisplay: View {
                         .font(.system(.title3, weight: .bold).monospacedDigit())
                         .foregroundStyle(mins <= 5 ? AppTheme.realtimeGreen : AppTheme.textPrimary)
                         .contentTransition(.numericText())
-                    Text("'")
+                    Text("m")
                         .font(.system(.subheadline, weight: .bold))
                         .foregroundStyle(mins <= 5 ? AppTheme.realtimeGreen : AppTheme.textSecondary)
                 }
@@ -77,7 +77,7 @@ struct TimeDisplay: View {
                         .font(.system(.subheadline, weight: .bold).monospacedDigit())
                         .foregroundStyle(AppTheme.textPrimary)
                     if m > 0 {
-                        Text("\(m)'")
+                        Text("\(m)m")
                             .font(.system(.footnote, weight: .semibold).monospacedDigit())
                             .foregroundStyle(AppTheme.textSecondary)
                     }
@@ -125,40 +125,3 @@ struct TimeDisplay: View {
     }
 }
 
-// MARK: - Departure Time Computation
-
-extension TimeDisplay {
-    /// Creates a `TimeDisplay` from a `Departure` and the current time.
-    /// - Parameters:
-    ///   - departure: The departure to display.
-    ///   - now: Current date (defaults to `.now`).
-    ///   - relativeThreshold: Minutes up to which relative format is used.
-    ///     Default 60 (show minutes up to 1h, absolute beyond).
-    ///     Pass e.g. 180 for home screen cards to show "1h 23'" up to 3h.
-    init(departure: Departure, now: Date = .now, relativeThreshold: Int = 60) {
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.hour, .minute], from: now)
-        let nowMinutes = (components.hour ?? 0) * 60 + (components.minute ?? 0)
-        var diff = departure.minutesFromMidnight - nowMinutes
-
-        // Wrap-around: se la partenza è "passata" da più di 1h, assumiamo che
-        // sia la prima occorrenza del giorno successivo (lo store restituisce
-        // upcoming departures rispetto a now, quindi non dovrebbero esserci
-        // partenze veramente passate). Diff < -60 → +24h.
-        if diff < -60 {
-            diff += 1440
-        }
-
-        if diff < 0 {
-            self.init(state: .passed(departure.time))
-        } else if diff == 0 {
-            self.init(state: .departing)
-        } else if diff <= 60 {
-            self.init(state: .minutes(diff))
-        } else if diff <= relativeThreshold {
-            self.init(state: .hoursMinutes(diff / 60, diff % 60))
-        } else {
-            self.init(state: .absolute(departure.time))
-        }
-    }
-}

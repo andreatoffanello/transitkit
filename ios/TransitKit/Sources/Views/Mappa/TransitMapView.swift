@@ -84,6 +84,13 @@ struct TransitMapView: UIViewRepresentable {
         let coord = context.coordinator
         coord.parent = self
 
+        // Re-assert il pallino utente blu: SwiftUI re-applica l'accent
+        // dell'environment come tintColor sulle UIView ad ogni layout pass,
+        // sovrascrivendo il systemBlue di makeUIView col verde operator.
+        if uiView.tintColor != UIColor.systemBlue {
+            uiView.tintColor = UIColor.systemBlue
+        }
+
         // Apply region from binding only when the binding value actually changed.
         // Comparing against lastBindingRegion (not uiView.region) prevents pitch
         // changes from spuriously triggering a setRegion that would flatten 3D view.

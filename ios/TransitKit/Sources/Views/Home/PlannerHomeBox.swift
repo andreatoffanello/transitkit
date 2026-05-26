@@ -31,7 +31,7 @@ struct PlannerHomeBox: View {
     // Layout constants
     private static let rowHeight: CGFloat = 50
     private static let dotColumnWidth: CGFloat = 44
-    private static let dotSize: CGFloat = 10
+    private static let dotSize: CGFloat = 18
 
     var body: some View {
         VStack(spacing: 8) {
@@ -158,21 +158,20 @@ struct PlannerHomeBox: View {
 
     private func roleDot(_ role: LocationRole) -> some View {
         ZStack {
-            // Background "halo" pieno del card per nascondere la connecting line
-            // dentro il dot — altrimenti la linea si vede attraverso il dot vuoto.
+            // Halo opaco del card per mascherare la connecting line dietro
+            // l'icona — l'SVG stroke-based ha trasparenza interna.
             Circle()
                 .fill(AppTheme.background)
-                .frame(width: Self.dotSize + 4, height: Self.dotSize + 4)
+                .frame(width: Self.dotSize + 6, height: Self.dotSize + 6)
 
-            if role == .origin {
-                Circle()
-                    .fill(AppTheme.accent)
-                    .frame(width: Self.dotSize, height: Self.dotSize)
-            } else {
-                Circle()
-                    .strokeBorder(AppTheme.textSecondary, lineWidth: 2)
-                    .frame(width: Self.dotSize, height: Self.dotSize)
+            Group {
+                if role == .origin {
+                    LucideIcon.locateFixed.sized(Self.dotSize)
+                } else {
+                    LucideIcon.mapPin.sized(Self.dotSize)
+                }
             }
+            .foregroundStyle(AppTheme.accent)
         }
     }
 

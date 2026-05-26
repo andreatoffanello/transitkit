@@ -276,7 +276,7 @@ struct VehicleDetailSheet: View {
                     .font(.system(.title3, weight: .bold).monospacedDigit())
                     .foregroundStyle(AppTheme.textPrimary)
                     .contentTransition(.numericText())
-                Text("'")
+                Text("m")
                     .font(.system(.subheadline, weight: .bold))
                     .foregroundStyle(AppTheme.textSecondary)
             }
@@ -286,7 +286,7 @@ struct VehicleDetailSheet: View {
                     .font(.system(.subheadline, weight: .bold).monospacedDigit())
                     .foregroundStyle(AppTheme.textPrimary)
                 if m > 0 {
-                    Text("\(m)'")
+                    Text("\(m)m")
                         .font(.system(.footnote, weight: .semibold).monospacedDigit())
                         .foregroundStyle(AppTheme.textSecondary)
                 }

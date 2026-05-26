@@ -42,6 +42,11 @@ __pycache__/
 
 # UX review screenshot artifacts (local)
 ux-review-*.png
+.designer-eye-qa/
+
+# Session-local audit/research prompts (not part of the codebase)
+AUDIT_*_PROMPT.md
+*_CROSSCHECK_PROMPT.md
 
 # Secrets — NEVER commit
 android/local.properties
@@ -57,3 +62,4 @@ shared/operators/*/firebase/google-services.json
 # Build artifact: staged from shared/operators/<op>/firebase/google-services.json
 # by scripts/build-android.sh
 android/app/google-services.json
+.vercel

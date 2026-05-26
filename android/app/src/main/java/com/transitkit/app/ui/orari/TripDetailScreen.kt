@@ -76,9 +76,7 @@ fun TripDetailScreen(
     val routeColorByName by viewModel.routeColorByName.collectAsStateWithLifecycle()
     val accentColor = TransitTheme.colors.accent
     val lineColor = remember(viewModel.routeColor, accentColor) {
-        runCatching {
-            Color(android.graphics.Color.parseColor("#${viewModel.routeColor}"))
-        }.getOrDefault(accentColor)
+        com.transitkit.app.ui.components.parseHexColor(viewModel.routeColor, fallback = accentColor)
     }
 
     Scaffold(
@@ -379,8 +377,8 @@ private fun TripStopRow(
                         modifier = Modifier.size(11.dp),
                     )
                     coincidences.take(4).forEach { coincidenceRoute ->
-                        val badgeColor = routeColorByName[coincidenceRoute]?.takeIf { it.isNotBlank() }
-                            ?.let { runCatching { Color(android.graphics.Color.parseColor("#$it")) }.getOrNull() }
+                        val rawHex = routeColorByName[coincidenceRoute]?.takeIf { it.isNotBlank() }
+                        val badgeColor = rawHex?.let { com.transitkit.app.ui.components.parseHexColor(it, fallback = lineColor.copy(alpha = 0.15f)) }
                             ?: lineColor.copy(alpha = 0.15f)
                         val isColored = routeColorByName[coincidenceRoute]?.isNotBlank() == true
                         Box(

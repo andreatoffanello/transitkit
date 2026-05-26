@@ -2,27 +2,27 @@
   <AppLayout>
     <div class="max-w-lg mx-auto lg:max-w-2xl">
 
-      <!-- Hero -->
-      <section class="hero-section px-5 pt-8 pb-6 relative overflow-hidden">
-        <!-- Cerchio decorativo sfondo -->
-        <div
-          class="absolute -top-12 -right-12 w-40 h-40 rounded-full pointer-events-none"
-          style="background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 15%, transparent) 0%, transparent 70%)"
-          aria-hidden="true"
+      <!-- Top bar compatto — parity con homeTopBar native (logo + brand + region + settings) -->
+      <header class="flex items-center gap-2.5 px-5 pt-3 pb-3">
+        <img
+          src="/icons/icon-180.png"
+          alt=""
+          class="shrink-0 rounded-full object-cover"
+          style="width: 32px; height: 32px"
         />
-        <div
-          class="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-          style="background-color: var(--color-primary)"
-        >
-          <Bus :size="26" :stroke-width="1.75" style="color: var(--color-text-on-primary)" />
+        <div class="min-w-0 flex-1">
+          <h1 class="text-[15px] font-semibold leading-tight truncate" style="color: var(--text-primary)">
+            {{ config?.fullName ?? config?.name }}
+          </h1>
+          <p
+            v-if="config?.region"
+            class="text-[11px] leading-tight truncate"
+            style="color: var(--text-secondary)"
+          >
+            {{ config.region }}
+          </p>
         </div>
-        <h1 class="text-3xl font-bold leading-tight mb-1" style="color: var(--text-primary); letter-spacing: -0.015em">
-          {{ config?.fullName ?? config?.name }}
-        </h1>
-        <p class="text-base" style="color: var(--text-secondary)">
-          {{ config?.store?.subtitle ?? 'Orari e partenze in tempo reale' }}
-        </p>
-      </section>
+      </header>
 
       <!-- Search bar -->
       <section v-if="schedules" class="px-5 mb-6">
@@ -303,6 +303,45 @@
           </section>
         </ClientOnly>
 
+        <!-- Chi muove la città — operator info card (parity native operatorInfoSection) -->
+        <section v-if="config">
+          <div class="px-1 mb-2.5">
+            <h2 class="text-[15px] font-semibold leading-tight" style="color: var(--text-primary)">
+              {{ s.homeOperatorsTitle }}
+            </h2>
+            <p class="text-xs leading-snug mt-0.5" style="color: var(--text-secondary)">
+              {{ s.homeOperatorsAttribution.replace('{operator}', config.name) }}
+            </p>
+          </div>
+          <a
+            v-if="config.url"
+            :href="config.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center gap-3.5 rounded-2xl px-3.5 py-3 transition-opacity active:opacity-80"
+            style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border: 1px solid var(--border)"
+          >
+            <!-- Logo operatore (fallback gradient + Bus se asset manca) -->
+            <div
+              class="shrink-0 flex items-center justify-center overflow-hidden"
+              style="width: 44px; height: 44px; border-radius: 12px; background-color: color-mix(in srgb, var(--color-primary) 12%, transparent)"
+            >
+              <img
+                src="/icons/icon-192.png"
+                alt=""
+                class="w-full h-full object-cover"
+              />
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-bold truncate" style="color: var(--text-primary)">{{ config.name }}</div>
+              <div v-if="schedules?.routes?.length" class="text-[11px] mt-0.5" style="color: var(--text-tertiary)">
+                {{ s.homeOperatorRoutes.replace('{n}', String(schedules.routes.length)) }}
+              </div>
+            </div>
+            <ChevronRight :size="14" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+          </a>
+        </section>
+
         <!-- Contatti -->
         <section v-if="config?.contact?.phone || config?.contact?.email">
           <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
@@ -333,42 +372,21 @@
           </div>
         </section>
 
-        <!-- Sito ufficiale -->
-        <section v-if="config?.url || config?.store">
-          <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
-            {{ s.resources ?? 'Risorse' }}
-          </h2>
-          <div
-            class="rounded-2xl overflow-hidden divide-app"
-            style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border-color: var(--border)"
-          >
-            <a
-              v-if="config?.url"
-              :href="config.url"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="flex items-center gap-3 px-4 py-3.5 transition-opacity duration-150 active:opacity-70"
-            >
-              <Globe :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
-              <span class="flex-1 text-[15px] font-medium" style="color: var(--text-primary)">{{ s.officialWebsite }}</span>
-              <ChevronRight :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
-            </a>
-            <NuxtLink
-              v-if="config?.store"
-              to="/lines"
-              prefetch
-              class="flex items-center gap-3 px-4 py-3.5 transition-opacity duration-150 active:opacity-70"
-              style="background-color: color-mix(in srgb, var(--color-primary) 4%, transparent)"
-            >
-              <Smartphone :size="16" :stroke-width="1.75" style="color: var(--color-primary); opacity: 0.7" class="shrink-0" />
-              <span class="flex-1 min-w-0">
-                <span class="block text-[15px] font-medium truncate" style="color: var(--text-primary)">{{ config.store.title }}</span>
-                <span v-if="config.store.subtitle" class="block text-xs truncate" style="color: var(--text-tertiary)">{{ config.store.subtitle }}</span>
-              </span>
-              <ChevronRight :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
-            </NuxtLink>
-          </div>
-        </section>
+        <!-- CTA esplora linee — operator URL già in "Chi muove la città" sopra -->
+        <NuxtLink
+          v-if="config?.store"
+          to="/lines"
+          prefetch
+          class="flex items-center gap-3 rounded-2xl px-4 py-3.5 transition-opacity duration-150 active:opacity-70"
+          style="background-color: color-mix(in srgb, var(--color-primary) 6%, var(--bg-elevated)); box-shadow: var(--shadow-sm); border: 1px solid color-mix(in srgb, var(--color-primary) 15%, var(--border))"
+        >
+          <Smartphone :size="16" :stroke-width="1.75" style="color: var(--color-primary); opacity: 0.7" class="shrink-0" />
+          <span class="flex-1 min-w-0">
+            <span class="block text-[15px] font-medium truncate" style="color: var(--text-primary)">{{ config.store.title }}</span>
+            <span v-if="config.store.subtitle" class="block text-xs truncate" style="color: var(--text-tertiary)">{{ config.store.subtitle }}</span>
+          </span>
+          <ChevronRight :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
+        </NuxtLink>
 
         <!-- Schedule freshness -->
         <div v-if="schedules?.validUntil" class="flex items-center justify-center gap-2">
@@ -384,6 +402,15 @@
             Valido fino al {{ formatShortDate(schedules.validUntil) }}
           </p>
         </div>
+
+        <!-- Footer disclaimer — citizen app, not operator-affiliated (parity native footerDisclaimer) -->
+        <p
+          v-if="config?.name"
+          class="text-center text-[11px] leading-relaxed px-6"
+          style="color: var(--text-tertiary)"
+        >
+          {{ s.homeFooterDisclaimer.replace('{operator}', config.name) }}
+        </p>
 
         <!-- Privacy link -->
         <a
@@ -405,7 +432,7 @@
 import { computeNowMin, getNextDeparture, sortStopsByNextDeparture } from '~/utils/schedule'
 import { highlightMatch } from '~/utils/highlight'
 import type { ScheduleStop, ScheduleData } from '~/types'
-import { Bus, Search, X, MapPin, Navigation, Star, Clock, ChevronRight, Phone, Mail, Globe, Smartphone, Route, CalendarDays } from 'lucide-vue-next'
+import { Search, X, MapPin, Navigation, Star, Clock, ChevronRight, Phone, Mail, Smartphone, Route, CalendarDays } from 'lucide-vue-next'
 
 const { config, schedules } = await useOperator()
 const s = useStrings(config)

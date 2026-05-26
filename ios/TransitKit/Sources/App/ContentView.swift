@@ -12,10 +12,14 @@ struct ContentView: View {
     @Environment(AlertStore.self) private var alertStore
     @Environment(FavoritesManager.self) private var favoritesManager
     @Environment(DeepLinkRouter.self) private var router
+    @Environment(\.scenePhase) private var scenePhase
     @State private var selectedTab = 0
     @State private var toastPresenter = AlertToastPresenter()
     @State private var toastDetailAlert: GtfsRtAlert?
+    #if DEBUG
     @State private var showShaderPlayground = false
+    #endif
+    @State private var deeplinkAlert: GtfsRtAlert?
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -82,7 +86,6 @@ struct ContentView: View {
                 .tag(4)
                 .accessibilityIdentifier("tab_alerts")
         }
-        .environment(\.vehiclePositionsUrl, config.gtfsRt?.vehiclePositionsUrl)
         .onChange(of: router.pendingRoute) { _, route in
             if route != nil { selectedTab = 2 }
         }
@@ -107,9 +110,36 @@ struct ContentView: View {
                 router.pendingMapOpen = nil
             }
         }
+        .onChange(of: router.pendingTabSwitch) { _, switchReq in
+            guard let switchReq else { return }
+            selectedTab = switchReq.index
+            router.pendingTabSwitch = nil
+        }
+        .onChange(of: router.pendingAlertId) { _, alertId in
+            guard let alertId,
+                  let alert = alertStore.allAlerts.first(where: { $0.id == alertId })
+            else { return }
+            router.pendingAlertId = nil
+            deeplinkAlert = alert
+        }
         .onAppear {
             if router.pendingMapPreviewStop != nil { selectedTab = 3 }
             if router.pendingMapPreviewVehicleId != nil { selectedTab = 3 }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // Pause GTFS-RT polling when the app is not active to avoid
+            // burning battery on background HTTPS requests every 15/60s.
+            // Restart immediately on .active so the user sees fresh data.
+            switch phase {
+            case .active:
+                vehicleStore.startPolling()
+                alertStore.startPolling()
+            case .inactive, .background:
+                vehicleStore.stopPolling()
+                alertStore.stopPolling()
+            @unknown default:
+                break
+            }
         }
         .toolbarBackground(.ultraThinMaterial, for: .tabBar)
         .modifier(TabBarVisibilityModifier())
@@ -142,6 +172,12 @@ struct ContentView: View {
                 AlertDetailView(alert: alert)
             }
         }
+        .fullScreenCover(item: $deeplinkAlert) { alert in
+            NavigationStack {
+                AlertDetailView(alert: alert)
+            }
+        }
+        #if DEBUG
         .onChange(of: router.showShaderPlayground) { _, requested in
             if requested {
                 showShaderPlayground = true
@@ -151,6 +187,7 @@ struct ContentView: View {
         .fullScreenCover(isPresented: $showShaderPlayground) {
             ShaderPlaygroundView()
         }
+        #endif
     }
 
     /// On every alert feed refresh, enqueue a toast for the first newly-active

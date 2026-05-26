@@ -10,18 +10,38 @@ struct HomeTab: View {
     @Environment(LocationManager.self) private var locationManager
     @Environment(VehicleStore.self) private var vehicleStore
     @Environment(AlertStore.self) private var alertStore
-    @Environment(\.colorScheme) private var colorScheme
+    @Environment(DeepLinkRouter.self) private var router
+    @Environment(\.operatorConfig) private var config
 
-    private var config: OperatorConfig? { try? ConfigLoader.load() }
+    /// Brand dell'APP (AppalRider), localizzato via InfoPlist.xcstrings.
+    /// Diverso da `config.name` (AppalCART) che è il nome dell'operatore di
+    /// cui mostriamo i dati.
+    private var appDisplayName: String {
+        (Bundle.main.localizedInfoDictionary?["CFBundleDisplayName"] as? String)
+            ?? (Bundle.main.infoDictionary?["CFBundleDisplayName"] as? String)
+            ?? "AppalRider"
+    }
     @State private var selectedMainStop: ResolvedStop?
+    /// Memoized nearby stops. Recomputed only when location or stop count changes
+    /// (see `.task(id: nearbyKey)`) — without this it ran on every body redraw,
+    /// including the 30s TimelineView tick and every @Observable change.
+    @State private var nearbyComputed: [(stop: ResolvedStop, distance: Double)] = []
+    /// Memoized routes-by-stop map for nearby cards. O(L·R) per stop computed
+    /// once per memoization cycle instead of inside each card body.
+    @State private var routesByStopId: [String: [APIRoute]] = [:]
     @State private var showSettings = false
     @State private var showAlertList = false
     @State private var showServizi = false
-    @AppStorage("hasSeenLocationPrimer") private var hasSeenLocationPrimer = false
-    @State private var showLocationPrimer = false
+    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
+    @State private var showOnboarding = false
 
     // MARK: Journey planner
     @State private var plannerLaunch: PlannerLaunch? = nil
+    @State private var deeplinkPlannerLaunch: PendingPlannerLaunch? = nil
+
+    /// Anchor id used by ScrollViewReader to scroll to the favorites section
+    /// when the user opens `transitkit://favorites`.
+    private let favoritesAnchorId = "home_favorites_anchor"
 
     // MARK: - Greeting
 
@@ -32,103 +52,48 @@ struct HomeTab: View {
         else { return String(localized: "home_greeting_evening") }
     }
 
-    @ViewBuilder
-    private var operatorMapBackground: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 24.0)) { ctx in
-            // Wrap time a 0..1000 per evitare precision loss Float32 GPU
-            let t = Float(ctx.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1000.0))
-            let (ar, ag, ab) = Self.rgbComponents(of: AppTheme.accent)
-            let isDark = colorScheme == .dark
-            GeometryReader { geo in
-                ZStack {
-                    // Layer 1: Deep fog (always present)
-                    homeMapLayer(size: geo.size, time: t, sharpness: 0.0, accent: (ar, ag, ab))
-                        .blur(radius: 28)
-                        .opacity(isDark ? 0.70 : 0.55)
-
-                    // Layer 2: Medium fog
-                    homeMapLayer(size: geo.size, time: t, sharpness: 0.3, accent: (ar, ag, ab))
-                        .blur(radius: 12)
-                        .opacity(isDark ? 0.50 : 0.42)
-
-                    // Layer 3: Forming lines
-                    homeMapLayer(size: geo.size, time: t, sharpness: 0.7, accent: (ar, ag, ab))
-                        .blur(radius: 4)
-                        .opacity(isDark ? 0.45 : 0.36)
-
-                    // Layer 4: Crisp lines (peak breathing only)
-                    homeMapLayer(size: geo.size, time: t, sharpness: 1.0, accent: (ar, ag, ab))
-                        .opacity(isDark ? 0.50 : 0.38)
-                }
-            }
-        }
-        .allowsHitTesting(false)
-    }
-
-    @ViewBuilder
-    private func homeMapLayer(
-        size: CGSize,
-        time: Float,
-        sharpness: Float,
-        accent: (Float, Float, Float)
-    ) -> some View {
-        Image("OperatorBackground")
-            .resizable()
-            .aspectRatio(contentMode: .fill)
-            .frame(width: size.width, height: size.height)
-            .clipped()
-            .colorEffect(
-                ShaderLibrary.mapGlowEffect(
-                    .float2(size),
-                    .float(time),
-                    .float(sharpness),
-                    .float(accent.0),
-                    .float(accent.1),
-                    .float(accent.2)
-                )
-            )
-    }
-
-    /// Estrae componenti RGB 0..1 da una Color SwiftUI risolvendola via UIColor.
-    /// Usata per passare l'accent color all'shader Metal come uniform.
-    private static func rgbComponents(of color: Color) -> (Float, Float, Float) {
-        let ui = UIColor(color)
-        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-        ui.getRed(&r, green: &g, blue: &b, alpha: &a)
-        return (Float(r), Float(g), Float(b))
-    }
+    // Background shader brandizzato condiviso con l'Onboarding.
+    // Implementazione in `Components/OperatorShaderBackground.swift`.
 
     var body: some View {
         NavigationStack {
             ZStack {
-                operatorMapBackground.ignoresSafeArea()
+                OperatorShaderBackground().ignoresSafeArea()
 
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 0) {
-                        // Alert chip sopra l'header (safety-critical)
-                        if !alertStore.activeAlerts.isEmpty {
-                            alertChip
-                                .padding(.top, 8)
-                                .padding(.bottom, 4)
-                        }
-                        homeMinimalHeader
-
-                        VStack(spacing: 20) {
-                            PlannerHomeBox { origin, dest, when in
-                                plannerLaunch = PlannerLaunch(origin: origin, destination: dest, when: when)
+                ScrollViewReader { proxy in
+                    ScrollView(showsIndicators: false) {
+                        VStack(spacing: 0) {
+                            // Alert chip sopra l'header (safety-critical)
+                            if !alertStore.activeAlerts.isEmpty {
+                                alertChip
+                                    .padding(.top, 8)
+                                    .padding(.bottom, 4)
                             }
-                            favoritesSection
-                            nearbyStopsSection
-                            operatorInfoSection
-                            serviziLinkSection
-                            footerDisclaimer
+
+                            VStack(spacing: 20) {
+                                PlannerHomeBox { origin, dest, when in
+                                    plannerLaunch = PlannerLaunch(origin: origin, destination: dest, when: when)
+                                }
+                                favoritesSection.id(favoritesAnchorId)
+                                nearbyStopsSection
+                                operatorInfoSection
+                                serviziLinkSection
+                                footerDisclaimer
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.top, 16)
+                            .padding(.bottom, 100)
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 16)
-                        .padding(.bottom, 100)
+                    }
+                    .background(.clear)
+                    .onChange(of: router.pendingFocusFavorites) { _, id in
+                        guard id != nil else { return }
+                        router.pendingFocusFavorites = nil
+                        withAnimation(.spring(response: 0.45, dampingFraction: 0.85)) {
+                            proxy.scrollTo(favoritesAnchorId, anchor: .top)
+                        }
                     }
                 }
-                .background(.clear)
 
                 // Footer gradient fade per leggibilità disclaimer sullo sfondo
                 VStack {
@@ -144,44 +109,30 @@ struct HomeTab: View {
                 .ignoresSafeArea()
             }
             .background(AppTheme.background.ignoresSafeArea())
-            .fullScreenCover(isPresented: $showLocationPrimer) {
-                LocationPrimerView()
+            .fullScreenCover(isPresented: $showOnboarding) {
+                OnboardingStoriesView()
             }
             .onAppear {
+                // Avvia gli updates se già autorizzato (no prompt).
                 switch locationManager.authorizationStatus {
                 case .authorizedWhenInUse, .authorizedAlways:
-                    // Gia' autorizzato: avvia gli updates (non mostra prompt)
                     locationManager.requestPermissionAndStart()
-                case .notDetermined:
-                    // Primo launch: mostra il primer, NON triggerare il prompt sistema
-                    if !hasSeenLocationPrimer {
-                        Task { @MainActor in
-                            try? await Task.sleep(nanoseconds: 400_000_000)
-                            showLocationPrimer = true
-                            hasSeenLocationPrimer = true
-                        }
-                    }
                 default:
-                    // .denied / .restricted: niente, l'utente gestisce da Settings > Privacy
                     break
                 }
-            }
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.hidden, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                        showSettings = true
-                    } label: {
-                        LucideIcon.settings.sized(20)
-                            .foregroundStyle(AppTheme.textSecondary)
+                if !hasSeenOnboarding {
+                    Task { @MainActor in
+                        try? await Task.sleep(nanoseconds: 350_000_000)
+                        showOnboarding = true
+                        hasSeenOnboarding = true
                     }
-                    .accessibilityIdentifier("btn_settings")
-                    .accessibilityLabel(String(localized: "tab_settings"))
                 }
             }
+            .toolbar(.hidden, for: .navigationBar)
+            .safeAreaInset(edge: .top, spacing: 0) {
+                homeTopBar
+            }
+            .task(id: nearbyKey) { recomputeNearby() }
             .fullScreenCover(isPresented: $showSettings) { SettingsTab() }
             .fullScreenCover(isPresented: $showAlertList) {
                 NavigationStack { AlertListView() }
@@ -196,40 +147,86 @@ struct HomeTab: View {
                     initialWhen: launch.when
                 )
             }
+            .navigationDestination(item: $deeplinkPlannerLaunch) { launch in
+                PlannerScreen(
+                    initialOrigin: launch.origin,
+                    initialDestination: launch.destination,
+                    initialWhen: launch.when
+                )
+            }
             .navigationDestination(item: $selectedMainStop) { stop in
                 StopDetailView(stop: stop)
+            }
+            .onChange(of: router.pendingSettingsOpen) { _, id in
+                guard id != nil else { return }
+                router.pendingSettingsOpen = nil
+                showSettings = true
+            }
+            .onChange(of: router.pendingServiziOpen) { _, id in
+                guard id != nil else { return }
+                router.pendingServiziOpen = nil
+                showServizi = true
+            }
+            .onChange(of: router.pendingOnboardingOpen) { _, id in
+                guard id != nil else { return }
+                router.pendingOnboardingOpen = nil
+                showOnboarding = true
+            }
+            .onChange(of: router.pendingPlannerOpen) { _, id in
+                guard id != nil else { return }
+                router.pendingPlannerOpen = nil
+                deeplinkPlannerLaunch = PendingPlannerLaunch(
+                    origin: nil, destination: nil, when: .now
+                )
+            }
+            .onChange(of: router.pendingPlannerLaunch) { _, launch in
+                guard let launch else { return }
+                router.pendingPlannerLaunch = nil
+                deeplinkPlannerLaunch = launch
             }
         }
     }
 
-    // MARK: - Minimal Header
+    // MARK: - Top bar (brand + settings, sotto la status bar)
 
-    private var homeMinimalHeader: some View {
-        HStack(spacing: 12) {
+    private var homeTopBar: some View {
+        HStack(spacing: 10) {
             if UIImage(named: "OperatorLogo") != nil {
                 Image("OperatorLogo")
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 32, height: 32)
+                    .frame(width: 28, height: 28)
                     .clipShape(Circle())
             }
             if let config {
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(config.brandName ?? config.name)
-                        .font(.system(size: 17, weight: .semibold))
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(appDisplayName)
+                        .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(AppTheme.textPrimary)
+                        .lineLimit(1)
                     if !config.region.isEmpty {
                         Text(config.region)
-                            .font(.system(size: 12))
+                            .font(.system(size: 11))
                             .foregroundStyle(AppTheme.textSecondary)
+                            .lineLimit(1)
                     }
                 }
             }
-            Spacer()
+            Spacer(minLength: 0)
+            Button {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                showSettings = true
+            } label: {
+                LucideIcon.settings.sized(20)
+                    .foregroundStyle(AppTheme.textSecondary)
+                    .frame(width: 36, height: 36)
+                    .contentShape(Rectangle())
+            }
+            .accessibilityIdentifier("btn_settings")
+            .accessibilityLabel(String(localized: "tab_settings"))
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 16)
-        .padding(.bottom, 8)
+        .padding(.horizontal, 16)
+        .frame(height: 44)
     }
 
     // MARK: - Alert Chip
@@ -314,14 +311,37 @@ struct HomeTab: View {
 
     // MARK: - Nearby Stops (GPS)
 
-    /// Closest stops to the user's location, paired with meters, ordered ascending.
-    /// No distance cutoff — the soft "far from transit" state is decided by the view.
-    /// Returns up to 8 candidates: the horizontal scroll trims by the 400 m filter.
-    private var nearbyStopsWithDistance: [(ResolvedStop, Double)] {
-        guard let location = locationManager.location else { return [] }
+    /// Cache-invalidation key for `nearbyComputed` + `routesByStopId`. The task
+    /// fires only when one of these inputs changes — the body still re-runs at
+    /// every TimelineView tick but the O(N·L·R) work happens only on real input
+    /// changes.
+    private struct NearbyKey: Hashable {
+        let lat: Double
+        let lng: Double
+        let stopsCount: Int
+        let routesCount: Int
+    }
+
+    private var nearbyKey: NearbyKey {
+        NearbyKey(
+            lat: locationManager.location?.coordinate.latitude ?? 0,
+            lng: locationManager.location?.coordinate.longitude ?? 0,
+            stopsCount: store.stops.count,
+            routesCount: store.routes.count
+        )
+    }
+
+    /// Recomputes the memoized nearby stops + routesByStopId map. Cheap on
+    /// AppalCART (~128 stops) but called only on real input changes.
+    private func recomputeNearby() {
+        guard let location = locationManager.location else {
+            nearbyComputed = []
+            routesByStopId = [:]
+            return
+        }
         let userLat = location.coordinate.latitude
         let userLng = location.coordinate.longitude
-        return store.stops
+        let ranked = store.stops
             .map { stop -> (ResolvedStop, Double) in
                 let dlat = stop.lat - userLat
                 let dlng = stop.lng - userLng
@@ -330,23 +350,23 @@ struct HomeTab: View {
             }
             .sorted { $0.1 < $1.1 }
             .prefix(8)
-            .map { ($0.0, $0.1) }
-    }
+        nearbyComputed = ranked.map { (stop: $0.0, distance: $0.1) }
 
-    /// Resolves the list of routes serving a given stop, deduplicated by id and
-    /// ordered to match `stop.lineNames` (the operator's canonical order). Used
-    /// by `NearbyStopCard` to render line badges under the stop name.
-    private func routesAtStop(_ stop: ResolvedStop) -> [APIRoute] {
-        stop.lineNames.compactMap { lineName in
-            store.routes.first { $0.name == lineName }
+        // Routes-by-stop map only for the 8 cards we'll render.
+        var map: [String: [APIRoute]] = [:]
+        for (stop, _) in ranked {
+            map[stop.id] = stop.lineNames.compactMap { lineName in
+                store.routes.first { $0.name == lineName }
+            }
+            .uniqued(by: \.id)
         }
-        .uniqued(by: \.id)
+        routesByStopId = map
     }
 
     private var enableLocationChip: some View {
         Button {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            showLocationPrimer = true
+            locationManager.requestPermissionAndStart()
         } label: {
             HStack(spacing: 8) {
                 LucideIcon.mapPin.sized(14)
@@ -372,7 +392,7 @@ struct HomeTab: View {
         case .notDetermined:
             enableLocationChip
         case .authorizedWhenInUse, .authorizedAlways:
-            let nearby = nearbyStopsWithDistance.filter { $0.1 <= 400 }
+            let nearby = nearbyComputed.filter { $0.distance <= 400 }
             if !nearby.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
                     sectionHeader(String(localized: "home_section_nearby"), icon: .mapPin)
@@ -380,12 +400,12 @@ struct HomeTab: View {
                     // the section title and the last one peeks past the right edge.
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(spacing: 10) {
-                            ForEach(nearby, id: \.0.id) { (stop, distance) in
+                            ForEach(nearby, id: \.stop.id) { entry in
                                 NearbyStopCard(
-                                    stop: stop,
-                                    distanceMeters: distance,
-                                    routes: routesAtStop(stop),
-                                    onTap: { selectedMainStop = stop }
+                                    stop: entry.stop,
+                                    distanceMeters: entry.distance,
+                                    routes: routesByStopId[entry.stop.id] ?? [],
+                                    onTap: { selectedMainStop = entry.stop }
                                 )
                             }
                         }
@@ -443,7 +463,7 @@ struct HomeTab: View {
                                 LiveBadge()
                             }
                             TimelineView(.periodic(from: .now, by: 30)) { _ in
-                                TimeDisplay(departure: dep, relativeThreshold: 1440)
+                                TimeDisplay(state: store.timeState(for: dep))
                             }
                         }
                         .padding(.vertical, 6)

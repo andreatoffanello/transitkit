@@ -88,6 +88,9 @@ struct TransitLeg: Identifiable {
     let alightTime: Date
     let tripId: String
     let intermediateStops: [IntermediateStop]
+    /// Encoded polyline (Google Algorithm) from MOTIS `legGeometry.points`.
+    /// MOTIS encodes with precision 7. Nil when MOTIS didn't return geometry.
+    let shapePolyline: String?
 }
 
 // MARK: - IntermediateStop
@@ -95,7 +98,9 @@ struct TransitLeg: Identifiable {
 struct IntermediateStop: Identifiable {
     let id: String   // stopId (MOTIS raw, può essere prefissato)
     let name: String
-    let time: String // "HH:MM"
+    /// Arrival time at this stop (absolute moment). Formatted at the call site
+    /// using the operator timezone — see `formatJourneyTime` in `JourneyDetailView.swift`.
+    let arrivalTime: Date
     let lat: Double
     let lng: Double
 }
@@ -109,4 +114,7 @@ struct WalkingLeg: Identifiable {
     let walkSeconds: Int
     /// Metri a piedi (da MOTIS `distance`, fallback walkSeconds * 1.2 m/s).
     let distanceMeters: Int
+    /// Encoded polyline (Google Algorithm) from MOTIS `legGeometry.points`.
+    /// MOTIS encodes with precision 7. Nil when MOTIS didn't return geometry.
+    let shapePolyline: String?
 }

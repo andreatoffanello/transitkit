@@ -41,6 +41,7 @@ class HomeViewModel @Inject constructor(
     private val favoritesStore: FavoritesStore,
     private val vehicleStore: VehicleStore,
     private val alertStore: AlertStore,
+    private val pushManager: com.transitkit.app.data.push.PushNotificationManager,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState(config = operatorConfig, isLoading = false))
@@ -63,8 +64,8 @@ class HomeViewModel @Inject constructor(
     private val _nearbyDepartures = MutableStateFlow<Map<String, List<Departure>>>(emptyMap())
     val nearbyDepartures: StateFlow<Map<String, List<Departure>>> = _nearbyDepartures.asStateFlow()
 
-    private val _shouldShowLocationPrimer = MutableStateFlow(false)
-    val shouldShowLocationPrimer: StateFlow<Boolean> = _shouldShowLocationPrimer.asStateFlow()
+    private val _shouldShowOnboarding = MutableStateFlow(false)
+    val shouldShowOnboarding: StateFlow<Boolean> = _shouldShowOnboarding.asStateFlow()
 
     val scheduleLoadError: StateFlow<String?> = scheduleRepository.loadError
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
@@ -154,14 +155,25 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun checkLocationPrimer(prefs: SharedPreferences, currentPermissionGranted: Boolean) {
-        val hasSeen = prefs.getBoolean("has_seen_location_primer", false)
-        _shouldShowLocationPrimer.value = !hasSeen && !currentPermissionGranted
+    fun checkOnboarding(prefs: SharedPreferences) {
+        val hasSeen = prefs.getBoolean("has_seen_onboarding", false)
+        _shouldShowOnboarding.value = !hasSeen
     }
 
-    fun markLocationPrimerSeen(prefs: SharedPreferences) {
-        prefs.edit().putBoolean("has_seen_location_primer", true).apply()
-        _shouldShowLocationPrimer.value = false
+    fun markOnboardingSeen(prefs: SharedPreferences) {
+        prefs.edit().putBoolean("has_seen_onboarding", true).apply()
+        _shouldShowOnboarding.value = false
+    }
+
+    /// Chiamato dall'onboarding quando l'utente concede POST_NOTIFICATIONS:
+    /// subscribe al topic operatore + recupero token FCM. Stessa implementa-
+    /// zione di SettingsViewModel.onNotificationsPermissionGranted.
+    fun onNotificationsPermissionGranted() {
+        viewModelScope.launch {
+            try {
+                pushManager.enableAndSubscribeAll()
+            } catch (_: Exception) {}
+        }
     }
 
     override fun onCleared() {

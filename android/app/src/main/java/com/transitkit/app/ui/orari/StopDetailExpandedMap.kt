@@ -28,6 +28,7 @@ import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.style.MapStyle
+import kotlinx.coroutines.awaitCancellation
 import com.transitkit.app.config.LocalTransitColors
 import com.transitkit.app.data.model.ResolvedStop
 import com.transitkit.app.ui.mappa.StopSymbolLayer
@@ -104,15 +105,14 @@ internal fun StopDetailExpandedMap(
                 modifier = Modifier.fillMaxSize(),
             ) {
                 MapEffect(isDark) { mapView ->
-                    val applied = mapView.mapboxMap.style
-                    if (applied != null) {
-                        applyTransitKitHeroStyleConfig(applied, isDark)
-                    } else {
-                        mapView.mapboxMap.subscribeStyleLoaded {
-                            mapView.mapboxMap.style?.let {
-                                applyTransitKitHeroStyleConfig(it, isDark)
-                            }
-                        }
+                    mapView.mapboxMap.style?.let { applyTransitKitHeroStyleConfig(it, isDark) }
+                    val cancelable = mapView.mapboxMap.subscribeStyleLoaded {
+                        mapView.mapboxMap.style?.let { applyTransitKitHeroStyleConfig(it, isDark) }
+                    }
+                    try {
+                        awaitCancellation()
+                    } finally {
+                        cancelable.cancel()
                     }
                 }
                 // Stesso marker della MapTab — single source of truth.

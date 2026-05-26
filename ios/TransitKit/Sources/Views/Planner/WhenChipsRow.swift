@@ -10,6 +10,7 @@ import SwiftUI
 struct WhenChipsRow: View {
     @Binding var selection: WhenSelection
 
+    @Environment(\.operatorTimeZone) private var operatorTimeZone
     @State private var showTimePicker = false
     @State private var showDatePicker = false
 
@@ -104,12 +105,14 @@ struct WhenChipsRow: View {
             .labelsHidden()
             .padding(20)
             .presentationCompactAdaptation(.popover)
+            .environment(\.timeZone, operatorTimeZone)
         }
     }
 
     private var timeLabel: String {
         let f = DateFormatter()
         f.dateFormat = "HH:mm"
+        f.timeZone = operatorTimeZone
         return f.string(from: currentDate)
     }
 
@@ -136,18 +139,22 @@ struct WhenChipsRow: View {
             .padding(16)
             .frame(minWidth: 320)
             .presentationCompactAdaptation(.popover)
+            .environment(\.timeZone, operatorTimeZone)
         }
     }
 
     private var dateLabel: String {
-        let f = DateFormatter()
+        var cal = Calendar.current
+        cal.timeZone = operatorTimeZone
         // Se il giorno coincide con oggi, mostra "Oggi"; altrimenti formato breve.
-        if Calendar.current.isDateInToday(currentDate) {
+        if cal.isDateInToday(currentDate) {
             return String(localized: "today_short")
         }
-        if Calendar.current.isDateInTomorrow(currentDate) {
+        if cal.isDateInTomorrow(currentDate) {
             return String(localized: "tomorrow_short")
         }
+        let f = DateFormatter()
+        f.timeZone = operatorTimeZone
         f.dateFormat = "d MMM"
         return f.string(from: currentDate)
     }

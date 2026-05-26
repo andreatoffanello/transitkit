@@ -75,9 +75,17 @@ enum HeadsignNormalizer {
             }
         }
 
-        // 4. Title-case if all-caps (e.g. "INBOUND" → "Inbound")
+        // 4. Smart casing for ALL-CAPS input. `.capitalized` indiscriminately
+        //    title-cases everything, including acronyms ("ASU SRC" → "Asu Src").
+        //    Heuristic: tokens up to 3 chars are likely acronyms (ASU, BRT, NYC,
+        //    USA, ST, AVE) and stay uppercase; longer tokens get title-cased.
         if result == result.uppercased() && result.count > 1 {
-            result = result.capitalized
+            let tokens = result.split(separator: " ", omittingEmptySubsequences: true)
+            result = tokens.map { tok -> String in
+                let s = String(tok)
+                if s.count <= 3 { return s }  // keep acronyms uppercase
+                return s.capitalized
+            }.joined(separator: " ")
         }
 
         return result

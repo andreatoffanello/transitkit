@@ -106,12 +106,13 @@ class RemoteRoutingProvider(
                 val color = leg.optString("routeColor").takeIf { it.isNotEmpty() } ?: "808080"
                 val textColor = leg.optString("routeTextColor").takeIf { it.isNotEmpty() } ?: contrastHex(color)
                 val intermediates = leg.optJSONArray("intermediateStops")?.let { ia ->
-                    (0 until ia.length()).map { j ->
+                    (0 until ia.length()).mapNotNull { j ->
                         val s = ia.getJSONObject(j)
+                        val ts = parseIso(s.optString("arrival")) ?: return@mapNotNull null
                         IntermediateStop(
                             id = s.optString("stopId"),
                             name = s.optString("name"),
-                            time = timeComponent(s.optString("arrival")),
+                            arrivalTime = ts,
                             lat = s.optDouble("lat", 0.0),
                             lon = s.optDouble("lon", 0.0),
                         )
@@ -149,12 +150,6 @@ class RemoteRoutingProvider(
     private fun parseIso(iso: String): Long? = runCatching {
         Instant.parse(iso).toEpochMilli()
     }.getOrNull()
-
-    // "2026-05-05T14:06:00Z" → "14:06"
-    private fun timeComponent(iso: String): String {
-        val t = iso.indexOf('T')
-        return if (t >= 0 && t + 6 <= iso.length) iso.substring(t + 1, t + 6) else ""
-    }
 
     private fun contrastHex(hex: String): String {
         val clean = hex.trimStart('#')

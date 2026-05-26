@@ -1,10 +1,11 @@
 import SwiftUI
 
-private let journeyTimeFormatter: DateFormatter = {
+private func formatJourneyTime(_ date: Date, tz: TimeZone) -> String {
     let f = DateFormatter()
     f.dateFormat = "HH:mm"
-    return f
-}()
+    f.timeZone = tz
+    return f.string(from: date)
+}
 
 // MARK: - JourneyDetailView
 //
@@ -22,6 +23,7 @@ struct JourneyDetailView: View {
     /// Bookend "A:..." sotto timeline quando ultimo leg è walking.
     var destinationName: String? = nil
 
+    @Environment(\.operatorTimeZone) private var operatorTimeZone
     @State private var expandedLegs: Set<UUID> = []
     @State private var showFullscreenMap = false
 
@@ -143,11 +145,11 @@ struct JourneyDetailView: View {
     private var heroHeader: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text(journeyTimeFormatter.string(from: journey.departureTime))
+                Text(formatJourneyTime(journey.departureTime, tz: operatorTimeZone))
                     .font(.system(size: 28, weight: .bold).monospacedDigit())
                 LucideIcon.arrowRight.sized(16)
                     .foregroundStyle(.secondary)
-                Text(journeyTimeFormatter.string(from: journey.arrivalTime))
+                Text(formatJourneyTime(journey.arrivalTime, tz: operatorTimeZone))
                     .font(.system(size: 28, weight: .bold).monospacedDigit())
             }
             Text(headerSubtitle)
@@ -181,6 +183,8 @@ private struct EndpointRow: View {
     let name: String
     let role: Role
 
+    @Environment(\.operatorTimeZone) private var operatorTimeZone
+
     // Allineamento verticale: il dot deve sedere sulla stessa baseline del
     // nome (Text body 15pt). La mini-label PARTENZA/ARRIVO è 11pt sopra il
     // nome — alta circa 18pt incluso il padding spacing(2) + cap-height SF.
@@ -189,7 +193,7 @@ private struct EndpointRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: kColGap) {
-            Text(journeyTimeFormatter.string(from: time))
+            Text(formatJourneyTime(time, tz: operatorTimeZone))
                 .font(.system(size: 13, weight: .semibold).monospacedDigit())
                 .foregroundStyle(.primary)
                 .frame(width: kTimeW, alignment: .trailing)
@@ -252,13 +256,15 @@ private struct TransitLegView: View {
     let isExpanded: Bool
     let onToggleExpand: () -> Void
 
+    @Environment(\.operatorTimeZone) private var operatorTimeZone
+
     private var tColor: Color {
         leg.routeColor.uppercased() == "FFFFFF"
             ? Color(.label)
             : Color(hex: "#\(leg.routeColor)")
     }
 
-    private func tf(_ d: Date) -> String { journeyTimeFormatter.string(from: d) }
+    private func tf(_ d: Date) -> String { formatJourneyTime(d, tz: operatorTimeZone) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -369,7 +375,7 @@ private struct TransitLegView: View {
                                         .font(.system(size: 13))
                                         .foregroundStyle(.secondary)
                                     Spacer()
-                                    Text(stop.time)
+                                    Text(tf(stop.arrivalTime))
                                         .font(.system(size: 12).monospacedDigit())
                                         .foregroundStyle(.tertiary)
                                 }

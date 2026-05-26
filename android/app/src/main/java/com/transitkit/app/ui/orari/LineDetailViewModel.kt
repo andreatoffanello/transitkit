@@ -34,6 +34,7 @@ data class LiveVehicleCard(
     val headsign: String,         // direzione corrente — TripDetail la usa come titolo
     val routeName: String,        // short name della linea — passato a TripDetail
     val routeColor: String,       // hex senza '#'
+    val lastUpdatedEpochSec: Long?, // GTFS-RT VehiclePosition.timestamp — null se il feed non lo espone
 )
 
 @HiltViewModel
@@ -55,6 +56,21 @@ class LineDetailViewModel @Inject constructor(
     val route: StateFlow<ScheduleRoute?> = scheduleRepository.routes
         .map { routes -> routes.firstOrNull { it.id == routeId } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /** True once the schedule has loaded but the requested routeId is absent
+     *  from the route list — surfaces a "Route not found" UI state instead
+     *  of showing an empty header forever (deep link with stale/wrong id). */
+    val routeNotFound: StateFlow<Boolean> = combine(
+        scheduleRepository.scheduleResponse,
+        route,
+    ) { schedule, r -> schedule != null && r == null }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    init {
+        // Ensure the schedule is fetched so the not-found guard can fire even
+        // when LineDetail is the first screen entered (deep link cold start).
+        viewModelScope.launch { scheduleRepository.load() }
+    }
 
     /** Schedule route index — used by `AlertCard` to render affected-line badges. */
     val routesById: StateFlow<Map<String, ScheduleRoute>> = scheduleRepository.routes
@@ -105,6 +121,7 @@ class LineDetailViewModel @Inject constructor(
                 headsign = headsign,
                 routeName = routeName,
                 routeColor = routeColor,
+                lastUpdatedEpochSec = v.timestamp.takeIf { it > 0L },
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())

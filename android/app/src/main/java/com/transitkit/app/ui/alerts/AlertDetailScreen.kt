@@ -50,9 +50,15 @@ import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.config.toColor
+import com.transitkit.app.data.model.AlertCause
+import com.transitkit.app.data.model.AlertEffect
 import com.transitkit.app.data.model.AlertSeverity
 import com.transitkit.app.data.model.ResolvedStop
 import com.transitkit.app.data.model.ScheduleRoute
+import com.transitkit.app.data.model.ServiceAlert
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
@@ -152,6 +158,11 @@ fun AlertDetailScreen(
                 }
             }
 
+            // Metadata card — effective period, cause, effect, "Affects all".
+            // Filled-in only when at least one row has content; avoids an empty
+            // card on alerts with description-only payload.
+            metadataCardItem(alert = alert, affectedRoutes = affectedRoutes, affectedStops = affectedStops)
+
             // Affected routes
             if (affectedRoutes.isNotEmpty()) {
                 item {
@@ -219,6 +230,146 @@ fun AlertDetailScreen(
             item { Spacer(Modifier.height(16.dp)) }
         }
     }
+}
+
+/**
+ * Adds the metadata card to a LazyColumn when there's something to show.
+ * Items are: effective period, cause, effect, plus an "Affects all service"
+ * footer when no specific routes/stops are listed (alert is system-wide).
+ */
+private fun androidx.compose.foundation.lazy.LazyListScope.metadataCardItem(
+    alert: ServiceAlert,
+    affectedRoutes: List<ScheduleRoute>,
+    affectedStops: List<ResolvedStop>,
+) {
+    val periodStart = alert.activePeriods.mapNotNull { it.start }.minOrNull()
+    val periodEnd = alert.activePeriods.mapNotNull { it.end }.maxOrNull()
+    val hasPeriod = periodStart != null || periodEnd != null
+    val hasCause = alert.cause != AlertCause.UNKNOWN_CAUSE
+    val hasEffect = alert.effect != AlertEffect.UNKNOWN_EFFECT && alert.effect != AlertEffect.NO_EFFECT
+    val affectsAll = affectedRoutes.isEmpty() && affectedStops.isEmpty()
+    if (!hasPeriod && !hasCause && !hasEffect && !affectsAll) return
+
+    item {
+        val colors = TransitTheme.colors
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = colors.bgSecondary),
+            border = BorderStroke(1.dp, colors.glassBorder),
+            elevation = CardDefaults.cardElevation(0.dp),
+        ) {
+            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (hasPeriod) {
+                    MetadataRow(
+                        icon = LucideIcons.Clock,
+                        label = stringResource(R.string.alert_meta_when),
+                        value = formatPeriod(periodStart, periodEnd),
+                    )
+                }
+                if (hasCause) {
+                    MetadataRow(
+                        icon = LucideIcons.Info,
+                        label = stringResource(R.string.alert_meta_cause),
+                        value = causeLabel(alert.cause),
+                    )
+                }
+                if (hasEffect) {
+                    MetadataRow(
+                        icon = LucideIcons.AlertTriangle,
+                        label = stringResource(R.string.alert_meta_effect),
+                        value = effectLabel(alert.effect),
+                    )
+                }
+                if (affectsAll) {
+                    MetadataRow(
+                        icon = LucideIcons.BusFront,
+                        label = stringResource(R.string.alert_affects_all),
+                        value = null,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MetadataRow(icon: Int, label: String, value: String?) {
+    val colors = TransitTheme.colors
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = null,
+            tint = colors.accent,
+            modifier = Modifier.size(16.dp),
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.textTertiary,
+                letterSpacing = 0.5.sp,
+            )
+            if (value != null) {
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.textPrimary,
+                )
+            }
+        }
+    }
+}
+
+private val periodFormatter: SimpleDateFormat by lazy {
+    SimpleDateFormat("d MMM, HH:mm", Locale.getDefault())
+}
+
+private fun formatPeriod(start: Long?, end: Long?): String {
+    val fmt = periodFormatter
+    val s = start?.let { fmt.format(Date(it * 1000L)) }
+    val e = end?.let { fmt.format(Date(it * 1000L)) }
+    return when {
+        s != null && e != null -> "$s — $e"
+        s != null -> "From $s"
+        e != null -> "Until $e"
+        else -> ""
+    }
+}
+
+@Composable
+private fun causeLabel(cause: AlertCause): String = when (cause) {
+    AlertCause.TECHNICAL_PROBLEM -> stringResource(R.string.alert_cause_technical)
+    AlertCause.STRIKE -> stringResource(R.string.alert_cause_strike)
+    AlertCause.DEMONSTRATION -> stringResource(R.string.alert_cause_demonstration)
+    AlertCause.ACCIDENT -> stringResource(R.string.alert_cause_accident)
+    AlertCause.HOLIDAY -> stringResource(R.string.alert_cause_holiday)
+    AlertCause.WEATHER -> stringResource(R.string.alert_cause_weather)
+    AlertCause.MAINTENANCE -> stringResource(R.string.alert_cause_maintenance)
+    AlertCause.CONSTRUCTION -> stringResource(R.string.alert_cause_construction)
+    AlertCause.POLICE_ACTIVITY -> stringResource(R.string.alert_cause_police)
+    AlertCause.MEDICAL_EMERGENCY -> stringResource(R.string.alert_cause_medical)
+    AlertCause.OTHER_CAUSE -> stringResource(R.string.alert_cause_other)
+    AlertCause.UNKNOWN_CAUSE -> stringResource(R.string.alert_cause_other)
+}
+
+@Composable
+private fun effectLabel(effect: AlertEffect): String = when (effect) {
+    AlertEffect.NO_SERVICE -> stringResource(R.string.alert_effect_no_service)
+    AlertEffect.REDUCED_SERVICE -> stringResource(R.string.alert_effect_reduced_service)
+    AlertEffect.SIGNIFICANT_DELAYS -> stringResource(R.string.alert_effect_delays)
+    AlertEffect.DETOUR -> stringResource(R.string.alert_effect_detour)
+    AlertEffect.ADDITIONAL_SERVICE -> stringResource(R.string.alert_effect_additional)
+    AlertEffect.MODIFIED_SERVICE -> stringResource(R.string.alert_effect_modified)
+    AlertEffect.STOP_MOVED -> stringResource(R.string.alert_effect_stop_moved)
+    AlertEffect.ACCESSIBILITY_ISSUE -> stringResource(R.string.alert_effect_accessibility)
+    AlertEffect.OTHER_EFFECT -> stringResource(R.string.alert_effect_other)
+    AlertEffect.UNKNOWN_EFFECT -> stringResource(R.string.alert_effect_other)
+    AlertEffect.NO_EFFECT -> stringResource(R.string.alert_effect_other)
 }
 
 @Composable

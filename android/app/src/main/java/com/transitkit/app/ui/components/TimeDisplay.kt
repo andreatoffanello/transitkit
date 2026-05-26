@@ -34,18 +34,17 @@ import com.transitkit.app.config.TransitTheme
 // -----------------------------------------------------------------------------
 // Layout:
 //
-//   row 1 — countdown        "5m" / "1h 23'" / "2h"  (or pulsing arrow if now)
+//   row 1 — countdown        "5m" / "1h 23m" / "2h"  (or pulsing arrow if now)
 //           [liveDot]        opt. green dot inline when realtime
 //   row 2 — scheduled/actual "16:20"  (monospaced, secondary color)
 //
-// Threshold:
-//   relativeThreshold = 60   (default) — partenze >= 60 min mostrano orario
-//                                       assoluto; tra 60 e 1440 nuovo case
-//                                       HoursMinutes ("1h 23'").
-//   relativeThreshold = 1440             tutto relativo entro 24h.
+// Threshold (default 60 — keep all callsites aligned):
+//   diff <= 60 min  → Minutes / Hours / HoursMinutes (relative)
+//   diff >  60 min  → Absolute (clock time)
 //
-// Wrap-around:
-//   departureMinutes < nowMinutes - 60 → diff += 1440 (next day occurrence).
+// Past departures are dropped upstream by ScheduleRepository — when a Passed
+// state slips through (race between fetch and render) it stays dimmed in place.
+// No day-after wrap: home and stop-detail must agree on what "now" means.
 // -----------------------------------------------------------------------------
 
 sealed class DepartureTimeState {
@@ -53,7 +52,7 @@ sealed class DepartureTimeState {
     data class Absolute(val clock: String) : DepartureTimeState()
     /** Countdown 1-59 min — rendered as "Xm". */
     data class Minutes(val minutes: Int, val clock: String) : DepartureTimeState()
-    /** 60-1439 min, with non-zero remainder — rendered as "Xh Y'". */
+    /** 60-1439 min, with non-zero remainder — rendered as "Xh Ym". */
     data class HoursMinutes(val hours: Int, val minutes: Int, val clock: String) : DepartureTimeState()
     /** 60-1439 min, exact hour — rendered as "Xh". */
     data class Hours(val hours: Int, val clock: String) : DepartureTimeState()
@@ -78,10 +77,7 @@ fun computeDepartureTimeState(
     clockHHmm: String,
     relativeThreshold: Int = 60,
 ): DepartureTimeState {
-    var diff = departureMinutes - nowMinutes
-    // Wrap-around: partenze "passate" di più di 60 min sono trattate come
-    // prossima occorrenza il giorno successivo.
-    if (diff < -60) diff += 1440
+    val diff = departureMinutes - nowMinutes
     return when {
         diff < 0 -> DepartureTimeState.Passed(clockHHmm)
         diff == 0 -> DepartureTimeState.Departing(clockHHmm)

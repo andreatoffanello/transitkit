@@ -1,7 +1,10 @@
 <template>
-  <div class="relative w-full overflow-hidden stop-map-hero">
-    <div ref="mapContainer" class="absolute inset-0" />
-    <!-- Expand → opens external maps -->
+  <div
+    class="relative w-full overflow-hidden"
+    style="height: 220px; background: var(--bg-secondary); border-bottom-left-radius: 20px; border-bottom-right-radius: 20px"
+  >
+    <div ref="mapContainer" class="absolute inset-0" style="height: 220px" />
+    <!-- Expand → opens external maps via geo: URI (iOS + Android) -->
     <a
       v-if="lat && lng"
       :href="`geo:${lat},${lng}?q=${lat},${lng}`"
@@ -28,8 +31,10 @@ const mapContainer = ref<HTMLElement | null>(null)
 let mapInstance: unknown = null
 let marker: unknown = null
 
-// Lucide Signpost path — kept inline so the marker doesn't depend on the component tree.
-// Source: https://lucide.dev/icons/signpost  (MIT)
+// Lucide Signpost — inline SVG così il marker non dipende dal component tree
+// e si può iniettare via innerHTML su un DOM element creato per MapLibre Marker.
+// Glyph identico a quello usato dalle native iOS (LucideIcon.signpost) e
+// Android (StopSymbolLayer signpost.png). Source: lucide.dev/icons/signpost (MIT)
 const SIGNPOST_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 13v8"/><path d="M12 3v3"/><path d="M18 6a2 2 0 0 1 1.387.56l2.307 2.22a1 1 0 0 1 0 1.44l-2.307 2.22A2 2 0 0 1 18 13H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/></svg>`
 
 function buildMarkerEl(color: string): HTMLElement {
@@ -53,41 +58,38 @@ function buildMarkerEl(color: string): HTMLElement {
 onMounted(async () => {
   if (!mapContainer.value) return
 
-  const { default: maplibregl } = await import('maplibre-gl')
-
-  const accent = props.primaryColor ?? '#165F9C'
+  // Usa la build CSP-compliant di MapLibre + worker URL esplicito.
+  // Necessario perché il pattern `URL.createObjectURL(blob)` del UMD bundle
+  // di default si rompe con il bundling Vite/Nuxt (worker spawn fallisce,
+  // canvas resta uniforme, zero tile request).
+  const [{ default: maplibregl }, workerUrlMod] = await Promise.all([
+    import('maplibre-gl/dist/maplibre-gl-csp.js'),
+    import('maplibre-gl/dist/maplibre-gl-csp-worker.js?url'),
+  ])
+  // @ts-expect-error setWorkerUrl exists in CSP build
+  maplibregl.setWorkerUrl(workerUrlMod.default)
 
   mapInstance = new maplibregl.Map({
     container: mapContainer.value,
     style: 'https://tiles.openfreemap.org/styles/bright',
     center: [props.lng, props.lat],
-    zoom: 14.5,
-    pitch: 35,
+    zoom: 15.5,
+    pitch: 0,
     bearing: 0,
     attributionControl: false,
     interactive: false,
   })
 
   const map = mapInstance as InstanceType<typeof maplibregl.Map>
+  // @ts-expect-error dev debug
+  if (import.meta.dev || (typeof window !== 'undefined' && window.location?.hostname?.includes('appalcart'))) (window as unknown as { __map: unknown }).__map = map
+  map.on('error', (e) => console.error('[StopMapHeader] map error', (e as unknown as { error?: { message?: string } })?.error?.message ?? e))
 
   map.on('load', () => {
+    const accent = props.primaryColor ?? '#165F9C'
     marker = new maplibregl.Marker({ element: buildMarkerEl(accent), anchor: 'bottom' })
       .setLngLat([props.lng, props.lat])
       .addTo(map)
-
-    // Fly-in cinematico (parity native: iOS pitch 60° + Android pitch 50°).
-    // Manteniamo 50° per leggibilità web e per non perdere il pin sul tilt.
-    setTimeout(() => {
-      map.flyTo({
-        center: [props.lng, props.lat],
-        zoom: 17,
-        pitch: 50,
-        bearing: 0,
-        duration: 1200,
-        essential: true,
-        curve: 1.42,
-      })
-    }, 500)
   })
 })
 
@@ -106,17 +108,3 @@ onUnmounted(() => {
   }
 })
 </script>
-
-<style scoped>
-.stop-map-hero {
-  height: 240px;
-  background: var(--bg-secondary);
-  border-bottom-left-radius: 20px;
-  border-bottom-right-radius: 20px;
-}
-@media (min-width: 640px) {
-  .stop-map-hero {
-    height: 280px;
-  }
-}
-</style>

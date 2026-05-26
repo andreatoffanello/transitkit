@@ -5,6 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import com.transitkit.app.config.LucideIcons
 import androidx.compose.material3.Badge
@@ -16,9 +18,9 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
@@ -26,6 +28,7 @@ import com.transitkit.app.R
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -58,6 +61,7 @@ import com.transitkit.app.ui.orari.TripDetailScreen
 import com.transitkit.app.ui.orari.LineDetailScreen
 import com.transitkit.app.ui.info.FareInfoScreen
 import com.transitkit.app.ui.info.OperatorInfoScreen
+import com.transitkit.app.ui.onboarding.OnboardingScreen
 import com.transitkit.app.ui.servizi.AccessibilityInfoScreen
 import com.transitkit.app.ui.servizi.ContactInfoScreen
 import com.transitkit.app.ui.servizi.ServiceDetailScreen
@@ -108,11 +112,75 @@ class MainActivity : ComponentActivity() {
             isAppearanceLightStatusBars = true
             isAppearanceLightNavigationBars = true
         }
+        handleMapDeepLink(intent)
+        handlePlannerDeepLink(intent)
+        handleSearchDeepLink(intent)
         setContent {
             TransitKitTheme(config = operatorConfig) {
                 TransitKitNavigation(operatorConfig = operatorConfig)
             }
         }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        handleMapDeepLink(intent)
+        handlePlannerDeepLink(intent)
+        handleSearchDeepLink(intent)
+    }
+
+    /**
+     * `transitkit://planner?from=<name>&to=<name>&when=HH:MM` — pre-popola il
+     * form Planner. `when` viene interpretato in operator-local TZ dal VM
+     * (vedi PlannerViewModel.applyPendingPrefill), non in TZ device.
+     */
+    private fun handlePlannerDeepLink(intent: android.content.Intent?) {
+        val data = intent?.data ?: return
+        if (data.scheme != "transitkit" || data.host != "planner") return
+        val from = data.getQueryParameter("from")?.takeIf { it.isNotBlank() }
+        val to = data.getQueryParameter("to")?.takeIf { it.isNotBlank() }
+        val whenStr = data.getQueryParameter("when")?.takeIf { it.isNotBlank() }
+        if (from == null && to == null && whenStr == null) return
+        com.transitkit.app.ui.planner.PendingPlannerPrefillStore.set(
+            com.transitkit.app.ui.planner.PendingPlannerPrefill(from = from, to = to, whenStr = whenStr)
+        )
+    }
+
+    /**
+     * `transitkit://search?q=<text>&scope=stops|lines` — pre-popola la search
+     * Orari e seleziona la tab indicata.
+     */
+    private fun handleSearchDeepLink(intent: android.content.Intent?) {
+        val data = intent?.data ?: return
+        if (data.scheme != "transitkit" || data.host != "search") return
+        val q = data.getQueryParameter("q")?.takeIf { it.isNotBlank() } ?: return
+        val scope = when (data.getQueryParameter("scope")?.lowercase()) {
+            "stops" -> com.transitkit.app.ui.orari.OrariTab.STOPS
+            "lines" -> com.transitkit.app.ui.orari.OrariTab.LINES
+            else -> null
+        }
+        com.transitkit.app.ui.orari.PendingSearchPrefillStore.set(
+            com.transitkit.app.ui.orari.PendingSearchPrefill(query = q, scope = scope)
+        )
+    }
+
+    /**
+     * Gestisce URL `transitkit://map?lat=&lng=&zoom=&pitch=`.
+     * Settando lo store, [com.transitkit.app.ui.mappa.MappaScreen] lo collega
+     * come Flow e applica `viewportState.flyTo`. Compose Navigation gestisce
+     * solo path args nativamente — i query params li parsiamo qui a mano
+     * (stesso pattern di Movete `handleDeepLinkIntent`).
+     */
+    private fun handleMapDeepLink(intent: android.content.Intent?) {
+        val data = intent?.data ?: return
+        if (data.scheme != "transitkit" || data.host != "map") return
+        val lat = data.getQueryParameter("lat")?.toDoubleOrNull() ?: return
+        val lng = data.getQueryParameter("lng")?.toDoubleOrNull() ?: return
+        val zoom = data.getQueryParameter("zoom")?.toDoubleOrNull() ?: 16.0
+        val pitch = data.getQueryParameter("pitch")?.toDoubleOrNull()
+        com.transitkit.app.ui.mappa.PendingMapCameraStore.set(
+            com.transitkit.app.ui.mappa.PendingMapCamera(lat, lng, zoom, pitch)
+        )
     }
 }
 
@@ -129,19 +197,22 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
     val labelMappa   = stringResource(R.string.tab_mappa)
     val labelAvvisi  = stringResource(R.string.tab_alerts)
 
-    val items = buildList {
-        add(Triple(Screen.Home,    LucideIcons.LayoutDashboard, labelHome))
-        add(Triple(Screen.Orari,   LucideIcons.Clock,           labelOrari))
-        add(Triple(Screen.Linee,   LucideIcons.Route,           labelLinee))
-        if (operatorConfig.features.enableMap) {
-            add(Triple(Screen.Mappa, LucideIcons.Map, labelMappa))
+    val mapEnabled = operatorConfig.features.enableMap
+    val items = remember(mapEnabled, labelHome, labelOrari, labelLinee, labelMappa, labelAvvisi) {
+        buildList {
+            add(Triple(Screen.Home,    LucideIcons.LayoutDashboard, labelHome))
+            add(Triple(Screen.Orari,   LucideIcons.Clock,           labelOrari))
+            add(Triple(Screen.Linee,   LucideIcons.Route,           labelLinee))
+            if (mapEnabled) {
+                add(Triple(Screen.Mappa, LucideIcons.Map, labelMappa))
+            }
+            add(Triple(Screen.Avvisi,  LucideIcons.Bell,            labelAvvisi))
         }
-        add(Triple(Screen.Avvisi,  LucideIcons.Bell,            labelAvvisi))
     }
 
     // Live counter of active alerts for the Avvisi tab badge.
     val alertsViewModel: AlertsViewModel = hiltViewModel()
-    val activeAlerts by alertsViewModel.alerts.collectAsState()
+    val activeAlerts by alertsViewModel.alerts.collectAsStateWithLifecycle()
     val avvisiCount = activeAlerts.size
 
     // Drilled-in destinations (detail screens, settings) must NOT show the root bottom nav.
@@ -155,7 +226,13 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
     val hideBottomBarRequests = remember { mutableStateOf(0) }
     val showBottomBar = currentRoute in tabRoutes && hideBottomBarRequests.value == 0
 
-    CompositionLocalProvider(LocalHideBottomBarRequests provides hideBottomBarRequests) {
+    val operatorTz = remember(plannerViewModel.operatorTimezone) {
+        java.util.TimeZone.getTimeZone(plannerViewModel.operatorTimezone)
+    }
+    CompositionLocalProvider(
+        LocalHideBottomBarRequests provides hideBottomBarRequests,
+        com.transitkit.app.ui.planner.LocalOperatorTimeZone provides operatorTz,
+    ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
@@ -172,10 +249,10 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                                             Badge { Text(avvisiCount.toString(), maxLines = 1) }
                                         },
                                     ) {
-                                        Icon(painterResource(icon), contentDescription = label)
+                                        Icon(painterResource(icon), contentDescription = label, modifier = Modifier.size(20.dp))
                                     }
                                 } else {
-                                    Icon(painterResource(icon), contentDescription = label)
+                                    Icon(painterResource(icon), contentDescription = label, modifier = Modifier.size(20.dp))
                                 }
                             },
                             label = { Text(label, maxLines = 1) },
@@ -183,7 +260,7 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 navController.navigate(screen.route) {
-                                    popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                     launchSingleTop = true
                                     restoreState = true
                                 }
@@ -226,23 +303,29 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
             },
         ) {
             // ── Home ────────────────────────────────────────────────────────────
-            composable(Screen.Home.route) {
+            composable(
+                Screen.Home.route,
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "transitkit://home" },
+                    navDeepLink { uriPattern = "transitkit://favorites" },
+                ),
+            ) {
                 HomeScreen(
                     onNavigateToOrari = {
                         navController.navigate(Screen.Orari.route) {
-                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                             launchSingleTop = true; restoreState = true
                         }
                     },
                     onNavigateToLinee = {
                         navController.navigate(Screen.Linee.route) {
-                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                             launchSingleTop = true; restoreState = true
                         }
                     },
                     onNavigateToMappa = {
                         navController.navigate(Screen.Mappa.route) {
-                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                             launchSingleTop = true; restoreState = true
                         }
                     },
@@ -251,7 +334,7 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                     },
                     onNavigateToAlerts = {
                         navController.navigate(Screen.Avvisi.route) {
-                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                             launchSingleTop = true; restoreState = true
                         }
                     },
@@ -265,7 +348,7 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                     },
                     onNavigateToPlanner = {
                         navController.navigate(Screen.Planner.route) {
-                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                             launchSingleTop = true; restoreState = true
                         }
                     },
@@ -277,13 +360,19 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
             }
 
             // ── Settings (pushed from Home) ─────────────────────────────────────
-            composable(ROUTE_SETTINGS_FROM_HOME) {
+            composable(
+                ROUTE_SETTINGS_FROM_HOME,
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "transitkit://settings" },
+                    navDeepLink { uriPattern = "transitkit://settings/notifications" },
+                ),
+            ) {
                 SettingsScreen(
                     onBack = { navController.popBackStack() },
                     onNavigateToOrari = {
                         navController.popBackStack()
                         navController.navigate(Screen.Orari.route) {
-                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                             launchSingleTop = true; restoreState = true
                         }
                     },
@@ -291,7 +380,14 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
             }
 
             // ── Orari (fermate only) ─────────────────────────────────────────────
-            composable(Screen.Orari.route) {
+            composable(
+                Screen.Orari.route,
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "transitkit://orari" },
+                    navDeepLink { uriPattern = "transitkit://schedules" },
+                    navDeepLink { uriPattern = "transitkit://search" },
+                ),
+            ) {
                 OrariScreen(
                     onNavigateToStop = { stopId, stopName ->
                         val encodedId = URLEncoder.encode(stopId, StandardCharsets.UTF_8.name())
@@ -306,7 +402,13 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
             }
 
             // ── Linee ────────────────────────────────────────────────────────────
-            composable(Screen.Linee.route) {
+            composable(
+                Screen.Linee.route,
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "transitkit://lines" },
+                    navDeepLink { uriPattern = "transitkit://linee" },
+                ),
+            ) {
                 LineeScreen(
                     onNavigateToLine = { routeId ->
                         val encodedId = URLEncoder.encode(routeId, StandardCharsets.UTF_8.name())
@@ -342,7 +444,7 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                     onNavigateToMap = { rId ->
                         val encoded = URLEncoder.encode(rId, StandardCharsets.UTF_8.name())
                         navController.navigate("mappa_line/$encoded") {
-                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                             launchSingleTop = true
                             restoreState = false
                         }
@@ -360,6 +462,12 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
             composable(
                 route = "mappa_line/{routeId}",
                 arguments = listOf(navArgument("routeId") { type = NavType.StringType }),
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "transitkit://line/{routeId}/map" },
+                    navDeepLink { uriPattern = "transitkit://line/{routeId}/map/{direction}" },
+                    navDeepLink { uriPattern = "transitkit://map/route/{routeId}" },
+                    navDeepLink { uriPattern = "transitkit://map/route/{routeId}/{direction}" },
+                ),
             ) { backStackEntry ->
                 val routeId = URLDecoder.decode(
                     backStackEntry.arguments?.getString("routeId") ?: "",
@@ -426,13 +534,18 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
             }
 
             // ── Planner ──────────────────────────────────────────────────────────
-            composable(Screen.Planner.route) {
+            composable(
+                Screen.Planner.route,
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "transitkit://planner" },
+                ),
+            ) {
                 PlannerScreen(
                     onBack = {
                         // Pop back to Home; if Home isn't in the stack, navigate there.
                         if (!navController.popBackStack(Screen.Home.route, inclusive = false)) {
                             navController.navigate(Screen.Home.route) {
-                                popUpTo(navController.graph.startDestinationId) {
+                                popUpTo(navController.graph.findStartDestination().id) {
                                     inclusive = false
                                 }
                                 launchSingleTop = true
@@ -494,13 +607,14 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
             }
 
             composable(route = "journey_detail") {
-                val journey = plannerViewModel.selectedJourney.collectAsState().value
+                val journey by plannerViewModel.selectedJourney.collectAsStateWithLifecycle()
+                val origin by plannerViewModel.origin.collectAsStateWithLifecycle()
+                val destination by plannerViewModel.destination.collectAsStateWithLifecycle()
+                val userLocation by plannerViewModel.currentLocation.collectAsStateWithLifecycle()
+                val resolvedJourney = journey
                     ?: run { navController.popBackStack(); return@composable }
-                val origin = plannerViewModel.origin.collectAsState().value
-                val destination = plannerViewModel.destination.collectAsState().value
-                val userLocation = plannerViewModel.currentLocation.collectAsState().value
                 JourneyDetailScreen(
-                    journey = journey,
+                    journey = resolvedJourney,
                     onBack = { navController.popBackStack() },
                     originName = origin?.name,
                     destinationName = destination?.name,
@@ -537,7 +651,10 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
             }
 
             // ── Servizi (drilled-in from Home — no longer a tab) ────────────────
-            composable(Screen.Servizi.route) {
+            composable(
+                Screen.Servizi.route,
+                deepLinks = listOf(navDeepLink { uriPattern = "transitkit://servizi" }),
+            ) {
                 ServiziScreen(
                     onBack = { navController.popBackStack() },
                     onNavigateToService = { serviceId ->
@@ -562,6 +679,7 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
             composable(
                 route = "service_detail/{serviceId}",
                 arguments = listOf(navArgument("serviceId") { type = NavType.StringType }),
+                deepLinks = listOf(navDeepLink { uriPattern = "transitkit://servizi/{serviceId}" }),
             ) { backStackEntry ->
                 val id = backStackEntry.arguments?.getString("serviceId") ?: return@composable
                 ServiceDetailScreen(
@@ -569,7 +687,7 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                     onBack = { navController.popBackStack() },
                     onNavigateToMappa = {
                         navController.navigate(Screen.Mappa.route) {
-                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                             launchSingleTop = true
                             restoreState = true
                         }
@@ -604,7 +722,13 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
             }
 
             // ── Service alerts (root tab) ────────────────────────────────────────
-            composable(Screen.Avvisi.route) {
+            composable(
+                Screen.Avvisi.route,
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "transitkit://alerts" },
+                    navDeepLink { uriPattern = "transitkit://avvisi" },
+                ),
+            ) {
                 AlertListScreen(
                     onNavigateToAlert = { alertId ->
                         val encoded = URLEncoder.encode(alertId, StandardCharsets.UTF_8.name())
@@ -616,11 +740,28 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
             composable(
                 route = "alert_detail/{alertId}",
                 arguments = listOf(navArgument("alertId") { type = NavType.StringType }),
+                deepLinks = listOf(navDeepLink { uriPattern = "transitkit://alert/{alertId}" }),
             ) { backStackEntry ->
                 val id = backStackEntry.arguments?.getString("alertId") ?: return@composable
                 AlertDetailScreen(
                     alertId = URLDecoder.decode(id, StandardCharsets.UTF_8.name()),
                     onBack = { navController.popBackStack() },
+                )
+            }
+
+            // ── Onboarding (dev/test deep link — first-run flow lives in
+            //     prefs but this route lets us showcase it on demand) ────────
+            composable(
+                route = "onboarding",
+                deepLinks = listOf(navDeepLink { uriPattern = "transitkit://onboarding" }),
+            ) {
+                val ctx = androidx.compose.ui.platform.LocalContext.current
+                val prefs = remember {
+                    ctx.getSharedPreferences("transitkit_prefs", android.content.Context.MODE_PRIVATE)
+                }
+                OnboardingScreen(
+                    prefs = prefs,
+                    onComplete = { navController.popBackStack() },
                 )
             }
         }

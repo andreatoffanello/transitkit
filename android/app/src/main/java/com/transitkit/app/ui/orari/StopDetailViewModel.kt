@@ -32,6 +32,7 @@ sealed class DeparturesState {
     object Loading : DeparturesState()
     data class Success(val departures: List<Departure>) : DeparturesState()
     object Empty : DeparturesState()
+    object NotFound : DeparturesState()
     data class Error(val message: String) : DeparturesState()
 }
 
@@ -118,7 +119,7 @@ class StopDetailViewModel @Inject constructor(
     }
 
     val departuresState: StateFlow<DeparturesState> = combine(_loadState, _rawDepartures, tickFlow, selectedRouteFilter) { loadState, raw, _, routeFilter ->
-        if (loadState is DeparturesState.Loading || loadState is DeparturesState.Error) return@combine loadState
+        if (loadState is DeparturesState.Loading || loadState is DeparturesState.Error || loadState is DeparturesState.NotFound) return@combine loadState
         val tz = TimeZone.getTimeZone(scheduleRepository.operatorTimezone)
         val cal = Calendar.getInstance(tz)
         val nowMinutes = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
@@ -168,6 +169,17 @@ class StopDetailViewModel @Inject constructor(
             _loadState.value = DeparturesState.Loading
             // Ensure schedule is loaded before querying
             scheduleRepository.load()
+            // Guard: if the stopId is not present in the schedule the deep
+            // link target doesn't exist — surface a NotFound state instead of
+            // a generic empty list with the raw id as the title.
+            val schedule = scheduleRepository.scheduleResponse.value
+            val stopExists = schedule?.stops?.any { it.id == stopId } == true
+            if (!stopExists) {
+                _rawDepartures.value = emptyList()
+                _allDepartures.value = emptyList()
+                _loadState.value = DeparturesState.NotFound
+                return@launch
+            }
             val raw = scheduleRepository.upcomingDepartures(stopId)
             _rawDepartures.value = raw
             _allDepartures.value = scheduleRepository.allDepartures(stopId)

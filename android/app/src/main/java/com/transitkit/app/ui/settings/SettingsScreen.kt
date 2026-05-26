@@ -5,7 +5,6 @@ import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -142,13 +141,8 @@ private fun SectionLabel(text: String) {
 @Composable
 private fun OperatorCard(config: OperatorConfig) {
     val colors = TransitTheme.colors
-    val context = androidx.compose.ui.platform.LocalContext.current
     val subtitle = config.region?.takeIf { it.isNotBlank() }
         ?: config.country.takeIf { it.isNotBlank() }
-    val operatorLogoRes = remember(context) {
-        context.resources.getIdentifier("operator_logo", "drawable", context.packageName)
-            .takeIf { it != 0 }
-    }
 
     Row(
         modifier = Modifier
@@ -159,34 +153,18 @@ private fun OperatorCard(config: OperatorConfig) {
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (operatorLogoRes != null) {
-            Image(
-                painter = painterResource(operatorLogoRes),
-                contentDescription = config.name,
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-                contentScale = androidx.compose.ui.layout.ContentScale.Fit,
-            )
-        } else {
-            // Fallback: bus icon su gradient se l'asset operator_logo manca.
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(
-                        Brush.linearGradient(listOf(colors.accent, colors.primary))
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(LucideIcons.BusFront),
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(22.dp),
-                )
-            }
-        }
+        // Header Settings mostra il brand dell'APP (icona bus AppalRider da
+        // ic_launcher_foreground + nome AppalRider). MAI il logo operatore:
+        // attribuirebbe l'app all'operatore (impersonazione). Il logo operatore
+        // resta solo nella OperatorReferenceCard di Home, dove esplicitamente
+        // diciamo "chi è l'operatore di trasporto".
+        Image(
+            painter = painterResource(R.mipmap.ic_launcher_foreground),
+            contentDescription = stringResource(R.string.app_name),
+            modifier = Modifier
+                .size(48.dp),
+            contentScale = androidx.compose.ui.layout.ContentScale.Fit,
+        )
 
         Spacer(modifier = Modifier.width(14.dp))
 

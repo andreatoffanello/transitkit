@@ -10,10 +10,13 @@ const OPERATOR_HOSTS: Record<string, string> = {
 }
 
 /**
- * URL base del CDN dati (GitHub Pages transitkit-data repo).
+ * URL base del CDN dati. Stesso endpoint usato dalle app iOS/Android via
+ * `cdnUrl` nel config bundled — fonte unica di verità per `schedules.json`
+ * + `config.json` (pubblicato da `.github/workflows/data.yml` del repo
+ * principale verso GitHub Pages branch `gh-pages`).
  * In development, set CDN_BASE env var to override (e.g. http://localhost:3010/mock).
  */
-export const CDN_BASE = process.env.CDN_BASE ?? 'https://andreatoffanello.github.io/transitkit-data'
+export const CDN_BASE = process.env.CDN_BASE ?? 'https://andreatoffanello.github.io/transitkit'
 
 export function resolveOperatorId(host: string): string | null {
   if (OPERATOR_HOSTS[host]) return OPERATOR_HOSTS[host] ?? null

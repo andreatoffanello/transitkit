@@ -35,7 +35,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import com.transitkit.app.R
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -64,12 +66,17 @@ fun WhenChipRow(
     var showDatePicker by remember { mutableStateOf(false) }
 
     val modeLabel = when (selection.mode) {
-        1 -> "Depart at"
-        2 -> "Arrive by"
-        else -> "Now"
+        1 -> stringResource(R.string.planner_depart_at)
+        2 -> stringResource(R.string.planner_arrive_by)
+        else -> stringResource(R.string.planner_now)
     }
-    val timeFmt = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
-    val dateFmt = remember { SimpleDateFormat("MMM d", Locale.getDefault()) }
+    val operatorTz = LocalOperatorTimeZone.current
+    val timeFmt = remember(operatorTz) {
+        SimpleDateFormat("HH:mm", Locale.getDefault()).apply { timeZone = operatorTz }
+    }
+    val dateFmt = remember(operatorTz) {
+        SimpleDateFormat("MMM d", Locale.getDefault()).apply { timeZone = operatorTz }
+    }
 
     Row(
         modifier = modifier,
@@ -97,7 +104,11 @@ fun WhenChipRow(
                     expanded = modeMenuOpen,
                     onDismissRequest = { modeMenuOpen = false },
                 ) {
-                    listOf(0 to "Now", 1 to "Depart at", 2 to "Arrive by").forEach { (mode, label) ->
+                    listOf(
+                        0 to stringResource(R.string.planner_now),
+                        1 to stringResource(R.string.planner_depart_at),
+                        2 to stringResource(R.string.planner_arrive_by),
+                    ).forEach { (mode, label) ->
                         DropdownMenuItem(
                             text = {
                                 Text(
@@ -136,7 +147,7 @@ fun WhenChipRow(
     }
 
     if (showTimePicker) {
-        val cal = remember { Calendar.getInstance().apply { time = selection.date } }
+        val cal = remember { Calendar.getInstance(operatorTz).apply { time = selection.date } }
         val tps = rememberTimePickerState(
             initialHour = cal.get(Calendar.HOUR_OF_DAY),
             initialMinute = cal.get(Calendar.MINUTE),
@@ -144,7 +155,7 @@ fun WhenChipRow(
         )
         TimePickerDialogWrapper(
             onConfirm = {
-                val c = Calendar.getInstance().apply {
+                val c = Calendar.getInstance(operatorTz).apply {
                     time = selection.date
                     set(Calendar.HOUR_OF_DAY, tps.hour)
                     set(Calendar.MINUTE, tps.minute)
@@ -182,19 +193,24 @@ fun WhenChipRow(
             confirmButton = {
                 TextButton(onClick = {
                     val millis = dps.selectedDateMillis ?: return@TextButton
-                    val newCal = Calendar.getInstance().apply {
+                    // M3 DatePicker returns midnight UTC of the picked calendar day —
+                    // read year/month/day in UTC, then apply onto the existing selection
+                    // (keeping current hour/minute) in the operator timezone.
+                    val pickedUtc = Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC")).apply {
+                        timeInMillis = millis
+                    }
+                    val newCal = Calendar.getInstance(operatorTz).apply {
                         time = selection.date
-                        val pickedCal = Calendar.getInstance().apply { timeInMillis = millis }
-                        set(Calendar.YEAR, pickedCal.get(Calendar.YEAR))
-                        set(Calendar.MONTH, pickedCal.get(Calendar.MONTH))
-                        set(Calendar.DAY_OF_MONTH, pickedCal.get(Calendar.DAY_OF_MONTH))
+                        set(Calendar.YEAR, pickedUtc.get(Calendar.YEAR))
+                        set(Calendar.MONTH, pickedUtc.get(Calendar.MONTH))
+                        set(Calendar.DAY_OF_MONTH, pickedUtc.get(Calendar.DAY_OF_MONTH))
                     }
                     onSelectionChange(selection.copy(date = newCal.time))
                     showDatePicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.done)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) }
             },
             colors = DatePickerDefaults.colors(
                 containerColor = MaterialTheme.colorScheme.surface,
@@ -291,7 +307,7 @@ private fun TimePickerDialogWrapper(
                 modifier = Modifier.padding(20.dp),
             ) {
                 Text(
-                    text = "Select time",
+                    text = stringResource(R.string.planner_select_time),
                     style = MaterialTheme.typography.labelMedium,
                     color = colors.textSecondary,
                     modifier = Modifier.padding(bottom = 20.dp),
@@ -303,8 +319,8 @@ private fun TimePickerDialogWrapper(
                         .padding(top = 12.dp),
                     horizontalArrangement = Arrangement.End,
                 ) {
-                    TextButton(onClick = onDismiss) { Text("Cancel") }
-                    TextButton(onClick = onConfirm) { Text("OK") }
+                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+                    TextButton(onClick = onConfirm) { Text(stringResource(R.string.done)) }
                 }
             }
         }

@@ -453,6 +453,8 @@ struct LineeTab: View {
             }
             .onAppear { consumePending() }
             .onChange(of: router.pendingRoute) { _, _ in consumePending() }
+            .onChange(of: router.pendingSearchQuery) { _, _ in consumeSearch() }
+            .onChange(of: router.pendingSearchScope) { _, _ in consumeSearch() }
         }
     }
 
@@ -462,6 +464,15 @@ struct LineeTab: View {
             path = NavigationPath()
             path.append(route)
         }
+        consumeSearch()
+    }
+
+    private func consumeSearch() {
+        guard router.pendingSearchScope == .lines,
+              let query = router.pendingSearchQuery else { return }
+        router.pendingSearchQuery = nil
+        path = NavigationPath()
+        searchQuery = query
     }
 
     private var searchBar: some View {

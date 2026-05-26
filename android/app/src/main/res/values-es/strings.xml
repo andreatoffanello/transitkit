@@ -123,6 +123,11 @@
     <string name="nessuna_partenza_oggi">Sin salidas hoy</string>
     <string name="partenze_non_disponibili">Salidas no disponibles</string>
     <string name="controlla_connessione">Revisa tu conexión e inténtalo otra vez.</string>
+    <string name="stop_not_found_title">Parada no encontrada</string>
+    <string name="stop_not_found_subtitle">Esta parada ya no está en servicio o el enlace está obsoleto.</string>
+    <string name="line_not_found_title">Ruta no encontrada</string>
+    <string name="line_not_found_subtitle">Esta ruta ya no está activa o el enlace está obsoleto.</string>
+    <string name="action_back_home">Volver al inicio</string>
 
     <!-- StopDetailScreen — day group labels for full-schedule sheet -->
     <string name="day_group_feriali">Entre semana</string>
@@ -303,6 +308,15 @@
     <string name="alerts_affected_stops_count">%1$d paradas</string>
     <string name="alerts_read_more">Más información</string>
     <string name="alert_no_description">Sin detalles adicionales.</string>
+    <string name="alert_meta_when">Cuándo</string>
+    <string name="alert_meta_cause">Causa</string>
+    <string name="alert_meta_effect">Efecto</string>
+    <string name="alert_affects_all">Afecta a todo el servicio</string>
+    <string name="alert_when_until">Hasta el %1$s</string>
+    <string name="alert_when_from">Desde el %1$s</string>
+    <string name="alert_when_range">%1$s — %2$s</string>
+    <string name="alert_cause_other">Otra</string>
+    <string name="alert_effect_other">Otro efecto</string>
     <string name="alert_effect_no_service">Sin servicio</string>
     <string name="alert_effect_reduced_service">Servicio reducido</string>
     <string name="alert_effect_delays">Retrasos importantes</string>
@@ -394,12 +408,32 @@
     <string name="planner_searching">Buscando…</string>
     <string name="planner_downloading">Descargando datos…</string>
     <string name="planner_same_stop">Origen y destino son iguales</string>
+    <string name="planner_out_of_service_area">La ubicación está fuera del área de servicio</string>
     <string name="planner_change">cambio</string>
     <string name="planner_changes">cambios</string>
     <string name="planner_walk_min">%1$d min a pie</string>
     <string name="planner_departs_in">Sale en %1$s</string>
     <string name="planner_journey">Itinerario</string>
     <string name="planner_stops_collapsed">%1$d paradas</string>
+    <string name="planner_stop_count_one">1 parada</string>
+    <string name="planner_stop_count_other">%1$d paradas</string>
+    <string name="planner_transfer_label">Transbordo</string>
+    <string name="planner_walk_label">%1$d min a pie</string>
+    <string name="planner_walk_meters">%1$d m</string>
+    <string name="planner_endpoint_departure">SALIDA</string>
+    <string name="planner_endpoint_arrival">LLEGADA</string>
+    <string name="planner_direct">Directo</string>
+    <string name="planner_one_transfer">1 transbordo</string>
+    <string name="planner_n_transfers">%1$d transbordos</string>
+    <string name="planner_subtitle_walking"> · %1$d min a pie</string>
+    <string name="planner_detail_title">Itinerario</string>
+    <string name="planner_data_unavailable">Datos de viaje no disponibles</string>
+    <string name="planner_data_unavailable_hint">Comprueba tu conexión e inténtalo de nuevo.</string>
+    <string name="planner_choose_stops">Elige una parada de origen y destino</string>
+    <string name="planner_select_time">Seleccionar hora</string>
+    <string name="cd_clear_location">Eliminar ubicación</string>
+    <string name="cd_swap_stops">Intercambiar origen y destino</string>
+    <string name="cd_close_map">Cerrar mapa</string>
     <string name="done">Listo</string>
     <string name="cancel">Cancelar</string>
     <string name="search_stops">Buscar paradas…</string>
@@ -429,8 +463,10 @@
     <string name="line_in_servizio">%d en servicio</string>
     <string name="line_next_stop">Próxima parada: %1$s</string>
     <string name="vehicle_next_stop_caption">PRÓXIMA PARADA</string>
-    <string name="vehicle_live_tracking">EN VIVO</string>
-    <string name="vehicle_next_stop_unknown">Desconocida</string>
+    <string name="vehicle_last_update_caption">ÚLTIMA ACTUALIZACIÓN</string>
+    <string name="vehicle_updated_seconds_ago">hace %ds</string>
+    <string name="vehicle_updated_minutes_ago">hace %dm</string>
+    <string name="vehicle_updated_hours_ago">hace %dh</string>
 
     <!-- Push notification channel -->
     <string name="notification_channel_default_name">Avisos y novedades</string>

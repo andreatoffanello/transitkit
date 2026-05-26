@@ -7,6 +7,8 @@ struct JourneyCard: View {
     let journey: Journey
     var maxJourneyDurationSeconds: Int = 0
 
+    @Environment(\.operatorTimeZone) private var operatorTimeZone
+
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             // Row 1: Times + Duration
@@ -79,7 +81,10 @@ struct JourneyCard: View {
     }
 
     private func timeLabel(_ date: Date) -> String {
-        let f = DateFormatter(); f.dateFormat = "HH:mm"; return f.string(from: date)
+        let f = DateFormatter()
+        f.dateFormat = "HH:mm"
+        f.timeZone = operatorTimeZone
+        return f.string(from: date)
     }
 }
 

@@ -19,7 +19,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      cdnBase: process.env.CDN_BASE ?? 'https://andreatoffanello.github.io/transitkit-data',
+      cdnBase: process.env.CDN_BASE ?? 'https://andreatoffanello.github.io/transitkit',
     },
   },
 

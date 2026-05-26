@@ -301,17 +301,3 @@ private struct FullVehiclePin: View {
         .accessibilityIdentifier("vehicle_\(routeName)")
     }
 }
-
-
-// MARK: - Environment Key
-
-private struct VehiclePositionsUrlKey: EnvironmentKey {
-    static let defaultValue: String? = nil
-}
-
-extension EnvironmentValues {
-    var vehiclePositionsUrl: String? {
-        get { self[VehiclePositionsUrlKey.self] }
-        set { self[VehiclePositionsUrlKey.self] = newValue }
-    }
-}

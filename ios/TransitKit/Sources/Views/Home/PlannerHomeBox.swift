@@ -16,6 +16,12 @@ struct PlannerHomeBox: View {
     @State private var whenSelection: WhenSelection = .now
     @State private var boxNav: BoxNav? = nil
 
+    // State-driven sequencing: invece di delay timing-based, reagiamo al
+    // dismiss reale della picker. Quando boxNav passa a nil sappiamo che
+    // il pop è terminato e possiamo eseguire l'azione differita.
+    @State private var pendingLaunch: Bool = false
+    @State private var pendingNextPicker: BoxNav? = nil
+
     /// Singolo navigationDestination per evitare conflitti SwiftUI con
     /// più navigationDestination(isPresented:) sulla stessa view.
     private enum BoxNav: Identifiable, Hashable {
@@ -72,15 +78,39 @@ struct PlannerHomeBox: View {
                     if isOrigin {
                         origin = location
                         if destination == nil {
-                            // Let origin picker dismiss first, then push destination
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
-                                boxNav = .picker(isOrigin: false, excludedId: location.stopId)
-                            }
+                            // Schedule destination picker dopo il pop dell'origin picker.
+                            // L'.onChange(of: boxNav) farà il push appena boxNav -> nil.
+                            pendingNextPicker = .picker(isOrigin: false, excludedId: location.stopId)
+                            return
                         }
                     } else {
                         destination = location
                     }
                     tryLaunch()
+                }
+            }
+        }
+        .onChange(of: boxNav) { _, newValue in
+            // Aspettiamo che la picker sia stata effettivamente dismissata
+            // (boxNav -> nil) prima di eseguire azioni che richiedono nav stack
+            // libero. Inoltre serve un hop al runloop successivo: HomeTab ha
+            // più navigationDestination(item:) sullo stesso stack, e modificare
+            // un secondo item nello stesso tick del pop fa coalescere le
+            // transizioni (NavigationStack iOS 18+ scarta il push concorrente).
+            guard newValue == nil else { return }
+            if let next = pendingNextPicker {
+                pendingNextPicker = nil
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(320))
+                    boxNav = next
+                }
+                return
+            }
+            if pendingLaunch, let o = origin, let d = destination {
+                pendingLaunch = false
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(320))
+                    onLaunch(o, d, whenSelection)
                 }
             }
         }
@@ -208,12 +238,13 @@ struct PlannerHomeBox: View {
 
     private func tryLaunch() {
         guard let o = origin, let d = destination else { return }
-        // Delay sufficiente per lasciare completare le pop animation di
-        // LocationPickerView / LocationPickerMap prima del push di PlannerScreen.
-        // Senza delay, NavigationStack iOS 18+ scarta il push concorrente con
-        // i pop e l'utente resta sulla Home con i field popolati ma senza
-        // results. 500ms = lunghezza standard pop animation in SwiftUI.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
+        if boxNav != nil {
+            // Una picker è ancora sullo stack: settiamo il flag, il push del
+            // PlannerScreen avverrà nell'.onChange(of: boxNav) quando il pop
+            // sarà terminato. Niente race con NavigationStack su iOS 18+.
+            pendingLaunch = true
+        } else {
+            // Caso swap button: nessuna picker da aspettare, launch immediato.
             onLaunch(o, d, whenSelection)
         }
     }

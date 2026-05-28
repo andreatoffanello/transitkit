@@ -15,9 +15,11 @@ set -euo pipefail
 #
 #   app-icon-foreground.png   ≥1000×1000, transparent background, subject in
 #                             inner 66% of canvas (Android adaptive icon safe zone)
-#                             → iOS OperatorLogo.imageset/ (header, 32pt circle)
+#                             → iOS OperatorLogo.imageset/ (header 32pt circle +
+#                               loading splash 96pt; 1x/2x/3x)
 #                             → Android mipmap-*/ic_launcher_foreground.png (108–432px)
-#                             → Android drawable/app_logo.png (header, 32dp circle)
+#                             → Android drawable/app_logo.png (header 32dp circle +
+#                               BrandedLoadingScreen 120dp)
 #
 #   operator-logo.jpg|png     Logo reale dell'operatore (es. appalCART apple).
 #                             Sfondo opaco OK — la card UI clippa con RoundedRect.
@@ -34,7 +36,8 @@ set -euo pipefail
 #
 #   Imageset                  Usato in
 #   AppIcon                   Icona launcher app
-#   OperatorLogo              HomeTab homeMinimalHeader — 32pt .clipShape(Circle())
+#   OperatorLogo              HomeTab homeMinimalHeader — 32pt .clipShape(Circle());
+#                             TransitKitApp.loadingView — 96pt splash (serve @3x)
 #   SourceOperatorLogo        HomeTab operatorInfoCard — 44pt .clipShape(RoundedRect 12)
 #   OperatorBackground        Shader background + onboarding
 #

@@ -27,6 +27,12 @@ bash scripts/build-android.sh {operator_id}
 - Android: `mipmap-*/ic_launcher*.png`, `drawable/app_logo.png`, `drawable/operator_logo.png`, `drawable/operator_background.png`
 - `brandName` (nome UI dell'app, es. "AppalRider") → campo `brandName` in `shared/operators/{op}/config.json` e `ios/.../Resources/config.json`; su Android è `app/src/main/res/values/strings.xml` → `app_name`
 
+**GOTCHA naming — non fidarsi del nome dell'imageset iOS:**
+- `OperatorLogo.imageset` = **bus dell'APP** (`app-icon-foreground.png` trasparente), NON il logo dell'operatore. 1x/2x/3x. Usato in header (32pt) e loading splash (96pt).
+- `SourceOperatorLogo.imageset` = **logo reale dell'operatore** (`operator-logo`). Solo nella card "operatore di riferimento".
+
+**Regola anti-impersonazione (splash + loading):** la schermata di apertura/caricamento mostra SEMPRE brand dell'app (bus + `brandName` "AppalRider") — MAI logo o nome dell'operatore ("AppalCART"). L'app non è ufficiale dell'operatore: mostrare il loro brand qui può far pensare a un'impersonazione (rischio rejection App Store + confusione utente). iOS `TransitKitApp.loadingView`, Android `BrandedLoadingScreen`.
+
 Documentazione tecnica completa con mapping iOS/Android: `scripts/deploy-brand.sh` (header del file).
 
 ---

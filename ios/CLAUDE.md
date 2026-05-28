@@ -89,3 +89,4 @@ Tutti gli endpoint GTFS-RT (vehicle-positions, trip-updates, alerts) puntano a `
 - **NEVER** inventare pathData SVG per icone — usa `LucideIcon` (`Components/LucideIcon.swift`) con nome da libreria.
 - **NEVER** usare `font-size`-equivalenti per dimensionare icone SVG — sempre `.frame(width:height:)` espliciti.
 - **NEVER** chiamare upstream GTFS-RT diretti — passare sempre da `rt.transitkit.app`.
+- **NEVER** mostrare logo/nome operatore (`config.name` "AppalCART") nella loading splash (`TransitKitApp.loadingView`) — sempre bus app + `config.brandName` ("AppalRider"). Rischio impersonazione/rejection. NB: l'imageset `OperatorLogo` è il bus dell'app (non l'operatore); il logo operatore è `SourceOperatorLogo`.

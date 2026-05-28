@@ -16,11 +16,15 @@ struct PlannerHomeBox: View {
     @State private var whenSelection: WhenSelection = .now
     @State private var boxNav: BoxNav? = nil
 
-    // State-driven sequencing: invece di delay timing-based, reagiamo al
-    // dismiss reale della picker. Quando boxNav passa a nil sappiamo che
-    // il pop è terminato e possiamo eseguire l'azione differita.
-    @State private var pendingLaunch: Bool = false
+    // Auto-advance origine -> destinazione: dopo aver scelto l'origine (se la
+    // destinazione è ancora vuota) apriamo automaticamente il picker della
+    // destinazione. Il push avviene quando boxNav torna nil (pop completato),
+    // con un hop al runloop successivo perché HomeTab ha più
+    // navigationDestination(item:) sullo stesso stack e modificarne due nello
+    // stesso tick fa coalescere le transizioni (NavigationStack iOS 18+).
     @State private var pendingNextPicker: BoxNav? = nil
+
+    private var canSearch: Bool { origin != nil && destination != nil }
 
     /// Singolo navigationDestination per evitare conflitti SwiftUI con
     /// più navigationDestination(isPresented:) sulla stessa view.
@@ -63,10 +67,17 @@ struct PlannerHomeBox: View {
                     }
                 }
 
-            // Chip mode + (orario, data) fuori card, allineate a sinistra.
-            HStack {
-                WhenChipsRow(selection: $whenSelection)
-                Spacer()
+            // Chip "quando" a sinistra (scrollabili: in modalità parti/arriva
+            // diventano 3), pulsante Cerca pinnato a destra. L'utente compila
+            // Da/A, sceglie il quando, poi lancia esplicitamente — niente
+            // auto-launch, niente race col pop delle picker.
+            HStack(spacing: 8) {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    WhenChipsRow(selection: $whenSelection)
+                        .padding(.vertical, 1)
+                }
+                searchButton
+                    .fixedSize()
             }
             .padding(.horizontal, 4)
         }
@@ -78,40 +89,28 @@ struct PlannerHomeBox: View {
                     if isOrigin {
                         origin = location
                         if destination == nil {
-                            // Schedule destination picker dopo il pop dell'origin picker.
-                            // L'.onChange(of: boxNav) farà il push appena boxNav -> nil.
+                            // Auto-advance: apri il picker destinazione dopo il
+                            // pop di questo. Il push avviene nell'.onChange sotto.
                             pendingNextPicker = .picker(isOrigin: false, excludedId: location.stopId)
-                            return
                         }
                     } else {
                         destination = location
                     }
-                    tryLaunch()
+                    // Niente auto-launch: l'utente lancia con il pulsante Cerca.
                 }
             }
         }
         .onChange(of: boxNav) { _, newValue in
-            // Aspettiamo che la picker sia stata effettivamente dismissata
-            // (boxNav -> nil) prima di eseguire azioni che richiedono nav stack
-            // libero. Inoltre serve un hop al runloop successivo: HomeTab ha
-            // più navigationDestination(item:) sullo stesso stack, e modificare
-            // un secondo item nello stesso tick del pop fa coalescere le
-            // transizioni (NavigationStack iOS 18+ scarta il push concorrente).
-            guard newValue == nil else { return }
-            if let next = pendingNextPicker {
-                pendingNextPicker = nil
-                Task { @MainActor in
-                    try? await Task.sleep(for: .milliseconds(320))
-                    boxNav = next
-                }
-                return
-            }
-            if pendingLaunch, let o = origin, let d = destination {
-                pendingLaunch = false
-                Task { @MainActor in
-                    try? await Task.sleep(for: .milliseconds(320))
-                    onLaunch(o, d, whenSelection)
-                }
+            // Quando boxNav torna nil il pop è completato. Se c'era un picker in
+            // coda (auto-advance origine -> destinazione) lo apriamo ora, con un
+            // hop al runloop successivo: HomeTab ha più navigationDestination(item:)
+            // sullo stesso stack e modificarne due nello stesso tick fa coalescere
+            // le transizioni (NavigationStack iOS 18+ scarta il push concorrente).
+            guard newValue == nil, let next = pendingNextPicker else { return }
+            pendingNextPicker = nil
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(320))
+                boxNav = next
             }
         }
         .onAppear { autoFillOrigin() }
@@ -211,8 +210,7 @@ struct PlannerHomeBox: View {
             let tmp = origin
             origin = destination
             destination = tmp
-            // Dopo swap, rilancia la search se entrambi sono settati.
-            tryLaunch()
+            // Solo swap: il lancio resta esplicito col pulsante Cerca.
         } label: {
             LucideIcon.arrowUpDown.sized(15)
                 .foregroundStyle(AppTheme.textSecondary)
@@ -224,6 +222,33 @@ struct PlannerHomeBox: View {
         .accessibilityLabel(String(localized: "planner_swap_label"))
     }
 
+    // MARK: - Search button
+
+    private var searchButton: some View {
+        Button {
+            guard let o = origin, let d = destination else { return }
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            onLaunch(o, d, whenSelection)
+        } label: {
+            HStack(spacing: 6) {
+                LucideIcon.search.sized(14)
+                Text(String(localized: "planner_search_button"))
+                    .font(.system(size: 14, weight: .semibold))
+            }
+            .foregroundStyle(canSearch ? .white : AppTheme.textTertiary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(
+                canSearch ? AppTheme.accent : Color(.tertiarySystemFill),
+                in: Capsule()
+            )
+        }
+        .buttonStyle(PressableButtonStyle())
+        .disabled(!canSearch)
+        .animation(.easeOut(duration: 0.2), value: canSearch)
+        .accessibilityIdentifier("home_planner_search")
+    }
+
     // MARK: - Auto-fill origin
 
     private func autoFillOrigin() {
@@ -232,21 +257,6 @@ struct PlannerHomeBox: View {
             name: String(localized: "planner_my_location"),
             coordinate: loc.coordinate
         )
-    }
-
-    // MARK: - Launch
-
-    private func tryLaunch() {
-        guard let o = origin, let d = destination else { return }
-        if boxNav != nil {
-            // Una picker è ancora sullo stack: settiamo il flag, il push del
-            // PlannerScreen avverrà nell'.onChange(of: boxNav) quando il pop
-            // sarà terminato. Niente race con NavigationStack su iOS 18+.
-            pendingLaunch = true
-        } else {
-            // Caso swap button: nessuna picker da aspettare, launch immediato.
-            onLaunch(o, d, whenSelection)
-        }
     }
 }
 

@@ -409,6 +409,7 @@
     <string name="planner_arrival_time">Orario di arrivo</string>
     <string name="planner_no_trips">Nessun viaggio trovato</string>
     <string name="planner_searching">Ricerca in corso…</string>
+    <string name="planner_search_button">Cerca</string>
     <string name="planner_downloading">Scaricamento orari…</string>
     <string name="planner_same_stop">Partenza e destinazione coincidono</string>
     <string name="planner_out_of_service_area">Posizione fuori dall\'area di servizio</string>

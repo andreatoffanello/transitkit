@@ -3,6 +3,8 @@ package com.transitkit.app.ui.home
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -73,17 +75,18 @@ internal fun PlannerHomeBox(
         }
     }
 
-    // Auto-navigate to planner once both fields are set.
-    LaunchedEffect(homeDestination) {
-        if (homeDestination != null && plannerViewModel.homeOrigin.value != null) {
-            plannerViewModel.setOrigin(plannerViewModel.homeOrigin.value)
-            plannerViewModel.setDestination(homeDestination)
-            plannerViewModel.clearHomeState()
-            onNavigateToPlanner()
-        }
-    }
-
     val bothFilled = homeOrigin != null && homeDestination != null
+
+    // Niente auto-navigate: l'utente lancia esplicitamente col pulsante Cerca,
+    // così può impostare prima il "quando" e non ri-triggera a ogni modifica.
+    fun launchPlanner() {
+        val o = plannerViewModel.homeOrigin.value ?: return
+        val d = homeDestination ?: return
+        plannerViewModel.setOrigin(o)
+        plannerViewModel.setDestination(d)
+        plannerViewModel.clearHomeState()
+        onNavigateToPlanner()
+    }
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -171,10 +174,65 @@ internal fun PlannerHomeBox(
                 }
             }
         }
-        // ── When chip row — inline mode select + time/date pickers ──────────
-        WhenChipRow(
-            selection = whenSel,
-            onSelectionChange = plannerViewModel::setWhenSelection,
+        // ── When chip row (sinistra, scrollabile) + pulsante Cerca (destra) ──
+        // Le when-chips in modalità "Parti alle/Arriva entro" diventano 3
+        // (mode+ora+data): le mettiamo in un'area scrollabile orizzontale così
+        // il pulsante Cerca resta pinnato a destra e non va mai a capo.
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            WhenChipRow(
+                selection = whenSel,
+                onSelectionChange = plannerViewModel::setWhenSelection,
+                modifier = Modifier
+                    .weight(1f)
+                    .horizontalScroll(rememberScrollState()),
+            )
+            SearchButton(
+                enabled = bothFilled,
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    launchPlanner()
+                },
+            )
+        }
+    }
+}
+
+// ── Search button (capsule, enabled solo con Da+A) ───────────────────────────
+
+@Composable
+private fun SearchButton(
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    val colors = TransitTheme.colors
+    val bg = if (enabled) colors.accent else colors.bgSecondary
+    val fg = if (enabled) Color.White else colors.textTertiary
+    Row(
+        modifier = Modifier
+            .background(bg, RoundedCornerShape(percent = 50))
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 9.dp)
+            .semantics { testTag = "planner_home_search" },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Icon(
+            painter = painterResource(LucideIcons.Search),
+            contentDescription = null,
+            tint = fg,
+            modifier = Modifier.size(14.dp),
+        )
+        Text(
+            text = stringResource(R.string.planner_search_button),
+            style = androidx.compose.material3.MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = fg,
+            maxLines = 1,
+            softWrap = false,
         )
     }
 }

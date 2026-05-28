@@ -406,6 +406,7 @@
     <string name="planner_arrival_time">Hora de llegada</string>
     <string name="planner_no_trips">No se encontraron viajes</string>
     <string name="planner_searching">Buscando…</string>
+    <string name="planner_search_button">Buscar</string>
     <string name="planner_downloading">Descargando datos…</string>
     <string name="planner_same_stop">Origen y destino son iguales</string>
     <string name="planner_out_of_service_area">La ubicación está fuera del área de servicio</string>

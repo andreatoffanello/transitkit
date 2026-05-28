@@ -433,6 +433,7 @@
     <string name="planner_arrival_time">Arrival time</string>
     <string name="planner_no_trips">No trips found</string>
     <string name="planner_searching">Searching…</string>
+    <string name="planner_search_button">Search</string>
     <string name="planner_downloading">Downloading schedules…</string>
     <string name="planner_same_stop">Origin and destination are the same</string>
     <string name="planner_out_of_service_area">Location is outside the service area</string>

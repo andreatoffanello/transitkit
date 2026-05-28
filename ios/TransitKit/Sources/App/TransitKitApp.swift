@@ -289,37 +289,27 @@ struct TransitKitApp: App {
 
     // MARK: - Loading View
 
-    private var operatorInitials: String {
-        guard let name = loadingConfig?.name else { return "" }
-        let words = name.split(separator: " ").prefix(2)
-        return words.compactMap { $0.first }.map(String.init).joined()
-    }
-
     private var loadingView: some View {
         VStack(spacing: 20) {
+            // Mostra l'icona dell'APP (bus AppalRider), MAI il logo o le iniziali
+            // dell'operatore: l'app non è ufficiale dell'operatore e mostrare il
+            // loro brand qui può far pensare a un'impersonazione.
+            Image("OperatorLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 96, height: 96)
+            // Brand dell'APP (es. "AppalRider"), non il nome dell'operatore.
             if let config = loadingConfig {
-                // Avatar circle with operator initials
-                ZStack {
-                    Circle()
-                        .fill(AppTheme.accent)
-                        .frame(width: 64, height: 64)
-                    Text(operatorInitials)
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(.white)
-                }
-                // Operator name
-                Text(config.name)
+                Text(config.brandName ?? config.name)
                     .font(.title2.bold())
                     .foregroundStyle(AppTheme.textPrimary)
             }
             // Subtle loading indicator
             ProgressView()
                 .tint(AppTheme.accent)
-            if loadingConfig == nil {
-                Text(String(localized: "powered_by_transitkit"))
-                    .font(.system(.caption, weight: .medium))
-                    .foregroundStyle(AppTheme.textTertiary)
-            }
+            Text(String(localized: "powered_by_transitkit"))
+                .font(.system(.caption, weight: .medium))
+                .foregroundStyle(AppTheme.textTertiary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(AppTheme.background.ignoresSafeArea())

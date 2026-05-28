@@ -114,12 +114,15 @@ sips -z 1024 1024 "$BRAND/app-icon.png" \
     --out "$XCASSETS/AppIcon.appiconset/AppIcon.png" -s formatOptions best > /dev/null
 echo "  ✓ AppIcon.appiconset/AppIcon.png (1024×1024)"
 
-# OperatorLogo — bus senza sfondo, usato a 32pt con .clipShape(Circle())
+# OperatorLogo — bus senza sfondo, usato a 32pt nell'header (.clipShape(Circle()))
+# e a 96pt nella loading view full-screen → serve anche il 3x crisp.
 sips -z 100 100 "$BRAND/app-icon-foreground.png" \
     --out "$XCASSETS/OperatorLogo.imageset/logo.png" > /dev/null
 sips -z 200 200 "$BRAND/app-icon-foreground.png" \
     --out "$XCASSETS/OperatorLogo.imageset/logo@2x.png" > /dev/null
-echo "  ✓ OperatorLogo.imageset/ (100px 1x, 200px 2x)"
+sips -z 300 300 "$BRAND/app-icon-foreground.png" \
+    --out "$XCASSETS/OperatorLogo.imageset/logo@3x.png" > /dev/null
+echo "  ✓ OperatorLogo.imageset/ (100px 1x, 200px 2x, 300px 3x)"
 
 # SourceOperatorLogo — logo reale operatore, usato a 44pt con .clipShape(RoundedRect 12)
 sips -z 100 100 -s format png "$OPERATOR_LOGO" \

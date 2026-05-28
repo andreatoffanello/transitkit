@@ -58,7 +58,7 @@ Regola: se aggiungi >50 righe a uno screen, prima estrai in file locali o in `ui
 
 ## Components riutilizzabili
 
-In `ui/components/`: `LineBadge` (pill colorato linea), `StopIcon`, `TimeDisplay`. Pochi — estrai nuovi componenti qui quando splitti gli screen monstre (candidati: DepartureRow, AlertBanner, FilterChip, EmptyState, ErrorState).
+In `ui/components/`: `LineBadge` (pill colorato linea), `StopIcon`, `TimeDisplay`, `WheelPicker`/`WheelTimePicker` (ruota selezione iOS-style con snap+haptic), `BrandPickerDialog` (chrome dialog brandizzata: raggio 14dp, surface `bgSecondary`, ombra reale + `tonalElevation=0`, conferma pill accent — usata da time/date picker; il contenuto prende larghezza piena, padding orizzontale solo su titolo/bottoni per non clippare la griglia calendario). Estrai nuovi componenti qui quando splitti gli screen monstre (candidati: DepartureRow, AlertBanner, FilterChip, EmptyState, ErrorState).
 
 ## Pattern comuni
 
@@ -81,8 +81,8 @@ Tutti i feed GTFS-RT passano da `https://rt.transitkit.app/{operator}/{feed}.pb`
 ## Regole non negoziabili Android
 
 - NON edge-to-edge — Play Console lo segnala come warning. Status bar / navigation bar configurate in `MainActivity.kt`, non toccare senza motivo
-- `adb` sempre con `-s $ANDROID_SERIAL`, mai nudo (altri progetti hanno emulatori attivi)
-- AVD `transitkit-dev` unico consentito — vedi CLAUDE.md root
+- `adb` sempre con `-s emulator-5600`, mai nudo. Porta console PINNED 5600 → serial deterministico. Boot SEMPRE con `emulator -avd transitkit-dev -port 5600 ...` — vedi CLAUDE.md root
+- AVD `transitkit-dev` unico consentito + STERILE: solo `com.transitkit.appalcart` installato. Disinstalla qualsiasi app di altri progetti (`pm list packages -3`)
 - Moshi: KSP già configurato (`moshi-kotlin-codegen`). Le data class usano `@JsonClass(generateAdapter = true)` — NON aggiungere `KotlinJsonAdapterFactory` a runtime
 - Mapbox token in `local.properties` / `gradle.properties`, mai committato
 

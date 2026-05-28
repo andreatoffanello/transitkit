@@ -101,6 +101,7 @@ Documentazione completa: [`transitkit-console/CLAUDE.md`](https://github.com/and
 - UDID simulatore iOS 26: `E25FE58E-7059-457F-A0A9-8B1E3D59145D` (`transitkit-dev-26`, iPhone 16 Pro)
 - Location simulatori/emulatore: applicata da `scripts/setup-dev.sh [operator_id]` leggendo `shared/operators/<op>/config.json` → `map.centerLat/centerLng`. Default `appalcart` → Boone, NC (`36.2168,-81.6746`). Su iOS la posizione `simctl location set` è in-memory: rilanciare lo script dopo ogni reboot del simulatore.
 - AVD Android: `transitkit-dev` (Pixel 6, API 34 — white-label: es. com.transitkit.appalcart)
+- **Porta console Android PINNED: `5600`** → serial deterministico `emulator-5600`. Avviare SEMPRE con `-port 5600`. La porta è riservata a transitkit: nessun altro progetto deve usarla.
 - Package Android: `com.transitkit.{OPERATOR_ID}`
 
 **Regole ferree:**
@@ -108,8 +109,9 @@ Documentazione completa: [`transitkit-console/CLAUDE.md`](https://github.com/and
 - MAI usare `booted` come target simctl — sempre `$UDID`.
 - Il Bundle ID cambia per operatore: verificare sempre `{OPERATOR_ID}` prima di `simctl launch`.
 - MAI lanciare/installare app su emulatori Android diversi da `transitkit-dev`.
-- MAI usare `adb` senza `-s <serial>` esplicito — su più emulatori ambiguo.
-- MAI usare `emulator -avd <name>` con `<name>` diverso dall'AVD pinned del progetto.
+- MAI usare `adb` senza `-s emulator-5600` esplicito.
+- MAI usare `emulator -avd <name>` con `<name>` diverso da `transitkit-dev`, e SEMPRE con `-port 5600`.
+- **STERILITÀ TOTALE tra progetti**: `transitkit-dev` ospita SOLO `com.transitkit.appalcart`. Mai installarci app di altri progetti (DoVe `app.dove.venezia`, Alilaguna `com.veniceairportwaterbus.app`, ACTV `it.actv.orari`, Movete, ecc.). Prima di lavorare, verificare i 3rd-party package e disinstallare qualsiasi residuo estraneo: `adb -s emulator-5600 shell pm list packages -3`. La porta fissa elimina l'ambiguità del serial (le porte sono assegnate per ordine di avvio, NON per AVD).
 
 ---
 
@@ -225,17 +227,23 @@ JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
 avdmanager create avd --name "transitkit-dev" --device "pixel_6" \
   --package "system-images;android-34;google_apis;arm64-v8a" --sdcard "512M"
 
-# Avvia emulatore
-/Users/andreatoffanello/Library/Android/sdk/emulator/emulator -avd transitkit-dev -no-snapshot-load -no-audio &
-
-# Lookup serial (usare QUESTO — non altri emulator-XXXX)
 ADB=/Users/andreatoffanello/Library/Android/sdk/platform-tools/adb
-ANDROID_SERIAL=$($ADB devices | grep emulator | awk '{print $1}' | while read s; do
-  $ADB -s $s emu avd name 2>/dev/null | grep -q "transitkit-dev" && echo $s && break
-done)
+ANDROID_SERIAL=emulator-5600   # PINNED — porta fissa, sempre questo serial
+
+# Avvia emulatore SEMPRE su porta fissa 5600 (serial deterministico)
+/Users/andreatoffanello/Library/Android/sdk/emulator/emulator \
+  -avd transitkit-dev -port 5600 -no-snapshot-load -no-audio &
+
+# Verifica difensiva PRIMA di ogni adb: il serial deve essere transitkit-dev
+[ "$($ADB -s $ANDROID_SERIAL emu avd name 2>/dev/null | head -1 | tr -d '\r')" = "transitkit-dev" ] \
+  || { echo "ABORT: $ANDROID_SERIAL non è transitkit-dev"; }
+
+# STERILITÀ: deve esserci SOLO com.transitkit.appalcart. Disinstalla residui altrui.
+$ADB -s $ANDROID_SERIAL shell pm list packages -3   # atteso: solo com.transitkit.appalcart
 ```
 
 **NEVER** usare altri emulatori (DoVe_Pixel6, alilaguna-android, movete-android) — appartengono ad altri progetti.
+**NEVER** installare su `transitkit-dev` app di altri progetti. Se `pm list packages -3` mostra estranei (`app.dove.venezia`, `com.veniceairportwaterbus.app`, `it.actv.orari`, Movete…), disinstallali subito: la regola è un emulatore sterile per progetto.
 
 ## BUILD
 

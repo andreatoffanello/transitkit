@@ -432,6 +432,7 @@
     <string name="planner_data_unavailable_hint">Comprueba tu conexión e inténtalo de nuevo.</string>
     <string name="planner_choose_stops">Elige una parada de origen y destino</string>
     <string name="planner_select_time">Seleccionar hora</string>
+    <string name="planner_select_date">Seleccionar fecha</string>
     <string name="cd_clear_location">Eliminar ubicación</string>
     <string name="cd_swap_stops">Intercambiar origen y destino</string>
     <string name="cd_close_map">Cerrar mapa</string>

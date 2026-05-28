@@ -459,6 +459,7 @@
     <string name="planner_data_unavailable_hint">Check your connection and try again.</string>
     <string name="planner_choose_stops">Choose a start and end stop</string>
     <string name="planner_select_time">Select time</string>
+    <string name="planner_select_date">Select date</string>
     <string name="cd_clear_location">Clear location</string>
     <string name="cd_swap_stops">Swap origin and destination</string>
     <string name="cd_close_map">Close map</string>

@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -20,29 +19,27 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TimePickerDefaults
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.transitkit.app.R
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.BrandPickerDialog
+import com.transitkit.app.ui.components.WheelTimePicker
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -148,17 +145,17 @@ fun WhenChipRow(
 
     if (showTimePicker) {
         val cal = remember { Calendar.getInstance(operatorTz).apply { time = selection.date } }
-        val tps = rememberTimePickerState(
-            initialHour = cal.get(Calendar.HOUR_OF_DAY),
-            initialMinute = cal.get(Calendar.MINUTE),
-            is24Hour = true,
-        )
-        TimePickerDialogWrapper(
+        var pickHour by remember { mutableIntStateOf(cal.get(Calendar.HOUR_OF_DAY)) }
+        var pickMinute by remember { mutableIntStateOf(cal.get(Calendar.MINUTE)) }
+        BrandPickerDialog(
+            title = stringResource(R.string.planner_select_time),
+            confirmLabel = stringResource(R.string.done),
+            cancelLabel = stringResource(R.string.cancel),
             onConfirm = {
                 val c = Calendar.getInstance(operatorTz).apply {
                     time = selection.date
-                    set(Calendar.HOUR_OF_DAY, tps.hour)
-                    set(Calendar.MINUTE, tps.minute)
+                    set(Calendar.HOUR_OF_DAY, pickHour)
+                    set(Calendar.MINUTE, pickMinute)
                     set(Calendar.SECOND, 0)
                 }
                 onSelectionChange(selection.copy(date = c.time))
@@ -166,20 +163,10 @@ fun WhenChipRow(
             },
             onDismiss = { showTimePicker = false },
         ) {
-            val colors = TransitTheme.colors
-            TimePicker(
-                state = tps,
-                colors = TimePickerDefaults.colors(
-                    selectorColor = colors.accent,
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    clockDialColor = colors.bgSecondary,
-                    clockDialSelectedContentColor = MaterialTheme.colorScheme.onPrimary,
-                    clockDialUnselectedContentColor = colors.textPrimary,
-                    timeSelectorSelectedContainerColor = colors.accent.copy(alpha = 0.15f),
-                    timeSelectorUnselectedContainerColor = colors.bgSecondary,
-                    timeSelectorSelectedContentColor = colors.accent,
-                    timeSelectorUnselectedContentColor = colors.textPrimary,
-                ),
+            WheelTimePicker(
+                hour = pickHour,
+                minute = pickMinute,
+                onChange = { h, m -> pickHour = h; pickMinute = m },
             )
         }
     }
@@ -188,43 +175,41 @@ fun WhenChipRow(
         val dps = rememberDatePickerState(
             initialSelectedDateMillis = selection.date.time,
         )
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    val millis = dps.selectedDateMillis ?: return@TextButton
-                    // M3 DatePicker returns midnight UTC of the picked calendar day —
-                    // read year/month/day in UTC, then apply onto the existing selection
-                    // (keeping current hour/minute) in the operator timezone.
-                    val pickedUtc = Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC")).apply {
-                        timeInMillis = millis
-                    }
-                    val newCal = Calendar.getInstance(operatorTz).apply {
-                        time = selection.date
-                        set(Calendar.YEAR, pickedUtc.get(Calendar.YEAR))
-                        set(Calendar.MONTH, pickedUtc.get(Calendar.MONTH))
-                        set(Calendar.DAY_OF_MONTH, pickedUtc.get(Calendar.DAY_OF_MONTH))
-                    }
-                    onSelectionChange(selection.copy(date = newCal.time))
-                    showDatePicker = false
-                }) { Text(stringResource(R.string.done)) }
+        BrandPickerDialog(
+            title = stringResource(R.string.planner_select_date),
+            confirmLabel = stringResource(R.string.done),
+            cancelLabel = stringResource(R.string.cancel),
+            onConfirm = {
+                val millis = dps.selectedDateMillis ?: run { showDatePicker = false; return@BrandPickerDialog }
+                // M3 DatePicker returns midnight UTC of the picked calendar day —
+                // read year/month/day in UTC, then apply onto the existing selection
+                // (keeping current hour/minute) in the operator timezone.
+                val pickedUtc = Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC")).apply {
+                    timeInMillis = millis
+                }
+                val newCal = Calendar.getInstance(operatorTz).apply {
+                    time = selection.date
+                    set(Calendar.YEAR, pickedUtc.get(Calendar.YEAR))
+                    set(Calendar.MONTH, pickedUtc.get(Calendar.MONTH))
+                    set(Calendar.DAY_OF_MONTH, pickedUtc.get(Calendar.DAY_OF_MONTH))
+                }
+                onSelectionChange(selection.copy(date = newCal.time))
+                showDatePicker = false
             },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) }
-            },
-            colors = DatePickerDefaults.colors(
-                containerColor = MaterialTheme.colorScheme.surface,
-                selectedDayContainerColor = TransitTheme.colors.accent,
-                todayContentColor = TransitTheme.colors.accent,
-                todayDateBorderColor = TransitTheme.colors.accent,
-            ),
+            onDismiss = { showDatePicker = false },
         ) {
+            // Calendario M3 senza header/headline/toggle — solo la griglia,
+            // ricolorata coerente. La chrome (titolo, bottoni, ombra) la dà
+            // BrandPickerDialog.
             DatePicker(
                 state = dps,
                 showModeToggle = false,
+                title = null,
+                headline = null,
                 colors = DatePickerDefaults.colors(
-                    containerColor = MaterialTheme.colorScheme.surface,
+                    containerColor = TransitTheme.colors.bgSecondary,
                     selectedDayContainerColor = TransitTheme.colors.accent,
+                    selectedDayContentColor = Color.White,
                     todayContentColor = TransitTheme.colors.accent,
                     todayDateBorderColor = TransitTheme.colors.accent,
                 ),
@@ -280,49 +265,3 @@ private fun WhenChip(
     }
 }
 
-/**
- * Small wrapper around [Dialog] that gives the embedded TimePicker the
- * familiar Material3 dialog chrome (Cancel/OK actions). M3 still doesn't ship
- * a public TimePickerDialog — this is the recommended workaround.
- */
-@Composable
-private fun TimePickerDialogWrapper(
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-    content: @Composable () -> Unit,
-) {
-    val colors = TransitTheme.colors
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false),
-    ) {
-        Surface(
-            shape = RoundedCornerShape(28.dp),
-            color = MaterialTheme.colorScheme.surface,
-            modifier = Modifier
-                .padding(24.dp)
-                .fillMaxWidth(),
-        ) {
-            androidx.compose.foundation.layout.Column(
-                modifier = Modifier.padding(20.dp),
-            ) {
-                Text(
-                    text = stringResource(R.string.planner_select_time),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = colors.textSecondary,
-                    modifier = Modifier.padding(bottom = 20.dp),
-                )
-                content()
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp),
-                    horizontalArrangement = Arrangement.End,
-                ) {
-                    TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
-                    TextButton(onClick = onConfirm) { Text(stringResource(R.string.done)) }
-                }
-            }
-        }
-    }
-}

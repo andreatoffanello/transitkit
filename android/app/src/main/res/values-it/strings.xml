@@ -435,6 +435,7 @@
     <string name="planner_data_unavailable_hint">Controlla la connessione e riprova.</string>
     <string name="planner_choose_stops">Scegli fermata di partenza e arrivo</string>
     <string name="planner_select_time">Seleziona orario</string>
+    <string name="planner_select_date">Seleziona data</string>
     <string name="cd_clear_location">Rimuovi posizione</string>
     <string name="cd_swap_stops">Inverti partenza e destinazione</string>
     <string name="cd_close_map">Chiudi mappa</string>

@@ -1,3 +1,4 @@
-• Plan trips your way: set your departure or arrival time, then tap Search
+• Plan trips with on-board and walking minutes per leg at a glance
+• See your nearby stops right on Home
 
-Plus stability improvements and bug fixes.
+Plus polish, performance improvements, and bug fixes.

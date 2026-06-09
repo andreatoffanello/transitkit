@@ -1,4 +1,5 @@
 • Plan trips with on-board and walking minutes per leg at a glance
 • See your nearby stops right on Home
+• Tap a line on the stop map to see its full route and live buses
 
 Plus polish, performance improvements, and bug fixes.

@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.unit.dp
-import androidx.core.view.WindowCompat
 import com.transitkit.app.config.LucideIcons
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -21,7 +20,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
 import com.transitkit.app.R
@@ -102,16 +104,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Status + gesture nav bars share the surface colour so the chrome reads as a
-        // single light frame instead of a dark handle clashing with a light top band.
+        // Status/gesture bar: colori e appearance sono gestiti theme-aware
+        // (light + dark) dal SideEffect in TransitKitTheme (AppTheme.kt).
         // NOT edge-to-edge (project rule).
-        val lightBg = 0xFFF5F7FA.toInt()
-        window.statusBarColor = lightBg
-        window.navigationBarColor = lightBg
-        WindowCompat.getInsetsController(window, window.decorView).apply {
-            isAppearanceLightStatusBars = true
-            isAppearanceLightNavigationBars = true
-        }
         handleMapDeepLink(intent)
         handlePlannerDeepLink(intent)
         handleSearchDeepLink(intent)
@@ -184,6 +179,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun TransitKitNavigation(operatorConfig: OperatorConfig) {
     val navController = rememberNavController()
@@ -234,10 +230,23 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
         com.transitkit.app.ui.planner.LocalOperatorTimeZone provides operatorTz,
     ) {
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        // testTagsAsResourceId: espone i Modifier.testTag come resource-id
+        // nell'albero accessibility — senza, il matching `id:` di Maestro
+        // sui tag Compose è inaffidabile (vede solo content-desc/testo).
+        modifier = Modifier
+            .fillMaxSize()
+            .semantics { testTagsAsResourceId = true },
         bottomBar = {
             if (showBottomBar) {
-                NavigationBar(containerColor = colors.tabBarBg) {
+                // windowInsets = WindowInsets(0) forces the bar to not reserve
+                // extra bottom inset (we're not edge-to-edge). Without this the
+                // last ~30px of the item's visual area sits below the bar's
+                // own gesture region and Material3 silently drops taps there
+                // — the symptom QA hit on label "Routes"/"Schedules".
+                NavigationBar(
+                    containerColor = colors.tabBarBg,
+                    windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
+                ) {
                     items.forEach { (screen, icon, label) ->
                         val isSelected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
                         val showBadge = screen == Screen.Avvisi && avvisiCount > 0
@@ -256,6 +265,7 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                                 }
                             },
                             label = { Text(label, maxLines = 1) },
+                            alwaysShowLabel = true,
                             selected = isSelected,
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -474,9 +484,10 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                     StandardCharsets.UTF_8.name(),
                 )
                 MappaScreen(
-                    onNavigateToStop = { stopId ->
+                    onNavigateToStop = { stopId, stopName ->
                         val encodedId = URLEncoder.encode(stopId, StandardCharsets.UTF_8.name())
-                        navController.navigate("stop/$encodedId")
+                        val encodedName = URLEncoder.encode(stopName, StandardCharsets.UTF_8.name())
+                        navController.navigate("stop/$encodedId?name=$encodedName")
                     },
                     initialRouteId = routeId,
                 )
@@ -638,9 +649,10 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                 val vehicleId = backStackEntry.arguments?.getString("vehicleId")
                 val previewStopId = backStackEntry.arguments?.getString("previewStopId")
                 MappaScreen(
-                    onNavigateToStop = { stopId ->
+                    onNavigateToStop = { stopId, stopName ->
                         val encodedId = URLEncoder.encode(stopId, StandardCharsets.UTF_8.name())
-                        navController.navigate("stop/$encodedId")
+                        val encodedName = URLEncoder.encode(stopName, StandardCharsets.UTF_8.name())
+                        navController.navigate("stop/$encodedId?name=$encodedName")
                     },
                     onOpenTripDetail = { tripId, fromStopId, routeName, routeColor ->
                         navController.navigate("trip/$tripId?fromStopId=$fromStopId&routeName=$routeName&routeColor=$routeColor")

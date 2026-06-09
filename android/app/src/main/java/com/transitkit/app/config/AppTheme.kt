@@ -1,5 +1,6 @@
 package com.transitkit.app.config
 
+import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -9,12 +10,16 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
 import com.transitkit.app.R
 
 // ---------------------------------------------------------------------------
@@ -198,6 +203,26 @@ fun TransitKitTheme(
 
     val colorScheme = if (darkTheme) buildDarkColorScheme(accentColor, primaryColor)
     else buildLightColorScheme(accentColor, primaryColor)
+
+    // System bars coerenti col tema, aggiornate a ogni cambio light/dark
+    // (anche runtime, senza dipendere dalla ricreazione dell'Activity):
+    // status bar = background della schermata, gesture bar = superficie
+    // della tab bar che le sta sopra (opaca — l'alpha 0.9 del token è per
+    // il blur della NavigationBar, non per il chrome di sistema).
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as? Activity)?.window
+            if (window != null) {
+                window.statusBarColor = transitColors.background.toArgb()
+                window.navigationBarColor = transitColors.tabBarBg.copy(alpha = 1f).toArgb()
+                WindowCompat.getInsetsController(window, view).apply {
+                    isAppearanceLightStatusBars = !darkTheme
+                    isAppearanceLightNavigationBars = !darkTheme
+                }
+            }
+        }
+    }
 
     CompositionLocalProvider(LocalTransitColors provides transitColors) {
         MaterialTheme(

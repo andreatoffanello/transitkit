@@ -38,6 +38,14 @@ struct Journey: Identifiable, Hashable {
         legs.compactMap { if case .transit(let l) = $0 { return l } else { return nil } }
     }
 
+    /// Total on-board time across all transit legs (seconds). Mirrors
+    /// `totalWalkSeconds` and the Android `Journey.totalTransitSeconds` extension.
+    var totalTransitSeconds: Int {
+        transitLegs.reduce(0) { acc, l in
+            acc + max(0, Int(l.alightTime.timeIntervalSince(l.boardTime)))
+        }
+    }
+
     var minutesUntilDeparture: Int {
         let diff = departureTime.timeIntervalSinceNow
         return max(0, Int(diff / 60))

@@ -140,7 +140,7 @@ struct LineDetailView: View {
                         .foregroundStyle(AppTheme.textPrimary)
                 }
                 .accessibilityLabel(Text(String(localized: "a11y_line_map")))
-                .accessibilityIdentifier("btn_line_map")
+                .accessibilityIdentifier("btn_expand_line_map")
             }
         }
         .navigationDestination(for: ResolvedStop.self) { stop in

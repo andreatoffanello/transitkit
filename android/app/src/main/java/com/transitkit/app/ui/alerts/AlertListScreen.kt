@@ -30,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -73,11 +74,15 @@ fun AlertListScreen(
         }
     }
 
-    val myAlerts = alerts.filter { it.isRelevant(myLineIds) }
-    val orderedAll = alerts.sortedWith(
-        compareByDescending<ServiceAlert> { it.isRelevant(myLineIds) }
-            .thenByDescending { it.firstActiveStart ?: 0L }
-    )
+    val myAlerts = remember(alerts, myLineIds) {
+        alerts.filter { it.isRelevant(myLineIds) }
+    }
+    val orderedAll = remember(alerts, myLineIds) {
+        alerts.sortedWith(
+            compareByDescending<ServiceAlert> { it.isRelevant(myLineIds) }
+                .thenByDescending { it.firstActiveStart ?: 0L }
+        )
+    }
     val visible = if (filter == AlertFilter.Mine) myAlerts else orderedAll
 
     Scaffold(

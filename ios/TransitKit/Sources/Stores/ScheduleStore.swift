@@ -202,7 +202,7 @@ class ScheduleStore {
         var result: [DayGroup: [Departure]] = [:]
         for (dayKey, deps) in grouped {
             let dayGroup = parseDayGroup(from: dayKey)
-            let resolved = deps.map { Departure(from: $0, route: routeById[$0.routeId]) }
+            let resolved = deps.map { Departure(from: $0, route: routeById[$0.routeId], headsignMap: operatorConfig?.headsignMap) }
             result[dayGroup] = resolved.sorted { $0.minutesFromMidnight < $1.minutesFromMidnight }
         }
         return result
@@ -266,7 +266,7 @@ class ScheduleStore {
               let entry = apiDepartureByTripId[tripId],
               let resolved = stop(forId: entry.apiStop.id) else { return nil }
         let route = routeById[entry.departure.routeId]
-        return (Departure(from: entry.departure, route: route), resolved)
+        return (Departure(from: entry.departure, route: route, headsignMap: operatorConfig?.headsignMap), resolved)
     }
 
     func route(forId routeId: String) -> APIRoute? {

@@ -4,30 +4,43 @@ appId: com.transitkit.appalcart
 # carichi journey reali (o errore esplicito, ma NON -1011).
 
 - launchApp:
-    clearState: true
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      text: "Home"
+    timeout: 6000
+
+# Tap su origin row (prima riga del planner card: "My location" se GPS on, "Departure" altrimenti)
+- tapOn:
+    id: "home_planner_block"
+    index: 0
 - waitForAnimationToEnd
 
-# Tap su origin row via accessibility id
-- tapOn:
-    id: "home_planner_row_origin"
-- waitForAnimationToEnd
+# In LocationPickerView tap "Choose on map" per origin
+- tapOn: "Choose on map"
+- waitForAnimationToEnd:
+    timeout: 2000
 
-# In LocationPickerView tap "La mia posizione"
+# Conferma il punto come origin
 - tapOn:
-    id: "picker_my_location"
+    id: "map_picker_confirm"
 - waitForAnimationToEnd:
     timeout: 3000
 
-# Ora origin = userLocation, tap destination
-- tapOn:
-    id: "home_planner_row_destination"
-- waitForAnimationToEnd
-
-# Tap "Scegli sulla mappa"
-- tapOn:
-    id: "picker_map_pick"
+# Destination picker si apre automaticamente ("Where to?")
+# Tap "Choose on map" per destination
+- tapOn: "Choose on map"
 - waitForAnimationToEnd:
     timeout: 2000
+
+# Sposta leggermente la mappa per punto diverso da origin
+- swipe:
+    start: "50%, 50%"
+    end: "40%, 40%"
+    duration: 500
+
+- waitForAnimationToEnd:
+    timeout: 1500
 
 # Conferma il punto centrale della mappa
 - tapOn:

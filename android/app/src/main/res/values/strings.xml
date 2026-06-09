@@ -94,6 +94,7 @@
 
     <!-- Orari — section headers -->
     <string name="section_recenti">Recent</string>
+    <string name="section_mie_linee">My lines</string>
     <string name="section_tutte_fermate">All stops</string>
     <string name="section_tutte_linee">All routes</string>
 
@@ -128,6 +129,10 @@
     <string name="stop_not_found_subtitle">This stop is no longer in service or the link is outdated.</string>
     <string name="line_not_found_title">Route not found</string>
     <string name="line_not_found_subtitle">This route is no longer active or the link is outdated.</string>
+    <string name="alert_not_found_title">Alert not found</string>
+    <string name="alert_not_found_subtitle">This alert is no longer active or the link is outdated.</string>
+    <string name="service_not_found_title">Service not found</string>
+    <string name="service_not_found_subtitle">This service is no longer available or the link is outdated.</string>
     <string name="action_back_home">Back to home</string>
 
     <!-- StopDetailScreen — day group labels for full-schedule sheet -->
@@ -144,8 +149,9 @@
     <string name="fermate_servite">Stops served</string>
     <string name="stop_count_fermate">%1$d stops</string>
     <string name="live_count">%1$d live</string>
-    <string name="home_operator_card_live">%1$d vehicles in service</string>
+    <string name="home_operator_card_live">%1$d live now</string>
     <string name="home_operator_card_no_live">No live vehicles</string>
+    <string name="home_operator_card_routes">%1$d routes</string>
     <string name="label_coincidenza">Transfer</string>
 
     <!-- Info — section headers -->
@@ -401,8 +407,8 @@
     <string name="walking_n_min">%d min walk</string>
     <string name="walking_10_plus_min">10+ min walk</string>
     <string name="home_footer_disclaimer">Independent app · Official %1$s data</string>
-    <string name="home_operators_section_title">Who keeps you moving</string>
-    <string name="home_operators_attribution">Schedules, routes, and live vehicles come directly from %1$s.</string>
+    <string name="home_operators_section_title">Who moves the city</string>
+    <string name="home_operators_attribution">Schedules, routes and live vehicles come straight from %1$s.</string>
     <string name="home_operators_live_count">%1$d real-time</string>
     <string name="home_operators_schedule_only">Scheduled only</string>
     <string name="home_enable_location_chip">Enable location to see nearby stops</string>
@@ -454,6 +460,8 @@
     <string name="planner_one_transfer">1 transfer</string>
     <string name="planner_n_transfers">%1$d transfers</string>
     <string name="planner_subtitle_walking"> · %1$d min walking</string>
+    <string name="planner_subtitle_transit"> · %1$d min on transit</string>
+    <string name="planner_leg_duration">%1$d min</string>
     <string name="planner_detail_title">Journey</string>
     <string name="planner_data_unavailable">Trip data unavailable</string>
     <string name="planner_data_unavailable_hint">Check your connection and try again.</string>
@@ -471,6 +479,7 @@
     <string name="planner_picker_origin_title">From</string>
     <string name="planner_picker_destination_title">To</string>
     <string name="planner_picker_my_location">Current location</string>
+    <string name="planner_my_location">My location</string>
     <string name="planner_picker_location_active">Using GPS location</string>
     <string name="planner_picker_location_inactive">Location unavailable</string>
     <string name="planner_picker_pick_on_map">Pick on map</string>

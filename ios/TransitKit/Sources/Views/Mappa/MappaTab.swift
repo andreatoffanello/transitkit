@@ -258,6 +258,23 @@ struct MappaTab: View {
                 fitMapToRoute(route)
             }
         }
+        .onChange(of: router.pendingMapOpen) { _, newId in
+            // Bare `transitkit://map` arrived — wipe any leftover selection so
+            // the user gets a clean map, not the previous deeplink's route
+            // filter / stop preview / vehicle follow. Using `.onChange` rather
+            // than `.task(id:)` so the closure runs synchronously on the same
+            // tick the id changes, before any peer observer can null it out.
+            guard newId != nil else { return }
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                selectedRoute = nil
+                selectedDirectionId = nil
+                selectedStop = nil
+                selectedVehicle = nil
+                isFollowingVehicle = false
+                routeSelectedByVehicle = false
+            }
+            router.pendingMapOpen = nil
+        }
         .task(id: router.pendingMapPreviewStop?.id) {
             guard let stop = router.pendingMapPreviewStop else { return }
             router.pendingMapPreviewStop = nil

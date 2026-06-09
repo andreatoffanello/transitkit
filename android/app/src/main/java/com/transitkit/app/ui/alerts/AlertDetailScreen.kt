@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -105,11 +107,48 @@ fun AlertDetailScreen(
                     .padding(padding),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    stringResource(R.string.alerts_title),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = colors.textSecondary,
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.padding(32.dp),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(72.dp)
+                            .background(colors.textTertiary.copy(alpha = 0.12f), CircleShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            painter = painterResource(LucideIcons.Bell),
+                            contentDescription = null,
+                            tint = colors.textTertiary,
+                            modifier = Modifier.size(36.dp),
+                        )
+                    }
+                    Text(
+                        text = stringResource(R.string.alert_not_found_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.textPrimary,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    )
+                    Text(
+                        text = stringResource(R.string.alert_not_found_subtitle),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.textSecondary,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    )
+                    Button(
+                        onClick = onBack,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colors.accent,
+                            contentColor = androidx.compose.ui.graphics.Color.White,
+                        ),
+                        shape = RoundedCornerShape(24.dp),
+                    ) {
+                        Text(stringResource(R.string.action_back_home), fontWeight = FontWeight.SemiBold)
+                    }
+                }
             }
             return@Scaffold
         }

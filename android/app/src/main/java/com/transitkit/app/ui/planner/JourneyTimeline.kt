@@ -164,6 +164,7 @@ internal fun BoardRow(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 LineBadge(
                     name = leg.routeName,
@@ -183,8 +184,19 @@ internal fun BoardRow(
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.textSecondary,
                         maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
                     )
                 }
+                Spacer(Modifier.weight(1f))
+                val legMin = ((leg.arrivalTime - leg.departureTime) / 60_000L)
+                    .coerceAtLeast(1L)
+                    .toInt()
+                Text(
+                    text = stringResource(R.string.planner_leg_duration, legMin),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textTertiary,
+                )
             }
         }
     }

@@ -17,7 +17,8 @@ struct MapControlsColumn: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            textCell(label: is3D ? "2D" : "3D", action: onToggle3D)
+            // Label reflects CURRENT state, not the action — see MapExpandedControls.
+            textCell(label: is3D ? "3D" : "2D", action: onToggle3D)
                 .accessibilityLabel(String(localized: is3D ? "map_switch_to_2d" : "map_switch_to_3d"))
                 .accessibilityIdentifier("btn_map_toggle_3d")
 

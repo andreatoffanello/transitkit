@@ -175,14 +175,25 @@ struct HomeTab: View {
             .onChange(of: router.pendingPlannerOpen) { _, id in
                 guard id != nil else { return }
                 router.pendingPlannerOpen = nil
-                deeplinkPlannerLaunch = PendingPlannerLaunch(
-                    origin: nil, destination: nil, when: .now
+                presentPlannerDeeplink(
+                    PendingPlannerLaunch(origin: nil, destination: nil, when: .now)
                 )
+            }
+            // Any in-app "go to map" intent (e.g. ServiceDetail "See live buses
+            // on map" CTA) sets `pendingMapOpen`. The TabView root already
+            // switches selectedTab; we just need to dismiss any HomeTab-owned
+            // fullScreenCover sitting on top, otherwise the user lands on the
+            // map but the Servizi/Settings overlay is still glued in front.
+            .onChange(of: router.pendingMapOpen) { _, id in
+                guard id != nil else { return }
+                showServizi = false
+                showSettings = false
+                showAlertList = false
             }
             .onChange(of: router.pendingPlannerLaunch) { _, launch in
                 guard let launch else { return }
                 router.pendingPlannerLaunch = nil
-                deeplinkPlannerLaunch = launch
+                presentPlannerDeeplink(launch)
             }
         }
     }
@@ -277,6 +288,26 @@ struct HomeTab: View {
 
     private func highestSeverity(_ alerts: [GtfsRtAlert]) -> AlertSeverity {
         alerts.map(\.severity).max(by: { $0.rawValue < $1.rawValue }) ?? .unknown
+    }
+
+    /// Drive `.navigationDestination(item:)` correctly when a Planner is already
+    /// on the stack. Assigning a fresh `PendingPlannerLaunch` while another is
+    /// already presented can let SwiftUI coalesce the change into "still the
+    /// same destination", so the @State of `PlannerScreen` (whenSelection in
+    /// particular) is NOT reinitialized and the new deeplink's prefill is lost.
+    /// Pattern from local memory `feedback_navstack_concurrent_destinations.md`:
+    /// pop first, hop the runloop ~320 ms, then push fresh.
+    private func presentPlannerDeeplink(_ launch: PendingPlannerLaunch) {
+        if deeplinkPlannerLaunch != nil || plannerLaunch != nil {
+            deeplinkPlannerLaunch = nil
+            plannerLaunch = nil
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(320))
+                deeplinkPlannerLaunch = launch
+            }
+        } else {
+            deeplinkPlannerLaunch = launch
+        }
     }
 
     // MARK: - Favorites

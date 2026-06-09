@@ -38,7 +38,6 @@ import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.data.model.PlannerLocation
-import com.transitkit.app.data.model.ResolvedStop
 import com.transitkit.app.ui.planner.PlannerViewModel
 import com.transitkit.app.ui.planner.WhenChipRow
 import java.text.SimpleDateFormat
@@ -52,7 +51,6 @@ private val _hhmmHome = SimpleDateFormat("HH:mm", Locale.getDefault())
 
 @Composable
 internal fun PlannerHomeBox(
-    nearbyStops: List<Pair<ResolvedStop, Double>>,
     plannerViewModel: PlannerViewModel,
     onNavigateToLocationPicker: (role: String) -> Unit,
     onNavigateToPlanner: () -> Unit,
@@ -65,12 +63,23 @@ internal fun PlannerHomeBox(
     val homeOrigin by plannerViewModel.homeOrigin.collectAsStateWithLifecycle()
     val homeDestination by plannerViewModel.homeDestination.collectAsStateWithLifecycle()
     val whenSel by plannerViewModel.whenSelection.collectAsStateWithLifecycle()
+    val currentLocation by plannerViewModel.currentLocation.collectAsStateWithLifecycle()
+    val myLocationLabel = stringResource(R.string.planner_my_location)
 
-    // Auto-fill origin from nearest stop when not yet set.
-    LaunchedEffect(nearbyStops) {
-        if (plannerViewModel.homeOrigin.value == null && nearbyStops.isNotEmpty()) {
+    // iOS parity: default origin = "My location" instead of nearest stop.
+    // Auto-fill only once GPS is available; if the user has set their own
+    // origin (kind != CurrentLocation), we leave it alone.
+    LaunchedEffect(currentLocation) {
+        val existing = plannerViewModel.homeOrigin.value
+        val loc = currentLocation ?: return@LaunchedEffect
+        if (existing == null || existing.kind == PlannerLocation.Kind.CurrentLocation) {
             plannerViewModel.setHomeOrigin(
-                PlannerLocation.fromStop(nearbyStops.first().first)
+                PlannerLocation(
+                    kind = PlannerLocation.Kind.CurrentLocation,
+                    name = myLocationLabel,
+                    lat = loc.first,
+                    lon = loc.second,
+                )
             )
         }
     }
@@ -95,7 +104,8 @@ internal fun PlannerHomeBox(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(colors.bgSecondary, shape)
+                // iOS parity: light accent tint instead of neutral surface
+                .background(colors.accent.copy(alpha = 0.10f), shape)
                 .semantics { testTag = "planner_home_box" },
         ) {
             // Row Da (origin) — icon column has dot + dashed line below

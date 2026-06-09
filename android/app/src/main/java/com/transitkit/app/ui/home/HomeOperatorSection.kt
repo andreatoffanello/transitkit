@@ -45,6 +45,7 @@ import com.transitkit.app.ui.components.LiveIndicator
 internal fun OperatorReferenceSection(
     config: OperatorConfig,
     liveVehicleCount: Int,
+    routesCount: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -72,6 +73,7 @@ internal fun OperatorReferenceSection(
         OperatorReferenceCard(
             config = config,
             liveVehicleCount = liveVehicleCount,
+            routesCount = routesCount,
             onClick = onClick,
         )
     }
@@ -81,6 +83,7 @@ internal fun OperatorReferenceSection(
 internal fun OperatorReferenceCard(
     config: OperatorConfig,
     liveVehicleCount: Int,
+    routesCount: Int,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -101,8 +104,10 @@ internal fun OperatorReferenceCard(
             else -> "?"
         }
     }
-    val subtitle = config.region?.takeIf { it.isNotBlank() }
-        ?: config.country.takeIf { it.isNotBlank() }
+    // iOS parity: subtitle "X live now · Y routes" (no address/region).
+    val routesLabel = if (routesCount > 0) {
+        stringResource(R.string.home_operator_card_routes, routesCount)
+    } else null
 
     Row(
         modifier = modifier
@@ -166,14 +171,14 @@ internal fun OperatorReferenceCard(
                         color = colors.realtimeGreen,
                         fontWeight = FontWeight.SemiBold,
                     )
-                    if (subtitle != null) {
+                    if (routesLabel != null) {
                         Text(
                             text = "·",
                             style = MaterialTheme.typography.labelSmall,
                             color = colors.textTertiary,
                         )
                         Text(
-                            text = subtitle,
+                            text = routesLabel,
                             style = MaterialTheme.typography.labelSmall,
                             color = colors.textSecondary,
                             maxLines = 1,
@@ -186,14 +191,14 @@ internal fun OperatorReferenceCard(
                         style = MaterialTheme.typography.labelSmall,
                         color = colors.textSecondary,
                     )
-                    if (subtitle != null) {
+                    if (routesLabel != null) {
                         Text(
                             text = "·",
                             style = MaterialTheme.typography.labelSmall,
                             color = colors.textTertiary,
                         )
                         Text(
-                            text = subtitle,
+                            text = routesLabel,
                             style = MaterialTheme.typography.labelSmall,
                             color = colors.textSecondary,
                             maxLines = 1,

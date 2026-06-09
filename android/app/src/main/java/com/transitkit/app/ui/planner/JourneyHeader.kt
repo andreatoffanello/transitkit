@@ -23,6 +23,7 @@ import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.data.model.Journey
 import com.transitkit.app.data.model.durationMinutes
+import com.transitkit.app.data.model.totalTransitSeconds
 import com.transitkit.app.data.model.totalWalkSeconds
 import com.transitkit.app.data.model.transfers
 
@@ -70,7 +71,9 @@ internal fun headerSubtitle(journey: Journey): String {
         1 -> stringResource(R.string.planner_one_transfer)
         else -> stringResource(R.string.planner_n_transfers, journey.transfers)
     }
+    val transitMin = journey.totalTransitSeconds / 60
     val walkMin = journey.totalWalkSeconds / 60
+    val transitStr = if (transitMin >= 1) stringResource(R.string.planner_subtitle_transit, transitMin) else ""
     val walkStr = if (walkMin >= 2) stringResource(R.string.planner_subtitle_walking, walkMin) else ""
-    return "$mins min · $transfersStr$walkStr"
+    return "$mins min · $transfersStr$transitStr$walkStr"
 }

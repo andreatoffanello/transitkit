@@ -344,9 +344,22 @@ private func decodeTripUpdate(_ data: Data) -> GtfsRtTripDelay? {
     }
 
     guard !tripId.isEmpty else { return nil }
-    let resolvedDelay = delay ?? firstStopDelay ?? 0
-    // Emit even when no delay so per-stop ETAs aren't lost.
+    // Clamp BEFORE the fallback: if `TripUpdate.delay` is implausible but the
+    // first stop's delay is sane, prefer the latter. When both are out of range
+    // we fall back to 0 — schedule-only display — and still emit the entry
+    // because `arrivalByStopId` carries absolute epochs useful for per-stop ETA.
+    let resolvedDelay = clampedDelay(delay) ?? clampedDelay(firstStopDelay) ?? 0
     return GtfsRtTripDelay(tripId: tripId, delay: resolvedDelay, arrivalByStopId: arrivals)
+}
+
+// GTFS-RT delay plausibility window (seconds). Asymmetric: see
+// `DELAY_*_BOUND_SEC` in Android `GtfsRtFetcher.kt` for the full rationale.
+private let delayLowerBoundSec: Int32 = -300
+private let delayUpperBoundSec: Int32 = 1800
+
+private func clampedDelay(_ raw: Int32?) -> Int32? {
+    guard let raw else { return nil }
+    return (raw >= delayLowerBoundSec && raw <= delayUpperBoundSec) ? raw : nil
 }
 
 /// Aggregates the fields we care about from a single StopTimeUpdate message.

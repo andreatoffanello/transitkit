@@ -7,6 +7,7 @@ struct SettingsTab: View {
     @Environment(FavoritesManager.self) private var favoritesManager
     @Environment(LocationManager.self) private var locationManager
     @Environment(PushNotificationManager.self) private var pushManager
+    @Environment(DeepLinkRouter.self) private var router
     @Environment(\.dismiss) private var dismiss
     @Environment(\.operatorConfig) private var config
 
@@ -31,6 +32,7 @@ struct SettingsTab: View {
     var body: some View {
         NavigationStack {
             ScrollView {
+                ScrollViewReader { proxy in
                 LazyVStack(alignment: .leading, spacing: 24) {
                     if let config {
                         operatorCard(config: config)
@@ -65,6 +67,7 @@ struct SettingsTab: View {
                                     notificationsRow
                                 }
                             }
+                            .id("notifications")
                         }
 
                         // MARK: Privacy (Location)
@@ -156,6 +159,20 @@ struct SettingsTab: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 4)
+                .onAppear {
+                    // Consume the deeplink anchor set by `transitkit://settings/<anchor>`.
+                    // The anchor key matches the `.id(...)` on the target section
+                    // (currently "notifications" — extend as new anchors are added).
+                    guard let anchor = router.pendingSettingsAnchor else { return }
+                    router.pendingSettingsAnchor = nil
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(80))
+                        withAnimation(.snappy(duration: 0.35)) {
+                            proxy.scrollTo(anchor, anchor: .top)
+                        }
+                    }
+                }
+                }
             }
             .background(AppTheme.background.ignoresSafeArea())
             .navigationTitle(String(localized: "tab_settings"))
@@ -381,7 +398,7 @@ struct SettingsTab: View {
     private var locationStatusDescription: String {
         switch locationManager.authorizationStatus {
         case .authorizedWhenInUse, .authorizedAlways:
-            return String(localized: "nearby_enable_subtitle")
+            return String(localized: "settings_location_active_subtitle")
         case .denied, .restricted:
             return String(localized: "nearby_denied_subtitle")
         case .notDetermined:

@@ -81,6 +81,7 @@ struct PlannerHomeBox: View {
             }
             .padding(.horizontal, 4)
         }
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("home_planner_block")
         .navigationDestination(item: $boxNav) { nav in
             switch nav {

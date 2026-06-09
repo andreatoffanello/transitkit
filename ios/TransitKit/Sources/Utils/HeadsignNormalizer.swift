@@ -12,28 +12,30 @@ enum HeadsignNormalizer {
 
     /// Resolves a headsign for display. When the raw headsign is a generic direction
     /// word ("Inbound", "Outbound", etc.), falls back to the route's long name or
-    /// first non-generic direction headsign.
-    static func resolve(_ raw: String, route: APIRoute?) -> String {
-        guard let route else { return normalize(raw) }
+    /// first non-generic direction headsign. The optional `map` is the operator's
+    /// `headsignMap` from `OperatorConfig` — exact-match override applied first
+    /// (case-insensitive) inside `normalize`.
+    static func resolve(_ raw: String, route: APIRoute?, map: [String: String]? = nil) -> String {
+        guard let route else { return normalize(raw, map: map) }
         let lower = raw.lowercased().trimmingCharacters(in: .whitespaces)
-        guard genericDirections.contains(lower) else { return normalize(raw) }
+        guard genericDirections.contains(lower) else { return normalize(raw, map: map) }
 
         // Prefer route longName if it's not also generic
         if let longName = route.longName, !longName.isEmpty,
            !genericDirections.contains(longName.lowercased()) {
-            return normalize(longName)
+            return normalize(longName, map: map)
         }
 
         // Fall back to first non-generic direction headsign
         for dir in route.directions {
             if let h = dir.headsign, !h.isEmpty,
                !genericDirections.contains(h.lowercased()) {
-                return normalize(h)
+                return normalize(h, map: map)
             }
         }
 
         // Nothing better — keep the raw value normalized
-        return normalize(raw)
+        return normalize(raw, map: map)
     }
 
     /// Normalize a raw headsign string.

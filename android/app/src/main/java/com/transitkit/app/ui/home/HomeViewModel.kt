@@ -89,6 +89,11 @@ class HomeViewModel @Inject constructor(
         .map { it.size }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
+    /** Numero totale di route dell'operatore — per subtitle "X live · Y routes" iOS parity. */
+    val routesCount: StateFlow<Int> = scheduleRepository.routes
+        .map { it.size }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
     /** Currently-active service alerts, surfaced in the Today card on Home. */
     val activeAlerts: StateFlow<List<ServiceAlert>> = alertStore.activeAlerts
 

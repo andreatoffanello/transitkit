@@ -7,16 +7,18 @@ appId: com.transitkit.appalcart
 # Destination = pin libero su 36.204979,-81.659981 ("610 State Farm Rd")
 
 - launchApp:
-    clearState: true
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      text: "Home"
+    timeout: 6000
+
+# Tap destination field nel planner card
+- tapOn: "Destination"
 - waitForAnimationToEnd
 
-# Tap destination "A..." nel planner card
-- tapOn:
-    point: "50%, 28%"
-- waitForAnimationToEnd
-
-# In LocationPickerView, tap "Scegli sulla mappa"
-- tapOn: "Scegli sulla mappa"
+# In LocationPickerView, tap "Choose on map"
+- tapOn: "Choose on map"
 - waitForAnimationToEnd:
     timeout: 3000
 
@@ -30,7 +32,7 @@ appId: com.transitkit.appalcart
 - waitForAnimationToEnd:
     timeout: 2500
 
-- tapOn: "Conferma posizione"
+- tapOn: "Confirm location"
 - waitForAnimationToEnd:
     timeout: 5000
 

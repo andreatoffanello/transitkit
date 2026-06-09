@@ -93,6 +93,7 @@
 
     <!-- Orari — section headers -->
     <string name="section_recenti">Recientes</string>
+    <string name="section_mie_linee">Mis líneas</string>
     <string name="section_tutte_fermate">Todas las paradas</string>
     <string name="section_tutte_linee">Todas las rutas</string>
 
@@ -127,6 +128,10 @@
     <string name="stop_not_found_subtitle">Esta parada ya no está en servicio o el enlace está obsoleto.</string>
     <string name="line_not_found_title">Ruta no encontrada</string>
     <string name="line_not_found_subtitle">Esta ruta ya no está activa o el enlace está obsoleto.</string>
+    <string name="alert_not_found_title">Aviso no encontrado</string>
+    <string name="alert_not_found_subtitle">Este aviso ya no está activo o el enlace está obsoleto.</string>
+    <string name="service_not_found_title">Servicio no encontrado</string>
+    <string name="service_not_found_subtitle">Este servicio ya no está disponible o el enlace está obsoleto.</string>
     <string name="action_back_home">Volver al inicio</string>
 
     <!-- StopDetailScreen — day group labels for full-schedule sheet -->
@@ -143,8 +148,9 @@
     <string name="fermate_servite">Paradas atendidas</string>
     <string name="stop_count_fermate">%1$d paradas</string>
     <string name="live_count">%1$d en vivo</string>
-    <string name="home_operator_card_live">%1$d vehículos en vivo</string>
+    <string name="home_operator_card_live">%1$d en vivo ahora</string>
     <string name="home_operator_card_no_live">Sin vehículos en vivo</string>
+    <string name="home_operator_card_routes">%1$d rutas</string>
     <string name="label_coincidenza">Transbordo</string>
 
     <!-- Info — section headers -->
@@ -396,6 +402,7 @@
     <!-- Planner additions -->
     <string name="planner_from">Desde…</string>
     <string name="planner_to">Hacia…</string>
+    <string name="planner_my_location">Mi ubicación</string>
     <string name="planner_now">Ahora</string>
     <string name="planner_depart_at">Salir a las</string>
     <string name="planner_arrive_by">Llegar antes de</string>
@@ -427,6 +434,8 @@
     <string name="planner_one_transfer">1 transbordo</string>
     <string name="planner_n_transfers">%1$d transbordos</string>
     <string name="planner_subtitle_walking"> · %1$d min a pie</string>
+    <string name="planner_subtitle_transit"> · %1$d min en transporte</string>
+    <string name="planner_leg_duration">%1$d min</string>
     <string name="planner_detail_title">Itinerario</string>
     <string name="planner_data_unavailable">Datos de viaje no disponibles</string>
     <string name="planner_data_unavailable_hint">Comprueba tu conexión e inténtalo de nuevo.</string>

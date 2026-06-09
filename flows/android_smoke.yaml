@@ -8,7 +8,7 @@ appId: com.transitkit.appalcart
 - assertVisible: "Schedules"
 - assertVisible: "Routes"
 - assertVisible: "Map"
-- assertVisible: "Services"
+- assertVisible: "Alerts"
 
 # Planner tab DEVE essere assente dalla bottom nav
 - assertNotVisible: "Planner"

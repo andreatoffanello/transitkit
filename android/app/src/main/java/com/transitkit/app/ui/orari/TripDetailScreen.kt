@@ -163,16 +163,56 @@ fun TripDetailScreen(
                         .padding(padding),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        text = stringResource(state.messageRes),
-                        color = TransitTheme.colors.textTertiary,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(32.dp),
-                    )
+                    if (state.messageRes == R.string.trip_error_no_stops) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.padding(32.dp),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .background(TransitTheme.colors.textTertiary.copy(alpha = 0.12f), CircleShape),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(
+                                    painter = painterResource(LucideIcons.Clock),
+                                    contentDescription = null,
+                                    tint = TransitTheme.colors.textTertiary,
+                                    modifier = Modifier.size(36.dp),
+                                )
+                            }
+                            Text(
+                                text = stringResource(state.messageRes),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = TransitTheme.colors.textPrimary,
+                                textAlign = TextAlign.Center,
+                            )
+                            androidx.compose.material3.Button(
+                                onClick = onBack,
+                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                    containerColor = lineColor,
+                                    contentColor = Color.White,
+                                ),
+                                shape = RoundedCornerShape(24.dp),
+                            ) {
+                                Text(stringResource(R.string.action_back_home), fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    } else {
+                        Text(
+                            text = stringResource(state.messageRes),
+                            color = TransitTheme.colors.textTertiary,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(32.dp),
+                        )
+                    }
                 }
 
                 is TripState.Success -> {
                     val liveOriginIndex by viewModel.liveOriginIndex.collectAsStateWithLifecycle()
+                    val hasLiveVehicle by viewModel.hasLiveVehicle.collectAsStateWithLifecycle()
                     val listState = rememberLazyListState()
                     // Scroll once to the initial origin on first successful load.
                     // Subsequent vehicle movements update the highlight but keep
@@ -197,6 +237,7 @@ fun TripDetailScreen(
                                 stop = stop,
                                 index = index,
                                 originIndex = liveOriginIndex,
+                                showCurrentPill = hasLiveVehicle,
                                 isFirst = index == 0,
                                 isLast = index == state.stops.lastIndex,
                                 lineColor = lineColor,
@@ -217,6 +258,7 @@ private fun TripStopRow(
     stop: StopTime,
     index: Int,
     originIndex: Int,
+    showCurrentPill: Boolean,
     isFirst: Boolean,
     isLast: Boolean,
     lineColor: Color,
@@ -225,6 +267,11 @@ private fun TripStopRow(
     onClick: () -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
+    // `isCurrent` drives the highlight ring + accent text color for the
+    // active row in the timeline. The "Now" pill — which actively claims a
+    // bus is AT this stop — only renders when we have a real live vehicle.
+    // Without [showCurrentPill] gating, a future trip whose `liveOriginIndex`
+    // falls back to `originIndex` (boarding stop) would lie to the rider.
     val isPast = index < originIndex
     val isCurrent = index == originIndex
     val isTerminal = isFirst || isLast
@@ -343,7 +390,7 @@ private fun TripStopRow(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                if (isCurrent) {
+                if (isCurrent && showCurrentPill) {
                     Box(
                         modifier = Modifier
                             .background(lineColor, RoundedCornerShape(50))

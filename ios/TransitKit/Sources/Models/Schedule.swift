@@ -214,7 +214,7 @@ struct Departure: Identifiable, Hashable {
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
     static func == (lhs: Departure, rhs: Departure) -> Bool { lhs.id == rhs.id }
 
-    init(from apiDep: APIDeparture, route: APIRoute?) {
+    init(from apiDep: APIDeparture, route: APIRoute?, headsignMap: [String: String]? = nil) {
         let timeParts = apiDep.departureTime.split(separator: ":")
         let displayHour = timeParts.count >= 1 ? (Int(timeParts[0]) ?? 0) % 24 : 0
         let displayMin  = timeParts.count >= 2 ? (Int(timeParts[1]) ?? 0) : 0
@@ -223,7 +223,7 @@ struct Departure: Identifiable, Hashable {
         self.id         = "\(t)_\(apiDep.routeName)_\(apiDep.headsign ?? "")_\(apiDep.tripId)"
         self.lineName   = apiDep.routeName
         self.routeId    = apiDep.routeId
-        self.headsign   = HeadsignNormalizer.resolve(apiDep.headsign ?? "", route: route)
+        self.headsign   = HeadsignNormalizer.resolve(apiDep.headsign ?? "", route: route, map: headsignMap)
         self.color      = apiDep.routeColor.map { "#\($0)" } ?? "#000000"
         self.textColor  = apiDep.routeTextColor.map { "#\($0)" } ?? "#FFFFFF"
         self.transitType = route.map { TransitType(gtfsRouteType: $0.transitType) } ?? .bus

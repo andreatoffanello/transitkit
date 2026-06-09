@@ -70,6 +70,7 @@ fun HomeScreen(
     val nearbyDepartures by viewModel.nearbyDepartures.collectAsStateWithLifecycle()
     val liveTripIds by viewModel.liveTripIds.collectAsStateWithLifecycle()
     val liveVehicleCount by viewModel.liveVehicleCount.collectAsStateWithLifecycle()
+    val routesCount by viewModel.routesCount.collectAsStateWithLifecycle()
     val routesByName by viewModel.routesByName.collectAsStateWithLifecycle()
     val activeAlerts by viewModel.activeAlerts.collectAsStateWithLifecycle()
     val shouldShowOnboarding by viewModel.shouldShowOnboarding.collectAsStateWithLifecycle()
@@ -110,7 +111,12 @@ fun HomeScreen(
                     android.location.LocationManager.GPS_PROVIDER,
                     android.location.LocationManager.NETWORK_PROVIDER,
                 ).filter { lm.isProviderEnabled(it) }.forEach { provider ->
-                    lm.requestLocationUpdates(provider, 30_000L, 50f, listener)
+                    // minTime 5s + minDistance 0 m → first fix arrives quickly
+                    // (incl. on emulators where `getLastKnownLocation` is null
+                    // and `emu geo fix` doesn't simulate movement); subsequent
+                    // updates are still rate-limited by the 5s window, so power
+                    // cost stays low.
+                    lm.requestLocationUpdates(provider, 5_000L, 0f, listener)
                 }
             } catch (_: SecurityException) {}
         }
@@ -196,7 +202,6 @@ fun HomeScreen(
 
             item {
                 PlannerHomeBox(
-                    nearbyStops = nearbyStops,
                     plannerViewModel = plannerViewModel,
                     onNavigateToLocationPicker = onNavigateToLocationPicker,
                     onNavigateToPlanner = onNavigateToPlanner,
@@ -247,6 +252,7 @@ fun HomeScreen(
                     OperatorReferenceSection(
                         config = config,
                         liveVehicleCount = liveVehicleCount,
+                        routesCount = routesCount,
                         onClick = onNavigateToServizi,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     )

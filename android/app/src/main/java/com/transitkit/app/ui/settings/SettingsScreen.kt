@@ -270,7 +270,6 @@ fun SettingsScreen(
     onNavigateToOrari: () -> Unit = {},
 ) {
     val favoriteStops by viewModel.favoriteStops.collectAsStateWithLifecycle()
-    val notificationsEnabled by viewModel.notificationsEnabled.collectAsStateWithLifecycle()
     val notificationsBusy by viewModel.notificationsBusy.collectAsStateWithLifecycle()
     val config = viewModel.operatorConfig
     val colors = TransitTheme.colors
@@ -278,18 +277,38 @@ fun SettingsScreen(
     val currentLanguage = java.util.Locale.getDefault().displayLanguage.replaceFirstChar { it.uppercaseChar() }
 
     // ── POST_NOTIFICATIONS runtime permission (Android 13+) ─────────────────
+    // The Switch's `checked` reads the *authoritative* OS permission status,
+    // not a separate in-VM flag. The previous version bound the switch to a
+    // MutableStateFlow that flipped only after a Firebase `ensureToken` round
+    // trip — when Firebase wasn't configured for the operator, the flag stayed
+    // false forever and the knob refused to slide despite the user tapping it.
+    // Reading permission state directly keeps the toggle truthful regardless of
+    // FCM availability.
     val context = androidx.compose.ui.platform.LocalContext.current
-    val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if (granted) viewModel.onNotificationsPermissionGranted()
-    }
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     val notifPermissionGranted: () -> Boolean = {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
             androidx.core.content.ContextCompat.checkSelfPermission(
                 context, android.Manifest.permission.POST_NOTIFICATIONS
             ) == android.content.pm.PackageManager.PERMISSION_GRANTED
         } else true
+    }
+    // Re-evaluated on every recomposition AND every ON_RESUME (user returns
+    // from Settings app after granting/revoking the permission).
+    var permissionTick by remember { androidx.compose.runtime.mutableStateOf(0) }
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) permissionTick++
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    val notificationsEnabled = remember(permissionTick) { notifPermissionGranted() }
+    val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        permissionTick++  // re-read OS state so the switch updates regardless
+        if (granted) viewModel.onNotificationsPermissionGranted()
     }
 
     LazyColumn(
@@ -353,9 +372,9 @@ fun SettingsScreen(
                     if (favoriteList.isEmpty()) {
                         SettingsRow(
                             icon = LucideIcons.Star,
+                            iconTint = colors.textTertiary,
                             title = stringResource(R.string.settings_section_preferiti),
                             subtitle = stringResource(R.string.settings_nessuno_salvato),
-                            onClick = onNavigateToOrari,
                         )
                     } else {
                         favoriteList.forEachIndexed { index, stop ->
@@ -396,13 +415,29 @@ fun SettingsScreen(
                                     if (wantOn) {
                                         if (notifPermissionGranted()) {
                                             viewModel.onNotificationsPermissionGranted()
+                                            permissionTick++
                                         } else {
                                             permissionLauncher.launch(
                                                 android.Manifest.permission.POST_NOTIFICATIONS
                                             )
                                         }
                                     } else {
+                                        // Disabling: we can't revoke POST_NOTIFICATIONS programmatically
+                                        // on Android 13+. Unsubscribe from topics and open the system
+                                        // notification settings so the user can flip the OS switch
+                                        // — on returning, ON_RESUME bumps `permissionTick` and the UI
+                                        // catches up.
                                         viewModel.onNotificationsDisabled()
+                                        runCatching {
+                                            context.startActivity(
+                                                Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                                                    putExtra(
+                                                        android.provider.Settings.EXTRA_APP_PACKAGE,
+                                                        context.packageName,
+                                                    )
+                                                }
+                                            )
+                                        }
                                     }
                                 },
                                 colors = SwitchDefaults.colors(

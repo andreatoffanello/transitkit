@@ -4,15 +4,17 @@ appId: com.transitkit.appalcart
 # (primo è walking-only, secondo invece ha WALK+BUS+WALK)
 
 - launchApp:
-    clearState: true
-- waitForAnimationToEnd
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      text: "Home"
+    timeout: 6000
 
 # Setup come ios_multimodal: arriva alla lista journey
-- tapOn:
-    point: "50%, 28%"
+- tapOn: "Destination"
 - waitForAnimationToEnd
 
-- tapOn: "Scegli sulla mappa"
+- tapOn: "Choose on map"
 - waitForAnimationToEnd:
     timeout: 3000
 
@@ -24,7 +26,7 @@ appId: com.transitkit.appalcart
 - waitForAnimationToEnd:
     timeout: 2500
 
-- tapOn: "Conferma posizione"
+- tapOn: "Confirm location"
 - waitForAnimationToEnd:
     timeout: 5000
 

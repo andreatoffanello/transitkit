@@ -4,7 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -110,17 +108,29 @@ fun AlertCard(
             alert.affectedRouteIds
                 .mapNotNull { routesById[it] }
                 .sortedBy { it.name }
-                .take(12)
         }
         if (resolvedRoutes.isNotEmpty()) {
+            // Single-line row: up to 6 badges + "+N" as plain text. Horizontal
+            // scroll inside the card competed with the alert list scroll and
+            // hid badges past the viewport. The full list lives in AlertDetail.
+            val maxVisible = 6
+            val visible = resolvedRoutes.take(maxVisible)
+            val overflow = resolvedRoutes.size - visible.size
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                resolvedRoutes.forEach { route ->
+                visible.forEach { route ->
                     LineBadge(route = route, size = LineBadgeSize.Small)
+                }
+                if (overflow > 0) {
+                    Text(
+                        text = "+$overflow",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.textSecondary,
+                    )
                 }
             }
         }

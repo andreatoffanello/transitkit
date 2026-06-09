@@ -12,9 +12,11 @@ appId: com.transitkit.appalcart
 #  4. place → stop              (swap: pin libero origin, fermata dest)
 
 - launchApp:
-    clearState: true
-
-- waitForAnimationToEnd
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      text: "Home"
+    timeout: 6000
 
 # ============================================================
 # COMBO 1: userLocation → place
@@ -28,13 +30,13 @@ appId: com.transitkit.appalcart
 - waitForAnimationToEnd
 
 # Tap "Scegli sulla mappa"
-- tapOn: "Scegli sulla mappa"
+- tapOn: "Choose on map"
 - waitForAnimationToEnd
 
 - takeScreenshot: flows/screenshots/combo1_map_picker
 
 # Conferma posizione libera
-- tapOn: "Conferma posizione"
+- tapOn: "Confirm location"
 - waitForAnimationToEnd:
     timeout: 4000
 
@@ -51,7 +53,7 @@ appId: com.transitkit.appalcart
     point: "30%, 19%"
 - waitForAnimationToEnd
 
-- tapOn: "Scegli sulla mappa"
+- tapOn: "Choose on map"
 - waitForAnimationToEnd
 
 - takeScreenshot: flows/screenshots/combo2_map_picker_origin
@@ -65,7 +67,7 @@ appId: com.transitkit.appalcart
 - waitForAnimationToEnd:
     timeout: 2000
 
-- tapOn: "Conferma posizione"
+- tapOn: "Confirm location"
 - waitForAnimationToEnd:
     timeout: 4000
 

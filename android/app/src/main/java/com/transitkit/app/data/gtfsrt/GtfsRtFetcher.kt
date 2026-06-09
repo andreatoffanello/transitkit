@@ -118,6 +118,9 @@ class GtfsRtFetcher @Inject constructor(
                 else -> skip(source, wireType)
             }
         }
+        // Drop physically implausible delays — see DELAY_*_BOUND_SEC for the
+        // asymmetric thresholds and rationale.
+        if (delay !in DELAY_LOWER_BOUND_SEC..DELAY_UPPER_BOUND_SEC) return null
         return tripId?.let { it to delay }
     }
 
@@ -148,6 +151,17 @@ class GtfsRtFetcher @Inject constructor(
     // -------------------------------------------------------------------------
 
     private companion object {
+        // GTFS-RT delay plausibility window (seconds). Asymmetric because:
+        // - early > 5 min is almost always noise: trip mismatch (vehicle
+        //   attached to wrong trip), vehicle waiting at terminal pre-departure,
+        //   optimistic linear extrapolations on future stops, stale ghost trips;
+        // - late up to 30 min is realistic for peripheral / overnight routes
+        //   in trouble. Beyond, null (schedule-only) beats misinformation.
+        // Measured on Movete's ATAC feed (633 trips, 12.8k stop_time_updates):
+        // arrivalDelay median -136s, 33% of samples outside ±5 min.
+        const val DELAY_LOWER_BOUND_SEC = -300
+        const val DELAY_UPPER_BOUND_SEC = 1800
+
         // Wire types
         const val WIRE_VARINT = 0
         const val WIRE_64BIT  = 1

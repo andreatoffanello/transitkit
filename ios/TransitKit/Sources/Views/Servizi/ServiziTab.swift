@@ -9,6 +9,12 @@ struct ServiziTab: View {
     let config: OperatorConfig
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isPresented) private var isPresented
+    @Environment(DeepLinkRouter.self) private var router
+
+    /// Id of the service to auto-push when `transitkit://servizi/<id>` is
+    /// consumed. `ServiceInfo` isn't Hashable end-to-end, so we bind the id
+    /// and re-resolve the model inside the destination closure.
+    @State private var deeplinkServiceId: String? = nil
 
     var body: some View {
         NavigationStack {
@@ -27,6 +33,11 @@ struct ServiziTab: View {
             .background(AppTheme.background.ignoresSafeArea())
             .navigationTitle(String(localized: "services_title"))
             .navigationBarTitleDisplayMode(.large)
+            .navigationDestination(item: $deeplinkServiceId) { id in
+                if let svc = config.services?.first(where: { $0.id == id }) {
+                    ServiceDetailView(service: svc, phone: config.contact?.phone)
+                }
+            }
             .toolbar {
                 if isPresented {
                     ToolbarItem(placement: .topBarTrailing) {
@@ -41,6 +52,23 @@ struct ServiziTab: View {
                     }
                 }
             }
+            .onAppear { consumePendingServiziId() }
+        }
+    }
+
+    /// Honor `transitkit://servizi/<id>` by pushing `ServiceDetailView` for the
+    /// matching service. Unknown ids are dropped silently — the user lands on
+    /// the index, which is a friendlier failure than a blank push.
+    private func consumePendingServiziId() {
+        guard let pendingId = router.pendingServiziId else { return }
+        router.pendingServiziId = nil
+        guard let services = config.services,
+              services.contains(where: { $0.id == pendingId }) else { return }
+        // Small hop so the push happens after NavigationStack mounts; without
+        // this the binding mutation races the initial layout and is dropped.
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(120))
+            deeplinkServiceId = pendingId
         }
     }
 

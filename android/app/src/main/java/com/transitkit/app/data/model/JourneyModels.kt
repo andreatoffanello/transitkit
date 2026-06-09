@@ -45,6 +45,12 @@ data class WalkingLeg(
 val Journey.totalWalkSeconds: Int
     get() = legs.filterIsInstance<WalkingLeg>().sumOf { it.walkSeconds }
 
+/** Total on-board time across all transit legs (seconds). */
+val Journey.totalTransitSeconds: Int
+    get() = legs.filterIsInstance<TransitLeg>()
+        .sumOf { ((it.arrivalTime - it.departureTime) / 1_000L).coerceAtLeast(0L) }
+        .toInt()
+
 data class IntermediateStop(
     val id: String,
     val name: String,

@@ -38,11 +38,21 @@ struct AlertCard: View {
             }
 
             if !affectedRoutes.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 4) {
-                        ForEach(affectedRoutes.prefix(12), id: \.id) { route in
-                            LineBadge(route: route, size: .small)
-                        }
+                // Single-line row: up to 6 badges + "+N" as plain text.
+                // Horizontal scroll inside the card competed with the alert
+                // list scroll and hid badges past the viewport. The full list
+                // lives in AlertDetail.
+                let maxVisible = 6
+                let visible = Array(affectedRoutes.prefix(maxVisible))
+                let overflow = affectedRoutes.count - visible.count
+                HStack(spacing: 4) {
+                    ForEach(visible, id: \.id) { route in
+                        LineBadge(route: route, size: .small)
+                    }
+                    if overflow > 0 {
+                        Text("+\(overflow)")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(AppTheme.textSecondary)
                     }
                 }
             }

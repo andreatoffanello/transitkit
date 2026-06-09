@@ -104,6 +104,14 @@ struct TransitKitApp: App {
 
         case "map":
             if parts.isEmpty {
+                // Bare `transitkit://map` means "give me the clean Map tab".
+                // Clear any leftover preview/filter pendings (route, stop, vehicle)
+                // before the tab switches, otherwise a previous `line/X/map` deeplink
+                // leaves the route chip glued on top of the supposedly-bare Map.
+                router.pendingMapPreviewStop = nil
+                router.pendingMapPreviewRouteId = nil
+                router.pendingMapPreviewDirectionId = nil
+                router.pendingMapPreviewVehicleId = nil
                 router.pendingMapOpen = UUID()
                 return
             }
@@ -180,8 +188,14 @@ struct TransitKitApp: App {
 
         // transitkit://line/<routeId>[/map[/<directionId>]]
         case "line":
-            guard let routeId = parts.first,
-                  let route = store.route(forId: routeId) else { return }
+            guard let routeId = parts.first else { Self.fallbackToHome(router: router); return }
+            guard let route = store.route(forId: routeId) else {
+                #if DEBUG
+                print("[DeepLink] line/\(routeId) — route id not found, falling back to Home")
+                #endif
+                Self.fallbackToHome(router: router)
+                return
+            }
             let openMap = parts.count >= 2 && parts[1] == "map"
             router.autoOpenMap = openMap
             router.pendingDirectionId = openMap && parts.count >= 3 ? Int(parts[2]) : nil
@@ -189,8 +203,14 @@ struct TransitKitApp: App {
 
         // transitkit://stop/<stopId>[/schedule]
         case "stop":
-            guard let stopId = parts.first,
-                  let stop = store.stops.first(where: { $0.id == stopId }) else { return }
+            guard let stopId = parts.first else { Self.fallbackToHome(router: router); return }
+            guard let stop = store.stops.first(where: { $0.id == stopId }) else {
+                #if DEBUG
+                print("[DeepLink] stop/\(stopId) — stop id not found, falling back to Home")
+                #endif
+                Self.fallbackToHome(router: router)
+                return
+            }
             router.openScheduleForStop = parts.count >= 2 && parts[1] == "schedule" ? stop.id : nil
             router.pendingStop = stop
 
@@ -198,12 +218,23 @@ struct TransitKitApp: App {
         case "trip":
             guard parts.count >= 3,
                   let stop = store.stops.first(where: { $0.id == parts[0] })
-            else { return }
+            else {
+                #if DEBUG
+                print("[DeepLink] trip/\(parts.joined(separator: "/")) — stop not found, falling back to Home")
+                #endif
+                Self.fallbackToHome(router: router)
+                return
+            }
             let routeId = parts[1]
             let time = parts[2]
             let deps = store.todayDepartures(forStopId: stop.id)
-            guard let dep = deps.first(where: { $0.routeId == routeId && $0.time == time })
-            else { return }
+            guard let dep = deps.first(where: { $0.routeId == routeId && $0.time == time }) else {
+                #if DEBUG
+                print("[DeepLink] trip/\(parts[0])/\(routeId)/\(time) — departure not found, falling back to Home")
+                #endif
+                Self.fallbackToHome(router: router)
+                return
+            }
             router.pendingTrip = TripTarget(departure: dep, fromStop: stop)
 
         // MARK: Dev
@@ -216,6 +247,13 @@ struct TransitKitApp: App {
         default:
             break
         }
+    }
+
+    /// Soft failure for unrecognised deeplink targets — switch to Home so the
+    /// user lands somewhere sensible instead of "nothing happened". Better than
+    /// silent ignore: from the user's perspective the click did do something.
+    private static func fallbackToHome(router: DeepLinkRouter) {
+        router.pendingTabSwitch = TabSwitch(index: 0)
     }
 
     /// Parses a `when=` deeplink value into a `WhenSelection`, resolving wall-clock

@@ -40,10 +40,13 @@ struct JourneyDetailView: View {
             default: return String(format: NSLocalizedString("planner_change_count", comment: ""), journey.transfers)
             }
         }()
+        let transit: String = journey.totalTransitSeconds >= 60
+            ? " · " + String(format: NSLocalizedString("planner_transit_total", comment: ""), journey.totalTransitSeconds / 60)
+            : ""
         let walk: String = journey.totalWalkSeconds > 90
             ? " · " + String(format: NSLocalizedString("planner_walking_total", comment: ""), journey.totalWalkSeconds / 60)
             : ""
-        return "\(dur) · \(changes)\(walk)"
+        return "\(dur) · \(changes)\(transit)\(walk)"
     }
 
     var body: some View {
@@ -329,9 +332,16 @@ private struct TransitLegView: View {
                                 .font(.system(size: 13))
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)
+                                .truncationMode(.tail)
                         }
                     }
+                    Spacer(minLength: 6)
+                    Text(String(format: NSLocalizedString("planner_leg_duration", comment: ""),
+                                max(1, Int(leg.alightTime.timeIntervalSince(leg.boardTime)) / 60)))
+                        .font(.system(size: 13).monospacedDigit())
+                        .foregroundStyle(.tertiary)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.top, (isFirst || isDirectTransfer) ? 0 : 2)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

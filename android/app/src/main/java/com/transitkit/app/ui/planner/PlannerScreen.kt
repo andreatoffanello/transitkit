@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -296,7 +297,12 @@ fun PlannerScreen(
                     val maxDuration = journeys.maxOf {
                         ((it.arrivalTime - it.departureTime) / 1_000L).coerceAtLeast(0L)
                     }
-                    LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        // Bottom padding parity with HomeScreen / LineeScreen:
+                        // keep the last journey clear of the bottom tab bar.
+                        contentPadding = PaddingValues(bottom = 88.dp),
+                    ) {
                         items(journeys, key = { it.id }) { journey ->
                             JourneyCard(
                                 journey = journey,

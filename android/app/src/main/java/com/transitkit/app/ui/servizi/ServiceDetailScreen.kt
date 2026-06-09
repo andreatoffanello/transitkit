@@ -80,7 +80,7 @@ fun ServiceDetailScreen(
                         Icon(
                             painterResource(LucideIcons.ChevronLeft),
                             contentDescription = stringResource(R.string.cd_indietro),
-                            tint = colors.accent,
+                            tint = colors.textPrimary,
                         )
                     }
                 },
@@ -150,11 +150,48 @@ fun ServiceDetailScreen(
                     .padding(padding),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    stringResource(R.string.services_title),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = colors.textSecondary,
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.padding(32.dp),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(72.dp)
+                            .background(colors.textTertiary.copy(alpha = 0.12f), CircleShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            painter = painterResource(LucideIcons.Info),
+                            contentDescription = null,
+                            tint = colors.textTertiary,
+                            modifier = Modifier.size(36.dp),
+                        )
+                    }
+                    Text(
+                        text = stringResource(R.string.service_not_found_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.textPrimary,
+                        textAlign = TextAlign.Center,
+                    )
+                    Text(
+                        text = stringResource(R.string.service_not_found_subtitle),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.textSecondary,
+                        textAlign = TextAlign.Center,
+                    )
+                    Button(
+                        onClick = onBack,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colors.accent,
+                            contentColor = androidx.compose.ui.graphics.Color.White,
+                        ),
+                        shape = RoundedCornerShape(24.dp),
+                    ) {
+                        Text(stringResource(R.string.action_back_home), fontWeight = FontWeight.SemiBold)
+                    }
+                }
             }
             return@Scaffold
         }

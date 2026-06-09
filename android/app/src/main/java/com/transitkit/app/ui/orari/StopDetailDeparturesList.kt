@@ -79,6 +79,18 @@ internal fun DeparturesList(
     val firstDepartures = departures.take(5)
     val extraDepartures = if (departures.size > 5) departures.drop(5) else emptyList()
 
+    // Group by headsign so a multi-direction stop (e.g. a corridor where the
+    // same route passes in both ways with different destinations) doesn't
+    // interleave the two directions by time — the user wants to scan their
+    // own way only. `departures` is already sorted upstream, and `groupBy`
+    // preserves first-occurrence order, so the resulting `directionGroups`
+    // are sorted by earliest departure naturally. Pattern from Movete
+    // `133091db2`. Falls back to flat 5+5 when there's a single direction.
+    val directionGroups = remember(departures) {
+        departures.groupBy { it.headsign }.toList()
+    }
+    val useGroups = directionGroups.size >= 2
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         state = listState,
@@ -96,7 +108,65 @@ internal fun DeparturesList(
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 6.dp),
             )
         }
-        item(key = "departure_card") {
+        if (useGroups) {
+            directionGroups.forEachIndexed { groupIdx, (headsign, groupDeps) ->
+                item(key = "dir_header_$groupIdx") {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(
+                            start = 16.dp,
+                            end = 16.dp,
+                            top = if (groupIdx == 0) 0.dp else 14.dp,
+                            bottom = 6.dp,
+                        ),
+                    ) {
+                        Icon(
+                            painter = painterResource(LucideIcons.ArrowRight),
+                            contentDescription = null,
+                            tint = colors.textSecondary,
+                            modifier = Modifier.size(12.dp),
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = headsign.ifBlank { stringResource(R.string.prossime_partenze) },
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = colors.textSecondary,
+                        )
+                    }
+                }
+                item(key = "dir_card_$groupIdx") {
+                    val visibleDeps = groupDeps.take(8)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(colors.bgSecondary)
+                            .border(1.dp, colors.glassBorder, RoundedCornerShape(14.dp)),
+                    ) {
+                        visibleDeps.forEachIndexed { index, departure ->
+                            DepartureRow(
+                                departure = departure,
+                                isNext = groupIdx == 0 && index == 0,
+                                operatorTimezone = operatorTimezone,
+                                stopSequence = stopSequenceByRouteId[departure.routeId],
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onNavigateToTrip(departure)
+                                },
+                            )
+                            if (index < visibleDeps.lastIndex) {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(start = 16.dp),
+                                    color = colors.separator,
+                                    thickness = 0.5.dp,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        } else item(key = "departure_card") {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

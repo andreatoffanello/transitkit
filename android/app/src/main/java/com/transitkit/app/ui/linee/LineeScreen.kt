@@ -88,6 +88,7 @@ fun LineeScreen(
     val routes by viewModel.routes.collectAsStateWithLifecycle()
     val stopNamesByRouteId by viewModel.stopNamesByRouteId.collectAsStateWithLifecycle()
     val recentRouteIds by viewModel.recentRouteIds.collectAsStateWithLifecycle()
+    val favoriteRouteIds by viewModel.favoriteRouteIds.collectAsStateWithLifecycle()
     val liveCountByRouteId by viewModel.liveCountByRouteId.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val scheduleLoadError by viewModel.scheduleLoadError.collectAsStateWithLifecycle()
@@ -151,6 +152,7 @@ fun LineeScreen(
             query = searchQuery,
             colors = colors,
             recentRouteIds = recentRouteIds,
+            favoriteRouteIds = favoriteRouteIds,
             liveCountByRouteId = liveCountByRouteId,
             onRouteClick = { routeId ->
                 viewModel.recordRouteVisit(routeId)
@@ -171,6 +173,7 @@ private fun LineeContent(
     query: String,
     colors: TransitColors,
     recentRouteIds: List<String> = emptyList(),
+    favoriteRouteIds: List<String> = emptyList(),
     liveCountByRouteId: Map<String, Int> = emptyMap(),
     onRouteClick: (routeId: String) -> Unit = {},
 ) {
@@ -192,14 +195,21 @@ private fun LineeContent(
     }
     val hasMultipleTypes = groupedRoutes.size > 1
     val routeById = remember(routes) { routes.associateBy { it.id } }
-    val recentRoutes = remember(recentRouteIds, routeById) {
-        recentRouteIds.mapNotNull { routeById[it] }
+    val favoriteRoutes = remember(favoriteRouteIds, routeById) {
+        favoriteRouteIds.mapNotNull { routeById[it] }
     }
+    val favoriteIdSet = remember(favoriteRouteIds) { favoriteRouteIds.toSet() }
+    // Recents exclude routes already shown as favorites — avoid duplicate rows
+    // when an item is both starred and recently opened.
+    val recentRoutes = remember(recentRouteIds, routeById, favoriteIdSet) {
+        recentRouteIds.mapNotNull { routeById[it] }.filter { it.id !in favoriteIdSet }
+    }
+    val showFavorites = query.isBlank() && favoriteRoutes.isNotEmpty()
     val showRecents = query.isBlank() && recentRoutes.isNotEmpty()
     val context = LocalContext.current
     val listState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() }
 
-    if (routes.isEmpty() && !showRecents) {
+    if (routes.isEmpty() && !showRecents && !showFavorites) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -222,6 +232,32 @@ private fun LineeContent(
         contentPadding = PaddingValues(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 88.dp),
         verticalArrangement = Arrangement.spacedBy(0.dp),
     ) {
+        if (showFavorites) {
+            item(key = "header_mie_linee") {
+                SectionLabel(stringResource(R.string.section_mie_linee), colors)
+            }
+            item(key = "mie_linee_card") {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(colors.bgSecondary)
+                        .border(1.dp, colors.glassBorder, RoundedCornerShape(16.dp)),
+                ) {
+                    favoriteRoutes.forEachIndexed { idx, route ->
+                        RouteListItem(route, stopNamesByRouteId[route.id], liveCountByRouteId[route.id] ?: 0, colors) { onRouteClick(route.id) }
+                        if (idx < favoriteRoutes.lastIndex) {
+                            HorizontalDivider(modifier = Modifier.padding(start = 76.dp), color = colors.separator, thickness = 0.5.dp)
+                        }
+                    }
+                }
+            }
+            if (showRecents) {
+                item(key = "spacer_after_favorites") {
+                    Spacer(Modifier.height(12.dp))
+                }
+            }
+        }
         if (showRecents) {
             item(key = "header_recenti") {
                 SectionLabel(stringResource(R.string.section_recenti), colors)
@@ -242,6 +278,8 @@ private fun LineeContent(
                     }
                 }
             }
+        }
+        if (showFavorites || showRecents) {
             item(key = "divider_all") {
                 HorizontalDivider(color = colors.separator, thickness = 0.5.dp, modifier = Modifier.padding(top = 8.dp))
             }

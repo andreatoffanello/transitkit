@@ -59,7 +59,7 @@ import kotlinx.coroutines.launch
 )
 @Composable
 fun MappaScreen(
-    onNavigateToStop: (stopId: String) -> Unit = {},
+    onNavigateToStop: (stopId: String, stopName: String) -> Unit = { _, _ -> },
     onOpenTripDetail: (tripId: String, fromStopId: String, routeName: String, routeColor: String) -> Unit = { _, _, _, _ -> },
     initialRouteId: String? = null,
     initialVehicleId: String? = null,
@@ -550,7 +550,7 @@ fun MappaScreen(
                                 isLoading = isDeparturesLoading,
                                 operatorTimezoneId = viewModel.operatorTimezoneId,
                                 onClose = { viewModel.clearSelectedStop() },
-                                onNavigateToStop = onNavigateToStop,
+                                onNavigateToStop = { stopId -> onNavigateToStop(stopId, stop.name) },
                             )
                         }
                     }

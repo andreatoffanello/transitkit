@@ -15,13 +15,13 @@ appId: com.transitkit.appalcart
     id: "btn_navigate_sheet"
 - extendedWaitUntil:
     visible:
-      text: "Parti da qui"
+      text: "Depart from here"
     timeout: 3000
-- assertVisible: "Arriva qui"
-- tapOn: "Parti da qui"
+- assertVisible: "Arrive here"
+- tapOn: "Depart from here"
 - extendedWaitUntil:
     visible:
-      text: "Pianifica viaggio"
+      text: "Plan a trip"
     timeout: 5000
 - extendedWaitUntil:
     visible:

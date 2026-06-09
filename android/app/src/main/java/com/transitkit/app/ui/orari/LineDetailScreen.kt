@@ -232,6 +232,7 @@ fun LineDetailScreen(
                     title = stringResource(R.string.line_not_found_title),
                     subtitle = stringResource(R.string.line_not_found_subtitle),
                     onBack = onBack,
+                    icon = LucideIcons.BusFront,
                 )
             }
             return@Scaffold

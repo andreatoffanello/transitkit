@@ -225,7 +225,9 @@ struct PlannerScreen: View {
                 }
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 16)
+            .padding(.top, 16)
+            // Tab bar floating overlay (≈80 pt) eats the last card otherwise.
+            .padding(.bottom, 96)
         }
     }
 

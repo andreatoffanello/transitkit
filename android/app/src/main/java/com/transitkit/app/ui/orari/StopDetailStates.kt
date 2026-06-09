@@ -92,6 +92,7 @@ internal fun NotFoundState(
     title: String,
     subtitle: String,
     onBack: () -> Unit,
+    icon: Int = LucideIcons.MapPin,
 ) {
     val colors = TransitTheme.colors
     Column(
@@ -108,7 +109,7 @@ internal fun NotFoundState(
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                painter = painterResource(LucideIcons.MapPin),
+                painter = painterResource(icon),
                 contentDescription = null,
                 tint = colors.textTertiary,
                 modifier = Modifier.size(36.dp),

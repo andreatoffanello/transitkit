@@ -6491,6 +6491,52 @@
         }
       }
     },
+    "planner_transit_total": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d min on transit"
+          }
+        },
+        "es-419": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d min en transporte"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d min sui mezzi"
+          }
+        }
+      }
+    },
+    "planner_leg_duration": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d min"
+          }
+        },
+        "es-419": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d min"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d min"
+          }
+        }
+      }
+    },
     "planner_walking_total": {
       "extractionState": "manual",
       "localizations": {
@@ -7773,6 +7819,29 @@
         }
       }
     },
+    "settings_location_active_subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Active — nearby stops shown on Home."
+          }
+        },
+        "es-419": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activo — paradas cercanas en Inicio."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attiva — fermate vicine mostrate in Home."
+          }
+        }
+      }
+    },
     "settings_notifications_denied": {
       "extractionState": "manual",
       "localizations": {
@@ -8466,7 +8535,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lines"
+            "value": "Routes"
           }
         },
         "es-419": {

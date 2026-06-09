@@ -80,6 +80,17 @@ class TripDetailViewModel @Inject constructor(
         (state as? TripState.Success)?.originIndex ?: 0
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
+    /// True only when a live vehicle is actually serving this trip RIGHT NOW.
+    /// Used by the timeline to gate the "Now" pill: showing it on a future
+    /// trip's boarding stop (because liveOriginIndex falls back to originIndex)
+    /// misleads the rider into thinking the bus is already there.
+    val hasLiveVehicle: StateFlow<Boolean> = vehicleStore.vehicleByTripId
+        .map { byTripId ->
+            val vehicle = byTripId[tripId] ?: return@map false
+            !vehicle.currentStopId.isNullOrBlank()
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
     init {
         viewModelScope.launch {
             try {

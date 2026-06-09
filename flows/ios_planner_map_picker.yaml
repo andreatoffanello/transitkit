@@ -15,7 +15,7 @@ appId: com.transitkit.appalcart
 - waitForAnimationToEnd
 
 # Ora siamo in LocationPickerView — tap "Scegli sulla mappa"
-- tapOn: "Scegli sulla mappa"
+- tapOn: "Choose on map"
 
 - waitForAnimationToEnd:
     timeout: 3000
@@ -24,7 +24,7 @@ appId: com.transitkit.appalcart
 - takeScreenshot: flows/screenshots/map_picker_pin_check
 
 # Tap "Conferma posizione" — verifica che il dismiss a cascata torni al planner
-- tapOn: "Conferma posizione"
+- tapOn: "Confirm location"
 
 - waitForAnimationToEnd:
     timeout: 4000

@@ -43,7 +43,10 @@ struct MapExpandedControls: View {
 
     private var pill: some View {
         VStack(spacing: 0) {
-            textCell(label: is3D ? "2D" : "3D", action: onToggle3D)
+            // Label reflects CURRENT state, not the action. Users glance at the
+            // pill to know which mode they're in; the action (toggle) is the
+            // tap itself.
+            textCell(label: is3D ? "3D" : "2D", action: onToggle3D)
                 .accessibilityLabel(String(localized: is3D ? "map_switch_to_2d" : "map_switch_to_3d"))
                 .accessibilityIdentifier("btn_map_toggle_3d")
 

@@ -6,15 +6,16 @@ appId: com.transitkit.appalcart
 # fino a 5 intermediate stops per leg.
 
 - launchApp:
-    clearState: true
-- waitForAnimationToEnd:
-    timeout: 3000
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      text: "Home"
+    timeout: 6000
 
-- tapOn:
-    point: "50%, 28%"
+- tapOn: "Destination"
 - waitForAnimationToEnd
 
-- tapOn: "Scegli sulla mappa"
+- tapOn: "Choose on map"
 - waitForAnimationToEnd:
     timeout: 3000
 
@@ -29,7 +30,7 @@ appId: com.transitkit.appalcart
 - waitForAnimationToEnd:
     timeout: 2500
 
-- tapOn: "Conferma posizione"
+- tapOn: "Confirm location"
 - waitForAnimationToEnd:
     timeout: 5000
 

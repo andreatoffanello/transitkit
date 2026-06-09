@@ -13,8 +13,11 @@ appId: com.transitkit.appalcart
     timeout: 5000
 - assertVisible:
     id: "btn_line_map"
+# Toolbar item (placement: .topBarTrailing) — Maestro does not expose the second
+# ToolbarItem's resource-id when two items share the same placement.
+# Assert via accessibilityLabel ("Line map") which IS visible in the a11y tree.
 - extendedWaitUntil:
     visible:
-      id: "btn_expand_line_map"
-    timeout: 3000
-- assertVisible: "Fermate servite"
+      text: "Line map"
+    timeout: 4000
+- assertVisible: "Stops served"

@@ -53,10 +53,11 @@ import kotlinx.coroutines.isActive
  * Operator map background — parità con `VeniceMapBackground` di DoVe (civici).
  *
  * Ottimizzazioni applicate (in commento dove sono):
- *  - **Quick win #1**: tempo avanza a ~30 fps tramite `withFrameNanos` con
- *    accumulator (33 ms budget). Le onde sin operano a 0.5–1.6 rad/s: un cap
- *    a 30 fps non si distingue percettivamente da 60+ fps ma dimezza il
- *    workload GPU dello shader.
+ *  - **Quick win #1**: tempo avanza a ~15 fps tramite `withFrameNanos` con
+ *    accumulator (66 ms budget). Le onde sin operano a 0.5–1.6 rad/s: il cap
+ *    a 15 fps non si distingue percettivamente da 30/60 fps ma dimezza
+ *    ulteriormente il workload GPU dello shader (benefit termico misurato
+ *    su device piccoli su Movete).
  *  - **Quick win #2**: shader stack renderizzato a metà risoluzione (¼ pixel)
  *    e upscalato 2× via `graphicsLayer`. Il fragment shader è dominante e
  *    l'effetto è blurry/ambient — l'upscale è invisibile.
@@ -184,8 +185,11 @@ private val glowLayers = listOf(
     GlowLayer(sharpness = 1.0f, blurDp = 0f,  opacityLight = 0.36f, opacityDark = 0.48f),
 )
 
-// Quick win #1: ~30 fps cap.
-private const val FRAME_BUDGET_NS = 33_000_000L
+// Quick win #1: ~15 fps cap. Le onde sin a 0.5–1.6 rad/s sono percettivamente
+// indistinguibili da 30+ fps, e dimezzare ancora il framerate dimezza il
+// workload GPU dello shader. Misurato come benefit termico sensibile su
+// device piccoli — pattern ereditato da Movete (CityMapBackground).
+private const val FRAME_BUDGET_NS = 66_666_666L
 
 // ── Public composable ────────────────────────────────────────────────────────
 

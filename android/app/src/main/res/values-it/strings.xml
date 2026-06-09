@@ -93,6 +93,7 @@
 
     <!-- Orari — section headers -->
     <string name="section_recenti">Recenti</string>
+    <string name="section_mie_linee">Le mie linee</string>
     <string name="section_tutte_fermate">Tutte le fermate</string>
     <string name="section_tutte_linee">Tutte le linee</string>
 
@@ -127,6 +128,10 @@
     <string name="stop_not_found_subtitle">Questa fermata non è più in servizio o il link è obsoleto.</string>
     <string name="line_not_found_title">Linea non trovata</string>
     <string name="line_not_found_subtitle">Questa linea non è più attiva o il link è obsoleto.</string>
+    <string name="alert_not_found_title">Avviso non trovato</string>
+    <string name="alert_not_found_subtitle">Questo avviso non è più attivo o il link è obsoleto.</string>
+    <string name="service_not_found_title">Servizio non trovato</string>
+    <string name="service_not_found_subtitle">Questo servizio non è più disponibile o il link è obsoleto.</string>
     <string name="action_back_home">Torna alla home</string>
 
     <!-- StopDetailScreen — day group labels for full-schedule sheet -->
@@ -143,8 +148,9 @@
     <string name="fermate_servite">Fermate servite</string>
     <string name="stop_count_fermate">%1$d fermate</string>
     <string name="live_count">%1$d live</string>
-    <string name="home_operator_card_live">%1$d mezzi in servizio</string>
+    <string name="home_operator_card_live">%1$d live ora</string>
     <string name="home_operator_card_no_live">Nessun mezzo live</string>
+    <string name="home_operator_card_routes">%1$d linee</string>
     <string name="label_coincidenza">Coincidenza</string>
 
     <!-- Info — section headers -->
@@ -399,6 +405,7 @@
     <!-- Planner additions -->
     <string name="planner_from">Da…</string>
     <string name="planner_to">A…</string>
+    <string name="planner_my_location">La mia posizione</string>
     <string name="planner_now">Ora</string>
     <string name="planner_depart_at">Parti alle</string>
     <string name="planner_arrive_by">Arriva entro</string>
@@ -430,6 +437,8 @@
     <string name="planner_one_transfer">1 cambio</string>
     <string name="planner_n_transfers">%1$d cambi</string>
     <string name="planner_subtitle_walking"> · %1$d min a piedi</string>
+    <string name="planner_subtitle_transit"> · %1$d min sui mezzi</string>
+    <string name="planner_leg_duration">%1$d min</string>
     <string name="planner_detail_title">Itinerario</string>
     <string name="planner_data_unavailable">Dati viaggio non disponibili</string>
     <string name="planner_data_unavailable_hint">Controlla la connessione e riprova.</string>

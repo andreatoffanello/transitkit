@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.transitkit.app.data.model.ResolvedStop
 import com.transitkit.app.data.model.ScheduleRoute
 import com.transitkit.app.data.repository.ScheduleRepository
+import com.transitkit.app.data.store.FavoritesStore
 import com.transitkit.app.data.store.SearchHistoryStore
 import com.transitkit.app.data.store.VehicleStore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,6 +34,7 @@ class OrariViewModel @Inject constructor(
     private val repository: ScheduleRepository,
     private val historyStore: SearchHistoryStore,
     private val vehicleStore: VehicleStore,
+    private val favoritesStore: FavoritesStore,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -129,6 +131,9 @@ class OrariViewModel @Inject constructor(
     }
 
     val recentRouteIds: StateFlow<List<String>> = historyStore.recentRouteIds
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    val favoriteRouteIds: StateFlow<List<String>> = favoritesStore.favoriteRouteIds
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     fun recordRouteVisit(routeId: String) {

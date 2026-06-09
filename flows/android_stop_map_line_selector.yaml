@@ -1,0 +1,25 @@
+appId: com.transitkit.appalcart
+---
+# Verifica: mappa espansa del dettaglio fermata → selettore linea.
+# Tap badge = vista linea (polilinea + fermate + fit camera);
+# ri-tap = deselect (camera torna sulla fermata, layer puliti).
+
+- launchApp:
+    clearState: false
+- openLink: "transitkit://stop/appalcart_asu_skywalk"
+- extendedWaitUntil:
+    visible:
+      text: "ASU Skywalk"
+    timeout: 10000
+- tapOn: "Expand map"
+- waitForAnimationToEnd
+# Seleziona la linea GY → vista linea (primo match = badge del track)
+- tapOn:
+    text: "GY"
+    index: 0
+- waitForAnimationToEnd
+# Deselect → camera torna sulla fermata, layer puliti
+- tapOn:
+    text: "GY"
+    index: 0
+- waitForAnimationToEnd

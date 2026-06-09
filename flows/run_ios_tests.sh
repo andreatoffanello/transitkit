@@ -70,7 +70,8 @@ for flow in \
   "$SCRIPT_DIR/ios_line_detail_map_hero.yaml" \
   "$SCRIPT_DIR/ios_line_detail_map_expand.yaml" \
   "$SCRIPT_DIR/ios_stop_detail_full_schedule.yaml" \
-  "$SCRIPT_DIR/ios_mappa_stop_preview.yaml"; do
+  "$SCRIPT_DIR/ios_mappa_stop_preview.yaml" \
+  "$SCRIPT_DIR/ios_stop_map_line_selector.yaml"; do
   run_flow "$flow"
 done
 

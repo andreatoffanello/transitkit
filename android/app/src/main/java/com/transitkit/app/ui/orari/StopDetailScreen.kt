@@ -125,6 +125,7 @@ fun StopDetailScreen(
                     }
                 },
                 actions = {
+                    if (departuresState !is DeparturesState.NotFound) {
                     val favScale by animateFloatAsState(
                         targetValue = if (isFavorite) 1.25f else 1f,
                         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
@@ -150,6 +151,7 @@ fun StopDetailScreen(
                             )
                         }
                     }
+                    } // end if not NotFound
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = colors.background,
@@ -283,6 +285,7 @@ fun StopDetailScreen(
             StopDetailExpandedMap(
                 stop = stop,
                 accent = colors.accent,
+                availableRoutes = availableRoutes,
                 onDismiss = { showExpandedMap = false },
             )
         }

@@ -168,7 +168,9 @@ struct StopDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .adaptiveNavBarBackground()
         .toolbar(.hidden, for: .tabBar)
-        .toolbar(.visible, for: .navigationBar)
+        // Nav bar nascosta quando la mappa è espansa — l'overlay è immersivo
+        // e il track badge linee vive nella zona alta (Android parity).
+        .toolbar(mapExpanded ? .hidden : .visible, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .principal) {
                 VStack(spacing: 1) {
@@ -226,15 +228,18 @@ struct StopDetailView: View {
         }
         .onAppear {
             mapPosition = flyInStartCamera
-            if router.openScheduleForStop == stop.id {
-                router.openScheduleForStop = nil
-                Task { @MainActor in
-                    try? await Task.sleep(nanoseconds: 400_000_000)
-                    showFullSchedule = true
-                }
-            }
         }
         .onDisappear { }
+        // React both on first appear AND on a fresh deeplink coming in while
+        // this StopDetailView is already on screen (e.g. user is on stop A and
+        // a `transitkit://stop/B/schedule` arrives). `onAppear` alone misses
+        // the second case because the view stays mounted across the push.
+        .task(id: router.openScheduleForStop) {
+            guard router.openScheduleForStop == stop.id else { return }
+            router.openScheduleForStop = nil
+            try? await Task.sleep(for: .milliseconds(400))
+            showFullSchedule = true
+        }
         .task(id: stop.id) {
             // Fly-in: let tiles load at far distance, then zoom in
             mapPosition = flyInStartCamera
@@ -303,6 +308,25 @@ struct StopDetailView: View {
         let allNext = upcomingDepartures
         let visible = showMoreDepartures ? allNext : Array(allNext.prefix(initialVisibleCount))
         let extraCount = allNext.count - initialVisibleCount
+        // Group upcoming departures by headsign so a multi-direction stop
+        // doesn't interleave the two directions by time. `allNext` is already
+        // sorted upstream; `Dictionary(grouping:by:)` is unordered, so we
+        // collect group keys in first-occurrence order. Falls back to the
+        // existing flat 5+N rendering when there's a single direction.
+        // Pattern from Movete `133091db2`.
+        let directionGroups: [(headsign: String, deps: [Departure])] = {
+            var seen: [String: [Departure]] = [:]
+            var order: [String] = []
+            for dep in allNext {
+                if seen[dep.headsign] == nil {
+                    seen[dep.headsign] = []
+                    order.append(dep.headsign)
+                }
+                seen[dep.headsign]?.append(dep)
+            }
+            return order.map { ($0, seen[$0] ?? []) }
+        }()
+        let useGroups = directionGroups.count >= 2
 
         return VStack(spacing: 0) {
             // Stop name header
@@ -358,7 +382,13 @@ struct StopDetailView: View {
             }
 
             // Departure rows, empty states
-            if !visible.isEmpty {
+            if useGroups {
+                ForEach(Array(directionGroups.enumerated()), id: \.offset) { idx, group in
+                    directionGroupSection(headsign: group.headsign,
+                                          deps: Array(group.deps.prefix(8)),
+                                          isFirst: idx == 0)
+                }
+            } else if !visible.isEmpty {
                 nextDeparturesSection(visible)
 
                 if !showMoreDepartures && extraCount > 0 {
@@ -512,6 +542,42 @@ struct StopDetailView: View {
             .clipShape(RoundedRectangle(cornerRadius: 14))
             .padding(.horizontal, 16)
             .padding(.bottom, 12)
+        }
+    }
+
+    /// Single direction section: "→ {headsign}" header + capped departure list.
+    /// Used when a stop has ≥2 distinct headsigns (multi-direction). Pattern
+    /// from Movete `133091db2`. The first section's first row is the "next"
+    /// row globally (gets the prominent treatment in `DepartureRow`).
+    private func directionGroupSection(headsign: String, deps: [Departure], isFirst: Bool) -> some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 4) {
+                LucideIcon.arrowRight.sized(11)
+                    .foregroundStyle(AppTheme.textSecondary)
+                Text(headsign)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(AppTheme.textSecondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 20)
+            .padding(.top, isFirst ? 8 : 14)
+            .padding(.bottom, 6)
+
+            VStack(spacing: 0) {
+                ForEach(Array(deps.enumerated()), id: \.element.id) { index, dep in
+                    let isHeroRow = isFirst && index == 0
+                    NavigationLink(value: TripTarget(departure: dep, fromStop: stop)) {
+                        DepartureRow(departure: dep, isFirst: isHeroRow, hideBadge: filterLine != nil)
+                            .padding(.horizontal, 20)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("departure_row_\(dep.id)")
+                }
+            }
+            .background(AppTheme.bgSecondary.opacity(0.4))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .padding(.horizontal, 16)
         }
     }
 

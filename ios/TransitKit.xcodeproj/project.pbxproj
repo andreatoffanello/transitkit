@@ -16,6 +16,7 @@
 		0D3364F8923B6F37D3DD18D1 /* StopsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9601C0115B556918E079DD02 /* StopsListView.swift */; };
 		0E3B58D6D489F95CFD11E41D /* PlannerScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = E06DDEBAA46B9DDB09944BFF /* PlannerScreen.swift */; };
 		104BD8CFDE2B1FD1AC43E64C /* SearchHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55B43C749CFDA933F18B4CD4 /* SearchHistoryStore.swift */; };
+		11FD835B0A2539934E548D77 /* MapLineFocusContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5058C4F2340AA7BEB6085B6A /* MapLineFocusContent.swift */; };
 		12DD8560C237FA40F6C9984E /* LineBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B10BEFD5CA21B9EBA3ADE1D7 /* LineBadge.swift */; };
 		189C94AE0BF1C9D3D6AB86F9 /* HomeTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C2048933225A12B749A4D7F /* HomeTab.swift */; };
 		1AB5B80CF57EA812533E06CE /* MapActiveRouteChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA366AD2544EFE026191866B /* MapActiveRouteChip.swift */; };
@@ -57,6 +58,7 @@
 		6334A3413535A5777E38BDDE /* OnboardingStoriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D9E5FECBE60202A55805E87 /* OnboardingStoriesView.swift */; };
 		661FF8A42FCC29B7B74EB5C0 /* FavoritesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA9BD090565D8838CFA04A8B /* FavoritesManager.swift */; };
 		6A0D75C54862E0398C5758E0 /* DirectionPills.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAF247C63BA3D783DA4D75F5 /* DirectionPills.swift */; };
+		6C28DCB58324B1AB3E1E4422 /* ExpandedMapLineTrack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D6B59FB234811C830B4142D /* ExpandedMapLineTrack.swift */; };
 		6CE652E0DDE136C66F6F0FED /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DA2366D32AF5DBEACB5DC2 /* GlassCard.swift */; };
 		7299B1936085CA7C0D5F426B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E7E5839E8A1674A88E34D940 /* Assets.xcassets */; };
 		75BF9DB9D7CF61A90CEBA2E4 /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02200CAFBA7484EB04E1B31A /* FlowLayout.swift */; };
@@ -157,6 +159,7 @@
 		333291D9DBA313225407E8DC /* PushNotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationManager.swift; sourceTree = "<group>"; };
 		3467B8169A684F3587919902 /* TransitMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransitMapView.swift; sourceTree = "<group>"; };
 		38AB28B4038DBF3ED421D1D0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		3D6B59FB234811C830B4142D /* ExpandedMapLineTrack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandedMapLineTrack.swift; sourceTree = "<group>"; };
 		3D9E5FECBE60202A55805E87 /* OnboardingStoriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingStoriesView.swift; sourceTree = "<group>"; };
 		3ECCF222F6E839416B5E8973 /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
 		40C190F3ADD2E1B0E41BDFC6 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
@@ -165,6 +168,7 @@
 		4A20EEA199B52A3A2B66325A /* FavoritesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesListView.swift; sourceTree = "<group>"; };
 		4B9FD10B5C48C0410259687C /* VehicleStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleStore.swift; sourceTree = "<group>"; };
 		4D713C24D42DB86C1C7593BE /* VehicleDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleDetailSheet.swift; sourceTree = "<group>"; };
+		5058C4F2340AA7BEB6085B6A /* MapLineFocusContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapLineFocusContent.swift; sourceTree = "<group>"; };
 		50FF8B27808C0B5F4F797E8A /* MapExpandedControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapExpandedControls.swift; sourceTree = "<group>"; };
 		5481BF9847C559057368FA6B /* StopAnnotationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopAnnotationView.swift; sourceTree = "<group>"; };
 		55B43C749CFDA933F18B4CD4 /* SearchHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchHistoryStore.swift; sourceTree = "<group>"; };
@@ -405,6 +409,7 @@
 				20EEB364FD8859B0CC69B811 /* Components */,
 				956BB3A2B098FB4B81F4E59E /* LineMapView.swift */,
 				A338B0B04B601C99D134BD22 /* LinePickerSheet.swift */,
+				5058C4F2340AA7BEB6085B6A /* MapLineFocusContent.swift */,
 				5F3436F501268CE8E925D853 /* MappaTab.swift */,
 				EAD2EE8B1342B1D8E6FD6E2E /* MappaTab+Actions.swift */,
 				718C5B6A9CC4184B6E40E212 /* MapZoomLevels.swift */,
@@ -482,6 +487,7 @@
 		94045D3D0B9D68BAE82FCE22 /* StopDetail */ = {
 			isa = PBXGroup;
 			children = (
+				3D6B59FB234811C830B4142D /* ExpandedMapLineTrack.swift */,
 				EE4A2705F3CB1A7ECFDACC67 /* ExpandedMapOverlay.swift */,
 				271B240F2B60AA029BA142F5 /* FullScheduleSheet.swift */,
 				F1C1A030C8B3A8CBB28C9B90 /* StopAlertsSection.swift */,
@@ -707,6 +713,7 @@
 				6A0D75C54862E0398C5758E0 /* DirectionPills.swift in Sources */,
 				A1E5AD549A70349C0ED89628 /* DockIndicators.swift in Sources */,
 				570955E4E445283DADAE8C0E /* EmptyStateView.swift in Sources */,
+				6C28DCB58324B1AB3E1E4422 /* ExpandedMapLineTrack.swift in Sources */,
 				CAEEDD9CD5BC9C8D5B8B4DBD /* ExpandedMapOverlay.swift in Sources */,
 				B68857B1DA7BAED7A5B10F2D /* FareInfoView.swift in Sources */,
 				093E157BE0797EEFDBE6DE7A /* FavoritesListView.swift in Sources */,
@@ -741,6 +748,7 @@
 				A7139FE92D9B81261286BE0B /* MapControlsColumn.swift in Sources */,
 				4202488BD8DE478C5F167B97 /* MapExpandedControls.swift in Sources */,
 				BC7894F2D9CE75723D0F692C /* MapFloatingOverlays.swift in Sources */,
+				11FD835B0A2539934E548D77 /* MapLineFocusContent.swift in Sources */,
 				91D73AB4317976D04456A5D4 /* MapSearchPill.swift in Sources */,
 				5E5B23034730E1830246C761 /* MapZoomLevels.swift in Sources */,
 				2EA54AB0AABB09A86E3ED092 /* MappaTab+Actions.swift in Sources */,

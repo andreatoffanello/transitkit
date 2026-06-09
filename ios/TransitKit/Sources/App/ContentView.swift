@@ -21,6 +21,14 @@ struct ContentView: View {
     #endif
     @State private var deeplinkAlert: GtfsRtAlert?
 
+    /// Dimensione icone tab bar — gli asset Lucide sono 24pt intrinseci,
+    /// leggermente ridotti per proporzione con le label.
+    private let tabIconPt: CGFloat = 22
+
+    private func tabIcon(_ icon: LucideIcon) -> Image {
+        Image(uiImage: icon.uiImage(pt: tabIconPt))
+    }
+
     var body: some View {
         TabView(selection: $selectedTab) {
             // MARK: Tab 0 — Home
@@ -29,7 +37,7 @@ struct ContentView: View {
                     Label {
                         Text(String(localized: "tab_home"))
                     } icon: {
-                        LucideIcon.home.image
+                        tabIcon(.home)
                     }
                 }
                 .tag(0)
@@ -41,7 +49,7 @@ struct ContentView: View {
                     Label {
                         Text(String(localized: "tab_schedules"))
                     } icon: {
-                        LucideIcon.clock.image
+                        tabIcon(.clock)
                     }
                 }
                 .tag(1)
@@ -53,19 +61,26 @@ struct ContentView: View {
                     Label {
                         Text(String(localized: "tab_lines"))
                     } icon: {
-                        LucideIcon.route.image
+                        tabIcon(.route)
                     }
                 }
                 .tag(2)
                 .accessibilityIdentifier("tab_lines")
 
             // MARK: Tab 3 — Mappa
-            MappaTab(config: config)
+            // NavigationStack is REQUIRED here so MappaTab's
+            // `.navigationDestination(item: $navigationDestinationStop)` can
+            // actually push StopDetailView. Without the wrap the "Open stop"
+            // CTA on the preview card flipped the binding silently and SwiftUI
+            // had no stack to push onto — the preview just dismissed.
+            NavigationStack {
+                MappaTab(config: config)
+            }
                 .tabItem {
                     Label {
                         Text(String(localized: "tab_map"))
                     } icon: {
-                        LucideIcon.map.image
+                        tabIcon(.map)
                     }
                 }
                 .tag(3)
@@ -79,7 +94,7 @@ struct ContentView: View {
                     Label {
                         Text(String(localized: "tab_alerts"))
                     } icon: {
-                        LucideIcon.bell.image
+                        tabIcon(.bell)
                     }
                 }
                 .badge(alertStore.activeAlerts.count)
@@ -105,10 +120,11 @@ struct ContentView: View {
             if rid != nil { selectedTab = 3 }
         }
         .onChange(of: router.pendingMapOpen) { _, id in
-            if id != nil {
-                selectedTab = 3
-                router.pendingMapOpen = nil
-            }
+            // Only switch tabs here — MappaTab consumes `pendingMapOpen` and
+            // wipes its own selection state. If we wiped to nil here too, the
+            // `.onChange(of:)` inside MappaTab could miss the trigger because
+            // SwiftUI may collapse the UUID→nil transition into a single tick.
+            if id != nil { selectedTab = 3 }
         }
         .onChange(of: router.pendingTabSwitch) { _, switchReq in
             guard let switchReq else { return }

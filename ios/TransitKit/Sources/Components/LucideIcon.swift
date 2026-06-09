@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Lucide icon names mapped to asset catalog names.
 /// All icons are stroke-based SVGs (24x24, stroke-width 2, round caps/joins)
@@ -67,6 +68,17 @@ enum LucideIcon: String, CaseIterable {
     var image: Image {
         Image(rawValue, bundle: .main)
             .renderingMode(.template)
+    }
+
+    /// UIImage template rasterizzata alla dimensione data. Serve per i
+    /// `tabItem`: il sistema ignora `.resizable().frame()` sulle Image lì
+    /// dentro e usa la dimensione intrinseca dell'asset (24pt).
+    func uiImage(pt: CGFloat) -> UIImage {
+        guard let base = UIImage(named: rawValue) else { return UIImage() }
+        let size = CGSize(width: pt, height: pt)
+        return UIGraphicsImageRenderer(size: size).image { _ in
+            base.draw(in: CGRect(origin: .zero, size: size))
+        }.withRenderingMode(.alwaysTemplate)
     }
 
     /// Returns a properly-sized image view using .resizable() + .frame().

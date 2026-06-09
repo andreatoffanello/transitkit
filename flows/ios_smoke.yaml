@@ -1,5 +1,8 @@
 appId: com.transitkit.appalcart
 ---
+# Smoke: app si avvia e la tab bar mostra le 5 tab correnti.
+# (Servizi non è più in tab bar — card in Home; "Lines" è "Routes".)
+
 - launchApp:
     clearState: false
 - extendedWaitUntil:
@@ -7,8 +10,7 @@ appId: com.transitkit.appalcart
       text: "Home"
     timeout: 6000
 - assertVisible: "Home"
-- assertVisible: "Orari"
-- assertVisible: "Linee"
-- assertVisible: "Mappa"
-- assertVisible: "Servizi"
-- assertNotVisible: "Pianifica"
+- assertVisible: "Schedules"
+- assertVisible: "Routes"
+- assertVisible: "Map"
+- assertVisible: "Alerts"

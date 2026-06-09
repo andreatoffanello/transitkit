@@ -6,6 +6,10 @@ appId: com.transitkit.appalcart
     clearState: false
 - openLink: "transitkit://map/stop/appalcart_asu_college_st_station"
 - waitForAnimationToEnd
+- extendedWaitUntil:
+    visible:
+      id: "stop_preview_card"
+    timeout: 20000   # cache fredda: lo schedule si scarica al primo avvio
 
 # Preview card deve apparire
 - assertVisible:

@@ -1,6 +1,8 @@
 appId: com.transitkit.appalcart
 ---
-# Verifica: tab Mappa — pill FAB unificato con 3 pulsanti (reset view, recentra, toggle 3D)
+# Verifica: tab Mappa — pill controlli unificato (2D/3D + recentra).
+# Il pill è sempre espanso sulla MapTab (niente btn_map_expand: la mappa è
+# già fullscreen); reset bearing appare solo a mappa ruotata, non assertato.
 
 - launchApp:
     clearState: false
@@ -9,20 +11,22 @@ appId: com.transitkit.appalcart
 - openLink: "transitkit://map"
 - waitForAnimationToEnd
 
-# Verifica i 3 bottoni del pill FAB
-- assertVisible:
-    id: "btn_map_reset_view"
+# Verifica i bottoni del pill (wait: a cache fredda la mappa arriva tardi)
+- extendedWaitUntil:
+    visible:
+      id: "btn_map_toggle_3d"
+    timeout: 20000
 - assertVisible:
     id: "btn_map_recenter"
-- assertVisible:
-    id: "btn_map_toggle_3d"
-
-# Tap reset view
-- tapOn:
-    id: "btn_map_reset_view"
-- waitForAnimationToEnd
 
 # Tap recentra
 - tapOn:
     id: "btn_map_recenter"
 - waitForAnimationToEnd
+
+# Toggle 3D
+- tapOn:
+    id: "btn_map_toggle_3d"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "btn_map_toggle_3d"

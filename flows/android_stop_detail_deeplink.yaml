@@ -6,4 +6,7 @@ appId: com.transitkit.appalcart
     clearState: false
 - openLink: "transitkit://stop/appalcart_asu_appalachian_heights"
 - waitForAnimationToEnd
-- assertVisible: "ASU Appalachian Heights"
+# cache fredda: il nome risolto appare solo a schedule scaricato
+- extendedWaitUntil:
+    visible: "ASU Appalachian Heights"
+    timeout: 20000

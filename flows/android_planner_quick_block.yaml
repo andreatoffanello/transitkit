@@ -1,16 +1,25 @@
 appId: com.transitkit.appalcart
 ---
-# Verifica: PlannerQuickBlock in HomeScreen naviga al Planner con origine precompilata
+# Verifica: PlannerQuickBlock in HomeScreen apre il picker destinazione
+# (UX corrente: From/To inline sul box + bottone Search esplicito — il tap
+# sul box apre la ricerca fermata "To", non più il PlannerScreen)
 
 - launchApp:
     clearState: false
 
-# HomeScreen già visibile (startDestination)
+# HomeScreen già visibile (startDestination) — attendi il box a cache fredda
+- extendedWaitUntil:
+    visible:
+      id: "planner_home_box"
+    timeout: 15000
+
 # Tap sul PlannerQuickBlock glass card
 - tapOn:
-    id: "planner_quick_block"
+    id: "planner_home_box"
 - waitForAnimationToEnd
 
-# Schermata Planner aperta — verifica campo origine precompilato
-# (se c'è una fermata vicina, mostra il nome; altrimenti "From…")
-- assertVisible: "From…"
+# Picker destinazione aperto — opzioni fisse del picker visibili
+- extendedWaitUntil:
+    visible: "Pick on map"
+    timeout: 10000
+- assertVisible: "Current location"

@@ -35,8 +35,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.transitkit.app.R
+import androidx.compose.ui.graphics.compositeOver
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.config.surfaceOverMap
 import com.transitkit.app.data.model.PlannerLocation
 import com.transitkit.app.ui.planner.PlannerViewModel
 import com.transitkit.app.ui.planner.WhenChipRow
@@ -104,8 +106,15 @@ internal fun PlannerHomeBox(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                // iOS parity: light accent tint instead of neutral surface
-                .background(colors.accent.copy(alpha = 0.10f), shape)
+                // Tinta accent OPACA (compositata su surfaceOverMap): iOS qui
+                // usa adaptiveGlass che SFOCA lo shader dietro; Compose non ha
+                // backdrop blur, e la sola velatura 10% lasciava passare il
+                // rumore dello shader sotto i campi Da/A in dark.
+                .background(
+                    colors.accent.copy(alpha = 0.10f)
+                        .compositeOver(colors.surfaceOverMap),
+                    shape,
+                )
                 .semantics { testTag = "planner_home_box" },
         ) {
             // Row Da (origin) — icon column has dot + dashed line below
@@ -219,7 +228,9 @@ private fun SearchButton(
     onClick: () -> Unit,
 ) {
     val colors = TransitTheme.colors
-    val bg = if (enabled) colors.accent else colors.bgSecondary
+    // surfaceOverMap: il bottone sta sopra lo shader — bgSecondary glass
+    // in dark sarebbe trasparente (stessa classe della card su mappa).
+    val bg = if (enabled) colors.accent else colors.surfaceOverMap
     val fg = if (enabled) Color.White else colors.textTertiary
     Row(
         modifier = Modifier

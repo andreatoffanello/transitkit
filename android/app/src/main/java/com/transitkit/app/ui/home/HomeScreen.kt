@@ -33,8 +33,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -274,21 +272,8 @@ fun HomeScreen(
             }
         }
 
-        // Footer gradient fade for readability above the tab bar.
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .height(120.dp)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            TransitTheme.colors.background.copy(alpha = 0.9f),
-                        )
-                    )
-                )
-        )
+        // Niente fade bottom: la tab bar ha già il suo sfondo (tabBarBg 0.9)
+        // — la banda gradiente extra sopra di essa sporcava le card in dark.
     }
 }
 

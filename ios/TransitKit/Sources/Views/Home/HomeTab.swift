@@ -95,18 +95,9 @@ struct HomeTab: View {
                     }
                 }
 
-                // Footer gradient fade per leggibilità disclaimer sullo sfondo
-                VStack {
-                    Spacer()
-                    LinearGradient(
-                        colors: [AppTheme.background.opacity(0), AppTheme.background.opacity(0.9)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .frame(height: 120)
-                    .allowsHitTesting(false)
-                }
-                .ignoresSafeArea()
+                // Niente fade bottom: la tab bar ha già il suo material —
+                // la banda gradiente extra sporcava le card in dark
+                // (parità con Android, rimossa su entrambe).
             }
             .background(AppTheme.background.ignoresSafeArea())
             .fullScreenCover(isPresented: $showOnboarding) {

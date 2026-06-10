@@ -131,12 +131,13 @@ struct LocationPickerMap: View {
                 ))
             }
         } label: {
-            Image(systemName: "location.fill")
-                .font(.system(size: 16, weight: .semibold))
+            // Stessa icona recenter del pill canonico (LucideIcon.navigation)
+            // e token MapChrome — niente SF Symbol ad-hoc.
+            LucideIcon.navigation.sized(MapChrome.iconSize)
                 .foregroundStyle(AppTheme.accent)
-                .frame(width: 44, height: 44)
+                .frame(width: MapChrome.buttonSize, height: MapChrome.buttonSize)
                 .background(.regularMaterial, in: Circle())
-                .shadow(color: .black.opacity(0.15), radius: 6, y: 2)
+                .shadow(color: MapChrome.shadowColor, radius: MapChrome.shadowRadius, y: MapChrome.shadowY)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(String(localized: "map_center_on_me"))

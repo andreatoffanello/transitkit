@@ -281,27 +281,17 @@ fun LocationPickerMapScreen(
                 centerLon = centerLon,
             )
 
-            // Center-on-me FAB — vertically centered on right edge
+            // Center-on-me — bottone canonico del chrome mappa, centrato a destra.
             if (currentLocation != null) {
-                Surface(
+                com.transitkit.app.ui.mappa.MapOverlayButton(
+                    iconRes = LucideIcons.Crosshair,
+                    contentDescription = stringResource(R.string.planner_picker_my_location),
                     onClick = ::centerOnUser,
+                    tint = colors.accent,
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
-                        .padding(end = 16.dp)
-                        .size(44.dp),
-                    shape = CircleShape,
-                    color = colors.background,
-                    shadowElevation = 6.dp,
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            painterResource(LucideIcons.Crosshair),
-                            contentDescription = stringResource(R.string.planner_picker_my_location),
-                            tint = colors.accent,
-                            modifier = Modifier.size(20.dp),
-                        )
-                    }
-                }
+                        .padding(end = 16.dp),
+                )
             }
 
             // Bottom card

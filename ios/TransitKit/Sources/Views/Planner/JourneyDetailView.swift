@@ -130,12 +130,10 @@ struct JourneyDetailView: View {
                         .stroke(Color(.separator), lineWidth: 0.5)
                 )
 
-            LucideIcon.maximize2.sized(13)
-                .foregroundStyle(.primary)
-                .frame(width: 32, height: 32)
-                .background(.regularMaterial, in: Circle())
-                .padding(10)
-                .allowsHitTesting(false)
+            // Decorativo (l'intera preview è tappabile) — stesso bottone
+            // canonico del chrome mappa per coerenza visiva.
+            MapCircleButton(icon: .maximize2)
+                .padding(8)
         }
         .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .onTapGesture {

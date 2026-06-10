@@ -281,19 +281,11 @@ struct StopDetailView: View {
             .mapStyle(.standard(pointsOfInterest: .excludingAll))
             .allowsHitTesting(false)
 
-            Button {
+            MapCircleButton(icon: .maximize2) {
                 withAnimation(.spring(duration: 0.35)) {
                     mapExpanded = true
                 }
-            } label: {
-                LucideIcon.maximize2.sized(14)
-                    .foregroundStyle(.white)
-                    .frame(width: 36, height: 36)
-                    .background(.ultraThinMaterial.opacity(0.9))
-                    .background(Color.black.opacity(0.3))
-                    .clipShape(RoundedRectangle(cornerRadius: 10))
             }
-            .buttonStyle(.plain)
             .padding(12)
             .accessibilityLabel(Text(String(localized: "a11y_expand_map")))
             .accessibilityIdentifier("btn_expand_map")

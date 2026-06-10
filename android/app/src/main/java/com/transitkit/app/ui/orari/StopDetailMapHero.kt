@@ -1,6 +1,5 @@
 package com.transitkit.app.ui.orari
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -8,10 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -19,9 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.dp
@@ -38,6 +32,7 @@ import com.transitkit.app.R
 import com.transitkit.app.config.LocalTransitColors
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.data.model.ResolvedStop
+import com.transitkit.app.ui.mappa.MapOverlayButton
 import com.transitkit.app.ui.mappa.StopSymbolLayer
 import com.transitkit.app.ui.mappa.applyTransitKitHeroStyleConfig
 import kotlinx.coroutines.delay
@@ -140,30 +135,16 @@ internal fun StopDetailMapHero(
                 accentColor = accent,
             )
         }
-        // Expand FAB top-end — apre overlay fullscreen.
-        Surface(
+        // Expand top-end — apre overlay fullscreen. Bottone canonico del
+        // chrome mappa (stessi token del pill controlli).
+        MapOverlayButton(
+            iconRes = LucideIcons.Maximize2,
+            contentDescription = stringResource(R.string.map_expand),
             onClick = onExpand,
+            buttonTestTag = "btn_stop_hero_expand",
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(8.dp)
-                .size(36.dp)
-                .semantics {
-                    contentDescription = ""
-                    testTag = "btn_stop_hero_expand"
-                },
-            shape = RoundedCornerShape(50),
-            color = colors.glassFill,
-            tonalElevation = 2.dp,
-            shadowElevation = 4.dp,
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    painter = painterResource(LucideIcons.Maximize2),
-                    contentDescription = stringResource(R.string.map_expand),
-                    tint = colors.textPrimary,
-                    modifier = Modifier.size(18.dp),
-                )
-            }
-        }
+                .padding(8.dp),
+        )
     }
 }

@@ -145,7 +145,13 @@ internal fun StopSymbolLayer(
                         """["step", ["zoom"], "", ${MapZoomLevels.neighborhoodMaxZoom}, ["get", "$PROP_STOP_NAME"]]"""
                     )
                 )
-                textSize(11.0)
+                // Parametri leggibilità allineati a movete
+                // (MapStopAnnotationLayer.kt): Medium, non il Regular di
+                // default dello style — il testo sottile si impasta col
+                // basemap, soprattutto in dark.
+                textSize(11.5)
+                textFont(listOf("DIN Pro Medium", "Arial Unicode MS Regular"))
+                textMaxWidth(8.0)
                 textAnchor(TextAnchor.TOP)
                 textOffset(listOf(0.0, 1.4))
                 // textAllowOverlap=true + textIgnorePlacement=true:
@@ -156,11 +162,11 @@ internal fun StopSymbolLayer(
                 textOptional(false)
                 textAllowOverlap(true)
                 textIgnorePlacement(true)
-                textColor(Expression.rgb(literal(20.0), literal(20.0), literal(20.0)))
+                textColor(Expression.rgb(literal(26.0), literal(26.0), literal(31.0)))
                 textHaloColor(Expression.rgb(literal(255.0), literal(255.0), literal(255.0)))
                 textHaloWidth(1.5)
-                textHaloBlur(0.5)
-                textPadding(2.0)
+                textHaloBlur(0.4)
+                textPadding(3.0)
             }
         }
     }
@@ -173,13 +179,15 @@ internal fun StopSymbolLayer(
     MapEffect(isDark) { mapView ->
         mapView.mapboxMap.getStyle { style ->
             if (style.styleLayerExists(STOPS_LAYER_ID)) {
+                // Valori identici a movete: dark testo F2F2F7 + halo nero 0.8
+                // (0.92 impastava), light testo 1A1A1F + halo bianco 0.9.
                 style.setStyleLayerProperty(
                     STOPS_LAYER_ID, "text-color",
-                    com.mapbox.bindgen.Value(if (isDark) "rgba(242, 242, 247, 1)" else "rgba(20, 20, 20, 1)"),
+                    com.mapbox.bindgen.Value(if (isDark) "rgba(242, 242, 247, 1)" else "rgba(26, 26, 31, 1)"),
                 )
                 style.setStyleLayerProperty(
                     STOPS_LAYER_ID, "text-halo-color",
-                    com.mapbox.bindgen.Value(if (isDark) "rgba(0, 0, 0, 0.92)" else "rgba(255, 255, 255, 0.95)"),
+                    com.mapbox.bindgen.Value(if (isDark) "rgba(0, 0, 0, 0.8)" else "rgba(255, 255, 255, 0.9)"),
                 )
             }
         }

@@ -76,7 +76,7 @@ targets:
         # English usati se la xcstrings non risolve.
         CFBundleDisplayName: "AppalRider"
         CFBundleShortVersionString: "1.2.1"
-        CFBundleVersion: "10"
+        CFBundleVersion: "11"
         # Apple HIG: la usage description deve spiegare il beneficio per
         # l'utente in modo specifico, distinguere chiaramente chi accede
         # alla posizione (AppalRider, l'app) da chi fornisce i dati

@@ -75,7 +75,7 @@ targets:
         # InfoPlist.xcstrings (en/it/es-419). I valori qui sono i fallback
         # English usati se la xcstrings non risolve.
         CFBundleDisplayName: "AppalRider"
-        CFBundleShortVersionString: "1.2.0"
+        CFBundleShortVersionString: "1.2.1"
         CFBundleVersion: "10"
         # Apple HIG: la usage description deve spiegare il beneficio per
         # l'utente in modo specifico, distinguere chiaramente chi accede

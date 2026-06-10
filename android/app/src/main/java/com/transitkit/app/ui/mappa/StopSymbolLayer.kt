@@ -164,6 +164,26 @@ internal fun StopSymbolLayer(
             }
         }
     }
+
+    // ─── Label theme-aware (movete parity, come StopMapLabel iOS) ────────────
+    // Il layer è creato una volta sola (addPinLayerIfMissing) coi colori light:
+    // qui si aggiornano le property a ogni cambio tema. Dark: testo near-bianco
+    // + halo nero; light: testo near-nero + halo bianco.
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+    MapEffect(isDark) { mapView ->
+        mapView.mapboxMap.getStyle { style ->
+            if (style.styleLayerExists(STOPS_LAYER_ID)) {
+                style.setStyleLayerProperty(
+                    STOPS_LAYER_ID, "text-color",
+                    com.mapbox.bindgen.Value(if (isDark) "rgba(242, 242, 247, 1)" else "rgba(20, 20, 20, 1)"),
+                )
+                style.setStyleLayerProperty(
+                    STOPS_LAYER_ID, "text-halo-color",
+                    com.mapbox.bindgen.Value(if (isDark) "rgba(0, 0, 0, 0.92)" else "rgba(255, 255, 255, 0.95)"),
+                )
+            }
+        }
+    }
 }
 
 /** Toglie eventuale alpha dal colore — Mapbox ignora alpha < 1.0 sull'image. */

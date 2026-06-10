@@ -112,6 +112,14 @@ struct StopAnnotationView: View {
             // bordo inferiore del frame. TransitMapView usa centerOffset = -30
             // per mappare quel bordo al coordinate esatto della fermata.
             .frame(width: 60, height: 60, alignment: .bottom)
+            // Nome fermata sotto al pin (movete parity, come l'Android
+            // SymbolLayer): overlay che sborda sotto il frame — l'host non
+            // clippa (clipsToBounds = false) e l'alignmentGuide aggancia il
+            // top della label al bottom del frame, senza spostare il tip.
+            .overlay(alignment: .bottom) {
+                StopMapLabel(name: stop.name)
+                    .alignmentGuide(.bottom) { d in d[.top] }
+            }
             .contentShape(Rectangle())
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("\(stop.name), \(dominantType.displayName)")

@@ -61,6 +61,26 @@ fun JourneyMapView(
         decodedLegs.flatMap { it.second }
     }
 
+    // Fallback camera: senza polilinee decodificate (MOTIS può ometterle) la
+    // viewport resterebbe al default Mapbox (0,0 / zoom 0). Le coordinate
+    // delle fermate dei leg ci sono sempre — usale per il fit. Scarta (0,0).
+    val cameraPoints = remember(allPoints, journey) {
+        val pts = if (allPoints.size >= 2) allPoints
+        else journey.legs.flatMap { leg ->
+            when (leg) {
+                is TransitLeg -> listOf(
+                    Point.fromLngLat(leg.boardStop.lng, leg.boardStop.lat),
+                    Point.fromLngLat(leg.alightStop.lng, leg.alightStop.lat),
+                )
+                is WalkingLeg -> listOf(
+                    Point.fromLngLat(leg.fromStop.lng, leg.fromStop.lat),
+                    Point.fromLngLat(leg.toStop.lng, leg.toStop.lat),
+                )
+            }
+        }
+        pts.filterNot { it.latitude() == 0.0 && it.longitude() == 0.0 }
+    }
+
     val walkingFeatures = remember(decodedLegs) {
         FeatureCollection.fromFeatures(
             decodedLegs.mapNotNull { (leg, coords) ->
@@ -91,9 +111,9 @@ fun JourneyMapView(
     }
 
     val viewportState = rememberMapViewportState {
-        if (allPoints.size >= 2) {
-            val lats = allPoints.map { it.latitude() }
-            val lngs = allPoints.map { it.longitude() }
+        if (cameraPoints.size >= 2) {
+            val lats = cameraPoints.map { it.latitude() }
+            val lngs = cameraPoints.map { it.longitude() }
             val centerLat = (lats.min() + lats.max()) / 2
             val centerLng = (lngs.min() + lngs.max()) / 2
             val latDelta = (lats.max() - lats.min()).coerceAtLeast(0.005)
@@ -104,6 +124,15 @@ fun JourneyMapView(
                 CameraOptions.Builder()
                     .center(Point.fromLngLat(centerLng, centerLat))
                     .zoom(zoom)
+                    .pitch(0.0)
+                    .bearing(0.0)
+                    .build()
+            )
+        } else if (cameraPoints.size == 1) {
+            setCameraOptions(
+                CameraOptions.Builder()
+                    .center(cameraPoints.first())
+                    .zoom(14.0)
                     .pitch(0.0)
                     .bearing(0.0)
                     .build()

@@ -6,6 +6,9 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import com.transitkit.app.config.LucideIcons
 import androidx.compose.material3.Badge
@@ -238,6 +241,16 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
             .semantics { testTagsAsResourceId = true },
         bottomBar = {
             if (showBottomBar) {
+                // Stacco dal contenuto (iOS parity: la UITabBar ha material +
+                // hairline di sistema): ombra soffusa sul wrapper + hairline
+                // top. Senza, la bar appoggiava flat sulla pagina.
+                androidx.compose.foundation.layout.Column(
+                    modifier = Modifier.shadow(elevation = 8.dp),
+                ) {
+                    HorizontalDivider(
+                        thickness = 0.5.dp,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f),
+                    )
                 // windowInsets = WindowInsets(0) forces the bar to not reserve
                 // extra bottom inset (we're not edge-to-edge). Without this the
                 // last ~30px of the item's visual area sits below the bar's
@@ -284,6 +297,7 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                             ),
                         )
                     }
+                }
                 }
             }
         }

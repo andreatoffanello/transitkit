@@ -175,6 +175,14 @@ internal fun StopDetailExpandedMap(
                 scaleBar = {},
                 modifier = Modifier.fillMaxSize(),
             ) {
+                MapEffect(Unit) { mapView ->
+                    // Cap di zoom-out (app cittadina) — token condiviso con iOS.
+                    mapView.mapboxMap.setBounds(
+                        com.mapbox.maps.CameraBoundsOptions.Builder()
+                            .minZoom(MapZoomLevels.minUserZoom)
+                            .build()
+                    )
+                }
                 MapEffect(isDark) { mapView ->
                     mapView.mapboxMap.style?.let { applyTransitKitHeroStyleConfig(it, isDark) }
                     val cancelable = mapView.mapboxMap.subscribeStyleLoaded {

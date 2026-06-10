@@ -401,6 +401,12 @@ fun MappaScreen(
             MapEffect(Unit) { mapView ->
                 mapView.mapboxMap.setPrefetchZoomDelta(4)
                 mapView.applyMaximumFps()
+                // Cap di zoom-out (app cittadina) — token condiviso con iOS.
+                mapView.mapboxMap.setBounds(
+                    com.mapbox.maps.CameraBoundsOptions.Builder()
+                        .minZoom(MapZoomLevels.minUserZoom)
+                        .build()
+                )
             }
 
             MapEffect(isDark, is3D) { mapView ->

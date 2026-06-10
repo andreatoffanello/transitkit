@@ -115,7 +115,10 @@ struct ExpandedMapOverlay: View {
     private var mapLayer: some View {
         GeometryReader { geo in
             ZStack(alignment: .top) {
-                Map(position: $expandedMapPosition) {
+                Map(
+                    position: $expandedMapPosition,
+                    bounds: MapCameraBounds(maximumDistance: MapZoomLevels.maxCameraDistance)
+                ) {
                     UserAnnotation()
 
                     if let route = selectedRoute {

@@ -94,4 +94,11 @@ enum MapZoomLevels {
 
     /// Zoom overview di una linea intera (clamping per "Vedi linea").
     static let lineOverview = 0.08
+
+    // ── Cap di zoom-out (app cittadina) ──────────────────────────────────────
+
+    /// Distanza camera massima consentita (zoom-out cap). ≈ zoom Mapbox 8 —
+    /// allineato a `MapZoomLevels.minUserZoom` su Android; quando aggiorni
+    /// uno, aggiorna l'altro.
+    static let maxCameraDistance: Double = 250_000
 }

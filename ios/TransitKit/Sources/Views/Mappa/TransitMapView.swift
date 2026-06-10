@@ -48,6 +48,11 @@ struct TransitMapView: UIViewRepresentable {
         map.tintColor = UIColor.systemBlue
         map.pointOfInterestFilter = .excludingAll
         map.showsCompass = false
+        // Cap di zoom-out (app cittadina): oltre l'overview regionale la
+        // mappa è solo rumore. Allineato a minUserZoom Android (zoom 8).
+        map.cameraZoomRange = MKMapView.CameraZoomRange(
+            maxCenterCoordinateDistance: MapZoomLevels.maxCameraDistance
+        )
         map.setRegion(region, animated: false)
         if pitch > 0 {
             // Derive the camera distance from the requested span instead of

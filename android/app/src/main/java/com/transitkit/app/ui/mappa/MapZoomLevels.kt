@@ -49,6 +49,11 @@ object MapZoomLevels {
     /** Zoom per focus su singola fermata (auto-zoom su tap se zoom inferiore). */
     const val stopFocus = 16.0
 
+    /** Cap di zoom-out (min zoom Mapbox) — app cittadina, oltre l'overview
+     *  regionale la mappa è solo rumore. Allineato a `maxCameraDistance`
+     *  su iOS (MapZoomLevels.swift); quando aggiorni uno, aggiorna l'altro. */
+    const val minUserZoom = 8.0
+
     // ── Tier resolver ────────────────────────────────────────────────────────
 
     fun tier(zoom: Double): MapZoomTier = when {

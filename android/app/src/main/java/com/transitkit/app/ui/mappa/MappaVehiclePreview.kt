@@ -165,11 +165,11 @@ internal fun VehiclePreviewContent(
                     )
                 }
             }
+            // IconButton a size default: il vecchio .size(32.dp) riduceva il
+            // touch target sotto il minimo 48dp.
             IconButton(
                 onClick = onDismiss,
-                modifier = Modifier
-                    .size(32.dp)
-                    .semantics { testTag = "btn_vehicle_sheet_close" },
+                modifier = Modifier.semantics { testTag = "btn_vehicle_sheet_close" },
             ) {
                 Icon(
                     painter = painterResource(LucideIcons.X),

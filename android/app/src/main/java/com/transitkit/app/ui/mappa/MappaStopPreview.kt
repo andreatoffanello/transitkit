@@ -103,6 +103,8 @@ internal fun StopPreviewContent(
                 color = TransitTheme.colors.textPrimary,
                 modifier = Modifier.weight(1f),
             )
+            // Stesso trattamento del close della vehicle preview (icona 18dp,
+            // textTertiary): sono card sorelle sulla stessa mappa.
             IconButton(
                 onClick = onClose,
                 modifier = Modifier.semantics { testTag = "btn_stop_sheet_close" },
@@ -110,7 +112,8 @@ internal fun StopPreviewContent(
                 Icon(
                     painter = painterResource(LucideIcons.X),
                     contentDescription = stringResource(R.string.action_chiudi),
-                    modifier = Modifier.size(20.dp),
+                    tint = TransitTheme.colors.textTertiary,
+                    modifier = Modifier.size(18.dp),
                 )
             }
         }

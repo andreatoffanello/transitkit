@@ -93,8 +93,11 @@ struct AlertToastView: View {
             }
             .padding(14)
             .background(
+                // Material, non bgSecondary: il toast galleggia sopra
+                // QUALUNQUE tab (mappa, shader home) — il token glass in
+                // dark (White 5%) sarebbe trasparente sul contenuto.
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(AppTheme.bgSecondary)
+                    .fill(.regularMaterial)
                     .shadow(color: .black.opacity(0.18), radius: 18, y: 6)
             )
             .overlay(

@@ -42,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.config.surfaceOverMap
 import com.transitkit.app.data.model.AlertSeverity
 import kotlinx.coroutines.delay
 
@@ -85,7 +86,10 @@ fun AlertToastHost(
                         .fillMaxWidth()
                         .shadow(elevation = 10.dp, shape = RoundedCornerShape(16.dp))
                         .clip(RoundedCornerShape(16.dp))
-                        .background(colors.bgSecondary)
+                        // surfaceOverMap, non bgSecondary: il toast galleggia
+                        // sopra QUALUNQUE tab (mappa, shader home) — il token
+                        // glass in dark sarebbe trasparente sul contenuto.
+                        .background(colors.surfaceOverMap)
                         .border(1.dp, colors.glassBorder, RoundedCornerShape(16.dp))
                         .clickable {
                             onNavigateToAlert(alert.id)

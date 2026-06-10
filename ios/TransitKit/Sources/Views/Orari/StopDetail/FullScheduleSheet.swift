@@ -59,13 +59,11 @@ struct FullScheduleSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        dismiss()
-                    } label: {
-                        LucideIcon.circleX.sized(24)
-                            .foregroundStyle(.secondary)
-                    }
-                    .accessibilityIdentifier("btn_close_schedule")
+                    // SheetCloseButton canonico: `circleX` (icona col cerchio
+                    // inciso) creava un doppio-cerchio rispetto agli altri
+                    // close di sheet.
+                    SheetCloseButton { dismiss() }
+                        .accessibilityIdentifier("btn_close_schedule")
                 }
             }
             .onAppear {

@@ -41,14 +41,8 @@ struct ServiziTab: View {
             .toolbar {
                 if isPresented {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button {
-                            dismiss()
-                        } label: {
-                            LucideIcon.x.sized(18)
-                                .foregroundStyle(AppTheme.textPrimary)
-                        }
-                        .accessibilityLabel(String(localized: "action_close"))
-                        .accessibilityIdentifier("btn_close_servizi")
+                        SheetCloseButton { dismiss() }
+                            .accessibilityIdentifier("btn_close_servizi")
                     }
                 }
             }

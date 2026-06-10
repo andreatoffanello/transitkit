@@ -187,10 +187,15 @@ struct StopPreviewCard: View {
                 }
                 Spacer()
                 Button(action: onDismiss) {
+                    // Pattern VehicleDetailSheet: visual compatto ma hit-area
+                    // 44pt (il vecchio 28×28 era sotto il minimo HIG).
                     LucideIcon.x.sized(14)
                         .foregroundStyle(.secondary)
                         .frame(width: 28, height: 28)
-                        .background(Color(.secondarySystemFill), in: Circle())
+                        .background(AppTheme.textPrimary.opacity(0.08))
+                        .clipShape(Circle())
+                        .frame(width: 44, height: 44)
+                        .contentShape(Circle())
                 }
                 .accessibilityLabel(Text(String(localized: "a11y_close_stop_preview")))
                 .accessibilityIdentifier("btn_stop_preview_dismiss")

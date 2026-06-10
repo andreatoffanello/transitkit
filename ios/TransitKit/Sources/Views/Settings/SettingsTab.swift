@@ -179,19 +179,11 @@ struct SettingsTab: View {
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
+                    SheetCloseButton {
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                         dismiss()
-                    } label: {
-                        LucideIcon.x.sized(18)
-                            .foregroundStyle(AppTheme.textSecondary)
-                            .frame(width: 32, height: 32)
-                            .background(
-                                Circle().fill(AppTheme.bgSecondary)
-                            )
                     }
                     .accessibilityIdentifier("btn_settings_close")
-                    .accessibilityLabel(String(localized: "action_close"))
                 }
             }
         }

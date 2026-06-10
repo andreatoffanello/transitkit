@@ -42,6 +42,7 @@ import com.transitkit.app.R
 import com.transitkit.app.config.LocalTransitColors
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.config.surfaceOverMap
 import com.transitkit.app.data.model.ResolvedDeparture
 import com.transitkit.app.data.model.ResolvedStop
 import com.transitkit.app.ui.components.LineBadge
@@ -67,7 +68,7 @@ internal fun PreviewCardContainer(
             .windowInsetsPadding(WindowInsets.navigationBars)
             .shadow(elevation = 8.dp, shape = RoundedCornerShape(18.dp))
             .clip(RoundedCornerShape(18.dp))
-            .background(colors.bgSecondary),
+            .background(colors.surfaceOverMap),
     ) {
         content()
     }

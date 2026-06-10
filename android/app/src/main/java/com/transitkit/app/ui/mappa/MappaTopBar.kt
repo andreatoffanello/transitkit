@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.transitkit.app.R
 import com.transitkit.app.config.LocalTransitColors
+import com.transitkit.app.config.surfaceOverMap
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.data.model.ScheduleRoute
 import com.transitkit.app.ui.components.LineBadge
@@ -37,7 +38,7 @@ internal fun SearchLinePill(onClick: () -> Unit) {
     val colors = LocalTransitColors.current
     Surface(
         shape = RoundedCornerShape(22.dp),
-        color = colors.bgSecondary,
+        color = colors.surfaceOverMap,
         shadowElevation = 4.dp,
         onClick = onClick,
         modifier = Modifier.semantics { testTag = "map_line_picker_pill" },
@@ -78,7 +79,7 @@ internal fun RouteDismissChip(
 
     Surface(
         shape = RoundedCornerShape(22.dp),
-        color = colors.bgSecondary,
+        color = colors.surfaceOverMap,
         shadowElevation = 4.dp,
         modifier = Modifier.semantics { testTag = "map_route_dismiss_chip" },
     ) {

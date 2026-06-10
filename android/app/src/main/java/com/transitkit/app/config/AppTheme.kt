@@ -13,6 +13,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
@@ -181,6 +182,16 @@ private val transitTypography = Typography(
     labelMedium = TextStyle(fontFamily = InterFontFamily, fontSize = 12.sp, lineHeight = 16.sp, letterSpacing = 0.5.sp),
     labelSmall  = TextStyle(fontFamily = InterFontFamily, fontSize = 11.sp, lineHeight = 16.sp, letterSpacing = 0.5.sp),
 )
+
+/**
+ * Superficie OPACA per card/pill flottanti SULLA MAPPA. In dark `bgSecondary`
+ * è glass (White 5%): sopra al `background` delle schermate funziona, sopra
+ * la mappa diventa trasparente (si vedono le strade attraverso la card).
+ * Compositandolo sul background si ottiene lo stesso colore percepito, opaco.
+ * Light: White su quasi-bianco → invariato.
+ */
+val TransitColors.surfaceOverMap: Color
+    get() = bgSecondary.compositeOver(background)
 
 // ---------------------------------------------------------------------------
 // Entry point composable

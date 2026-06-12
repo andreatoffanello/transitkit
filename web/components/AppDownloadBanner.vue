@@ -34,7 +34,7 @@
         </a>
         <button
           type="button"
-          aria-label="Chiudi"
+          :aria-label="getStrings(props.locale).closeBanner"
           class="p-1 opacity-80 hover:opacity-100 transition-opacity"
           @click="dismiss"
         >

@@ -191,6 +191,111 @@ export interface AppStrings {
   homeOperatorRoutes: string       // "{n} linee"
   homeOperatorLiveCount: string    // "{n} mezzi live"
   homeFooterDisclaimer: string     // "App dei cittadini, non gestita da {operator}"
+
+  // Home — search & onboarding
+  startSearch: string
+  clearSearch: string
+  noStopsFoundForQuery: string    // "No stops found for "{query}""
+  searchInLines: string
+  featuredLines: string
+  allLines: string
+  schedulesExpiringSoon: string
+
+  // Home — schedule validity
+  validUntil: string              // "Valid until {date}"
+
+  // Settings page
+  settingsTitle: string
+  settingsAppearance: string
+  settingsDarkTheme: string
+  settingsDark: string
+  settingsLight: string
+  settingsToggleDark: string      // aria-label
+  settingsInfo: string
+  settingsOfficialWebsite: string
+  settingsScheduleData: string
+  settingsSchedulesValidUntil: string
+  settingsExpiringSoon: string
+  settingsPoweredBy: string
+
+  // Map page
+  mapTitle: string
+  mapComingSoon: string
+  mapComingSoonBody: string
+  mapBrowseLines: string
+  mapBackHome: string
+
+  // 404 page
+  pageNotFoundTitle: string
+  pageNotFoundBody: string
+  pageNotFoundBack: string
+
+  // Info page — section headers
+  infoServices: string
+  infoFares: string
+  infoFaresTitle: string
+  infoAccessibility: string
+  infoContacts: string
+  infoPhone: string
+  infoEmail: string
+
+  // Info/fares page
+  faresSectionTitle: string
+  faresNotes: string
+  faresPurchase: string
+  faresPurchaseOnline: string
+  faresNotAvailable: string
+  faresWhereToBy: string
+
+  // Info/accessibility page
+  accessibilityFeatures: string
+  accessibilityMoreInfo: string
+  accessibilityNotAvailable: string
+  accessibilityFallbackTitle: string
+
+  // Info/services page
+  serviceDescription: string
+  serviceDetails: string
+  serviceAudience: string
+  serviceHours: string
+  serviceFare: string
+  serviceArea: string
+  serviceHowItWorks: string
+  serviceNotes: string
+  serviceUsefulLinks: string
+  serviceNotFound: string
+  serviceFallbackTitle: string
+
+  // PageHeader
+  back: string
+  backDefault: string
+
+  // AppSidebar theme toggle
+  switchToLight: string
+  switchToDark: string
+
+  // AppDownloadBanner
+  closeBanner: string
+
+  // AppSidebar / AppTabBar aria
+  mainNavAriaLabel: string
+
+  // OG / manifest
+  ogTagline: string
+  manifestDescription: string
+  manifestShortcutLines: string
+  manifestShortcutLinesSub: string
+  manifestShortcutFavorites: string
+  manifestShortcutFavoritesSub: string
+  manifestFallbackDescription: string
+
+  // app.vue error boundary
+  errorPageNotFound: string
+  errorServiceUnavailable: string
+  errorLoadSchedules: string
+  errorUnexpected: string
+  errorRetry: string
+  errorSkipToContent: string
 }
 
 const IT: AppStrings = {
@@ -301,6 +406,96 @@ const IT: AppStrings = {
   homeOperatorRoutes: '{n} linee',
   homeOperatorLiveCount: '{n} mezzi live',
   homeFooterDisclaimer: 'App dei cittadini. Non gestita da {operator}.',
+
+  startSearch: 'Inizia la tua ricerca',
+  clearSearch: 'Cancella ricerca',
+  noStopsFoundForQuery: 'Nessuna fermata trovata',
+  searchInLines: 'Cerca nelle linee',
+  featuredLines: 'Linee consigliate',
+  allLines: 'Tutte le linee',
+  schedulesExpiringSoon: 'In scadenza',
+
+  validUntil: 'Valido fino al {date}',
+
+  settingsTitle: 'Impostazioni',
+  settingsAppearance: 'Aspetto',
+  settingsDarkTheme: 'Tema scuro',
+  settingsDark: 'Scuro',
+  settingsLight: 'Chiaro',
+  settingsToggleDark: 'Attiva/disattiva tema scuro',
+  settingsInfo: 'Informazioni',
+  settingsOfficialWebsite: 'Sito ufficiale',
+  settingsScheduleData: 'Dati orari',
+  settingsSchedulesValidUntil: 'Orari validi fino al',
+  settingsExpiringSoon: 'In scadenza',
+  settingsPoweredBy: 'Powered by transit-engine',
+
+  mapTitle: 'Mappa',
+  mapComingSoon: 'Prossimamente',
+  mapComingSoonBody: 'Mappa interattiva con fermate, percorsi e tempi di percorrenza. In sviluppo.',
+  mapBrowseLines: 'Sfoglia le linee',
+  mapBackHome: 'Torna alla home',
+
+  pageNotFoundTitle: 'Pagina non trovata',
+  pageNotFoundBody: 'La pagina che stai cercando non esiste o è stata spostata.',
+  pageNotFoundBack: 'Torna alla home',
+
+  infoServices: 'Servizi',
+  infoFares: 'Tariffe',
+  infoFaresTitle: 'Tariffe e biglietti',
+  infoAccessibility: 'Accessibilità',
+  infoContacts: 'Contatti',
+  infoPhone: 'Telefono',
+  infoEmail: 'Email',
+
+  faresSectionTitle: 'Tariffe',
+  faresNotes: 'Note',
+  faresPurchase: 'Acquisto',
+  faresPurchaseOnline: 'Acquista online',
+  faresNotAvailable: 'Informazioni tariffarie non disponibili.',
+  faresWhereToBy: 'Dove acquistare',
+
+  accessibilityFeatures: 'Caratteristiche',
+  accessibilityMoreInfo: 'Maggiori informazioni',
+  accessibilityNotAvailable: 'Informazioni non disponibili.',
+  accessibilityFallbackTitle: 'Accessibilità',
+
+  serviceDescription: 'Descrizione',
+  serviceDetails: 'Dettagli',
+  serviceAudience: 'Chi può usarlo',
+  serviceHours: 'Orari',
+  serviceFare: 'Tariffa',
+  serviceArea: 'Area servita',
+  serviceHowItWorks: 'Come funziona',
+  serviceNotes: 'Note',
+  serviceUsefulLinks: 'Link utili',
+  serviceNotFound: 'Servizio non trovato.',
+  serviceFallbackTitle: 'Servizio',
+
+  back: 'Indietro',
+  backDefault: 'Indietro',
+
+  switchToLight: 'Passa al tema chiaro',
+  switchToDark: 'Passa al tema scuro',
+
+  closeBanner: 'Chiudi',
+
+  mainNavAriaLabel: 'Navigazione principale',
+
+  ogTagline: 'Orari e linee',
+  manifestDescription: 'Orari e fermate in tempo reale',
+  manifestShortcutLines: 'Linee',
+  manifestShortcutLinesSub: 'Vedi tutte le linee',
+  manifestShortcutFavorites: 'Preferiti',
+  manifestShortcutFavoritesSub: 'Fermate preferite',
+  manifestFallbackDescription: 'Orari e fermate in tempo reale',
+
+  errorPageNotFound: 'Pagina non trovata',
+  errorServiceUnavailable: 'Servizio temporaneamente non disponibile',
+  errorLoadSchedules: 'Impossibile caricare gli orari. Riprova tra qualche minuto.',
+  errorUnexpected: 'Si è verificato un errore imprevisto.',
+  errorRetry: 'Riprova',
+  errorSkipToContent: 'Vai al contenuto principale',
 }
 
 const EN: AppStrings = {
@@ -411,6 +606,96 @@ const EN: AppStrings = {
   homeOperatorRoutes: '{n} routes',
   homeOperatorLiveCount: '{n} vehicles live',
   homeFooterDisclaimer: 'A community app. Not affiliated with {operator}.',
+
+  startSearch: 'Start your search',
+  clearSearch: 'Clear search',
+  noStopsFoundForQuery: 'No stops found',
+  searchInLines: 'Search in lines',
+  featuredLines: 'Featured lines',
+  allLines: 'All lines',
+  schedulesExpiringSoon: 'Expiring soon',
+
+  validUntil: 'Valid until {date}',
+
+  settingsTitle: 'Settings',
+  settingsAppearance: 'Appearance',
+  settingsDarkTheme: 'Dark mode',
+  settingsDark: 'Dark',
+  settingsLight: 'Light',
+  settingsToggleDark: 'Toggle dark mode',
+  settingsInfo: 'Information',
+  settingsOfficialWebsite: 'Official website',
+  settingsScheduleData: 'Schedule data',
+  settingsSchedulesValidUntil: 'Schedules valid until',
+  settingsExpiringSoon: 'Expiring soon',
+  settingsPoweredBy: 'Powered by transit-engine',
+
+  mapTitle: 'Map',
+  mapComingSoon: 'Coming soon',
+  mapComingSoonBody: 'Interactive map with stops, routes, and travel times. In development.',
+  mapBrowseLines: 'Browse lines',
+  mapBackHome: 'Back to home',
+
+  pageNotFoundTitle: 'Page not found',
+  pageNotFoundBody: 'The page you\'re looking for doesn\'t exist or has been moved.',
+  pageNotFoundBack: 'Back to home',
+
+  infoServices: 'Services',
+  infoFares: 'Fares',
+  infoFaresTitle: 'Fares & Passes',
+  infoAccessibility: 'Accessibility',
+  infoContacts: 'Contact',
+  infoPhone: 'Phone',
+  infoEmail: 'Email',
+
+  faresSectionTitle: 'Fares',
+  faresNotes: 'Notes',
+  faresPurchase: 'Purchase',
+  faresPurchaseOnline: 'Buy online',
+  faresNotAvailable: 'Fare information not available.',
+  faresWhereToBy: 'Where to buy',
+
+  accessibilityFeatures: 'Features',
+  accessibilityMoreInfo: 'More information',
+  accessibilityNotAvailable: 'Information not available.',
+  accessibilityFallbackTitle: 'Accessibility',
+
+  serviceDescription: 'Description',
+  serviceDetails: 'Details',
+  serviceAudience: 'Who can use it',
+  serviceHours: 'Hours',
+  serviceFare: 'Fare',
+  serviceArea: 'Service area',
+  serviceHowItWorks: 'How it works',
+  serviceNotes: 'Notes',
+  serviceUsefulLinks: 'Useful links',
+  serviceNotFound: 'Service not found.',
+  serviceFallbackTitle: 'Service',
+
+  back: 'Back',
+  backDefault: 'Back',
+
+  switchToLight: 'Switch to light mode',
+  switchToDark: 'Switch to dark mode',
+
+  closeBanner: 'Close',
+
+  mainNavAriaLabel: 'Main navigation',
+
+  ogTagline: 'Schedules & Lines',
+  manifestDescription: 'Real-time schedules and stops',
+  manifestShortcutLines: 'Lines',
+  manifestShortcutLinesSub: 'View all lines',
+  manifestShortcutFavorites: 'Favorites',
+  manifestShortcutFavoritesSub: 'Favorite stops',
+  manifestFallbackDescription: 'Real-time schedules and stops',
+
+  errorPageNotFound: 'Page not found',
+  errorServiceUnavailable: 'Service temporarily unavailable',
+  errorLoadSchedules: 'Could not load schedules. Please try again in a moment.',
+  errorUnexpected: 'An unexpected error occurred.',
+  errorRetry: 'Retry',
+  errorSkipToContent: 'Skip to main content',
 }
 
 const STRINGS: Record<Locale, AppStrings> = { it: IT, en: EN }

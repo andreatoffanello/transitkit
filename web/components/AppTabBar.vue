@@ -1,6 +1,6 @@
 <template>
   <nav
-    aria-label="Navigazione principale"
+    :aria-label="s.mainNavAriaLabel"
     class="fixed bottom-0 left-0 right-0 z-40 lg:hidden"
     style="
       border-top: 1px solid var(--border);

@@ -20,7 +20,7 @@
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-1 px-3 py-4" aria-label="Navigazione principale">
+    <nav class="flex-1 px-3 py-4" :aria-label="s.mainNavAriaLabel">
       <ul class="space-y-0.5">
         <li v-for="tab in visibleTabs" :key="tab.path">
           <NuxtLink
@@ -43,10 +43,10 @@
         @click="toggleTheme"
         class="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-sm font-medium transition-colors duration-150"
         style="color: var(--text-secondary)"
-        :aria-label="isDark ? 'Passa al tema chiaro' : 'Passa al tema scuro'"
+        :aria-label="isDark ? s.switchToLight : s.switchToDark"
       >
         <component :is="isDark ? Sun : Moon" :size="20" :stroke-width="1.75" />
-        {{ isDark ? 'Tema chiaro' : 'Tema scuro' }}
+        {{ isDark ? s.settingsLight : s.settingsDark }}
       </button>
     </div>
   </aside>

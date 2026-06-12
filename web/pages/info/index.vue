@@ -1,13 +1,13 @@
 <template>
   <AppLayout>
-    <PageHeader title="Info" />
+    <PageHeader :title="s.tabInfo" />
 
     <div class="max-w-lg mx-auto px-4 pb-10 space-y-8">
 
       <!-- Servizi -->
       <section v-if="config?.services?.length">
         <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
-          Servizi
+          {{ s.infoServices }}
         </h2>
         <div
           class="rounded-2xl overflow-hidden divide-app"
@@ -48,7 +48,7 @@
       <!-- Tariffe -->
       <section v-if="config?.fares">
         <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
-          Tariffe
+          {{ s.infoFares }}
         </h2>
         <div
           class="rounded-2xl overflow-hidden divide-app"
@@ -65,7 +65,7 @@
             >
               <Ticket :size="18" :stroke-width="1.75" style="color: var(--color-primary)" aria-hidden="true" />
             </div>
-            <span class="flex-1 text-sm font-medium" style="color: var(--text-primary)">Tariffe e biglietti</span>
+            <span class="flex-1 text-sm font-medium" style="color: var(--text-primary)">{{ s.infoFaresTitle }}</span>
             <ChevronRight :size="16" :stroke-width="1.75" class="shrink-0" style="color: var(--text-tertiary)" aria-hidden="true" />
           </NuxtLink>
         </div>
@@ -74,7 +74,7 @@
       <!-- Accessibilità -->
       <section v-if="config?.accessibility">
         <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
-          Accessibilità
+          {{ s.infoAccessibility }}
         </h2>
         <div
           class="rounded-2xl overflow-hidden divide-app"
@@ -104,7 +104,7 @@
       <!-- Contatti -->
       <section v-if="config?.contact && hasContact">
         <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
-          Contatti
+          {{ s.infoContacts }}
         </h2>
         <div
           class="rounded-2xl overflow-hidden divide-app"
@@ -123,7 +123,7 @@
               <Phone :size="18" :stroke-width="1.75" style="color: var(--color-primary)" aria-hidden="true" />
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-xs font-medium uppercase tracking-wide" style="color: var(--text-tertiary)">Telefono</p>
+              <p class="text-xs font-medium uppercase tracking-wide" style="color: var(--text-tertiary)">{{ s.infoPhone }}</p>
               <p class="text-sm font-medium" style="color: var(--text-primary)">{{ config.contact.phone }}</p>
             </div>
             <ExternalLink :size="14" :stroke-width="1.75" class="shrink-0" style="color: var(--text-tertiary)" aria-hidden="true" />
@@ -141,7 +141,7 @@
               <Mail :size="18" :stroke-width="1.75" style="color: var(--color-primary)" aria-hidden="true" />
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-xs font-medium uppercase tracking-wide" style="color: var(--text-tertiary)">Email</p>
+              <p class="text-xs font-medium uppercase tracking-wide" style="color: var(--text-tertiary)">{{ s.infoEmail }}</p>
               <p class="text-sm font-medium truncate" style="color: var(--text-primary)">{{ config.contact.email }}</p>
             </div>
             <ExternalLink :size="14" :stroke-width="1.75" class="shrink-0" style="color: var(--text-tertiary)" aria-hidden="true" />
@@ -159,6 +159,7 @@ import type { Component } from 'vue'
 import type { MultiLangString } from '~/types'
 
 const { config } = await useOperator()
+const s = useStrings(config)
 
 const locale = computed(() => config.value?.locale?.[0] ?? 'en')
 
@@ -188,7 +189,7 @@ const hasContact = computed(() =>
 )
 
 useHead({
-  title: computed(() => `Info — ${config.value?.name ?? ''}`),
+  title: computed(() => `${s.value.tabInfo} — ${config.value?.name ?? ''}`),
 })
 useOperatorHead(config)
 </script>

@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <PageHeader title="Linee" />
+    <PageHeader :title="s.linesPageTitle" />
 
     <div class="max-w-lg mx-auto px-4 pb-8">
       <h1 class="sr-only">{{ s.linesPageTitle }}</h1>

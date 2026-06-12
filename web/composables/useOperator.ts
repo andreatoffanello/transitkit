@@ -49,7 +49,7 @@ export async function useOperator() {
     const statusCode = status === 404 ? 404 : 502
     const statusMessage = statusCode === 404
       ? 'Operator not found'
-      : 'Impossibile caricare i dati. Riprova tra qualche minuto.'
+      : 'Unable to load transit data. Please try again in a moment.'
     throw createError({ statusCode, statusMessage })
   }
 

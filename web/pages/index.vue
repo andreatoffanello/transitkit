@@ -43,7 +43,7 @@
             type="button"
             class="shrink-0"
             @click="searchStopQuery = ''"
-            aria-label="Cancella ricerca"
+            :aria-label="s.clearSearch"
           >
             <X :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" />
           </button>
@@ -55,15 +55,15 @@
           class="mt-2 rounded-2xl px-4 py-5 text-center"
           style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm)"
         >
-          <p class="text-sm font-medium mb-1" style="color: var(--text-primary)">Nessuna fermata trovata</p>
-          <p class="text-xs mb-3" style="color: var(--text-secondary)">per "{{ searchStopQuery }}"</p>
+          <p class="text-sm font-medium mb-1" style="color: var(--text-primary)">{{ s.noStopsFoundForQuery }}</p>
+          <p class="text-xs mb-3" style="color: var(--text-secondary)">for "{{ searchStopQuery }}"</p>
           <NuxtLink
             :to="`/lines?q=${encodeURIComponent(searchStopQuery)}`"
             class="inline-flex items-center gap-1.5 text-xs font-semibold"
             style="color: var(--color-primary)"
           >
             <Route :size="13" :stroke-width="1.75" />
-            Cerca nelle linee
+            {{ s.searchInLines }}
           </NuxtLink>
         </div>
 
@@ -265,7 +265,7 @@
                 <MapPin :size="24" :stroke-width="1.5" style="color: var(--color-primary); opacity: 0.75" />
               </div>
               <div>
-                <p class="text-sm font-semibold mb-0.5" style="color: var(--text-primary)">Inizia la tua ricerca</p>
+                <p class="text-sm font-semibold mb-0.5" style="color: var(--text-primary)">{{ s.startSearch }}</p>
                 <p class="text-xs max-w-[240px]" style="color: var(--text-secondary)">{{ s.onboardingHint }}</p>
               </div>
             </div>
@@ -273,7 +273,7 @@
             <!-- Featured lines — prime 3 linee come punto di partenza -->
             <div v-if="schedules?.routes?.length" class="mt-4">
               <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
-                Linee consigliate
+                {{ s.featuredLines }}
               </h2>
               <div
                 class="rounded-2xl overflow-hidden divide-app"
@@ -295,7 +295,7 @@
                   class="flex items-center justify-center gap-1.5 px-4 py-3 text-sm font-semibold transition-opacity duration-150 active:opacity-70"
                   style="color: var(--color-primary)"
                 >
-                  Tutte le linee
+                  {{ s.allLines }}
                   <ChevronRight :size="14" :stroke-width="2" />
                 </NuxtLink>
               </div>
@@ -395,11 +395,11 @@
             class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold"
             style="background-color: #d97706; color: #fff"
           >
-            In scadenza
+            {{ s.schedulesExpiringSoon }}
           </span>
           <CalendarDays :size="13" :stroke-width="1.75" style="color: var(--text-tertiary)" />
           <p class="text-xs" style="color: var(--text-tertiary)">
-            Valido fino al {{ formatShortDate(schedules.validUntil) }}
+            {{ s.schedulesValidUntil }} {{ formatShortDate(schedules.validUntil) }}
           </p>
         </div>
 
@@ -517,13 +517,15 @@ function formatDate(dateStr: string | undefined): string {
   if (!dateStr) return ''
   const d = new Date(dateStr)
   if (isNaN(d.getTime())) return dateStr
-  return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
+  const locale = config.value?.locale?.[0] ?? 'en-US'
+  return d.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 function formatShortDate(dateStr: string): string {
   const d = new Date(dateStr)
   if (isNaN(d.getTime())) return dateStr
-  return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' })
+  const locale = config.value?.locale?.[0] ?? 'en-US'
+  return d.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 const schedulesExpiringSoon = computed(() => {
@@ -581,7 +583,7 @@ const recentNextDepartures = computed<Record<string, { lineName: string; lineCol
 })
 
 useHead({
-  title: computed(() => `${config.value?.fullName ?? config.value?.name ?? ''} — Orari e linee`),
+  title: computed(() => `${config.value?.fullName ?? config.value?.name ?? ''} — ${s.value.linesAndSchedules}`),
   link: [{ rel: 'canonical', href: computed(() => `${requestUrl.origin}${currentRoute.path}`) }],
   script: [
     {
@@ -606,7 +608,7 @@ useHead({
         const name = config.value?.fullName ?? config.value?.name ?? ''
         const region = config.value?.region
         const location = region ? ` — ${region}` : ''
-        return `${name}${location}. Orari, linee e fermate. Bus schedule and timetables.`
+        return `${name}${location}. ${s.value.stopsAndSchedules}. Bus schedule and timetables.`
       }),
     },
     {
@@ -619,7 +621,7 @@ useHead({
         const name = config.value?.fullName ?? config.value?.name ?? ''
         const region = config.value?.region
         const location = region ? ` — ${region}` : ''
-        return `${name}${location}. Orari, linee e fermate. Bus schedule and timetables.`
+        return `${name}${location}. ${s.value.stopsAndSchedules}. Bus schedule and timetables.`
       }),
     },
   ],

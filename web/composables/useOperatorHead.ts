@@ -1,7 +1,7 @@
 import type { Ref } from 'vue'
 import type { OperatorConfig } from '~/types'
 
-export function useOperatorHead(config: Ref<OperatorConfig | null>) {
+export function useOperatorHead(config: Ref<OperatorConfig | null | undefined>) {
   const ogImageUrl = computed(() => {
     const color = encodeURIComponent(config.value?.theme.primaryColor ?? '#003366')
     const name = encodeURIComponent(config.value?.fullName ?? config.value?.name ?? 'Transit')
@@ -12,7 +12,7 @@ export function useOperatorHead(config: Ref<OperatorConfig | null>) {
   // values for var(--color-primary) etc. without relying on dynamic :style bindings
   // that would create SSR/client mismatches.
   useHead({
-    htmlAttrs: { lang: computed(() => config.value?.locale[0] ?? 'it') },
+    htmlAttrs: { lang: computed(() => config.value?.locale[0] ?? 'en') },
     style: [
       {
         innerHTML: computed(() => {

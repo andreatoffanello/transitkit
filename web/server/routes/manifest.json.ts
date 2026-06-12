@@ -1,4 +1,5 @@
 import { resolveOperatorId, CDN_BASE } from '~/utils/operators'
+import { getStrings } from '~/utils/strings'
 import type { OperatorConfig } from '~/types'
 
 const BASE_ICONS = [
@@ -8,38 +9,43 @@ const BASE_ICONS = [
   { src: '/icons/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
 ]
 
-const SHORTCUTS = [
-  {
-    name: 'Linee',
-    short_name: 'Linee',
-    description: 'Vedi tutte le linee',
-    url: '/lines',
-    icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }],
-  },
-  {
-    name: 'Preferiti',
-    short_name: 'Preferiti',
-    description: 'Fermate preferite',
-    url: '/',
-    icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }],
-  },
-]
+function buildShortcuts(locale?: string) {
+  const s = getStrings(locale)
+  return [
+    {
+      name: s.manifestShortcutLines,
+      short_name: s.manifestShortcutLines,
+      description: s.manifestShortcutLinesSub,
+      url: '/lines',
+      icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }],
+    },
+    {
+      name: s.manifestShortcutFavorites,
+      short_name: s.manifestShortcutFavorites,
+      description: s.manifestShortcutFavoritesSub,
+      url: '/',
+      icons: [{ src: '/icons/icon-192.png', sizes: '192x192' }],
+    },
+  ]
+}
 
 const FALLBACK: Record<string, unknown> = {
   name: 'TransitKit',
   short_name: 'Transit',
   theme_color: '#003366',
-  description: 'Orari e fermate in tempo reale',
+  description: getStrings(undefined).manifestFallbackDescription,
 }
 
 export function buildManifest(config: OperatorConfig | null): Record<string, unknown> {
+  const locale = config?.locale?.[0]
+  const s = getStrings(locale)
   const base: Record<string, unknown> = {
     id: '/',
     start_url: '/',
     display: 'standalone',
     background_color: '#080C18',
     icons: BASE_ICONS,
-    shortcuts: SHORTCUTS,
+    shortcuts: buildShortcuts(locale),
   }
 
   if (!config) {
@@ -50,9 +56,9 @@ export function buildManifest(config: OperatorConfig | null): Record<string, unk
     ...base,
     name: config.fullName ?? config.name,
     short_name: config.name,
-    description: `Orari e fermate — ${config.name}`,
+    description: `${s.manifestDescription} — ${config.name}`,
     theme_color: config.theme.primaryColor,
-    lang: config.locale[0] ?? 'it',
+    lang: locale ?? 'en',
   }
 }
 

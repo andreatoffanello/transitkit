@@ -1,4 +1,5 @@
 import { resolveOperatorId, CDN_BASE } from '~/utils/operators'
+import { getStrings } from '~/utils/strings'
 import type { OperatorConfig } from '~/types'
 
 /**
@@ -17,9 +18,10 @@ function escapeXml(str: string): string {
     .replace(/'/g, '&apos;')
 }
 
-function buildSvg(primaryColor: string, name: string): string {
+function buildSvg(primaryColor: string, name: string, tagline?: string): string {
   const safeColor = /^#(?:[0-9A-Fa-f]{3,4}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/.test(primaryColor) ? primaryColor : '#003366'
   const safeName = escapeXml(name.slice(0, 80))
+  const safeTagline = escapeXml((tagline ?? 'Schedules & Lines').slice(0, 60))
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>
@@ -51,7 +53,7 @@ function buildSvg(primaryColor: string, name: string): string {
     font-family="system-ui, -apple-system, Helvetica Neue, Arial, sans-serif"
     font-weight="400"
     opacity="0.65"
-  >Orari e linee</text>
+  >${safeTagline}</text>
 </svg>`
 }
 
@@ -66,7 +68,8 @@ export default defineEventHandler(async (event) => {
   if (operatorId) {
     try {
       const config = await $fetch<OperatorConfig>(`${CDN_BASE}/${operatorId}/config.json`)
-      return buildSvg(config.theme.primaryColor, config.fullName ?? config.name)
+      const tagline = getStrings(config.locale?.[0]).ogTagline
+      return buildSvg(config.theme.primaryColor, config.fullName ?? config.name, tagline)
     } catch {
       // CDN unreachable — fall through to query params
     }

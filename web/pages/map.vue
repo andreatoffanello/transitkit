@@ -2,7 +2,7 @@
   <AppLayout>
     <div class="max-w-lg mx-auto px-4">
       <div class="px-1 pt-6 pb-4">
-        <h1 class="text-xl font-bold mb-0.5" style="color: var(--text-primary)">Mappa</h1>
+        <h1 class="text-xl font-bold mb-0.5" style="color: var(--text-primary)">{{ s.mapTitle }}</h1>
         <p class="text-sm" style="color: var(--text-secondary)">{{ config?.fullName ?? config?.name }}</p>
       </div>
 
@@ -22,9 +22,9 @@
           <Map :size="44" :stroke-width="1.5" style="color: var(--color-primary); position: relative; z-index: 1; opacity: 0.85" />
         </div>
 
-        <h2 class="text-lg font-semibold mb-2" style="color: var(--text-primary)">Prossimamente</h2>
+        <h2 class="text-lg font-semibold mb-2" style="color: var(--text-primary)">{{ s.mapComingSoon }}</h2>
         <p class="text-sm leading-relaxed max-w-[260px]" style="color: var(--text-secondary)">
-          Mappa interattiva con fermate, percorsi e tempi di percorrenza. In sviluppo.
+          {{ s.mapComingSoonBody }}
         </p>
 
         <div class="mt-8 w-full max-w-xs space-y-2.5">
@@ -34,7 +34,7 @@
             style="background-color: var(--color-primary); color: var(--color-text-on-primary)"
           >
             <Route :size="16" :stroke-width="1.75" />
-            Sfoglia le linee
+            {{ s.mapBrowseLines }}
           </NuxtLink>
           <NuxtLink
             to="/"
@@ -42,7 +42,7 @@
             style="background-color: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--border)"
           >
             <Home :size="16" :stroke-width="1.75" />
-            Torna alla home
+            {{ s.mapBackHome }}
           </NuxtLink>
         </div>
       </div>
@@ -53,6 +53,7 @@
 <script setup lang="ts">
 import { Map, Route, Home } from 'lucide-vue-next'
 const { config } = await useOperator()
+const s = useStrings(config)
 
-useHead({ title: computed(() => `Mappa — ${config.value?.name ?? ''}`) })
+useHead({ title: computed(() => `${s.value.mapTitle} — ${config.value?.name ?? ''}`) })
 </script>

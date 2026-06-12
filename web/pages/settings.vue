@@ -1,28 +1,28 @@
 <template>
   <AppLayout>
     <div class="max-w-lg mx-auto lg:max-w-2xl flex flex-col" style="min-height: calc(100vh - 4rem)">
-      <PageHeader title="Impostazioni" />
+      <PageHeader :title="s.settingsTitle" />
 
       <div class="px-4 space-y-6 pb-8 flex-1">
 
         <!-- Aspetto -->
         <section>
           <h2 class="text-xs font-semibold uppercase tracking-widest px-1 mb-2" style="color: var(--text-tertiary)">
-            Aspetto
+            {{ s.settingsAppearance }}
           </h2>
           <div class="rounded-2xl overflow-hidden" style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm)">
             <button
               class="flex items-center gap-4 w-full px-4 py-4 transition-opacity duration-150 active:opacity-70"
               @click="toggleTheme"
               :aria-pressed="isDark"
-              aria-label="Attiva/disattiva tema scuro"
+              :aria-label="s.settingsToggleDark"
             >
               <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background-color: var(--bg-secondary)">
                 <component :is="isDark ? Sun : Moon" :size="18" :stroke-width="1.75" style="color: var(--text-secondary)" />
               </div>
               <div class="flex-1 text-left">
-                <p class="text-[15px] font-medium" style="color: var(--text-primary)">Tema scuro</p>
-                <p class="text-sm" style="color: var(--text-secondary)">{{ isDark ? 'Scuro' : 'Chiaro' }}</p>
+                <p class="text-[15px] font-medium" style="color: var(--text-primary)">{{ s.settingsDarkTheme }}</p>
+                <p class="text-sm" style="color: var(--text-secondary)">{{ isDark ? s.settingsDark : s.settingsLight }}</p>
               </div>
               <!-- Toggle visivo -->
               <div
@@ -41,7 +41,7 @@
         <!-- Informazioni -->
         <section>
           <h2 class="text-xs font-semibold uppercase tracking-widest px-1 mb-2" style="color: var(--text-tertiary)">
-            Informazioni
+            {{ s.settingsInfo }}
           </h2>
           <div
             class="rounded-2xl overflow-hidden"
@@ -81,7 +81,7 @@
               <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style="background-color: var(--bg-secondary)">
                 <Globe :size="18" :stroke-width="1.75" style="color: var(--text-secondary)" />
               </div>
-              <span class="flex-1 text-[15px] font-medium" style="color: var(--text-primary)">Sito ufficiale</span>
+              <span class="flex-1 text-[15px] font-medium" style="color: var(--text-primary)">{{ s.settingsOfficialWebsite }}</span>
               <ExternalLink :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" />
             </a>
           </div>
@@ -90,7 +90,7 @@
         <!-- Dati orari -->
         <section v-if="schedules?.validUntil">
           <h2 class="text-xs font-semibold uppercase tracking-widest px-1 mb-2" style="color: var(--text-tertiary)">
-            Dati orari
+            {{ s.settingsScheduleData }}
           </h2>
           <div class="rounded-2xl overflow-hidden" style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm)">
             <div class="flex items-center gap-4 px-4 py-4">
@@ -98,14 +98,14 @@
                 <CalendarDays :size="18" :stroke-width="1.75" style="color: var(--text-secondary)" />
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-[15px] font-medium" style="color: var(--text-primary)">Orari validi fino al</p>
+                <p class="text-[15px] font-medium" style="color: var(--text-primary)">{{ s.settingsSchedulesValidUntil }}</p>
                 <p class="text-sm" style="color: var(--text-secondary)">{{ formatValidUntil(schedules.validUntil) }}</p>
               </div>
               <span
                 v-if="schedulesExpiringSoon"
                 class="text-xs font-semibold px-2 py-0.5 rounded-full"
                 style="background-color: rgba(245,158,11,0.12); color: #d97706"
-              >In scadenza</span>
+              >{{ s.settingsExpiringSoon }}</span>
             </div>
           </div>
         </section>
@@ -115,7 +115,7 @@
       <!-- Version footer anchored to bottom -->
       <div class="px-4 py-5 text-center" style="border-top: 1px solid var(--border)">
         <p class="text-xs" style="color: var(--text-tertiary)">
-          Powered by transit-engine
+          {{ s.settingsPoweredBy }}
         </p>
       </div>
     </div>
@@ -137,8 +137,10 @@ const schedulesExpiringSoon = computed(() => {
 
 function formatValidUntil(dateStr: string): string {
   const d = new Date(dateStr)
-  return d.toLocaleDateString(config.value?.locale?.[0] ?? 'it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
+  return d.toLocaleDateString(config.value?.locale?.[0] ?? 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-useHead({ title: 'Impostazioni' })
+const s = useStrings(config)
+
+useHead({ title: computed(() => `${s.value.settingsTitle} — ${config.value?.name ?? ''}`) })
 </script>

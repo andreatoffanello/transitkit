@@ -6,6 +6,6 @@ import type { OperatorConfig } from '~/types'
  * Returns the app strings for the current operator's locale.
  * Call after useOperator() so config is populated.
  */
-export function useStrings(config: Ref<OperatorConfig | null>): ComputedRef<AppStrings> {
+export function useStrings(config: Ref<OperatorConfig | null | undefined>): ComputedRef<AppStrings> {
   return computed(() => getStrings(config.value?.locale[0]))
 }

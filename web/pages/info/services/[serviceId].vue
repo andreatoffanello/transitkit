@@ -1,7 +1,7 @@
 <template>
   <AppLayout>
     <PageHeader
-      :title="service ? ml(service.title) : 'Servizio'"
+      :title="service ? ml(service.title) : s.serviceFallbackTitle"
       back-to="/info"
       back-label="Info"
     />
@@ -30,7 +30,7 @@
       <!-- Descrizione -->
       <section v-if="service.description">
         <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
-          Descrizione
+          {{ s.serviceDescription }}
         </h2>
         <div
           class="rounded-2xl px-4 py-3.5"
@@ -43,7 +43,7 @@
       <!-- Dettagli (audience, hours, fare, serviceArea) -->
       <section v-if="service.audience || service.hours || service.fare || service.serviceArea">
         <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
-          Dettagli
+          {{ s.serviceDetails }}
         </h2>
         <div
           class="rounded-2xl overflow-hidden divide-app"
@@ -56,7 +56,7 @@
           >
             <Users :size="16" :stroke-width="1.75" class="shrink-0 mt-0.5" style="color: var(--text-tertiary)" aria-hidden="true" />
             <div>
-              <p class="text-xs font-medium mb-0.5" style="color: var(--text-tertiary)">Chi può usarlo</p>
+              <p class="text-xs font-medium mb-0.5" style="color: var(--text-tertiary)">{{ s.serviceAudience }}</p>
               <p class="text-sm" style="color: var(--text-primary)">{{ ml(service.audience) }}</p>
             </div>
           </div>
@@ -67,7 +67,7 @@
           >
             <Clock :size="16" :stroke-width="1.75" class="shrink-0 mt-0.5" style="color: var(--text-tertiary)" aria-hidden="true" />
             <div>
-              <p class="text-xs font-medium mb-0.5" style="color: var(--text-tertiary)">Orari</p>
+              <p class="text-xs font-medium mb-0.5" style="color: var(--text-tertiary)">{{ s.serviceHours }}</p>
               <p class="text-sm" style="color: var(--text-primary)">{{ ml(service.hours) }}</p>
             </div>
           </div>
@@ -78,7 +78,7 @@
           >
             <Ticket :size="16" :stroke-width="1.75" class="shrink-0 mt-0.5" style="color: var(--text-tertiary)" aria-hidden="true" />
             <div>
-              <p class="text-xs font-medium mb-0.5" style="color: var(--text-tertiary)">Tariffa</p>
+              <p class="text-xs font-medium mb-0.5" style="color: var(--text-tertiary)">{{ s.serviceFare }}</p>
               <p class="text-sm" style="color: var(--text-primary)">{{ ml(service.fare) }}</p>
             </div>
           </div>
@@ -89,7 +89,7 @@
           >
             <MapPin :size="16" :stroke-width="1.75" class="shrink-0 mt-0.5" style="color: var(--text-tertiary)" aria-hidden="true" />
             <div>
-              <p class="text-xs font-medium mb-0.5" style="color: var(--text-tertiary)">Area servita</p>
+              <p class="text-xs font-medium mb-0.5" style="color: var(--text-tertiary)">{{ s.serviceArea }}</p>
               <p class="text-sm" style="color: var(--text-primary)">{{ ml(service.serviceArea) }}</p>
             </div>
           </div>
@@ -99,7 +99,7 @@
       <!-- Come funziona (steps) -->
       <section v-if="service.steps?.length">
         <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
-          Come funziona
+          {{ s.serviceHowItWorks }}
         </h2>
         <div
           class="rounded-2xl overflow-hidden divide-app"
@@ -125,7 +125,7 @@
       <!-- Note -->
       <section v-if="service.notes?.length">
         <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
-          Note
+          {{ s.serviceNotes }}
         </h2>
         <div
           class="rounded-2xl overflow-hidden divide-app"
@@ -146,7 +146,7 @@
       <!-- Link utili -->
       <section v-if="service.links?.length">
         <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
-          Link utili
+          {{ s.serviceUsefulLinks }}
         </h2>
         <div
           class="rounded-2xl overflow-hidden divide-app"
@@ -204,7 +204,7 @@
 
     <!-- Not found -->
     <div v-else class="max-w-lg mx-auto px-4 py-16 text-center">
-      <p class="text-sm" style="color: var(--text-secondary)">Servizio non trovato.</p>
+      <p class="text-sm" style="color: var(--text-secondary)">{{ s.serviceNotFound }}</p>
     </div>
   </AppLayout>
 </template>
@@ -215,6 +215,7 @@ import type { Component } from 'vue'
 import type { MultiLangString } from '~/types'
 
 const { config } = await useOperator()
+const s = useStrings(config)
 const route = useRoute()
 
 const locale = computed(() => config.value?.locale?.[0] ?? 'en')
@@ -246,7 +247,7 @@ function resolveServiceIcon(name: string): Component {
 
 useHead({
   title: computed(() => {
-    const title = service.value ? ml(service.value.title) : 'Servizio'
+    const title = service.value ? ml(service.value.title) : s.value.serviceFallbackTitle
     return `${title} — ${config.value?.name ?? ''}`
   }),
 })

@@ -1,7 +1,7 @@
 <template>
   <AppLayout>
     <PageHeader
-      :title="config?.accessibility ? ml(config.accessibility.title) : 'Accessibilità'"
+      :title="config?.accessibility ? ml(config.accessibility.title) : s.accessibilityFallbackTitle"
       back-to="/info"
       back-label="Info"
     />
@@ -23,7 +23,7 @@
       <!-- Bullet points -->
       <section v-if="config.accessibility.bullets?.length">
         <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
-          Caratteristiche
+          {{ s.accessibilityFeatures }}
         </h2>
         <div
           class="rounded-2xl overflow-hidden divide-app"
@@ -56,7 +56,7 @@
           class="flex items-center justify-center w-full py-3.5 rounded-2xl text-sm font-semibold transition-opacity duration-150 active:opacity-75"
           :style="{ backgroundColor: 'var(--bg-elevated)', boxShadow: 'var(--shadow-sm)', color: 'var(--color-primary)' }"
         >
-          Maggiori informazioni
+          {{ s.accessibilityMoreInfo }}
           <ExternalLink :size="14" :stroke-width="2" class="ml-2" aria-hidden="true" />
         </a>
       </section>
@@ -64,7 +64,7 @@
     </div>
 
     <div v-else class="max-w-lg mx-auto px-4 py-16 text-center">
-      <p class="text-sm" style="color: var(--text-secondary)">Informazioni non disponibili.</p>
+      <p class="text-sm" style="color: var(--text-secondary)">{{ s.accessibilityNotAvailable }}</p>
     </div>
   </AppLayout>
 </template>
@@ -74,6 +74,7 @@ import { CheckCircle2, ExternalLink } from 'lucide-vue-next'
 import type { MultiLangString } from '~/types'
 
 const { config } = await useOperator()
+const s = useStrings(config)
 
 const locale = computed(() => config.value?.locale?.[0] ?? 'en')
 
@@ -84,7 +85,7 @@ function ml(field: MultiLangString | undefined): string {
 
 useHead({
   title: computed(() => {
-    const title = config.value?.accessibility ? ml(config.value.accessibility.title) : 'Accessibilità'
+    const title = config.value?.accessibility ? ml(config.value.accessibility.title) : s.value.accessibilityFallbackTitle
     return `${title} — ${config.value?.name ?? ''}`
   }),
 })

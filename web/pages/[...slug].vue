@@ -7,9 +7,9 @@
       >
         <MapPin :size="28" :stroke-width="1.5" style="color: var(--text-tertiary)" />
       </div>
-      <h1 class="text-xl font-bold mb-2" style="color: var(--text-primary)">Pagina non trovata</h1>
+      <h1 class="text-xl font-bold mb-2" style="color: var(--text-primary)">{{ s.pageNotFoundTitle }}</h1>
       <p class="text-[15px] mb-6" style="color: var(--text-secondary)">
-        La pagina che stai cercando non esiste o è stata spostata.
+        {{ s.pageNotFoundBody }}
       </p>
       <NuxtLink
         to="/"
@@ -17,7 +17,7 @@
         style="background-color: var(--color-primary); color: var(--color-text-on-primary)"
       >
         <Home :size="16" :stroke-width="1.75" />
-        Torna alla home
+        {{ s.pageNotFoundBack }}
       </NuxtLink>
     </div>
   </AppLayout>
@@ -27,9 +27,10 @@
 import { MapPin, Home } from 'lucide-vue-next'
 
 const { config } = await useOperator()
+const s = useStrings(config)
 
 useHead({
-  title: computed(() => `Pagina non trovata — ${config.value?.name ?? 'TransitKit'}`),
+  title: computed(() => `${s.value.pageNotFoundTitle} — ${config.value?.name ?? 'TransitKit'}`),
 })
 useOperatorHead(config)
 </script>

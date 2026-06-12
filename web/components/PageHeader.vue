@@ -28,10 +28,10 @@
       :to="backTo"
       class="flex items-center gap-1.5 pl-1 pr-3 py-2 rounded-lg -ml-1 transition-opacity duration-150 active:opacity-60"
       style="color: var(--color-primary); font-size: 14px; font-weight: 500; letter-spacing: -0.01em"
-      :aria-label="`Torna indietro`"
+      :aria-label="backLabel ?? 'Back'"
     >
       <ChevronLeft :size="20" :stroke-width="1.75" />
-      <span class="truncate">{{ backLabel ?? 'Indietro' }}</span>
+      <span class="truncate">{{ backLabel ?? 'Back' }}</span>
     </NuxtLink>
 
     <!-- Title centrato -->

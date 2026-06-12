@@ -3,7 +3,7 @@
     <PageHeader
       :title="route ? (route.longName ? `${route.name}: ${route.longName}` : route.name) : ''"
       back-to="/lines"
-      back-label="Linee"
+      :back-label="s.backToLines"
     >
       <template #action>
         <button

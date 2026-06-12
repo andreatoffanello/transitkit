@@ -165,6 +165,7 @@ export interface ScheduleStop {
   lines: string[]
   departures: Record<string, (string | number)[][]>
   docks?: Dock[]
+  gtfsStopIds?: string[]
 }
 
 export interface Dock {

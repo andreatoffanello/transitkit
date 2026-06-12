@@ -214,6 +214,13 @@ const stop = computed(() =>
   schedules.value?.stops.find((st: ScheduleStop) => st.id === stopId.value) ?? null,
 )
 
+// I QR stampati sulle paline codificano il GTFS stop_id raw (es. /stop/11),
+// contratto a lungo termine: risolvi allo slug canonico senza rompere il link.
+if (!stop.value && schedules.value) {
+  const byGtfsId = schedules.value.stops.find((st: ScheduleStop) => st.gtfsStopIds?.includes(stopId.value))
+  if (byGtfsId) await navigateTo({ path: `/stop/${byGtfsId.id}`, query: route.query }, { redirectCode: 301 })
+}
+
 const departuresByGroup = computed<Record<string, Departure[]>>(() => {
   if (!stop.value || !schedules.value) return {}
   const result: Record<string, Departure[]> = {}

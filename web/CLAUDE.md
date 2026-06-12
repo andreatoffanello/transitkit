@@ -71,7 +71,7 @@ Pattern splitting: orchestrator `pages/<route>.vue` snello + sottocartella `comp
 
 - Host → `operatorId` mappato in `utils/operators.ts` (`OPERATOR_HOSTS`). Unica mappa: aggiornare qui per nuovo operatore.
 - `middleware/operator.global.ts` risolve a ogni nav e setta `useState('operatorId')`. 404 se host sconosciuto (eccezione: `/privacy`, operator-agnostic).
-- Config + schedule live su CDN: `https://andreatoffanello.github.io/transitkit-data/{operatorId}/{config.json,schedules.json}` (override dev via env `CDN_BASE`).
+- Config + schedule live su CDN: `https://andreatoffanello.github.io/transitkit/{operatorId}/{config.json,schedules.json}` (override dev via env `CDN_BASE`). **NON** `transitkit-data` — quello è il repo del mock iniziale (4 fermate finte italiane): puntarci in prod è già successo e ha servito dati demo agli utenti.
 - Dev: senza hostname matching usa `NUXT_OPERATOR` env o il primo operatore registrato.
 
 ## Realtime

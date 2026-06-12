@@ -12,7 +12,7 @@
         />
         <div class="min-w-0 flex-1">
           <h1 class="text-[15px] font-semibold leading-tight truncate" style="color: var(--text-primary)">
-            {{ config?.fullName ?? config?.name }}
+            {{ config?.brandName ?? config?.name }}
           </h1>
           <p
             v-if="config?.region"
@@ -488,7 +488,7 @@ function formatDistance(m: number): string {
   return `${(m / 1000).toFixed(1)} ${s.value.distanceKm}`
 }
 
-const now = ref(Date.now())
+const now = useState('now-ms', () => Date.now())
 onMounted(() => {
   load()
   loadFavorites()
@@ -549,7 +549,7 @@ const sortedRecentStops = computed(() => {
 
 const favoriteNextDepartures = computed<Record<string, string>>(() => {
   const result: Record<string, string> = {}
-  const nowMin = computeNowMin(now.value)
+  const nowMin = computeNowMin(now.value, config.value?.timezone)
   for (const fav of favoriteStops.value) {
     if (!schedules.value) continue
     const dep = getNextDeparture(fav.stopId, schedules.value, now.value, config.value?.timezone, config.value?.headsignMap)
@@ -565,7 +565,7 @@ const favoriteNextDepartures = computed<Record<string, string>>(() => {
 
 const recentNextDepartures = computed<Record<string, { lineName: string; lineColor?: string; lineTextColor?: string; timeLabel: string; minutesFromNow: number }>>(() => {
   const result: Record<string, { lineName: string; lineColor?: string; lineTextColor?: string; timeLabel: string; minutesFromNow: number }> = {}
-  const nowMin = computeNowMin(now.value)
+  const nowMin = computeNowMin(now.value, config.value?.timezone)
   for (const recent of recentStops.value) {
     if (!schedules.value) continue
     const dep = getNextDeparture(recent.stopId, schedules.value, now.value, config.value?.timezone, config.value?.headsignMap)
@@ -583,7 +583,7 @@ const recentNextDepartures = computed<Record<string, { lineName: string; lineCol
 })
 
 useHead({
-  title: computed(() => `${config.value?.fullName ?? config.value?.name ?? ''} — ${s.value.linesAndSchedules}`),
+  title: computed(() => `${config.value?.brandName ?? config.value?.name ?? ''} — ${s.value.linesAndSchedules}`),
   link: [{ rel: 'canonical', href: computed(() => `${requestUrl.origin}${currentRoute.path}`) }],
   script: [
     {
@@ -613,7 +613,7 @@ useHead({
     },
     {
       property: 'og:title',
-      content: computed(() => config.value?.fullName ?? config.value?.name ?? ''),
+      content: computed(() => config.value?.brandName ?? config.value?.name ?? ''),
     },
     {
       property: 'og:description',

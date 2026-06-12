@@ -42,13 +42,13 @@ export function useStopHead(args: StopHeadArgs) {
       }),
     }],
     title: computed(() => {
-      const opName = config.value?.fullName ?? config.value?.name ?? ''
+      const opName = config.value?.brandName ?? config.value?.name ?? ''
       if (!pending.value && !stop.value) return `${s.value.stopNotFound} — ${opName}`
       const stopName = stop.value?.name ?? ''
       const base = stopName ? `${stopName} — ${opName}` : opName
       if (!upcomingDepartures.value.length) return base
       const next = upcomingDepartures.value[0]!
-      const titleNowMin = computeNowMin(now.value)
+      const titleNowMin = computeNowMin(now.value, config.value?.timezone)
       let diffMin = next.minutesFromMidnight - titleNowMin
       if (next.realtimeDelay !== undefined) diffMin += Math.round(next.realtimeDelay / 60)
       if (diffMin < 0 || diffMin >= 60) return base
@@ -56,7 +56,7 @@ export function useStopHead(args: StopHeadArgs) {
       return `${stopName} · ${next.lineName} ${s.value.nextDepartureIn} ${diffMin} ${s.value.minutesShort} — ${opName}`
     }),
     meta: [
-      { property: 'og:title', content: computed(() => stop.value?.name ?? config.value?.fullName ?? config.value?.name ?? '') },
+      { property: 'og:title', content: computed(() => stop.value?.name ?? config.value?.brandName ?? config.value?.name ?? '') },
       {
         name: 'description',
         content: computed(() => {

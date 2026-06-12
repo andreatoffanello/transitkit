@@ -2,6 +2,7 @@
 export interface OperatorConfig {
   id: string
   name: string
+  brandName?: string
   fullName: string
   url: string
   region: string

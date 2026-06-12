@@ -12,7 +12,7 @@
         <Bus :size="20" :stroke-width="1.75" style="color: var(--color-text-on-primary)" />
       </div>
       <p class="text-sm font-semibold leading-tight" style="color: var(--text-primary)">
-        {{ config?.name ?? 'TransitKit' }}
+        {{ config?.brandName ?? config?.name ?? 'TransitKit' }}
       </p>
       <p v-if="config?.region" class="text-xs mt-0.5" style="color: var(--text-tertiary)">
         {{ config.region }}

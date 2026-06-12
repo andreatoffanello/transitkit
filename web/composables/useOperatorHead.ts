@@ -4,7 +4,7 @@ import type { OperatorConfig } from '~/types'
 export function useOperatorHead(config: Ref<OperatorConfig | null | undefined>) {
   const ogImageUrl = computed(() => {
     const color = encodeURIComponent(config.value?.theme.primaryColor ?? '#003366')
-    const name = encodeURIComponent(config.value?.fullName ?? config.value?.name ?? 'Transit')
+    const name = encodeURIComponent(config.value?.brandName ?? config.value?.name ?? 'Transit')
     return `/og.svg?color=${color}&name=${name}`
   })
 
@@ -26,7 +26,7 @@ export function useOperatorHead(config: Ref<OperatorConfig | null | undefined>) 
     meta: [
       { name: 'theme-color', content: computed(() => config.value?.theme.primaryColor ?? '#003366') },
       { name: 'theme-color', content: '#111827', media: '(prefers-color-scheme: dark)' },
-      { name: 'apple-mobile-web-app-title', content: computed(() => config.value?.name ?? 'Transit') },
+      { name: 'apple-mobile-web-app-title', content: computed(() => config.value?.brandName ?? config.value?.name ?? 'Transit') },
       { property: 'og:image', content: ogImageUrl },
       { property: 'og:image:type', content: 'image/svg+xml' },
       { property: 'og:image:width', content: '1200' },

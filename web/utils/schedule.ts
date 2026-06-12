@@ -173,8 +173,24 @@ export function decodeDepartures(
 /**
  * Given a timestamp in milliseconds, returns the number of whole minutes
  * elapsed since the start of that calendar day (midnight = 0).
+ *
+ * Departure times in schedules.json are wall-clock in the operator's
+ * timezone: pass `timezone` so the comparison holds for any viewer/runtime
+ * tz (Vercel SSR runs UTC, the rider's phone runs wherever they are).
  */
-export function computeNowMin(nowMs: number): number {
+export function computeNowMin(nowMs: number, timezone?: string): number {
+  if (timezone) {
+    try {
+      const fmt = new Intl.DateTimeFormat('en-GB', {
+        timeZone: timezone,
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+      })
+      const [h, m] = fmt.format(new Date(nowMs)).split(':').map(Number)
+      if (Number.isFinite(h) && Number.isFinite(m)) return h! * 60 + m!
+    } catch { /* invalid tz id — fall back to runtime-local */ }
+  }
   const midnight = new Date(nowMs)
   midnight.setHours(0, 0, 0, 0)
   return Math.floor((nowMs - midnight.getTime()) / 60_000)
@@ -216,7 +232,7 @@ export function getNextDeparture(
   const compact = stop.departures[todayKey]
   if (!compact) return null
   const deps = decodeDepartures(compact, scheduleData, headsignMap)
-  const nowMin = computeNowMin(nowMs)
+  const nowMin = computeNowMin(nowMs, timezone)
   return deps
     .sort((a, b) => a.minutesFromMidnight - b.minutesFromMidnight)
     .find(d => d.minutesFromMidnight >= nowMin && (!lineFilter || d.lineName === lineFilter)) ?? null

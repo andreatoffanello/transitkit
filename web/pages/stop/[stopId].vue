@@ -266,7 +266,9 @@ const servingRoutes = computed((): Route[] => {
   return [...routeIds].map(id => routeMap.get(id)).filter((r): r is Route => r !== undefined)
 })
 
-const now = ref(Date.now())
+// useState: il valore SSR viene serializzato nel payload e riusato al
+// hydrate — client e server renderizzano lo stesso minuto (no mismatch).
+const now = useState('now-ms', () => Date.now())
 let interval: ReturnType<typeof setInterval>
 const { addStop } = useRecentStops()
 const { load: loadFavorites, toggleFavorite, isFavorite } = useFavoriteStops()
@@ -282,7 +284,7 @@ onMounted(async () => {
 })
 onUnmounted(() => clearInterval(interval))
 
-const nowMin = computed(() => computeNowMin(now.value))
+const nowMin = computed(() => computeNowMin(now.value, config.value?.timezone))
 
 const todayDepartures = computed<Departure[]>(() => {
   const key = todayKey.value
@@ -297,7 +299,7 @@ const { departures: realtimeDepartures, isLive, isLoading: realtimeLoading, last
 
 const upcomingDepartures = computed<Departure[]>(() => {
   const deps = realtimeDepartures.value
-  const curNowMin = computeNowMin(now.value)
+  const curNowMin = computeNowMin(now.value, config.value?.timezone)
   return deps
     .filter((d: Departure) => {
       const effectiveMin = d.minutesFromMidnight + Math.round((d.realtimeDelay ?? 0) / 60)
@@ -322,7 +324,7 @@ const nextDepartureTodayData = computed<{ time: string; lineName: string; lineCo
     filterLine.value,
   )
   if (!result) return null
-  const curNowMin = computeNowMin(now.value)
+  const curNowMin = computeNowMin(now.value, config.value?.timezone)
   if (result.minutesFromMidnight <= curNowMin + 120) return null
   const r = schedules.value.routes.find(rt => rt.name === result.lineName)
   return { time: result.time, lineName: result.lineName, lineColor: r?.color, lineTextColor: r?.textColor }

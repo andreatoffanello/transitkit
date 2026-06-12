@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <div class="max-w-lg mx-auto lg:max-w-2xl">
+    <div class="max-w-lg mx-auto md:max-w-xl lg:max-w-2xl">
 
       <!-- Top bar compatto — parity con homeTopBar native (logo + brand + region + settings) -->
       <header class="flex items-center gap-2.5 px-5 pt-3 pb-3">

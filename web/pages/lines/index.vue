@@ -2,7 +2,7 @@
   <AppLayout>
     <PageHeader :title="s.linesPageTitle" />
 
-    <div class="max-w-lg mx-auto px-4 pb-8">
+    <div class="max-w-lg mx-auto md:max-w-xl lg:max-w-2xl px-4 pb-8">
       <h1 class="sr-only">{{ s.linesPageTitle }}</h1>
 
       <div v-if="pending" aria-busy="true" :aria-label="s.ariaLoading">

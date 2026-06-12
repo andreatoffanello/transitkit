@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <div class="max-w-lg mx-auto lg:max-w-2xl">
+    <div class="max-w-lg mx-auto md:max-w-xl lg:max-w-2xl">
 
       <!-- Map header — only when coords are valid -->
       <template v-if="!pending && stop && stop.lat && stop.lng">

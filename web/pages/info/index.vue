@@ -2,7 +2,7 @@
   <AppLayout>
     <PageHeader :title="s.tabInfo" />
 
-    <div class="max-w-lg mx-auto px-4 pb-10 space-y-8">
+    <div class="max-w-lg mx-auto md:max-w-xl lg:max-w-2xl px-4 pb-10 space-y-8">
 
       <!-- Servizi -->
       <section v-if="config?.services?.length">
@@ -36,7 +36,7 @@
               <p class="text-sm font-medium truncate" style="color: var(--text-primary)">
                 {{ ml(service.title) }}
               </p>
-              <p class="text-xs truncate mt-0.5" style="color: var(--text-secondary)">
+              <p class="text-xs mt-0.5 line-clamp-2" style="color: var(--text-secondary)">
                 {{ ml(service.subtitle) }}
               </p>
             </div>

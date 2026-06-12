@@ -19,7 +19,7 @@
       </template>
     </PageHeader>
 
-    <div class="max-w-lg mx-auto px-4 pt-4 pb-8">
+    <div class="max-w-lg mx-auto md:max-w-xl lg:max-w-2xl px-4 pt-4 pb-8">
       <h1 class="sr-only">{{ route?.longName ?? route?.name ?? '' }}</h1>
 
       <div v-if="pending" aria-busy="true" :aria-label="s.ariaLoading">
@@ -69,14 +69,14 @@
             role="tab"
             :aria-selected="selectedDirectionId === dir.id"
             aria-controls="direction-panel"
-            :aria-label="dir.headsign ?? `${s.ariaDirections} ${dirIdx + 1}`"
+            :aria-label="dir.headsign ? normalizeGtfsDisplay(dir.headsign) : `${s.ariaDirections} ${dirIdx + 1}`"
             class="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all truncate active:opacity-80"
             :style="selectedDirectionId === dir.id
               ? { backgroundColor: 'var(--color-primary)', color: 'var(--color-text-on-primary)' }
               : { color: 'var(--text-secondary)' }"
             @click="selectedDirectionId = dir.id"
           >
-            {{ dir.headsign ?? `${s.ariaDirections} ${dirIdx + 1}` }}
+            {{ dir.headsign ? normalizeGtfsDisplay(dir.headsign) : `${s.ariaDirections} ${dirIdx + 1}` }}
           </button>
         </div>
 
@@ -92,10 +92,10 @@
           role="tabpanel"
           class="relative px-2"
         >
-          <!-- Linea verticale -->
+          <!-- Linea verticale — usa il colore della linea corrente -->
           <div
             class="absolute left-[19px] top-5 bottom-5 w-[1.5px]"
-            style="background-color: var(--border)"
+            :style="{ backgroundColor: lineColor }"
             aria-hidden="true"
           />
           <div class="space-y-0">
@@ -110,15 +110,15 @@
                 ? 'background-color: color-mix(in srgb, var(--color-primary) 8%, transparent)'
                 : ''"
             >
-              <!-- Terminal stops: primary ring; intermediate: numbered dot -->
+              <!-- Terminal stops: larger ring with line color; intermediate: small numbered dot -->
               <div
                 class="shrink-0 z-10 flex items-center justify-center rounded-full border-2"
-                :class="index === 0 || index === currentStops.length - 1 ? 'w-4 h-4' : 'w-5 h-5'"
+                :class="index === 0 || index === currentStops.length - 1 ? 'w-5 h-5' : 'w-4 h-4'"
                 :style="index === 0 || index === currentStops.length - 1
-                  ? 'border-color: var(--color-primary); background-color: var(--bg-primary)'
+                  ? { borderColor: lineColor, backgroundColor: 'var(--bg-primary)' }
                   : nuxtRoute.query.stop === stop.id
-                    ? 'border-color: var(--color-primary); background-color: var(--color-primary)'
-                    : 'border-color: var(--border); background-color: var(--bg-secondary)'"
+                    ? { borderColor: lineColor, backgroundColor: lineColor }
+                    : { borderColor: lineColor, backgroundColor: 'var(--bg-secondary)', opacity: '0.55' }"
                 aria-hidden="true"
               >
                 <span
@@ -135,7 +135,7 @@
                     ? 'color: var(--color-primary); font-weight: 600'
                     : 'color: var(--text-primary)'"
                 >
-                  {{ stop.name }}
+                  {{ normalizeGtfsDisplay(stop.name) }}
                 </span>
                 <span
                   v-if="nuxtRoute.query.stop === stop.id"
@@ -193,6 +193,7 @@
 definePageMeta({ pageTransition: { name: 'page-slide-up', mode: 'out-in' } })
 import { onMounted } from 'vue'
 import { normalizeHex } from '~/utils/color'
+import { normalizeGtfsDisplay } from '~/utils/gtfsDisplay'
 import type { Route, RouteDirection, ScheduleStop } from '~/types'
 import { Share2, Copy, ChevronRight } from 'lucide-vue-next'
 
@@ -240,6 +241,12 @@ const headerBg = computed(() => {
 const headerText = computed(() => {
   if (route.value?.textColor) return normalizeHex(route.value.textColor)
   return config.value?.theme.textOnPrimary ?? undefined
+})
+
+/** Route line color for spine/dots, falling back to --color-primary */
+const lineColor = computed(() => {
+  if (route.value?.color) return normalizeHex(route.value.color)
+  return 'var(--color-primary)'
 })
 
 const selectedDirectionId = ref<number>(0)

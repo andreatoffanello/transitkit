@@ -30,7 +30,7 @@ const { config } = await useOperator()
 const s = useStrings(config)
 
 useHead({
-  title: computed(() => `${s.value.pageNotFoundTitle} — ${config.value?.name ?? 'TransitKit'}`),
+  title: computed(() => `${s.value.pageNotFoundTitle} — ${config.value?.brandName ?? config.value?.name ?? 'TransitKit'}`),
 })
 useOperatorHead(config)
 </script>

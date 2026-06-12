@@ -248,7 +248,7 @@ function resolveServiceIcon(name: string): Component {
 useHead({
   title: computed(() => {
     const title = service.value ? ml(service.value.title) : s.value.serviceFallbackTitle
-    return `${title} — ${config.value?.name ?? ''}`
+    return `${title} — ${config.value?.brandName ?? config.value?.name ?? ''}`
   }),
 })
 useOperatorHead(config)

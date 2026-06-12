@@ -272,13 +272,13 @@ const currentStops = computed(() => {
 useHead({
   title: computed(() => {
     const lineName = route.value?.longName ?? route.value?.name ?? ''
-    const op = config.value?.fullName ?? config.value?.name ?? ''
+    const brand = config.value?.brandName ?? config.value?.name ?? ''
     const currentDir = route.value?.directions.find((d: RouteDirection) => d.id === selectedDirectionId.value)
     const headsign = currentDir?.headsign
 
-    if (!lineName) return op
-    if (headsign) return `${lineName} → ${headsign} — ${op}`
-    return `${lineName} — ${op}`
+    if (!lineName) return brand
+    if (headsign && headsign !== lineName) return `${lineName} → ${headsign} — ${brand}`
+    return `${lineName} — ${brand}`
   }),
   link: [{ rel: 'canonical', href: computed(() => `${requestUrl.origin}${nuxtRoute.path}`) }],
   script: [

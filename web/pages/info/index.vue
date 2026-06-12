@@ -189,7 +189,7 @@ const hasContact = computed(() =>
 )
 
 useHead({
-  title: computed(() => `${s.value.tabInfo} — ${config.value?.name ?? ''}`),
+  title: computed(() => `${s.value.tabInfo} — ${config.value?.brandName ?? config.value?.name ?? ''}`),
 })
 useOperatorHead(config)
 </script>

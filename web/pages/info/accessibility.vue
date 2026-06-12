@@ -86,7 +86,7 @@ function ml(field: MultiLangString | undefined): string {
 useHead({
   title: computed(() => {
     const title = config.value?.accessibility ? ml(config.value.accessibility.title) : s.value.accessibilityFallbackTitle
-    return `${title} — ${config.value?.name ?? ''}`
+    return `${title} — ${config.value?.brandName ?? config.value?.name ?? ''}`
   }),
 })
 useOperatorHead(config)

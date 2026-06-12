@@ -59,7 +59,7 @@
           <span
             class="block text-[12px] line-through"
             style="color: var(--text-tertiary); font-variant-numeric: tabular-nums"
-          >{{ departure.time }}</span>
+          >{{ displayTime }}</span>
           <span
             class="block text-[15px] font-semibold text-orange-500"
             style="font-variant-numeric: tabular-nums"
@@ -81,7 +81,7 @@
             v-else
             class="text-[15px] font-semibold"
             style="font-variant-numeric: tabular-nums; letter-spacing: -0.02em; color: var(--text-primary)"
-          >{{ departure.time }}</span>
+          >{{ displayTime }}</span>
         </template>
       </div>
     </div>
@@ -94,6 +94,7 @@ import { BusFront, TramFront, Train, Ship } from 'lucide-vue-next'
 import type { Departure } from '~/types'
 import { getStrings } from '~/utils/strings'
 import { normalizeHex } from '~/utils/color'
+import { formatClockTime } from '~/utils/clockTime'
 
 const props = defineProps<{
   departure: Departure
@@ -130,13 +131,16 @@ const delayMinutes = computed(() =>
 const hasDelay = computed(() => delayMinutes.value > 0)
 
 const realtimeTime = computed(() => {
-  if (!hasDelay.value) return props.departure.time
+  if (!hasDelay.value) return formatClockTime(props.departure.time, props.locale)
   const [h = 0, m = 0] = props.departure.time.split(':').map(Number)
   const totalMin = h * 60 + m + delayMinutes.value
   const rh = Math.floor(totalMin / 60) % 24
   const rm = totalMin % 60
-  return `${String(rh).padStart(2, '0')}:${String(rm).padStart(2, '0')}`
+  const raw = `${String(rh).padStart(2, '0')}:${String(rm).padStart(2, '0')}`
+  return formatClockTime(raw, props.locale)
 })
+
+const displayTime = computed(() => formatClockTime(props.departure.time, props.locale))
 
 function computeEffectiveMinutes(nowMs: number): number {
   const midnight = new Date(nowMs)
@@ -154,7 +158,7 @@ const rowAriaLabel = computed(() => {
   let timeDescription: string
   if (diffMin === 0) timeDescription = s.value.now
   else if (diffMin > 0 && diffMin < 60) timeDescription = `${diffMin} ${s.value.minutes}`
-  else timeDescription = props.departure.time
+  else timeDescription = displayTime.value
   return `${s.value.lineLabel} ${props.departure.lineName}, ${props.departure.headsign}, ${timeDescription}`
 })
 </script>

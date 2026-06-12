@@ -137,7 +137,7 @@
           :text-color="nextDepartureTodayData.lineTextColor"
           :locale="config?.locale[0]"
         />
-        <span class="text-sm font-semibold tabular-nums" style="color: var(--text-primary)">{{ nextDepartureTodayData.time }}</span>
+        <span class="text-sm font-semibold tabular-nums" style="color: var(--text-primary)">{{ formatClockTime(nextDepartureTodayData.time, config?.locale[0]) }}</span>
       </div>
       <button
         type="button"
@@ -168,6 +168,7 @@
 import { RefreshCw, Clock, ChevronDown, WifiOff } from 'lucide-vue-next'
 import type { OperatorConfig, Departure, Route } from '~/types'
 import type { AppStrings } from '~/utils/strings'
+import { formatClockTime } from '~/utils/clockTime'
 
 const props = defineProps<{
   s: AppStrings

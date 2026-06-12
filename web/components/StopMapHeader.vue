@@ -75,7 +75,7 @@ onMounted(async () => {
     zoom: 15.5,
     pitch: 0,
     bearing: 0,
-    attributionControl: false,
+    attributionControl: { compact: true },
     interactive: false,
   })
 

@@ -133,7 +133,7 @@ describe('getStrings', () => {
 
   it('onboardingHint: IT and EN', () => {
     expect(getStrings('it').onboardingHint).toBe('Cerca le linee per trovare e salvare le tue fermate preferite')
-    expect(getStrings('en').onboardingHint).toBe('Browse lines to find and save your favourite stops')
+    expect(getStrings('en').onboardingHint).toBe('Browse lines to find and save your favorite stops')
   })
 
   it('copyLink: IT and EN', () => {

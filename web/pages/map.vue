@@ -55,5 +55,5 @@ import { Map, Route, Home } from 'lucide-vue-next'
 const { config } = await useOperator()
 const s = useStrings(config)
 
-useHead({ title: computed(() => `${s.value.mapTitle} — ${config.value?.name ?? ''}`) })
+useHead({ title: computed(() => `${s.value.mapTitle} — ${config.value?.brandName ?? config.value?.name ?? ''}`) })
 </script>

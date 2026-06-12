@@ -2,8 +2,8 @@
   <AppLayout>
     <div class="max-w-lg mx-auto md:max-w-xl lg:max-w-2xl">
 
-      <!-- Top bar compatto — parity con homeTopBar native (logo + brand + region + settings) -->
-      <header class="flex items-center gap-2.5 px-5 pt-3 pb-3">
+      <!-- Top bar compatto — parity con homeTopBar native (logo + brand + region + settings) — hidden on desktop (sidebar shows it) -->
+      <header class="flex items-center gap-2.5 px-5 pt-3 pb-3 lg:hidden">
         <img
           :src="config?.logoUrl ?? '/icons/icon-180.png'"
           alt=""
@@ -431,6 +431,7 @@
 <script setup lang="ts">
 import { computeNowMin, getNextDeparture, sortStopsByNextDeparture } from '~/utils/schedule'
 import { highlightMatch } from '~/utils/highlight'
+import { formatClockTime } from '~/utils/clockTime'
 import type { ScheduleStop, ScheduleData } from '~/types'
 import { Search, X, MapPin, Navigation, Star, Clock, ChevronRight, Phone, Mail, Smartphone, Route, CalendarDays } from 'lucide-vue-next'
 
@@ -558,7 +559,7 @@ const favoriteNextDepartures = computed<Record<string, string>>(() => {
     if (diff < 0) continue
     if (diff === 0) result[fav.stopId] = `${dep.lineName} · ${s.value.now}`
     else if (diff < 60) result[fav.stopId] = `${dep.lineName} · ${diff} ${s.value.minutes}`
-    else result[fav.stopId] = `${dep.lineName} · ${dep.time}`
+    else result[fav.stopId] = `${dep.lineName} · ${formatClockTime(dep.time, config.value?.locale?.[0])}`
   }
   return result
 })
@@ -576,7 +577,7 @@ const recentNextDepartures = computed<Record<string, { lineName: string; lineCol
     let timeLabel: string
     if (diff === 0) timeLabel = s.value.now
     else if (diff < 60) timeLabel = `${diff} ${s.value.minutes}`
-    else timeLabel = dep.time
+    else timeLabel = formatClockTime(dep.time, config.value?.locale?.[0])
     result[recent.stopId] = { lineName: dep.lineName, lineColor: route?.color, lineTextColor: route?.textColor, timeLabel, minutesFromNow: diff }
   }
   return result

@@ -428,7 +428,7 @@ const IT: AppStrings = {
   settingsScheduleData: 'Dati orari',
   settingsSchedulesValidUntil: 'Orari validi fino al',
   settingsExpiringSoon: 'In scadenza',
-  settingsPoweredBy: 'Powered by transit-engine',
+  settingsPoweredBy: 'Powered by TransitKit',
 
   mapTitle: 'Mappa',
   mapComingSoon: 'Prossimamente',
@@ -572,7 +572,7 @@ const EN: AppStrings = {
   nextDepartureToday: 'Next today',
   schedulesUpdated: 'Schedules updated',
   schedulesValidUntil: 'Valid until',
-  onboardingHint: 'Browse lines to find and save your favourite stops',
+  onboardingHint: 'Browse lines to find and save your favorite stops',
   lineSingular: 'line',
   linePlural: 'lines',
   updatedAt: 'Updated at',
@@ -628,7 +628,7 @@ const EN: AppStrings = {
   settingsScheduleData: 'Schedule data',
   settingsSchedulesValidUntil: 'Schedules valid until',
   settingsExpiringSoon: 'Expiring soon',
-  settingsPoweredBy: 'Powered by transit-engine',
+  settingsPoweredBy: 'Powered by TransitKit',
 
   mapTitle: 'Map',
   mapComingSoon: 'Coming soon',

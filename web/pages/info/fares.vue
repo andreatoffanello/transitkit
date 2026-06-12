@@ -99,7 +99,7 @@ const { config } = await useOperator()
 const s = useStrings(config)
 
 useHead({
-  title: computed(() => `${s.value.infoFaresTitle} — ${config.value?.name ?? ''}`),
+  title: computed(() => `${s.value.infoFaresTitle} — ${config.value?.brandName ?? config.value?.name ?? ''}`),
 })
 useOperatorHead(config)
 </script>

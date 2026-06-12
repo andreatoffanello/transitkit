@@ -142,5 +142,5 @@ function formatValidUntil(dateStr: string): string {
 
 const s = useStrings(config)
 
-useHead({ title: computed(() => `${s.value.settingsTitle} — ${config.value?.name ?? ''}`) })
+useHead({ title: computed(() => `${s.value.settingsTitle} — ${config.value?.brandName ?? config.value?.name ?? ''}`) })
 </script>

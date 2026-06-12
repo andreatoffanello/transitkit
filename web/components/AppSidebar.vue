@@ -5,7 +5,15 @@
   >
     <!-- Operator branding -->
     <div class="px-5 py-6" style="border-bottom: 1px solid var(--border)">
+      <img
+        v-if="config?.logoUrl"
+        :src="config.logoUrl"
+        alt=""
+        class="w-10 h-10 rounded-xl object-cover mb-3"
+        style="width: 40px; height: 40px"
+      />
       <div
+        v-else
         class="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
         style="background-color: var(--color-primary)"
       >

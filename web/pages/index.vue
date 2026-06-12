@@ -5,7 +5,7 @@
       <!-- Top bar compatto — parity con homeTopBar native (logo + brand + region + settings) -->
       <header class="flex items-center gap-2.5 px-5 pt-3 pb-3">
         <img
-          src="/icons/icon-180.png"
+          :src="config?.logoUrl ?? '/icons/icon-180.png'"
           alt=""
           class="shrink-0 rounded-full object-cover"
           style="width: 32px; height: 32px"

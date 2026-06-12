@@ -18,6 +18,7 @@ import io
 import json
 import os
 import re
+import shutil
 import ssl
 import sys
 import zipfile
@@ -1182,6 +1183,17 @@ def main():
     # Write config.json for CDN consumers (strip pipeline-internal keys)
     cdn_config = {k: v for k, v in config.items()
                   if k not in ("gtfs_url", "gtfs_rt", "exclude_patterns", "terminal_overrides")}
+
+    # Publish the launcher icon next to the data so web clients show the same
+    # brand logo as the native apps (header + sidebar), via cdn_config.logoUrl.
+    app_icon = REPO_ROOT / "shared" / "operators" / operator_id / "brand" / "app-icon.png"
+    if app_icon.exists():
+        shutil.copyfile(app_icon, output_dir / "app-icon.png")
+        cdn_base = str(config.get("cdnUrl", "")).rstrip("/")
+        if cdn_base:
+            cdn_config["logoUrl"] = f"{cdn_base}/{operator_id}/app-icon.png"
+        print(f"  {(output_dir / 'app-icon.png').relative_to(REPO_ROOT)} (brand logo)")
+
     config_file = output_dir / "config.json"
     with open(config_file, "w", encoding="utf-8") as f:
         json.dump(cdn_config, f, ensure_ascii=False, indent=2)

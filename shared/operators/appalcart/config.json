@@ -34,7 +34,7 @@
     "defaultZoom": 13
   },
   "features": {
-    "enableMap": true,
+    "enableMap": false,
     "enableGeolocation": true,
     "enableFavorites": true,
     "enableNotifications": true,

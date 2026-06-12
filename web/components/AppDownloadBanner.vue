@@ -74,6 +74,15 @@ function dismiss() {
   localStorage.setItem(STORAGE_KEY, '1')
   window.dispatchEvent(new Event('app-banner-dismissed'))
 }
+
+// Il banner è fixed e ruberebbe l'ultima riga di contenuto: riserva lo
+// spazio via CSS var consumata da AppLayout (60px = min-height 44 + padding).
+watch(visible, (v) => {
+  document.documentElement.style.setProperty('--download-banner-offset', v ? '60px' : '0px')
+})
+onUnmounted(() => {
+  document.documentElement.style.removeProperty('--download-banner-offset')
+})
 </script>
 
 <style scoped>

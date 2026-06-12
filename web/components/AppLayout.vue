@@ -8,7 +8,7 @@
     <AppSidebar />
     <main
       class="app-main lg:ml-60 min-h-screen"
-      style="background-color: var(--bg-secondary)"
+      style="background-color: var(--bg-secondary); padding-bottom: var(--download-banner-offset, 0px)"
     >
       <slot />
     </main>

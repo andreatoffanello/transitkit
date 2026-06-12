@@ -78,7 +78,7 @@ defineProps<{
   stop: ScheduleStop
   fromLine: Route | null
   servingRoutes: Route[]
-  config: OperatorConfig | null
+  config: OperatorConfig | null | undefined
   s: AppStrings
   canShare: boolean
   copied: boolean

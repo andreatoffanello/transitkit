@@ -59,7 +59,7 @@ import type { AppStrings } from '~/utils/strings'
 
 defineProps<{
   s: AppStrings
-  config: OperatorConfig | null
+  config: OperatorConfig | null | undefined
   dayGroups: DayGroup[]
   departuresByGroup: Record<string, Departure[]>
   todayKey: string | null

@@ -6,7 +6,7 @@ import { computeNowMin } from '~/utils/schedule'
 
 interface StopHeadArgs {
   stop: ComputedRef<ScheduleStop | null>
-  config: Ref<OperatorConfig | null>
+  config: Ref<OperatorConfig | null | undefined>
   s: ComputedRef<AppStrings>
   pending: ComputedRef<boolean>
   upcomingDepartures: ComputedRef<Departure[]>

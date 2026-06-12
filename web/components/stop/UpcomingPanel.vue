@@ -171,7 +171,7 @@ import type { AppStrings } from '~/utils/strings'
 
 const props = defineProps<{
   s: AppStrings
-  config: OperatorConfig | null
+  config: OperatorConfig | null | undefined
   servingRoutes: Route[]
   filteredUpcomingDepartures: Departure[]
   filterLine: string | null

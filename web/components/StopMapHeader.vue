@@ -66,7 +66,6 @@ onMounted(async () => {
     import('maplibre-gl/dist/maplibre-gl-csp.js'),
     import('maplibre-gl/dist/maplibre-gl-csp-worker.js?url'),
   ])
-  // @ts-expect-error setWorkerUrl exists in CSP build
   maplibregl.setWorkerUrl(workerUrlMod.default)
 
   mapInstance = new maplibregl.Map({
@@ -81,9 +80,8 @@ onMounted(async () => {
   })
 
   const map = mapInstance as InstanceType<typeof maplibregl.Map>
-  // @ts-expect-error dev debug
   if (import.meta.dev || (typeof window !== 'undefined' && window.location?.hostname?.includes('appalcart'))) (window as unknown as { __map: unknown }).__map = map
-  map.on('error', (e) => console.error('[StopMapHeader] map error', (e as unknown as { error?: { message?: string } })?.error?.message ?? e))
+  map.on('error', (e: unknown) => console.error('[StopMapHeader] map error', (e as { error?: { message?: string } })?.error?.message ?? e))
 
   map.on('load', () => {
     const accent = props.primaryColor ?? '#165F9C'

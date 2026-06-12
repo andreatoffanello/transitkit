@@ -28,7 +28,7 @@
     "defaultZoom": 13
   },
   "features": {
-    "enableMap": true,
+    "enableMap": false,
     "enableGeolocation": true,
     "enableFavorites": true,
     "enableNotifications": true,
@@ -529,5 +529,6 @@
     "ios": "https://apps.apple.com/us/app/appalrider/id6770484267",
     "android": "https://play.google.com/store/apps/details?id=com.transitkit.appalcart"
   },
-  "privacyUrl": "https://appalcart.transitkit.app/privacy"
+  "privacyUrl": "https://appalcart.transitkit.app/privacy",
+  "logoUrl": "https://andreatoffanello.github.io/transitkit/appalcart/app-icon.png"
 }

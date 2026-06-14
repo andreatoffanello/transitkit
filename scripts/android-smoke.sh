@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# TransitKit — install + launch + verify smoke su emulator transitkit-dev.
+# TransitKit — install + launch + verify smoke su emulator transitkit-android.
 #
 # Dismette qualunque dialog ANR/system bloccante, force-stop dell'app,
 # launch pulito, attesa first paint, screenshot.
@@ -18,7 +18,7 @@
 set -euo pipefail
 
 ADB="/Users/andreatoffanello/Library/Android/sdk/platform-tools/adb"
-AVD_NAME="transitkit-dev"
+AVD_NAME="transitkit-android"
 OPERATOR_ID="appalcart"
 NAMESPACE="com.transitkit.app"
 ACT="${NAMESPACE}.MainActivity"
@@ -46,7 +46,7 @@ done
 
 PKG="com.transitkit.${OPERATOR_ID}"
 
-# Risolvi serial dell'emulator transitkit-dev (non usare emulator-XXXX hardcoded:
+# Risolvi serial dell'emulator transitkit-android (non usare emulator-XXXX hardcoded:
 # altri progetti hanno emulatori attivi con porte diverse)
 EMU=""
 for s in $("$ADB" devices | grep -E "^emulator-" | awk '{print $1}'); do

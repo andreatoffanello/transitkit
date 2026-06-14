@@ -97,21 +97,21 @@ Documentazione completa: [`transitkit-console/CLAUDE.md`](https://github.com/and
 - Scheme: `TransitKit`
 - Bundle ID: `com.transitkit.{OPERATOR_ID}` (white-label: es. `com.transitkit.appalcart`)
 - iOS xcodeproj: `ios/TransitKit.xcodeproj`
-- UDID simulatore iOS 18: `4302AFD9-496E-4586-A5D0-D6BAC735FFFD` (`transitkit-dev`, iPhone 16 Pro)
-- UDID simulatore iOS 26: `E25FE58E-7059-457F-A0A9-8B1E3D59145D` (`transitkit-dev-26`, iPhone 16 Pro)
+- UDID simulatore iOS 18: `4302AFD9-496E-4586-A5D0-D6BAC735FFFD` (`transitkit-ios18`, iPhone 16 Pro)
+- UDID simulatore iOS 26: `1E7E7611-FB05-4BFD-8F50-8E7F0963E0A6` (`transitkit-ios26`, iPhone 16 Pro)
 - Location simulatori/emulatore: applicata da `scripts/setup-dev.sh [operator_id]` leggendo `shared/operators/<op>/config.json` → `map.centerLat/centerLng`. Default `appalcart` → Boone, NC (`36.2168,-81.6746`). Su iOS la posizione `simctl location set` è in-memory: rilanciare lo script dopo ogni reboot del simulatore.
-- AVD Android: `transitkit-dev` (Pixel 6, API 34 — white-label: es. com.transitkit.appalcart)
+- AVD Android: `transitkit-android` (Pixel 6, API 34 — white-label: es. com.transitkit.appalcart)
 - **Porta console Android PINNED: `5600`** → serial deterministico `emulator-5600`. Avviare SEMPRE con `-port 5600`. La porta è riservata a transitkit: nessun altro progetto deve usarla.
 - Package Android: `com.transitkit.{OPERATOR_ID}`
 
 **Regole ferree:**
-- MAI lanciare/installare app su simulatori diversi da `transitkit-dev` e `transitkit-dev-26`.
+- MAI lanciare/installare app su simulatori diversi da `transitkit-ios18` e `transitkit-ios26`.
 - MAI usare `booted` come target simctl — sempre `$UDID`.
 - Il Bundle ID cambia per operatore: verificare sempre `{OPERATOR_ID}` prima di `simctl launch`.
-- MAI lanciare/installare app su emulatori Android diversi da `transitkit-dev`.
+- MAI lanciare/installare app su emulatori Android diversi da `transitkit-android`.
 - MAI usare `adb` senza `-s emulator-5600` esplicito.
-- MAI usare `emulator -avd <name>` con `<name>` diverso da `transitkit-dev`, e SEMPRE con `-port 5600`.
-- **STERILITÀ TOTALE tra progetti**: `transitkit-dev` ospita SOLO `com.transitkit.appalcart`. Mai installarci app di altri progetti (DoVe `app.dove.venezia`, Alilaguna `com.veniceairportwaterbus.app`, ACTV `it.actv.orari`, Movete, ecc.). Prima di lavorare, verificare i 3rd-party package e disinstallare qualsiasi residuo estraneo: `adb -s emulator-5600 shell pm list packages -3`. La porta fissa elimina l'ambiguità del serial (le porte sono assegnate per ordine di avvio, NON per AVD).
+- MAI usare `emulator -avd <name>` con `<name>` diverso da `transitkit-android`, e SEMPRE con `-port 5600`.
+- **STERILITÀ TOTALE tra progetti**: `transitkit-android` ospita SOLO `com.transitkit.appalcart`. Mai installarci app di altri progetti (DoVe `app.dove.venezia`, Alilaguna `com.veniceairportwaterbus.app`, ACTV `it.actv.orari`, Movete, ecc.). Prima di lavorare, verificare i 3rd-party package e disinstallare qualsiasi residuo estraneo: `adb -s emulator-5600 shell pm list packages -3`. La porta fissa elimina l'ambiguità del serial (le porte sono assegnate per ordine di avvio, NON per AVD).
 
 ---
 
@@ -200,31 +200,31 @@ Framework iOS white-label per app di trasporto pubblico.
 
 | Ruolo | Nome progetto | Modello | iOS |
 |-------|--------------|---------|-----|
-| Principale | `transitkit-dev` | iPhone 16 Pro | 18.5 |
-| iOS 26 test | `transitkit-dev-26` | iPhone 16 Pro | 26.2 |
+| Principale | `transitkit-ios18` | iPhone 16 Pro | 18.5 |
+| iOS 26 test | `transitkit-ios26` | iPhone 16 Pro | 26.3 |
 
 ```bash
 # Setup tramite script (una volta per Mac) — usa questo
 bash scripts/setup-dev.sh
 
 # Oppure manuale con identifier completi:
-xcrun simctl create "transitkit-dev" "com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro" "com.apple.CoreSimulator.SimRuntime.iOS-18-5"
+xcrun simctl create "transitkit-ios18" "com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro" "com.apple.CoreSimulator.SimRuntime.iOS-18-5"
 
 # Lookup UDID
-UDID="4302AFD9-496E-4586-A5D0-D6BAC735FFFD"      # transitkit-dev (iOS 18.5 — pinned)
-UDID26="E25FE58E-7059-457F-A0A9-8B1E3D59145D"    # transitkit-dev-26 (iOS 26.2 — pinned)
+UDID="4302AFD9-496E-4586-A5D0-D6BAC735FFFD"      # transitkit-ios18 (iOS 18.5 — pinned)
+UDID26="1E7E7611-FB05-4BFD-8F50-8E7F0963E0A6"    # transitkit-ios26 (iOS 26.3 — pinned)
 ```
 
 ### Android
 
 | Ruolo | AVD name | Device | API |
 |-------|----------|--------|-----|
-| Principale | `transitkit-dev` | Pixel 6 | 34 |
+| Principale | `transitkit-android` | Pixel 6 | 34 |
 
 ```bash
 # Crea AVD (una volta per Mac)
 JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
-avdmanager create avd --name "transitkit-dev" --device "pixel_6" \
+avdmanager create avd --name "transitkit-android" --device "pixel_6" \
   --package "system-images;android-34;google_apis;arm64-v8a" --sdcard "512M"
 
 ADB=/Users/andreatoffanello/Library/Android/sdk/platform-tools/adb
@@ -232,23 +232,23 @@ ANDROID_SERIAL=emulator-5600   # PINNED — porta fissa, sempre questo serial
 
 # Avvia emulatore SEMPRE su porta fissa 5600 (serial deterministico)
 /Users/andreatoffanello/Library/Android/sdk/emulator/emulator \
-  -avd transitkit-dev -port 5600 -no-snapshot-load -no-audio &
+  -avd transitkit-android -port 5600 -no-snapshot-load -no-audio &
 
-# Verifica difensiva PRIMA di ogni adb: il serial deve essere transitkit-dev
-[ "$($ADB -s $ANDROID_SERIAL emu avd name 2>/dev/null | head -1 | tr -d '\r')" = "transitkit-dev" ] \
-  || { echo "ABORT: $ANDROID_SERIAL non è transitkit-dev"; }
+# Verifica difensiva PRIMA di ogni adb: il serial deve essere transitkit-android
+[ "$($ADB -s $ANDROID_SERIAL emu avd name 2>/dev/null | head -1 | tr -d '\r')" = "transitkit-android" ] \
+  || { echo "ABORT: $ANDROID_SERIAL non è transitkit-android"; }
 
 # STERILITÀ: deve esserci SOLO com.transitkit.appalcart. Disinstalla residui altrui.
 $ADB -s $ANDROID_SERIAL shell pm list packages -3   # atteso: solo com.transitkit.appalcart
 ```
 
-**NEVER** usare altri emulatori (DoVe_Pixel6, alilaguna-android, movete-android) — appartengono ad altri progetti.
-**NEVER** installare su `transitkit-dev` app di altri progetti. Se `pm list packages -3` mostra estranei (`app.dove.venezia`, `com.veniceairportwaterbus.app`, `it.actv.orari`, Movete…), disinstallali subito: la regola è un emulatore sterile per progetto.
+**NEVER** usare altri emulatori (dove-android, alilaguna-android, movete-android) — appartengono ad altri progetti.
+**NEVER** installare su `transitkit-android` app di altri progetti. Se `pm list packages -3` mostra estranei (`app.dove.venezia`, `com.veniceairportwaterbus.app`, `it.actv.orari`, Movete…), disinstallali subito: la regola è un emulatore sterile per progetto.
 
 ## BUILD
 
 ```bash
-UDID="4302AFD9-496E-4586-A5D0-D6BAC735FFFD"   # transitkit-dev (pinned — evita ambiguità con cloni omonimi)
+UDID="4302AFD9-496E-4586-A5D0-D6BAC735FFFD"   # transitkit-ios18 (pinned — evita ambiguità con cloni omonimi)
 xcodebuild -project ios/TransitKit.xcodeproj -scheme TransitKit \
   -sdk iphonesimulator \
   -destination "platform=iOS Simulator,id=$UDID" \

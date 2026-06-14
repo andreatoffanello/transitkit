@@ -4,9 +4,9 @@
 #
 # Legge shared/operators/<op>/config.json → map.centerLat / map.centerLng,
 # poi imposta:
-#   - iOS sim transitkit-dev    (UDID 4302AFD9-…, iOS 18.5)
-#   - iOS sim transitkit-dev-26 (UDID E25FE58E-…, iOS 26.2)
-#   - Android emulator AVD transitkit-dev (se in esecuzione)
+#   - iOS sim transitkit-ios18    (UDID 4302AFD9-…, iOS 18.5)
+#   - iOS sim transitkit-ios26 (UDID 1E7E7611-…, iOS 26.3)
+#   - Android emulator AVD transitkit-android (se in esecuzione)
 #
 # UDID/AVD sono *pinned* al CLAUDE.md root del progetto. Idempotente:
 # rilanciare quando vuoi cambiare operatore o sincronizzare i sim.
@@ -37,8 +37,8 @@ echo "==> operator=$OPERATOR_ID  center=$LAT,$LON"
 # ---------- iOS ----------
 
 IOS_UDIDS=(
-    "4302AFD9-496E-4586-A5D0-D6BAC735FFFD"   # transitkit-dev    (iOS 18.5)
-    "E25FE58E-7059-457F-A0A9-8B1E3D59145D"   # transitkit-dev-26 (iOS 26.2)
+    "4302AFD9-496E-4586-A5D0-D6BAC735FFFD"   # transitkit-ios18    (iOS 18.5)
+    "1E7E7611-FB05-4BFD-8F50-8E7F0963E0A6"   # transitkit-ios26 (iOS 26.3)
 )
 
 for UDID in "${IOS_UDIDS[@]}"; do
@@ -60,7 +60,7 @@ done
 # ---------- Android ----------
 
 ADB="/Users/andreatoffanello/Library/Android/sdk/platform-tools/adb"
-AVD_NAME="transitkit-dev"
+AVD_NAME="transitkit-android"
 
 EMU=""
 for s in $("$ADB" devices 2>/dev/null | grep -E "^emulator-" | awk '{print $1}'); do

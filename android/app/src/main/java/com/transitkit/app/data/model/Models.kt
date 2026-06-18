@@ -140,6 +140,19 @@ data class ResolvedDeparture(
     val serviceDays: List<String> = emptyList(),
 )
 
+/**
+ * Scheduled departure time shifted forward by [delayMinutes] (plausibility-
+ * filtered RT delay from `VehicleStore.reliableDelayMinutes`). Returns
+ * [departureTime] unchanged when the delay is zero — non-live rows are
+ * byte-for-byte identical. Mirrors iOS `Departure.shiftedTime(byMinutes:)`
+ * and DoVe `Departure.liveTime`.
+ */
+fun ResolvedDeparture.shiftedTime(delayMinutes: Int): String {
+    if (delayMinutes == 0) return departureTime
+    val total = ((minutesFromMidnight + delayMinutes) % 1440 + 1440) % 1440
+    return "%02d:%02d".format(total / 60, total % 60)
+}
+
 fun ResolvedDeparture.toDeparture() = Departure(
     tripId = tripId,
     routeId = routeId,
@@ -149,6 +162,31 @@ fun ResolvedDeparture.toDeparture() = Departure(
     realtimeDepartureTime = null,
     delay = null,
     isRealtime = false,
+    routeColor = routeColor,
+    routeTextColor = routeTextColor,
+    transitType = transitType,
+)
+
+/**
+ * Converts a [ResolvedDeparture] to a [Departure] enriched with the
+ * plausibility-filtered RT delay from `VehicleStore.reliableDelayMinutes`.
+ *
+ * - [isLive] reflects vehicle presence in the positions feed (NOT delay
+ *   presence), matching iOS `VehicleStore.isLive` semantics exactly.
+ * - [delayMinutes] is the plausibility-filtered delay; null when untracked
+ *   or outside the −5…+30 min window.
+ * - `realtimeDepartureTime` = scheduled time shifted by delay; equals
+ *   [departureTime] when delay is zero → non-live rows are invariant.
+ */
+fun ResolvedDeparture.toRtDeparture(isLive: Boolean, delayMinutes: Int?) = Departure(
+    tripId = tripId,
+    routeId = routeId,
+    routeShortName = routeName,
+    headsign = headsign,
+    departureTime = departureTime,
+    realtimeDepartureTime = delayMinutes?.let { shiftedTime(it) },
+    delay = delayMinutes?.let { it * 60 },
+    isRealtime = isLive,
     routeColor = routeColor,
     routeTextColor = routeTextColor,
     transitType = transitType,

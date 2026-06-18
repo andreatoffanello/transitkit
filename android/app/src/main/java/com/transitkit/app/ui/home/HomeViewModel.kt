@@ -10,7 +10,7 @@ import com.transitkit.app.config.OperatorConfig
 import com.transitkit.app.data.model.Departure
 import com.transitkit.app.data.model.ResolvedStop
 import com.transitkit.app.data.model.ScheduleRoute
-import com.transitkit.app.data.model.toDeparture
+import com.transitkit.app.data.model.toRtDeparture
 import com.transitkit.app.data.repository.ScheduleRepository
 import com.transitkit.app.data.model.ServiceAlert
 import com.transitkit.app.data.store.AlertStore
@@ -151,9 +151,13 @@ class HomeViewModel @Inject constructor(
             nearbyStops.collectLatest { nearby ->
                 val result = mutableMapOf<String, List<Departure>>()
                 for ((stop, _) in nearby) {
+                    val liveTripIds = vehicleStore.vehicleByTripId.value.keys
                     result[stop.id] = scheduleRepository
                         .upcomingDepartures(stop.id, limit = 3)
-                        .map { it.toDeparture() }
+                        .map { dep ->
+                            val delayMin = vehicleStore.reliableDelayMinutes(dep.tripId)
+                            dep.toRtDeparture(isLive = dep.tripId in liveTripIds, delayMinutes = delayMin)
+                        }
                 }
                 _nearbyDepartures.value = result
             }
@@ -190,9 +194,13 @@ class HomeViewModel @Inject constructor(
 
     private fun loadDepartures(stopIds: List<String>) {
         val result = mutableMapOf<String, List<Departure>>()
+        val liveTripIds = vehicleStore.vehicleByTripId.value.keys
         for (stopId in stopIds) {
             result[stopId] = scheduleRepository.upcomingDepartures(stopId, limit = 3)
-                .map { it.toDeparture() }
+                .map { dep ->
+                    val delayMin = vehicleStore.reliableDelayMinutes(dep.tripId)
+                    dep.toRtDeparture(isLive = dep.tripId in liveTripIds, delayMinutes = delayMin)
+                }
         }
         _favoriteDepartures.value = result
     }

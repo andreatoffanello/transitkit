@@ -6,11 +6,12 @@ import androidx.lifecycle.viewModelScope
 import com.transitkit.app.data.model.Departure
 import com.transitkit.app.data.model.ResolvedDeparture
 import com.transitkit.app.data.model.ResolvedStop
-import com.transitkit.app.data.model.toDeparture
+import com.transitkit.app.data.model.toRtDeparture
 import com.transitkit.app.data.model.ServiceAlert
 import com.transitkit.app.data.repository.ScheduleRepository
 import com.transitkit.app.data.store.AlertStore
 import com.transitkit.app.data.store.FavoritesStore
+import com.transitkit.app.data.store.VehicleStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,6 +43,7 @@ class StopDetailViewModel @Inject constructor(
     private val scheduleRepository: ScheduleRepository,
     private val favoritesStore: FavoritesStore,
     private val alertStore: AlertStore,
+    private val vehicleStore: VehicleStore,
 ) : ViewModel() {
 
     val stopId: String = run {
@@ -123,7 +125,15 @@ class StopDetailViewModel @Inject constructor(
         val tz = TimeZone.getTimeZone(scheduleRepository.operatorTimezone)
         val cal = Calendar.getInstance(tz)
         val nowMinutes = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
-        val upcoming = raw.filter { it.minutesFromMidnight >= nowMinutes }.map { it.toDeparture() }
+        val liveTripIds = vehicleStore.vehicleByTripId.value.keys
+        val upcoming = raw.filter { it.minutesFromMidnight >= nowMinutes }.map { dep ->
+            // Plausibility-filtered RT delay from the local GTFS-RT feed.
+            // isLive = vehicle presence (positions feed) — NOT delay presence.
+            // Zero-regression: non-live rows get realtimeDepartureTime=null,
+            // identical to the pre-RT state.
+            val delayMin = vehicleStore.reliableDelayMinutes(dep.tripId)
+            dep.toRtDeparture(isLive = dep.tripId in liveTripIds, delayMinutes = delayMin)
+        }
         val filtered = if (routeFilter != null) upcoming.filter { it.routeId == routeFilter } else upcoming
         if (filtered.isEmpty()) DeparturesState.Empty else DeparturesState.Success(filtered)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DeparturesState.Loading)

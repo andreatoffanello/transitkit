@@ -44,6 +44,28 @@ class VehicleStore @Inject constructor(
     private val _tripDelays = MutableStateFlow<Map<String, Int>>(emptyMap())
     val tripDelays: StateFlow<Map<String, Int>> = _tripDelays.asStateFlow()
 
+    /**
+     * Plausibility window for RT delays: −5 min … +30 min (in seconds).
+     * Ghost trips or stale predictions often carry outliers (observed up to
+     * +93 min) that are noise, not information. Matches iOS VehicleStore
+     * and DoVe StopTimeUpdate.PLAUSIBLE_DELAY_RANGE (-300..1800 s).
+     */
+    companion object {
+        private val PLAUSIBLE_DELAY_RANGE = -300..1800
+    }
+
+    /**
+     * Delay in **minutes** for a trip, filtered through the plausibility window.
+     * Returns null when the trip is untracked or the raw delay is an outlier.
+     * Mirrors iOS `VehicleStore.reliableDelayMinutes(forTripId:)` and DoVe's
+     * `StopTimeUpdate.reliableDelay`.
+     */
+    fun reliableDelayMinutes(tripId: String): Int? {
+        val delaySec = _tripDelays.value[tripId] ?: return null
+        if (delaySec !in PLAUSIBLE_DELAY_RANGE) return null
+        return Math.round(delaySec / 60.0).toInt()
+    }
+
     private var pollingJob: Job? = null
     private var consecutiveErrors = 0
     private var scheduleObserverJob: Job? = null

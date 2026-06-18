@@ -63,6 +63,7 @@
 <script setup lang="ts">
 import { Home, Route, Map, Settings, Bus, Sun, Moon } from 'lucide-vue-next'
 import type { Component } from 'vue'
+import { WEB_MAP_READY } from '~/utils/features'
 
 interface Tab {
   path: string
@@ -80,7 +81,9 @@ const s = useStrings(config)
 const ALL_TABS = computed<Tab[]>(() => [
   { path: '/', label: s.value.tabHome, icon: Home },
   { path: '/lines', label: s.value.tabLines, icon: Route },
-  { path: '/map', label: s.value.tabMap, icon: Map, feature: 'enableMap' },
+  // Web map is still a placeholder — hidden until WEB_MAP_READY, regardless of
+  // the (native-shared) `enableMap` flag. See web/utils/features.ts.
+  ...(WEB_MAP_READY ? [{ path: '/map', label: s.value.tabMap, icon: Map, feature: 'enableMap' }] : []),
   { path: '/settings', label: s.value.tabSettings, icon: Settings },
 ])
 

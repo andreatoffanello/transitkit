@@ -39,16 +39,15 @@ bloccante), `442bc0a9` (force-update 5 lingue), `f4c74bec` (config appUpdate),
 
 ---
 
-## ⚠️ Vincolo scoperto: mappa disabilitata per appalcart
+## ✅ Risolto: mappa nativa riabilitata (era un flag condiviso)
 
-`shared/operators/appalcart/config.json` → `features.enableMap: false`. La tab
-Mappa è **spenta** nello stato canonico di appalcart. Conseguenze:
-- **Cluster A** (card mappa, glide, follow/linea/corsa) non è validabile finché
-  la mappa non viene riabilitata. Decisione utente necessaria: abilitare la
-  mappa (Cluster A la rende pronta) o tenere Cluster A in pausa / testarlo su
-  altro operatore.
-- Il "Vedi su mappa" del box corsa (Cluster B) punterebbe a una tab assente →
-  in caso, portare il box senza quella CTA finché la mappa è off.
+`enableMap` era `false` (commit `f4d7f40`, 12 giu) per nascondere la mappa
+**web** placeholder, ma è un flag condiviso → spegneva anche la mappa nativa
+(Android la perdeva a ogni build via `build-android.sh`). Fix `e1226c8`:
+canonical `enableMap: true` (nativo ON), web gateata su `WEB_MAP_READY`
+(`web/utils/features.ts`, =false) finché la PWA map non è reale. Mappa Android
+verificata funzionante (Mapbox, marker, toggle 2D, no crash). **Cluster A
+sbloccato.** Il "Vedi su mappa" del box corsa ora ha una destinazione valida.
 
 ## Avanzamento (loop porting)
 
@@ -59,9 +58,10 @@ Mappa è **spenta** nello stato canonico di appalcart. Conseguenze:
   additivo (campi RT prima mai popolati), pallino LIVE ora a parità. QA primary
   4/5 PASS — unico FAIL = verde condiviso soon/live (ereditato da DoVe, design
   decision aperta, non regressione).
+- ✅ **Mappa nativa riabilitata** (`e1226c8`): Cluster A sbloccato; web placeholder
+  nascosto via `WEB_MAP_READY`.
 - 🔶 **Decisione aperta:** differenziare il verde soon vs live? (cross-platform)
-- 🔶 **Decisione aperta:** abilitare la mappa per Cluster A?
-- ▶️ **Prossimo:** Cluster C — update-check (indipendente da mappa/colore).
+- ▶️ **Prossimo:** Cluster A (card mappa, ora validabile) o Cluster C update-check.
 
 ## Cluster A — Card mappa mezzi + pulsanti (follow/linea/corsa) + glide
 

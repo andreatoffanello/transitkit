@@ -7,6 +7,7 @@ import SwiftUI
 struct StopMapSheet: View {
     let stop: ResolvedStop
     @Environment(ScheduleStore.self) private var store
+    @Environment(VehicleStore.self) private var vehicleStore
 
     /// Callback to navigate to the full stop detail view.
     var onShowAllDepartures: ((ResolvedStop) -> Void)?
@@ -124,7 +125,7 @@ struct StopMapSheet: View {
 
                     Spacer()
 
-                    TimeDisplay(state: store.timeState(for: departure))
+                    TimeDisplay(state: store.timeState(for: departure, delayMinutes: departure.tripId.flatMap { vehicleStore.reliableDelayMinutes(forTripId: $0) }))
                 }
                 .padding(.vertical, 4)
                 .accessibilityIdentifier("sheet_dep_\(departure.lineName)_\(departure.time)")

@@ -21,8 +21,15 @@ struct DepartureRow: View {
     @Environment(VehicleStore.self) private var vehicleStore
     @Environment(ScheduleStore.self) private var scheduleStore
 
+    /// Plausibility-filtered RT delay in minutes for this departure's trip.
+    /// Nil when untracked or outside the −5…+30 min plausibility window.
+    private var rtDelay: Int? {
+        guard let tripId = departure.tripId else { return nil }
+        return vehicleStore.reliableDelayMinutes(forTripId: tripId)
+    }
+
     private var timeState: DepartureTimeState {
-        scheduleStore.timeState(for: departure)
+        scheduleStore.timeState(for: departure, delayMinutes: rtDelay)
     }
 
     private var isDeparted: Bool {
@@ -103,14 +110,18 @@ struct DepartureRow: View {
 
     @ViewBuilder
     private var timeStack: some View {
-        let isLive = vehicleStore.isLive(tripId: departure.tripId)
         VStack(alignment: .trailing, spacing: 1) {
-            TimeDisplay(state: timeState, liveDot: isLive)
+            // LIVE dot = vehicle tracked in the positions feed (unchanged
+            // semantics — no regression). Delay quality is a separate signal
+            // that only shifts the times below, not whether the dot shows.
+            TimeDisplay(state: timeState, liveDot: vehicleStore.isLive(tripId: departure.tripId))
 
-            // Absolute clock time beneath the countdown
+            // Absolute clock beneath the countdown. Shifted forward by the
+            // plausibility-filtered RT delay when present; byte-for-byte the
+            // scheduled time otherwise — zero regression for non-live rows.
             switch timeState {
             case .minutes, .departing:
-                Text(departure.time)
+                Text(departure.shiftedTime(byMinutes: rtDelay ?? 0))
                     .font(.system(size: 11, weight: .medium, design: .monospaced))
                     .foregroundStyle(isSoon ? AppTheme.realtimeGreen.opacity(0.8) : AppTheme.textSecondary)
             default:

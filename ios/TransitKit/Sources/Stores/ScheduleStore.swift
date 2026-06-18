@@ -361,15 +361,22 @@ class ScheduleStore {
     /// Always uses the operator's timezone — never the device's — so countdowns
     /// stay consistent across views regardless of where the user is.
     /// Threshold: ≤60 min → minutes countdown, >60 min → absolute clock time.
-    func timeState(for departure: Departure, now: Date = Date()) -> DepartureTimeState {
+    ///
+    /// When `delayMinutes` is provided (non-nil, plausibility already checked by
+    /// the caller via `VehicleStore.reliableDelayMinutes`) the countdown and the
+    /// absolute clock are both shifted by that amount via
+    /// `departure.shiftedTime(byMinutes:)`. Mirrors DoVe's `liveMinutesUntil()`.
+    func timeState(for departure: Departure, delayMinutes: Int? = nil, now: Date = Date()) -> DepartureTimeState {
         var cal = Calendar(identifier: .gregorian)
         cal.timeZone = operatorTimezone
         let nowMinutes = cal.component(.hour, from: now) * 60 + cal.component(.minute, from: now)
-        let diff = departure.minutesFromMidnight - nowMinutes
-        if diff < 0 { return .passed(departure.time) }
+        let delay = delayMinutes ?? 0
+        let diff = departure.minutesFromMidnight + delay - nowMinutes
+        let displayTime = departure.shiftedTime(byMinutes: delay)
+        if diff < 0 { return .passed(displayTime) }
         if diff == 0 { return .departing }
         if diff <= 60 { return .minutes(diff) }
-        return .absolute(departure.time)
+        return .absolute(displayTime)
     }
 }
 

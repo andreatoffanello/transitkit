@@ -485,7 +485,8 @@ struct HomeTab: View {
                                 LiveBadge()
                             }
                             TimelineView(.periodic(from: .now, by: 30)) { _ in
-                                TimeDisplay(state: store.timeState(for: dep))
+                                let rtDelay = dep.tripId.flatMap { vehicleStore.reliableDelayMinutes(forTripId: $0) }
+                                TimeDisplay(state: store.timeState(for: dep, delayMinutes: rtDelay))
                             }
                         }
                         .padding(.vertical, 6)

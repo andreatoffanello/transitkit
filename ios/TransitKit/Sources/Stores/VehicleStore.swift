@@ -85,6 +85,21 @@ final class VehicleStore {
         delayByTripId[tripId]
     }
 
+    /// Plausibility window for RT delays: −5 min … +30 min (in seconds).
+    /// Ghost trips or stale predictions often carry outliers (observed up to
+    /// +93 min) that are noise, not information. Matches DoVe's
+    /// `StopTimeUpdate.plausibleDelay` (-300...1800 s).
+    static let plausibleDelayRange: ClosedRange<Int32> = -300...1800
+
+    /// Delay in **minutes** for a trip, filtered through the plausibility window.
+    /// Returns nil when the trip is untracked or the delay is an outlier.
+    /// Mirrored from DoVe's `StopTimeUpdate.reliableDelay`.
+    func reliableDelayMinutes(forTripId tripId: String) -> Int? {
+        guard let delaySec = delayByTripId[tripId],
+              Self.plausibleDelayRange.contains(delaySec) else { return nil }
+        return Int((Double(delaySec) / 60).rounded())
+    }
+
     /// Predicted arrival time for a stop on a given trip, or nil if the feed
     /// does not publish per-stop ETAs. Matches either the synthetic station id
     /// or an original GTFS stop_id (the RT feed always uses the latter).

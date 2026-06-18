@@ -153,6 +153,7 @@ struct StopPreviewCard: View {
     let onDismiss: () -> Void
     let onOpenStop: () -> Void
     @Environment(ScheduleStore.self) private var store
+    @Environment(VehicleStore.self) private var vehicleStore
     /// Incremented every 15s to keep countdowns live — mirrors StopDetailView.
     @State private var refreshTick: Int = 0
 
@@ -162,12 +163,8 @@ struct StopPreviewCard: View {
     }
 
     private func timeState(for dep: Departure) -> DepartureTimeState {
-        let nowMinutes = store.currentMinutesFromMidnight()
-        let diff = dep.minutesFromMidnight - nowMinutes
-        if diff < 0 { return .passed(dep.time) }
-        if diff == 0 { return .departing }
-        if diff <= 60 { return .minutes(diff) }
-        return .absolute(dep.time)
+        let delay = dep.tripId.flatMap { vehicleStore.reliableDelayMinutes(forTripId: $0) }
+        return store.timeState(for: dep, delayMinutes: delay)
     }
 
     var body: some View {

@@ -211,6 +211,16 @@ struct Departure: Identifiable, Hashable {
         return parts[0] * 60 + parts[1]
     }
 
+    /// Scheduled time shifted forward by `delayMinutes` (the plausibility-filtered
+    /// RT delay from `VehicleStore.reliableDelayMinutes`). Returns the scheduled
+    /// `time` unchanged when the delay is zero — so non-live rows stay byte-for-byte
+    /// identical. Mirrors DoVe's `Departure.liveTime`.
+    func shiftedTime(byMinutes delayMinutes: Int) -> String {
+        guard delayMinutes != 0 else { return time }
+        let total = ((minutesFromMidnight + delayMinutes) % 1440 + 1440) % 1440
+        return String(format: "%02d:%02d", total / 60, total % 60)
+    }
+
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
     static func == (lhs: Departure, rhs: Departure) -> Bool { lhs.id == rhs.id }
 

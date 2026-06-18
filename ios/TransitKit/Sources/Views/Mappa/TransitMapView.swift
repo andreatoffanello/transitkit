@@ -337,6 +337,9 @@ struct TransitMapView: UIViewRepresentable {
                                    tier: parent.tier,
                                    route: route,
                                    isSelected: parent.selectedVehicleId == ann.vehicle.id)
+                    // Keep a11y label current as route data resolves.
+                    let routeName = route?.name ?? transitType.displayName
+                    view.accessibilityLabel = "\(routeName) \(transitType.displayName)"
                 }
             }
         }
@@ -389,6 +392,13 @@ struct TransitMapView: UIViewRepresentable {
                 view.displayPriority = .required
                 // Sotto al pallino utente (.max) ma sopra alle stop (100).
                 view.zPriority = MKAnnotationViewZPriority(rawValue: 900)
+                // Accessibility — vehicle markers must be reachable via VoiceOver
+                // and idb/Maestro automation. The SwiftUI host view (isUserInteractionEnabled=false)
+                // cannot itself carry a11y — set it on the MKAnnotationView wrapper.
+                view.isAccessibilityElement = true
+                view.accessibilityIdentifier = "map_vehicle_\(vehicleAnn.vehicle.id)"
+                let routeName = route?.name ?? transitType.displayName
+                view.accessibilityLabel = "\(routeName) \(transitType.displayName)"
                 return view
             }
             return nil

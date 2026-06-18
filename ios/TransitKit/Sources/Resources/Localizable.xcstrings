@@ -9173,6 +9173,29 @@
         }
       }
     },
+    "vehicle_open_line": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Line"
+          }
+        },
+        "es-419": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Línea"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linea"
+          }
+        }
+      }
+    },
     "vehicle_open_trip": {
       "extractionState": "manual",
       "localizations": {

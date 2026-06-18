@@ -11,6 +11,7 @@ struct VehicleCardOverlay: View {
     let route: APIRoute?
     let isFollowing: Bool
     let onToggleFollow: () -> Void
+    let onOpenLine: (() -> Void)?
     let onOpenTrip: () -> Void
     let onDismiss: () -> Void
 
@@ -22,6 +23,7 @@ struct VehicleCardOverlay: View {
                 route: route,
                 isFollowing: isFollowing,
                 onToggleFollow: onToggleFollow,
+                onOpenLine: onOpenLine,
                 onOpenTrip: onOpenTrip,
                 onDismiss: onDismiss
             )

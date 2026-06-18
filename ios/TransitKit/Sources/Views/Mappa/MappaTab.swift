@@ -67,8 +67,15 @@ struct MappaTab: View {
         var id: String { vehicle.id }
     }
     @State var selectedVehicle: VehicleSelection?
-    /// When non-nil, presents TripDetailView as a sheet (opened via the vehicle card).
+    /// When non-nil, presents TripDetailView as a fullscreen cover (opened via the vehicle card).
     @State var tripSheetTarget: TripTarget?
+    /// When non-nil, presents LineDetailView as a fullscreen cover (opened via the "Linea" button).
+    struct LineTarget: Identifiable {
+        let route: APIRoute
+        let directionId: Int
+        var id: String { route.id + "_\(directionId)" }
+    }
+    @State var lineSheetTarget: LineTarget?
 
     // MARK: Vehicle display
     /// Smoothly-animated vehicle list — updated with withAnimation on each feed refresh
@@ -195,6 +202,17 @@ struct MappaTab: View {
                     onToggleFollow: {
                         isFollowingVehicle.toggle()
                         if isFollowingVehicle { followSelectedVehicleIfNeeded() }
+                    },
+                    onOpenLine: selection.route.map { route in
+                        {
+                            // Navigation action (DoVe parity): push the line-detail
+                            // screen for this vehicle's route, mirroring how the
+                            // "Corsa" button opens TripDetailView via tripSheetTarget.
+                            lineSheetTarget = LineTarget(
+                                route: route,
+                                directionId: selectedDirectionId ?? route.directions.first?.directionId ?? 0
+                            )
+                        }
                     },
                     onOpenTrip: {
                         tripSheetTarget = makeTripTarget(for: selection)
@@ -365,6 +383,23 @@ struct MappaTab: View {
                                 tripSheetTarget = nil
                             }
                         }
+                    }
+            }
+        }
+        .fullScreenCover(item: $lineSheetTarget) { target in
+            NavigationStack {
+                LineDetailView(route: target.route)
+                    .navigationBarBackButtonHidden(true)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button(String(localized: "action_chiudi")) {
+                                lineSheetTarget = nil
+                            }
+                        }
+                    }
+                    .onAppear {
+                        // Pre-select the direction the vehicle was travelling in.
+                        router.pendingDirectionId = target.directionId
                     }
             }
         }

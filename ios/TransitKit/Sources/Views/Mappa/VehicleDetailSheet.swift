@@ -9,6 +9,7 @@ struct VehicleDetailSheet: View {
     let route: APIRoute?
     let isFollowing: Bool
     let onToggleFollow: () -> Void
+    let onOpenLine: (() -> Void)?
     let onOpenTrip: () -> Void
     let onDismiss: () -> Void
 
@@ -333,22 +334,48 @@ struct VehicleDetailSheet: View {
     }
 
     // MARK: - Row N — Full-width action buttons at the bottom
+    //
+    // Layout: Follow = compact icon-only (fixed 44pt square) to avoid truncation of
+    // the long localized label ("Follow vehicle" / "Segui il mezzo"). Linea = ghost/
+    // outlined labeled. Corsa = filled/primary labeled. The two labeled buttons share
+    // the remaining width so they always have room without squeezing.
 
     @ViewBuilder
     private var actionsRow: some View {
         HStack(spacing: 10) {
-            actionButton(
-                icon: .navigation,
-                title: String(localized: isFollowing ? "vehicle_unfollow" : "vehicle_follow"),
-                filled: isFollowing,
-                action: onToggleFollow
-            )
+            // Follow — icon-only compact square. No text label at all, so the
+            // EN/IT localization length never causes truncation. A11y label is
+            // mandatory because icon-only buttons must be discoverable by VoiceOver.
+            Button(action: onToggleFollow) {
+                LucideIcon.navigation.sized(18)
+                    .foregroundStyle(isFollowing ? Color.white : AppTheme.accent)
+                    .frame(width: 44, height: 44)
+                    .background(
+                        isFollowing ? AppTheme.accent : AppTheme.accent.opacity(0.12),
+                        in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    )
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(String(localized: isFollowing ? "vehicle_unfollow" : "vehicle_follow"))
+            .accessibilityIdentifier("vehicle_card_follow")
+
+            if let onOpenLine {
+                actionButton(
+                    icon: .map,
+                    title: String(localized: "vehicle_open_line"),
+                    filled: false,
+                    action: onOpenLine
+                )
+                .accessibilityIdentifier("vehicle_card_open_line")
+            }
+            // Corsa = filled/primary — visually dominant CTA
             actionButton(
                 icon: .list,
                 title: String(localized: "vehicle_open_trip"),
-                filled: false,
+                filled: true,
                 action: onOpenTrip
             )
+            .accessibilityIdentifier("vehicle_card_open_trip")
         }
     }
 
@@ -360,9 +387,10 @@ struct VehicleDetailSheet: View {
                 Text(title)
                     .font(.subheadline.weight(.semibold))
                     .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                    .allowsTightening(true)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity, minHeight: 44)
             .foregroundStyle(filled ? Color.white : AppTheme.textPrimary)
             .background(filled ? AppTheme.accent : AppTheme.textPrimary.opacity(0.08))
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))

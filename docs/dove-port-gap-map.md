@@ -60,8 +60,16 @@ sbloccato.** Il "Vedi su mappa" del box corsa ora ha una destinazione valida.
   decision aperta, non regressione).
 - ✅ **Mappa nativa riabilitata** (`e1226c8`): Cluster A sbloccato; web placeholder
   nascosto via `WEB_MAP_READY`.
+- ✅ **Cluster A — pulsante "Linea" card mezzo — iOS** (`8afb3ce`): layout DoVe
+  Follow(icon-only)/Linea(ghost)/Corsa(filled); Linea apre LineDetailView (push,
+  parallelo a Corsa→TripDetail), fedele a DoVe (onShowLine=navigateToRoute, NON
+  overlay). Marker mezzo ora accessibili (a11y id). QA primary 5/5 PASS.
+  - Correzione importante: la prima lettura di DoVe (Linea=filtro overlay) era
+    sbagliata; verificato a mano: DoVe Linea = push line detail.
 - 🔶 **Decisione aperta:** differenziare il verde soon vs live? (cross-platform)
-- ▶️ **Prossimo:** Cluster A (card mappa, ora validabile) o Cluster C update-check.
+- 📌 **Fuori scope flaggati:** a11y marker fermata, polish controlli mappa, stress
+  nomi linea lunghi.
+- ▶️ **Prossimo:** mirror Android del pulsante "Linea" (parità), poi glide marker.
 
 ## Cluster A — Card mappa mezzi + pulsanti (follow/linea/corsa) + glide
 

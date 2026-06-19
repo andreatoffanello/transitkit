@@ -7,6 +7,7 @@ struct TripDetailView: View {
     let fromStop: ResolvedStop
     @Environment(ScheduleStore.self) private var store
     @Environment(VehicleStore.self) private var vehicleStore
+    @Environment(DeepLinkRouter.self) private var router
 
     /// One row in the trip timeline: the resolved stop + its scheduled
     /// departure time at this trip (e.g. "16:45"). Stops are ordered by
@@ -51,7 +52,8 @@ struct TripDetailView: View {
 
     /// Live vehicle serving this trip (if still in feed). Drives the "Ora"
     /// highlight so the timeline tracks the bus as it progresses — not frozen
-    /// to whatever stop the sheet was opened from.
+    /// to whatever stop the sheet was opened from. Also powers the live-vehicle
+    /// box at the top of the view (presence = "in transit").
     private var liveVehicle: GtfsRtVehicle? {
         guard let tripId = departure.tripId, !tripId.isEmpty else { return nil }
         return vehicleStore.vehicle(forTripId: tripId)
@@ -81,6 +83,8 @@ struct TripDetailView: View {
             VStack(spacing: 0) {
                 tripHeader
 
+                liveVehicleBox
+
                 if let rows = tripRows, !rows.isEmpty {
                     stopsTimeline(rows: rows)
                 } else {
@@ -105,6 +109,98 @@ struct TripDetailView: View {
         .toolbar(.hidden, for: .tabBar)
         .navigationDestination(for: ResolvedStop.self) { stop in
             StopDetailView(stop: stop)
+        }
+    }
+
+    // MARK: - Live status (GTFS-RT)
+
+    /// Plausibility-filtered delay in minutes.
+    /// Mirrors DoVe's `liveDelayMinutes` — uses `reliableDelayMinutes`, NOT raw delay,
+    /// to discard absurd values (observed up to +93 min on stale ghost trips).
+    private var liveDelayMinutes: Int? {
+        guard let tripId = departure.tripId, !tripId.isEmpty else { return nil }
+        return vehicleStore.reliableDelayMinutes(forTripId: tripId)
+    }
+
+    // MARK: - Live Vehicle Box
+
+    /// Tappable status box shown at the top of the trip ONLY when a live vehicle
+    /// is resolved. Mirrors DoVe's `liveVehicleBox(route:)` faithfully:
+    /// transit icon circle · green/orange dot · "In transito" · delay pill · "Vedi su mappa" CTA.
+    ///
+    /// "Vedi su mappa" wires to `router.pendingMapPreviewVehicleId` — the same
+    /// mechanism used by deep-links (`transitkit://map/vehicle/<id>`) and the
+    /// vehicle callout "Apri corsa" CTA — which makes MappaTab switch focus to
+    /// that vehicle's annotation and open its preview card.
+    @ViewBuilder
+    private var liveVehicleBox: some View {
+        if let vehicle = liveVehicle {
+            let delay = liveDelayMinutes ?? 0
+            let isLate = delay > 0
+            let statusTint: Color = isLate ? .orange : .green
+
+            Button {
+                UISelectionFeedbackGenerator().selectionChanged()
+                router.pendingMapPreviewVehicleId = vehicle.id
+                router.pendingTabSwitch = TabSwitch(index: 3)
+            } label: {
+                HStack(spacing: 12) {
+                    // Transit mode icon in accent-colored circle
+                    ZStack {
+                        Circle()
+                            .fill(AppTheme.accent.opacity(0.14))
+                            .frame(width: 42, height: 42)
+                        departure.transitType.icon.sized(21)
+                            .foregroundStyle(AppTheme.accent)
+                    }
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        // Status row: pulsing dot · "In transito" · separator · delay pill
+                        HStack(spacing: 6) {
+                            Circle()
+                                .fill(statusTint)
+                                .frame(width: 7, height: 7)
+                            Text(String(localized: "trip_in_transit"))
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(.primary)
+                            Text("·")
+                                .font(.system(size: 12))
+                                .foregroundStyle(.tertiary)
+                            if isLate {
+                                Text(String(format: NSLocalizedString("trip_delay_minutes", comment: ""), delay))
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(.orange)
+                            } else {
+                                Text(String(localized: "trip_on_time"))
+                                    .font(.system(size: 13))
+                                    .foregroundStyle(AppTheme.textSecondary)
+                            }
+                        }
+                    }
+
+                    Spacer(minLength: 6)
+
+                    // "Vedi su mappa" CTA
+                    HStack(spacing: 3) {
+                        LucideIcon.mapPin.sized(13)
+                        Text(String(localized: "trip_see_on_map"))
+                            .font(.system(size: 12, weight: .semibold))
+                            .lineLimit(1)
+                    }
+                    .foregroundStyle(AppTheme.accent)
+                }
+                .padding(12)
+                .background(Color(.secondarySystemGroupedBackground),
+                            in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(AppTheme.accent.opacity(0.22), lineWidth: 1)
+                )
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 14)
+            .accessibilityIdentifier("trip_live_vehicle_box")
         }
     }
 

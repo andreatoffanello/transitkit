@@ -66,10 +66,19 @@ sbloccato.** Il "Vedi su mappa" del box corsa ora ha una destinazione valida.
   overlay). Marker mezzo ora accessibili (a11y id). QA primary 5/5 PASS.
   - Correzione importante: la prima lettura di DoVe (Linea=filtro overlay) era
     sbagliata; verificato a mano: DoVe Linea = push line detail.
+- ✅ **Cluster A — pulsante "Linea" — Android** (`8d51439`): mirror iOS, riusa nav
+  `line/{routeId}`, layout 3 pulsanti, testTag. + completati in IT i 9 testi della
+  card mezzo (erano fallback EN). Card mezzo ora interamente EN+IT. QA: layout OK,
+  truncation OK; Linea/Corsa/Follow code-verified (feed appalcart vuoto fuori
+  orario → ri-QA in orario di servizio).
 - 🔶 **Decisione aperta:** differenziare il verde soon vs live? (cross-platform)
-- 📌 **Fuori scope flaggati:** a11y marker fermata, polish controlli mappa, stress
-  nomi linea lunghi.
-- ▶️ **Prossimo:** mirror Android del pulsante "Linea" (parità), poi glide marker.
+- ⚠️ **Debito i18n scoperto:** ~26 chiavi IT ancora mancanti nell'app (viola la
+  regola EN+IT completi). Candidato a sweep dedicato + lint MissingTranslation CI.
+- 📌 **Fuori scope flaggati:** a11y marker fermata/mezzo (Mapbox symbol layer),
+  polish controlli mappa.
+- ▶️ **Prossimo:** glide marker mezzi (L, iOS+Android), oppure box stato live in
+  TripDetail, oppure sweep i18n IT se prioritario.
+- 🔁 **Loop:** cron 10 min `9b760fd6` (era wakeup dinamico).
 
 ## Cluster A — Card mappa mezzi + pulsanti (follow/linea/corsa) + glide
 

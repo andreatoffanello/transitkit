@@ -71,6 +71,22 @@ sbloccato.** Il "Vedi su mappa" del box corsa ora ha una destinazione valida.
   card mezzo (erano fallback EN). Card mezzo ora interamente EN+IT. QA: layout OK,
   truncation OK; Linea/Corsa/Follow code-verified (feed appalcart vuoto fuori
   orario → ri-QA in orario di servizio).
+- ✅ **i18n IT completo** (`094bd00`): EN+IT ora 1:1 su entrambe (26 chiavi IT
+  Android aggiunte; iOS già completo). Regola EN+IT rispettata. (es resta indietro,
+  fuori scope.)
+- ✅ **Update-check app — iOS** (`1363102`): banner soft (iTunes Lookup, bundleId
+  parametrizzato) + force screen, schema `appUpdate` in config. force OFF per
+  appalcart (no brick). Build+launch verificati. QA visiva banner/force =
+  condizionale (serve versione store più alta / force=true per innescarli).
+- ✅ **Fix marker mezzo tappabile** (`1c0f22f`): tappare il bus ora apre la card
+  (era rotto: a11y id non rinfrescato + hit-area 100×100 che faceva rubare il tap
+  dalle fermate). Verificato live.
+- ✅ **QA LIVE iOS (orario di servizio, `2026-06-19_1400`)**: card 3 pulsanti,
+  Linea→line detail, Corsa→trip detail, Follow, **box stato live**, countdown
+  ritardo RT — **tutti PASS su dati live**. Backlog QA mezzo-live iOS CHIUSO.
+- 📌 **Da QA, pre-esistenti fuori scope:** M1 righe partenza con destinazione
+  duplicata (headsign printed twice — ricorrente), M2 "live" reso in 2 modi
+  (dot vs pill), P1 icona Follow (arrow vs crosshair).
 - ✅ **Box stato live in TripDetail — iOS** (`8054da5`) **+ Android** (`86e1adb`):
   "In transito" + pill ritardo + CTA "Vedi su mappa" (riusa deep-link
   map/vehicle/{id}); additiva, nascosta senza mezzo live. Stringhe EN+IT+es.
@@ -81,10 +97,13 @@ sbloccato.** Il "Vedi su mappa" del box corsa ora ha una destinazione valida.
 - 🕑 **Backlog QA "in orario di servizio"** (appalcart non ha mezzi live di notte →
   feed vuoto, UI a mezzo-live non visibili): card mezzo Android (Linea/Corsa/Follow),
   box stato live TripDetail iOS+Android, glide marker quando fatti.
-- ▶️ **Prossimo:** sweep i18n IT (~26 chiavi) — non dipende da mezzi live, onora la
-  regola EN+IT. Poi glide marker (da QA in orario di servizio).
-- 🔁 **Loop:** cron 10 min `9b760fd6` + `caffeinate` (Mac sveglio, l'heartbeat non
-  muore più di notte) + wakeup di continuità.
+- ▶️ **Prossimo:** Android update-check (mirror iOS, no mezzi live) · glide marker
+  Android (iOS ha già il tween; verificare se Android salta) · Android live QA in
+  orario di servizio (card/box).
+- 🔁 **Loop:** l'heartbeat in-memory (wakeup/cron) NON scatta affidabilmente
+  unattended (provato: wakeup 12:53 non partito per 53 min nonostante caffeinate).
+  Continuazione affidabile = sessione attiva / ping utente, oppure grind nello
+  stesso turno.
 
 ## Cluster A — Card mappa mezzi + pulsanti (follow/linea/corsa) + glide
 

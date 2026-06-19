@@ -97,9 +97,13 @@ sbloccato.** Il "Vedi su mappa" del box corsa ora ha una destinazione valida.
 - 🕑 **Backlog QA "in orario di servizio"** (appalcart non ha mezzi live di notte →
   feed vuoto, UI a mezzo-live non visibili): card mezzo Android (Linea/Corsa/Follow),
   box stato live TripDetail iOS+Android, glide marker quando fatti.
-- ▶️ **Prossimo:** Android update-check (mirror iOS, no mezzi live) · glide marker
-  Android (iOS ha già il tween; verificare se Android salta) · Android live QA in
-  orario di servizio (card/box).
+- ✅ **Update-check app — Android** (`a3a5d06`): mirror iOS, config-only, force gate
+  OFF (no brick), banner soft + force screen, EN+IT+es. Build+launch OK. **Cluster C
+  completo iOS+Android.**
+- ▶️ **Prossimo:** glide marker Android (iOS ha `scheduleVehicleTween`; verificare
+  se Android salta tra refresh e portare il tween) · QA live Android in orario di
+  servizio (card mezzo + box stato live) · [opz] fix pre-esistente M1 (righe
+  partenza con destinazione duplicata — headsign, segnalato 3× dalle QA).
 - 🔁 **Loop:** l'heartbeat in-memory (wakeup/cron) NON scatta affidabilmente
   unattended (provato: wakeup 12:53 non partito per 53 min nonostante caffeinate).
   Continuazione affidabile = sessione attiva / ping utente, oppure grind nello

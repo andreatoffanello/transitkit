@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 // Maps stopId → list of other route short names that also serve that stop
 typealias StopCoincidences = Map<String, List<String>>
@@ -91,6 +92,28 @@ class TripDetailViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
+    /// Live vehicle resolved for this trip (presence = box is shown at top of screen).
+    /// Mirrors iOS `liveVehicle` computed property in TripDetailView.
+    val liveVehicle: StateFlow<com.transitkit.app.data.gtfsrt.VehiclePosition?> =
+        vehicleStore.vehicleByTripId
+            .map { byTripId -> byTripId[tripId] }
+            .distinctUntilChanged()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /// Plausibility-filtered delay in minutes for the live vehicle on this trip.
+    /// Delegates to VehicleStore.reliableDelayMinutes — same filter as iOS (−5…+30 min).
+    /// Returns null when trip is untracked or delay is an outlier.
+    val liveDelayMinutes: StateFlow<Int?> = vehicleStore.tripDelays
+        .map { vehicleStore.reliableDelayMinutes(tripId) }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /// Transit type for this trip's route, resolved once the schedule loads.
+    /// Needed by the live-vehicle box to choose the mode icon.
+    /// Defaults to 3 (bus) — same default as the Departure model.
+    private val _routeTransitType = MutableStateFlow(3)
+    val routeTransitType: StateFlow<Int> = _routeTransitType.asStateFlow()
+
     init {
         viewModelScope.launch {
             try {
@@ -106,6 +129,8 @@ class TripDetailViewModel @Inject constructor(
                 val result = kotlinx.coroutines.withContext(Dispatchers.Default) {
                     // Build stopId → stop lookup once.
                     val stopById = schedule.stops.associateBy { it.id }
+                    // Build routeId → ScheduleRoute for transitType lookup.
+                    val routeById = schedule.routes.associateBy { it.id }
 
                     // Single pass over the schedule: collect every departure
                     // for this trip + record the currentRouteId. Avoids 3
@@ -125,6 +150,7 @@ class TripDetailViewModel @Inject constructor(
                             }
                         }
                     }
+                    val foundTransitType = currentRouteId?.let { routeById[it]?.transitType } ?: 3
                     val stopTimes = tripStops.sortedBy { it.sequenceNumber }
                     val originIdx = stopTimes.indexOfFirst { it.stopId == fromStopId }.coerceAtLeast(0)
                     val coincidences = stopTimes.associate { st ->
@@ -135,10 +161,12 @@ class TripDetailViewModel @Inject constructor(
                             ?: emptyList()
                         st.stopId to others
                     }
-                    Triple(stopTimes, originIdx, coincidences)
+                    Triple(stopTimes, originIdx, coincidences) to foundTransitType
                 }
 
-                val (stopTimes, originIdx, coincidences) = result
+                val (triple, transitType) = result
+                val (stopTimes, originIdx, coincidences) = triple
+                _routeTransitType.value = transitType
                 if (stopTimes.isEmpty()) {
                     _tripState.value = TripState.Error(R.string.trip_error_no_stops)
                     return@launch

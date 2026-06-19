@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,6 +43,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.draw.drawWithContent
@@ -50,6 +52,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -62,6 +65,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.transitkit.app.R
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.data.model.StopTime
+import com.transitkit.app.ui.mappa.iconForTransitType
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,6 +73,7 @@ import kotlinx.coroutines.delay
 fun TripDetailScreen(
     onBack: () -> Unit,
     onNavigateToStop: (stopId: String) -> Unit,
+    onShowVehicleOnMap: (vehicleId: String) -> Unit = {},
     viewModel: TripDetailViewModel = hiltViewModel(),
 ) {
     val tripState by viewModel.tripState.collectAsStateWithLifecycle()
@@ -213,6 +218,9 @@ fun TripDetailScreen(
                 is TripState.Success -> {
                     val liveOriginIndex by viewModel.liveOriginIndex.collectAsStateWithLifecycle()
                     val hasLiveVehicle by viewModel.hasLiveVehicle.collectAsStateWithLifecycle()
+                    val liveVehicle by viewModel.liveVehicle.collectAsStateWithLifecycle()
+                    val liveDelayMinutes by viewModel.liveDelayMinutes.collectAsStateWithLifecycle()
+                    val routeTransitType by viewModel.routeTransitType.collectAsStateWithLifecycle()
                     val listState = rememberLazyListState()
                     // Scroll once to the initial origin on first successful load.
                     // Subsequent vehicle movements update the highlight but keep
@@ -229,6 +237,23 @@ fun TripDetailScreen(
                             .padding(padding),
                         contentPadding = PaddingValues(vertical = 8.dp),
                     ) {
+                        // Live vehicle box — shown ONLY when there is a live vehicle.
+                        // Hidden when liveVehicle is null → screen unchanged when no RT feed.
+                        if (liveVehicle != null) {
+                            val v = liveVehicle!!
+                            item(key = "live_vehicle_box") {
+                                LiveVehicleBox(
+                                    transitType = routeTransitType,
+                                    delayMinutes = liveDelayMinutes ?: 0,
+                                    lineColor = lineColor,
+                                    onClick = { onShowVehicleOnMap(v.vehicleId) },
+                                    modifier = Modifier
+                                        .padding(horizontal = 16.dp)
+                                        .padding(top = 4.dp, bottom = 12.dp),
+                                )
+                            }
+                        }
+
                         itemsIndexed(
                             items = state.stops,
                             key = { _, stop -> "${stop.stopId}_${stop.departureTime}" },
@@ -249,6 +274,115 @@ fun TripDetailScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+// ── Live Vehicle Box ──────────────────────────────────────────────────────────
+// Shown at the TOP of the trip ONLY when a live vehicle is resolved.
+// Mirrors iOS TripDetailView `liveVehicleBox`: transit icon circle · status dot ·
+// "In transito" · delay pill · "Vedi su mappa" CTA. Tap → switches to Map tab
+// focused on that vehicle via the deep-link route `transitkit://map/vehicle/{id}`.
+//
+// Progress text (DoVe: vehicle position description) is intentionally omitted —
+// `vehicleProgress()` helper is absent in transit-engine; omit as iOS commit did.
+
+@Composable
+private fun LiveVehicleBox(
+    transitType: Int,
+    delayMinutes: Int,
+    lineColor: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val haptic = LocalHapticFeedback.current
+    val late = delayMinutes > 0
+    val orange = Color(0xFFFF9500)
+    val green = Color(0xFF34C759)
+    val statusTint = if (late) orange else green
+    val iconRes = iconForTransitType(transitType)
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .clickable {
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onClick()
+            }
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
+            .border(1.dp, lineColor.copy(alpha = 0.22f), RoundedCornerShape(14.dp))
+            .padding(12.dp)
+            .semantics { testTag = "trip_live_vehicle_box" },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        // Transit mode icon in accent-colored circle
+        Box(
+            modifier = Modifier
+                .size(42.dp)
+                .clip(CircleShape)
+                .background(lineColor.copy(alpha = 0.14f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                modifier = Modifier.size(21.dp),
+                tint = lineColor,
+            )
+        }
+
+        // Status column: dot · "In transito" · separator · delay pill
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(7.dp)
+                    .clip(CircleShape)
+                    .background(statusTint),
+            )
+            Text(
+                text = stringResource(R.string.trip_in_transit),
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = "·",
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            )
+            Text(
+                text = if (late) stringResource(R.string.trip_delay_minutes, delayMinutes)
+                       else stringResource(R.string.trip_on_time),
+                fontSize = 13.sp,
+                fontWeight = if (late) FontWeight.SemiBold else FontWeight.Normal,
+                color = if (late) orange else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        // "See on map" CTA
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
+            Icon(
+                painter = painterResource(LucideIcons.MapPin),
+                contentDescription = null,
+                modifier = Modifier.size(13.dp),
+                tint = lineColor,
+            )
+            Text(
+                text = stringResource(R.string.trip_see_on_map),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = lineColor,
+                maxLines = 1,
+            )
         }
     }
 }

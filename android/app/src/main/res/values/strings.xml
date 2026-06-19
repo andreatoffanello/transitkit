@@ -300,6 +300,12 @@
     <string name="trip_stop_attuale">Now</string>
     <string name="cd_indietro_trip">Back</string>
 
+    <!-- TripDetailScreen — live vehicle box (iOS parity: trip_in_transit / trip_on_time / trip_delay_minutes / trip_see_on_map) -->
+    <string name="trip_in_transit">In transit</string>
+    <string name="trip_on_time">on time</string>
+    <string name="trip_delay_minutes">+%1$d min</string>
+    <string name="trip_see_on_map">See on map</string>
+
     <!-- MappaScreen — vehicle marker fallback label -->
     <string name="vehicle_label_default">Bus</string>
 

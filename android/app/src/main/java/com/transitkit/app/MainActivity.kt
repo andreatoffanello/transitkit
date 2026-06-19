@@ -555,6 +555,17 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                         val encodedId = URLEncoder.encode(stopId, StandardCharsets.UTF_8.name())
                         navController.navigate("stop/$encodedId")
                     },
+                    onShowVehicleOnMap = { vehicleId ->
+                        // Reuse the existing deep-link route that MappaScreen already handles:
+                        // composable("mappa", deepLinks = [uriPattern = "transitkit://map/vehicle/{vehicleId}"]).
+                        // This pops back to the Mappa tab and passes `initialVehicleId` so the map
+                        // opens focused on that vehicle — same mechanism as the vehicle callout CTA.
+                        val encoded = URLEncoder.encode(vehicleId, StandardCharsets.UTF_8.name())
+                        navController.navigate("transitkit://map/vehicle/$encoded") {
+                            popUpTo(Screen.Mappa.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    },
                 )
             }
 

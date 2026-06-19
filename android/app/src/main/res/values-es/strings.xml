@@ -300,6 +300,12 @@
     <string name="trip_stop_attuale">Ahora</string>
     <string name="cd_indietro_trip">Atrás</string>
 
+    <!-- TripDetailScreen — caja vehículo en vivo (paridad iOS) -->
+    <string name="trip_in_transit">En tránsito</string>
+    <string name="trip_on_time">puntual</string>
+    <string name="trip_delay_minutes">+%1$d min</string>
+    <string name="trip_see_on_map">Ver en mapa</string>
+
     <!-- MappaScreen — vehicle marker fallback label -->
     <string name="vehicle_label_default">Autobús</string>
 

@@ -505,4 +505,13 @@
     <string name="onb_done_title">Todo listo</string>
     <string name="onb_done_body">Agrega tus paradas habituales a favoritos para verlas con un toque.</string>
     <string name="onb_done_cta">Comenzar</string>
+
+    <!-- App update check -->
+    <string name="update_available_title">Actualización disponible</string>
+    <string name="update_now_label">Actualizar ahora</string>
+    <string name="update_later_label">Más tarde</string>
+    <string name="update_force_title">Actualización requerida</string>
+    <string name="update_force_cta">Actualizar la app</string>
+    <string name="update_force_fallback_message">Por favor actualiza la aplicación para continuar usándola.</string>
+    <string name="update_soft_fallback_message">Nuevas funciones y mejoras disponibles.</string>
 </resources>

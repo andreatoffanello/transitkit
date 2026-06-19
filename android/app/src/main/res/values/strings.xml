@@ -556,4 +556,13 @@
     <string name="onb_done_title">You\'re all set</string>
     <string name="onb_done_body">Add your daily stops to favorites for one-tap schedules.</string>
     <string name="onb_done_cta">Get started</string>
+
+    <!-- App update check -->
+    <string name="update_available_title">Update available</string>
+    <string name="update_now_label">Update now</string>
+    <string name="update_later_label">Later</string>
+    <string name="update_force_title">Update required</string>
+    <string name="update_force_cta">Update the app</string>
+    <string name="update_force_fallback_message">Please update the app to continue using it.</string>
+    <string name="update_soft_fallback_message">New features and improvements are available.</string>
 </resources>

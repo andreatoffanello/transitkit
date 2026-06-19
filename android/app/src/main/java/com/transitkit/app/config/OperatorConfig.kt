@@ -116,6 +116,7 @@ data class OperatorConfig(
     @Json(name = "privacyUrl") val privacyUrl: String? = null,
     val services: List<ServiceInfo>? = null,
     val accessibility: AccessibilityInfo? = null,
+    @Json(name = "appUpdate") val appUpdate: AppUpdateConfig? = null,
 ) {
     @Immutable
     @JsonClass(generateAdapter = true)
@@ -159,4 +160,39 @@ data class OperatorConfig(
         @Json(name = "trip_updates") val tripUpdatesUrl: String? = null,
         @Json(name = "alerts") val serviceAlertsUrl: String? = null,
     )
+
+    @Immutable
+    @JsonClass(generateAdapter = true)
+    data class AppUpdateAndroidConfig(
+        @Json(name = "minVersionCode") val minVersionCode: Int = 0,
+        @Json(name = "latestVersionCode") val latestVersionCode: Int = 0,
+        val force: Boolean = false,
+        @Json(name = "storeUrl") val storeUrl: String? = null,
+    )
+
+    @Immutable
+    @JsonClass(generateAdapter = true)
+    data class AppUpdateConfig(
+        val android: AppUpdateAndroidConfig? = null,
+        @Json(name = "messageEn") val messageEn: String? = null,
+        @Json(name = "messageIt") val messageIt: String? = null,
+        @Json(name = "messageEs") val messageEs: String? = null,
+        @Json(name = "whatsNewEn") val whatsNewEn: String? = null,
+        @Json(name = "whatsNewIt") val whatsNewIt: String? = null,
+        @Json(name = "whatsNewEs") val whatsNewEs: String? = null,
+    ) {
+        fun localizedMessage(language: String): String? = when (language.lowercase()) {
+            "en" -> messageEn
+            "it" -> messageIt
+            "es" -> messageEs
+            else -> messageIt ?: messageEn
+        }?.takeIf { it.isNotBlank() }
+
+        fun localizedWhatsNew(language: String): String? = when (language.lowercase()) {
+            "en" -> whatsNewEn
+            "it" -> whatsNewIt
+            "es" -> whatsNewEs
+            else -> whatsNewIt ?: whatsNewEn
+        }?.takeIf { it.isNotBlank() }
+    }
 }

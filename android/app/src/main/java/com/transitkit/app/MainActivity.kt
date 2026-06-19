@@ -53,11 +53,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import com.transitkit.app.data.AppUpdateChecker
 import com.transitkit.app.ui.alerts.AlertDetailScreen
 import com.transitkit.app.ui.alerts.AlertListScreen
 import com.transitkit.app.ui.alerts.AlertToastHost
 import com.transitkit.app.ui.alerts.AlertsViewModel
 import com.transitkit.app.ui.home.HomeScreen
+import com.transitkit.app.ui.update.ForceUpdateScreen
 import com.transitkit.app.ui.linee.LineeScreen
 import com.transitkit.app.ui.mappa.MappaScreen
 import com.transitkit.app.ui.orari.OrariScreen
@@ -113,6 +115,12 @@ class MainActivity : ComponentActivity() {
         handleMapDeepLink(intent)
         handlePlannerDeepLink(intent)
         handleSearchDeepLink(intent)
+        // Controllo versione al lancio (fire-and-forget, nessun I/O — legge solo config in-memory).
+        AppUpdateChecker.check(
+            context = applicationContext,
+            config = operatorConfig,
+            language = java.util.Locale.getDefault().language,
+        )
         setContent {
             TransitKitTheme(config = operatorConfig) {
                 TransitKitNavigation(operatorConfig = operatorConfig)
@@ -228,6 +236,21 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
     val operatorTz = remember(plannerViewModel.operatorTimezone) {
         java.util.TimeZone.getTimeZone(plannerViewModel.operatorTimezone)
     }
+
+    // Force-update overlay: bloccante, nessuna interazione possibile con il resto dell'app.
+    val forceUpdateState by AppUpdateChecker.state.collectAsStateWithLifecycle()
+    val forcedUpdate = forceUpdateState as? AppUpdateChecker.Requirement.Forced
+    if (forcedUpdate != null) {
+        val context = androidx.compose.ui.platform.LocalContext.current
+        ForceUpdateScreen(
+            message = forcedUpdate.message,
+            onUpdate = {
+                AppUpdateChecker.openStore(context, forcedUpdate.storeUrl)
+            },
+        )
+        return
+    }
+
     CompositionLocalProvider(
         LocalHideBottomBarRequests provides hideBottomBarRequests,
         com.transitkit.app.ui.planner.LocalOperatorTimeZone provides operatorTz,

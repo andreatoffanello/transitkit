@@ -549,4 +549,13 @@
     <string name="planner_picker_selected_position">Posizione selezionata</string>
     <string name="planner_picker_selected_stop">Fermata selezionata</string>
     <string name="planner_picker_walking_distance">%1$d m di distanza</string>
+
+    <!-- App update check -->
+    <string name="update_available_title">Aggiornamento disponibile</string>
+    <string name="update_now_label">Aggiorna ora</string>
+    <string name="update_later_label">Più tardi</string>
+    <string name="update_force_title">Aggiornamento richiesto</string>
+    <string name="update_force_cta">Aggiorna l\'app</string>
+    <string name="update_force_fallback_message">Aggiorna l\'app per continuare a usarla.</string>
+    <string name="update_soft_fallback_message">Nuove funzionalità e miglioramenti disponibili.</string>
 </resources>

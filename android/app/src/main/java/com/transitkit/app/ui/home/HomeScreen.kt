@@ -40,7 +40,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.data.AppUpdateChecker
 import com.transitkit.app.ui.planner.PlannerViewModel
+import com.transitkit.app.ui.update.SoftUpdateBanner
 
 @Composable
 fun HomeScreen(
@@ -72,6 +74,7 @@ fun HomeScreen(
     val routesByName by viewModel.routesByName.collectAsStateWithLifecycle()
     val activeAlerts by viewModel.activeAlerts.collectAsStateWithLifecycle()
     val shouldShowOnboarding by viewModel.shouldShowOnboarding.collectAsStateWithLifecycle()
+    val softUpdate by AppUpdateChecker.softState.collectAsStateWithLifecycle()
 
     val prefs = remember { context.getSharedPreferences("transitkit_prefs", android.content.Context.MODE_PRIVATE) }
 
@@ -196,6 +199,20 @@ fun HomeScreen(
                     config = config,
                     onSettingsClick = onNavigateToSettings,
                 )
+            }
+
+            // Banner soft aggiornamento app (non bloccante, dismissibile)
+            softUpdate?.let { soft ->
+                item {
+                    SoftUpdateBanner(
+                        message = soft.message,
+                        onUpdate = { AppUpdateChecker.openStore(context, soft.storeUrl) },
+                        onLater = { AppUpdateChecker.dismissSoftUpdate(context) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                    )
+                }
             }
 
             item {

@@ -517,4 +517,36 @@
     <string name="onb_done_title">Pronto a partire</string>
     <string name="onb_done_body">Aggiungi le tue fermate ai preferiti per averle sempre a portata di tap.</string>
     <string name="onb_done_cta">Inizia</string>
+
+    <!-- Occupancy (mezzo) -->
+    <string name="occupancy_few_seats">Pochi posti</string>
+    <string name="occupancy_full">Pieno</string>
+    <string name="occupancy_not_boarding">Non imbarca</string>
+    <string name="occupancy_seats_available">Posti liberi</string>
+    <string name="occupancy_standing_only">Solo in piedi</string>
+
+    <!-- Vehicle label -->
+    <string name="vehicle_label_format">Vettura %s</string>
+
+    <!-- Planner -->
+    <string name="tab_planner">Pianifica</string>
+    <string name="planner_picker_confirm">Conferma</string>
+    <string name="planner_picker_origin_title">Da</string>
+    <string name="planner_picker_destination_title">A</string>
+    <string name="planner_picker_loading_stops">Caricamento fermate…</string>
+    <string name="planner_picker_location_active">Posizione GPS attiva</string>
+    <string name="planner_picker_location_inactive">Posizione non disponibile</string>
+    <string name="planner_picker_map_hint">Tocca una fermata per selezionarla</string>
+    <string name="planner_picker_map_resolving">Individuazione posizione…</string>
+    <string name="planner_picker_my_location">Posizione attuale</string>
+    <string name="planner_picker_no_results">Nessuna fermata trovata</string>
+    <string name="planner_picker_no_stop_nearby">Nessuna fermata vicina — centra la mappa su una fermata</string>
+    <string name="planner_picker_pick_on_map">Scegli sulla mappa</string>
+    <string name="planner_picker_pick_on_map_sub">Sposta la mappa per centrare una fermata</string>
+    <string name="planner_picker_search_placeholder">Cerca fermata…</string>
+    <string name="planner_picker_section_nearby">Vicino a te</string>
+    <string name="planner_picker_section_recent">Recenti</string>
+    <string name="planner_picker_selected_position">Posizione selezionata</string>
+    <string name="planner_picker_selected_stop">Fermata selezionata</string>
+    <string name="planner_picker_walking_distance">%1$d m di distanza</string>
 </resources>

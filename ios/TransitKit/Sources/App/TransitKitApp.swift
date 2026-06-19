@@ -17,6 +17,8 @@ struct TransitKitApp: App {
     @State private var configError: String?
     @State private var router = DeepLinkRouter()
     @State private var connectionsStore = ConnectionsStore()
+    @State private var updateChecker = AppUpdateChecker.shared
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
         if CommandLine.arguments.contains("--reset-schedule-cache") {
@@ -29,29 +31,46 @@ struct TransitKitApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                if let store, let favoritesManager, let searchHistoryStore, let operatorConfig, let pushManager {
-                    ContentView(config: operatorConfig)
-                        .environment(store)
-                        .environment(favoritesManager)
-                        .environment(searchHistoryStore)
-                        .environment(locationManager)
-                        .environment(vehicleStore)
-                        .environment(alertStore)
-                        .environment(pushManager)
-                        .environment(router)
-                        .environment(connectionsStore)
-                        .environment(\.operatorConfig, operatorConfig)
-                        .environment(\.operatorTimeZone, TimeZone(identifier: operatorConfig.timezone) ?? .current)
-                        .tint(AppTheme.accent)
-                } else if let configError {
-                    errorView(message: configError)
-                } else {
-                    loadingView
+            ZStack {
+                Group {
+                    if let store, let favoritesManager, let searchHistoryStore, let operatorConfig, let pushManager {
+                        ContentView(config: operatorConfig)
+                            .environment(store)
+                            .environment(favoritesManager)
+                            .environment(searchHistoryStore)
+                            .environment(locationManager)
+                            .environment(vehicleStore)
+                            .environment(alertStore)
+                            .environment(pushManager)
+                            .environment(router)
+                            .environment(connectionsStore)
+                            .environment(\.operatorConfig, operatorConfig)
+                            .environment(\.operatorTimeZone, TimeZone(identifier: operatorConfig.timezone) ?? .current)
+                            .tint(AppTheme.accent)
+                    } else if let configError {
+                        errorView(message: configError)
+                    } else {
+                        loadingView
+                    }
+                }
+
+                // Force-update overlay: blocks the entire UI when the operator
+                // config declares a minimum version the user hasn't reached,
+                // with force:true. No dismiss — the only action is to update.
+                if case let .forced(message, storeUrl) = updateChecker.requirement {
+                    ForceUpdateView(message: message, storeUrl: storeUrl)
+                        .transition(.opacity)
+                        .zIndex(10)
                 }
             }
+            .animation(.easeInOut(duration: 0.4), value: updateChecker.requirement)
             .task { await bootstrap() }
             .onOpenURL { url in handleDeepLink(url) }
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .active {
+                    updateChecker.check(config: operatorConfig)
+                }
+            }
         }
     }
 
@@ -316,6 +335,9 @@ struct TransitKitApp: App {
             )
             alertStore.configure(serviceAlertsUrl: config.gtfsRt?.serviceAlertsUrl)
             Task { await connectionsStore.load(stops: scheduleStore.stops) }
+            // Check for forced update immediately after config loads (synchronous,
+            // no network). Soft banner check fires asynchronously inside.
+            updateChecker.check(config: config)
             if let pending = router.pendingUrl {
                 router.pendingUrl = nil
                 resolve(url: pending, store: scheduleStore)

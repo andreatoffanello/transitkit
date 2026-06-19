@@ -34,6 +34,7 @@ struct OperatorConfig: Codable {
     let headsignMap: [String: String]?
     let services: [ServiceInfo]?
     let accessibility: AccessibilityInfo?
+    let appUpdate: AppUpdateConfig?
 
     struct ThemeConfig: Codable {
         let primaryColor: String
@@ -164,6 +165,33 @@ struct AccessibilityInfo: Codable {
     let description: LocalizedText
     let bullets: [LocalizedText]
     let moreUrl: String?
+}
+
+// MARK: - App Update
+
+/// Optional server-side gate controlling mandatory and soft update prompts.
+/// Mirrors the `appUpdate` block used in DoVe (civici repo), adapted for
+/// the multi-operator white-label context of TransitKit.
+struct AppUpdateConfig: Codable {
+    let ios: AppUpdatePlatform?
+    /// Localized message shown in the force-update screen body.
+    let messageEn: String?
+    let messageIt: String?
+    let messageEs: String?
+    /// Localized "what's new" shown as soft-banner subtitle.
+    let whatsNewEn: String?
+    let whatsNewIt: String?
+    let whatsNewEs: String?
+}
+
+struct AppUpdatePlatform: Codable {
+    /// Minimum version that must be installed. If current < minVersion and
+    /// force==true, the force-update overlay is shown (no dismiss).
+    let minVersion: String?
+    /// When true + current < minVersion → force-update blocking screen.
+    let force: Bool?
+    /// App Store page URL. Falls back to iTunes Lookup `trackViewUrl` when nil.
+    let storeUrl: String?
 }
 
 // MARK: - Fare Info

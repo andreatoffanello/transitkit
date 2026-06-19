@@ -537,5 +537,18 @@
     "ios": "https://apps.apple.com/us/app/appalrider/id6770484267",
     "android": "https://play.google.com/store/apps/details?id=com.transitkit.appalcart"
   },
-  "privacyUrl": "https://appalcart.transitkit.app/privacy"
+  "privacyUrl": "https://appalcart.transitkit.app/privacy",
+  "appUpdate": {
+    "ios": {
+      "minVersion": "1.0.0",
+      "force": false,
+      "storeUrl": "https://apps.apple.com/us/app/appalrider/id6770484267"
+    },
+    "messageEn": "Please update the app to continue.",
+    "messageIt": "Aggiorna l'app per continuare.",
+    "messageEs": "Por favor actualiza la aplicación para continuar.",
+    "whatsNewEn": "New features and improvements are available.",
+    "whatsNewIt": "Nuove funzionalità e miglioramenti disponibili.",
+    "whatsNewEs": "Nuevas funciones y mejoras disponibles."
+  }
 }

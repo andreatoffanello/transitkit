@@ -39,6 +39,9 @@ struct HomeTab: View {
     @State private var plannerLaunch: PlannerLaunch? = nil
     @State private var deeplinkPlannerLaunch: PendingPlannerLaunch? = nil
 
+    // MARK: App update
+    @State private var updateChecker = AppUpdateChecker.shared
+
     /// Anchor id used by ScrollViewReader to scroll to the favorites section
     /// when the user opens `transitkit://favorites`.
     private let favoritesAnchorId = "home_favorites_anchor"
@@ -74,6 +77,13 @@ struct HomeTab: View {
                                 PlannerHomeBox { origin, dest, when in
                                     plannerLaunch = PlannerLaunch(origin: origin, destination: dest, when: when)
                                 }
+                                if let soft = updateChecker.softUpdate {
+                                    SoftUpdateBanner(softUpdate: soft)
+                                        .transition(.asymmetric(
+                                            insertion: .move(edge: .top).combined(with: .opacity),
+                                            removal: .opacity.combined(with: .scale(scale: 0.95))
+                                        ))
+                                }
                                 favoritesSection.id(favoritesAnchorId)
                                 nearbyStopsSection
                                 operatorInfoSection
@@ -83,6 +93,7 @@ struct HomeTab: View {
                             .padding(.horizontal, 16)
                             .padding(.top, 16)
                             .padding(.bottom, 100)
+                            .animation(.spring(duration: 0.4, bounce: 0.2), value: updateChecker.softUpdate)
                         }
                     }
                     .background(.clear)

@@ -60,6 +60,11 @@ struct VehicleAnnotationView: View {
 
     private var showBadge: Bool { tier == .street && !routeName.isEmpty }
 
+    // MARK: Geometry helpers
+
+    private var ringR: CGFloat { (dotSize + 3) / 2 }
+    private var haloR: CGFloat { haloSize / 2 }
+
     var body: some View {
         TimelineView(.animation) { context in
             let t = context.date.timeIntervalSinceReferenceDate
@@ -88,55 +93,74 @@ struct VehicleAnnotationView: View {
                         .frame(width: 8, height: 5)
                 }
 
-                // Halo + ring + dot in un unico Canvas per depth/stabilità.
-                // Con badge: center.y = ringR così il ring top tocca il canvas top
-                // e il tail tip si connette senza gap. Senza badge: center.y = size.height/2
-                // per piazzare il dot esattamente sulla coordinata MapKit.
-                Canvas { ctx, size in
-                    let ringR = (dotSize + 3) / 2
-                    let centerY = showBadge ? CGFloat(ringR) : size.height / 2
-                    let center = CGPoint(x: size.width / 2, y: centerY)
-                    let haloR = size.width / 2
-                    let dotR = dotSize / 2
+                // Ring + dot + halo in ZStack:
+                //   - halo layer (dietro): Circle con opacity pulsante, dimensionato
+                //     haloSize e posizionato a center così può overflow verso l'alto
+                //     senza che il Canvas di ring/dot lo clippi. SwiftUI non clippa
+                //     i figli di uno ZStack a meno di .clipped() esplicito.
+                //   - ring/dot layer (davanti): Canvas con centerY = ringR (con badge)
+                //     o height/2 (senza badge). Frame = haloSize×haloSize.
+                //
+                // Con badge: ringR è il top del Canvas quindi il ring top coincide
+                // col Canvas top, direttamente connesso al tail. Il halo sovrasta
+                // il Canvas di (haloR - ringR) px verso l'alto, ma essendo in ZStack
+                // e non in Canvas, quel tratto è visibile (no clip).
+                // Senza badge: center.y = size.height/2 — comportamento invariato.
+                ZStack {
+                    // Halo pulsante — disegnato come Circle SwiftUI, non in Canvas,
+                    // così non è soggetto al clipping del Canvas sottostante.
+                    // Allineamento: il centro del halo deve coincidere col centro
+                    // del ring, non col centro dello ZStack frame.
+                    // Con badge: ring center è a ringR dal top dello ZStack (= haloSize/2
+                    // centrato in ZStack, ma ring è a ringR = haloSize/2 - (haloR-ringR)
+                    // dal top → ring center.y relativo a ZStack center = -(haloR-ringR)).
+                    let ringOffsetY: CGFloat = showBadge ? -(haloR - ringR) : 0
+                    Circle()
+                        .fill(lineColor.opacity(alpha))
+                        .frame(width: haloSize, height: haloSize)
+                        .offset(y: ringOffsetY)
+                        .allowsHitTesting(false)
 
-                    // Halo pulsante
-                    ctx.fill(
-                        Path(ellipseIn: CGRect(
-                            x: center.x - haloR, y: center.y - haloR,
-                            width: haloR * 2, height: haloR * 2
-                        )),
-                        with: .color(lineColor.opacity(alpha))
-                    )
-                    // Shadow del ring (cerchio nero translucido offset)
-                    ctx.fill(
-                        Path(ellipseIn: CGRect(
-                            x: center.x - ringR - 0.5,
-                            y: center.y - ringR + 0.5,
-                            width: (ringR + 0.5) * 2,
-                            height: (ringR + 0.5) * 2
-                        )),
-                        with: .color(.black.opacity(0.22))
-                    )
-                    // Ring bianco
-                    ctx.fill(
-                        Path(ellipseIn: CGRect(
-                            x: center.x - ringR, y: center.y - ringR,
-                            width: ringR * 2, height: ringR * 2
-                        )),
-                        with: .color(.white)
-                    )
-                    // Dot colorato
-                    ctx.fill(
-                        Path(ellipseIn: CGRect(
-                            x: center.x - dotR, y: center.y - dotR,
-                            width: dotR * 2, height: dotR * 2
-                        )),
-                        with: .color(lineColor)
-                    )
+                    // Ring + dot nel Canvas originale (non modificato rispetto
+                    // al comportamento pre-fix — ring al top con badge, centrato senza).
+                    Canvas { ctx, size in
+                        let centerY: CGFloat = showBadge ? ringR : size.height / 2
+                        let center = CGPoint(x: size.width / 2, y: centerY)
+                        let rR = ringR
+                        let dR = dotSize / 2
+
+                        // Shadow del ring (cerchio nero translucido offset)
+                        ctx.fill(
+                            Path(ellipseIn: CGRect(
+                                x: center.x - rR - 0.5,
+                                y: center.y - rR + 0.5,
+                                width: (rR + 0.5) * 2,
+                                height: (rR + 0.5) * 2
+                            )),
+                            with: .color(.black.opacity(0.22))
+                        )
+                        // Ring bianco
+                        ctx.fill(
+                            Path(ellipseIn: CGRect(
+                                x: center.x - rR, y: center.y - rR,
+                                width: rR * 2, height: rR * 2
+                            )),
+                            with: .color(.white)
+                        )
+                        // Dot colorato
+                        ctx.fill(
+                            Path(ellipseIn: CGRect(
+                                x: center.x - dR, y: center.y - dR,
+                                width: dR * 2, height: dR * 2
+                            )),
+                            with: .color(lineColor)
+                        )
+                    }
+                    .frame(width: haloSize, height: haloSize)
                 }
                 .frame(width: haloSize, height: haloSize)
 
-                // Spacer invisibile che bilancia badge+tail+gap sopra, così il
+                // Spacer invisibile che bilancia badge+tail sopra, così il
                 // centro visivo del composable coincide col centro del pallino
                 // (MapKit Annotation piazza il centro del View sulla coordinata).
                 if showBadge {

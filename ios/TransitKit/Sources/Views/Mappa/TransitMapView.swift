@@ -352,18 +352,27 @@ struct TransitMapView: UIViewRepresentable {
 
         // MARK: MKMapViewDelegate — annotation views
 
-        // Garantisce che il pallino utente (MKUserLocationView, default blu di
-        // sistema) renda SEMPRE sopra stop e veicoli. Senza questo, i veicoli
-        // con zPriority .max lo coprivano.
+        // Il pallino utente è ora un custom billboarded view restituito da viewFor,
+        // quindi zPriority/.max è già impostato lì. Il didAdd non necessita di
+        // override per MKUserLocation — il metodo rimane per eventuali usi futuri.
         func mapView(_ mapView: MKMapView, didAdd views: [MKAnnotationView]) {
-            for v in views where v.annotation is MKUserLocation {
-                v.zPriority = .max
-                v.displayPriority = .required
-            }
+            // no-op: zPriority gestito in viewFor per tutti i tipi di annotazione
         }
 
         func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-            if annotation is MKUserLocation { return nil }
+            // Custom billboarded user-location puck: sostituisce il marker default
+            // di MapKit che, in modalità 3D pitched, veniva renderizzato come disco
+            // piatto sul piano terra (prospettiva), a differenza di tutti gli altri
+            // MKAnnotationView che fanno billboard (frontale, camera-facing).
+            if annotation is MKUserLocation {
+                let id = "userLocation"
+                let view = (mapView.dequeueReusableAnnotationView(withIdentifier: id) as? UserLocationAnnotationView)
+                    ?? UserLocationAnnotationView(annotation: annotation, reuseIdentifier: id)
+                view.annotation = annotation
+                view.zPriority = .max
+                view.displayPriority = .required
+                return view
+            }
 
             if let stopAnn = annotation as? StopMKAnnotation {
                 let view = (mapView.dequeueReusableAnnotationView(withIdentifier: "stop") as? StopAnnotationHost)
@@ -529,6 +538,75 @@ final class StopAnnotationHost: MKAnnotationView {
         case .street:
             centerOffset = CGPoint(x: 0, y: -bounds.height / 2)
         }
+    }
+}
+
+// MARK: - User location annotation view (billboarded, camera-facing)
+//
+// Il pallino utente di default di MapKit viene renderizzato sul piano terra
+// in modalità 3D pitched: appare come un'ellissi in prospettiva invece di
+// un disco frontale come tutti gli altri MKAnnotationView. Questo wrapper
+// Custom disegna un puck minimale (dot blu + ring bianco + ombra) identico
+// allo stile dell'app, e restando un MKAnnotationView standard fa billboard
+// automaticamente (non ground-plane) in qualsiasi configurazione camera.
+//
+// Dimensioni: dot 14pt, ring 20pt, frame 32pt (include margine per ombra).
+// Colore: systemBlue — invariante rispetto all'accent dell'operatore.
+final class UserLocationAnnotationView: MKAnnotationView {
+    private let dotSize: CGFloat = 14
+    private let ringSize: CGFloat = 20
+    private let totalSize: CGFloat = 32
+
+    override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
+        super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
+        frame = CGRect(x: 0, y: 0, width: totalSize, height: totalSize)
+        backgroundColor = .clear
+        clipsToBounds = false
+        centerOffset = .zero
+        drawPuck()
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    private func drawPuck() {
+        let center = CGPoint(x: totalSize / 2, y: totalSize / 2)
+
+        // Shadow layer (soft, slightly offset down)
+        let shadowLayer = CALayer()
+        let shadowSize = ringSize + 2
+        shadowLayer.frame = CGRect(
+            x: center.x - shadowSize / 2,
+            y: center.y - shadowSize / 2 + 1,
+            width: shadowSize,
+            height: shadowSize
+        )
+        shadowLayer.cornerRadius = shadowSize / 2
+        shadowLayer.backgroundColor = UIColor.black.withAlphaComponent(0.18).cgColor
+        layer.addSublayer(shadowLayer)
+
+        // White ring
+        let ringLayer = CALayer()
+        ringLayer.frame = CGRect(
+            x: center.x - ringSize / 2,
+            y: center.y - ringSize / 2,
+            width: ringSize,
+            height: ringSize
+        )
+        ringLayer.cornerRadius = ringSize / 2
+        ringLayer.backgroundColor = UIColor.white.cgColor
+        layer.addSublayer(ringLayer)
+
+        // Blue dot
+        let dotLayer = CALayer()
+        dotLayer.frame = CGRect(
+            x: center.x - dotSize / 2,
+            y: center.y - dotSize / 2,
+            width: dotSize,
+            height: dotSize
+        )
+        dotLayer.cornerRadius = dotSize / 2
+        dotLayer.backgroundColor = UIColor.systemBlue.cgColor
+        layer.addSublayer(dotLayer)
     }
 }
 

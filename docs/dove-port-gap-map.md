@@ -71,14 +71,20 @@ sbloccato.** Il "Vedi su mappa" del box corsa ora ha una destinazione valida.
   card mezzo (erano fallback EN). Card mezzo ora interamente EN+IT. QA: layout OK,
   truncation OK; Linea/Corsa/Follow code-verified (feed appalcart vuoto fuori
   orario → ri-QA in orario di servizio).
+- ✅ **Box stato live in TripDetail — iOS** (`8054da5`) **+ Android** (`86e1adb`):
+  "In transito" + pill ritardo + CTA "Vedi su mappa" (riusa deep-link
+  map/vehicle/{id}); additiva, nascosta senza mezzo live. Stringhe EN+IT+es.
 - 🔶 **Decisione aperta:** differenziare il verde soon vs live? (cross-platform)
-- ⚠️ **Debito i18n scoperto:** ~26 chiavi IT ancora mancanti nell'app (viola la
-  regola EN+IT completi). Candidato a sweep dedicato + lint MissingTranslation CI.
+- ⚠️ **Debito i18n:** ~26 chiavi IT mancanti nell'app (viola EN+IT completi).
 - 📌 **Fuori scope flaggati:** a11y marker fermata/mezzo (Mapbox symbol layer),
   polish controlli mappa.
-- ▶️ **Prossimo:** glide marker mezzi (L, iOS+Android), oppure box stato live in
-  TripDetail, oppure sweep i18n IT se prioritario.
-- 🔁 **Loop:** cron 10 min `9b760fd6` (era wakeup dinamico).
+- 🕑 **Backlog QA "in orario di servizio"** (appalcart non ha mezzi live di notte →
+  feed vuoto, UI a mezzo-live non visibili): card mezzo Android (Linea/Corsa/Follow),
+  box stato live TripDetail iOS+Android, glide marker quando fatti.
+- ▶️ **Prossimo:** sweep i18n IT (~26 chiavi) — non dipende da mezzi live, onora la
+  regola EN+IT. Poi glide marker (da QA in orario di servizio).
+- 🔁 **Loop:** cron 10 min `9b760fd6` + `caffeinate` (Mac sveglio, l'heartbeat non
+  muore più di notte) + wakeup di continuità.
 
 ## Cluster A — Card mappa mezzi + pulsanti (follow/linea/corsa) + glide
 

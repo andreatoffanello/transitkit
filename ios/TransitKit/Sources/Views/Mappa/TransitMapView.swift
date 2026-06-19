@@ -337,7 +337,13 @@ struct TransitMapView: UIViewRepresentable {
                                    tier: parent.tier,
                                    route: route,
                                    isSelected: parent.selectedVehicleId == ann.vehicle.id)
-                    // Keep a11y label current as route data resolves.
+                    // Keep a11y properties current — must be re-asserted here because
+                    // viewFor is only called once (on first add or dequeue); subsequent
+                    // updates go through reconfigureExistingAnnotations exclusively.
+                    // Without this, dequeued views may carry a stale identifier from
+                    // the previous vehicle that used the same view object.
+                    view.isAccessibilityElement = true
+                    view.accessibilityIdentifier = "map_vehicle_\(ann.vehicle.id)"
                     let routeName = route?.name ?? transitType.displayName
                     view.accessibilityLabel = "\(routeName) \(transitType.displayName)"
                 }
@@ -529,19 +535,77 @@ final class StopAnnotationHost: MKAnnotationView {
 final class VehicleAnnotationHost: MKAnnotationView {
     private var hosting: UIHostingController<VehicleAnnotationView>?
 
+    // Tracked for point(inside:with:) and centerOffset computation.
+    private var currentTier: MapZoomTier = .neighborhood
+
+    // MARK: Tier-dependent geometry (mirrors VehicleAnnotationView constants)
+
+    private var haloSize: CGFloat {
+        switch currentTier {
+        case .city:         return 18
+        case .neighborhood: return 24
+        case .street:       return 30
+        }
+    }
+
+    private var dotSize: CGFloat {
+        switch currentTier {
+        case .city:         return 8
+        case .neighborhood: return 11
+        case .street:       return 13
+        }
+    }
+
+    /// Approximate height of badge pill + tail above the halo at .street tier.
+    /// Used to bias centerOffset so the dot (not the badge top) lands on the coordinate.
+    private static let badgePlusTailHeight: CGFloat = 31  // ~26pt pill + 5pt tail
+    /// Spacer below the halo at .street tier (balance element in VehicleAnnotationView).
+    private static let spacerHeight: CGFloat = 11
+
     override init(annotation: MKAnnotation?, reuseIdentifier: String?) {
         super.init(annotation: annotation, reuseIdentifier: reuseIdentifier)
-        // Oversized host so the pin-badge (~30pt tall) floating above the dot
-        // isn't clipped. MKAnnotationView anchors by center — the dot stays at
-        // the geometric center of the SwiftUI view, so the annotation's
-        // `coordinate` still resolves to the dot center.
+        // Oversized host so the badge + halo aren't clipped. centerOffset is
+        // applied in configure() based on tier so the dot lands on the coordinate.
         frame = CGRect(x: 0, y: 0, width: 100, height: 100)
         backgroundColor = .clear
-        centerOffset = .zero
         clipsToBounds = false
     }
 
     required init?(coder: NSCoder) { fatalError() }
+
+    // MARK: Hit-testing
+    //
+    // The annotation view frame is 100×100 (larger than the visible marker) so
+    // the badge+halo aren't clipped. We narrow the tappable area to the actual
+    // visible content — a circle whose radius equals haloSize/2 centred on the
+    // coordinate's screen point (centre of the annotation view after the
+    // centerOffset is applied). At .street tier the dot sits below badge+tail,
+    // so we include the badge rect above the halo as well.
+    // This prevents the large transparent dead-zone of the 100×100 frame from
+    // stealing taps that should reach nearby stop annotations beneath it.
+    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+        let center = CGPoint(x: bounds.midX, y: bounds.midY)
+        let hR = haloSize / 2 + 4  // +4pt finger-slop beyond visible halo edge
+
+        // Halo circle hit area (always present)
+        let dx = point.x - center.x
+        let dy = point.y - center.y
+        if dx * dx + dy * dy <= hR * hR { return true }
+
+        // Badge rect hit area — only at .street tier
+        if currentTier == .street {
+            // Badge sits directly above the halo; the halo top is at
+            // (center.y - haloSize/2). Badge height ≈ badgePlusTailHeight.
+            let badgeTop    = center.y - haloSize / 2 - Self.badgePlusTailHeight - 4
+            let badgeBottom = center.y - haloSize / 2 + 4
+            let badgeHalfW: CGFloat = 32   // typical badge pill half-width
+            if point.y >= badgeTop && point.y <= badgeBottom
+               && abs(point.x - center.x) <= badgeHalfW {
+                return true
+            }
+        }
+        return false
+    }
 
     func configure(with vehicle: GtfsRtVehicle,
                    routeColor: String?,
@@ -549,6 +613,24 @@ final class VehicleAnnotationHost: MKAnnotationView {
                    tier: MapZoomTier,
                    route: APIRoute?,
                    isSelected: Bool) {
+        currentTier = tier
+
+        // Center the dot (not the badge or spacer) on the coordinate.
+        // At .neighborhood/.city: content is just the halo — already centred → zero offset.
+        // At .street: VStack = badge(~26) + tail(5) + halo(30) + spacer(11).
+        // With the VStack centred in the 100pt frame the halo's dot-centre lands
+        // at frame.midY + ~3pt. Apply a small downward shift so the map coordinate
+        // (placed at frame.midY by MapKit) aligns with the dot.
+        // Net: dot is at (badgePlusTailHeight - spacerHeight)/2 ≈ 10pt above midY.
+        // So shift the frame 10pt up (positive y = down in UIKit, so offset.y = -10).
+        switch tier {
+        case .city, .neighborhood:
+            centerOffset = .zero
+        case .street:
+            let shift = (Self.badgePlusTailHeight - Self.spacerHeight) / 2
+            centerOffset = CGPoint(x: 0, y: -shift)
+        }
+
         let view = VehicleAnnotationView(
             vehicle: vehicle,
             routeColor: routeColor,

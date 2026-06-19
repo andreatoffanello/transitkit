@@ -50,6 +50,7 @@ internal fun VehiclePreviewContent(
     operatorTimezoneId: String = "UTC",
     isFollowing: Boolean = false,
     onToggleFollow: () -> Unit = {},
+    onOpenLine: (() -> Unit)? = null,
     onOpenTrip: () -> Unit = {},
     onDismiss: () -> Unit,
 ) {
@@ -335,50 +336,81 @@ internal fun VehiclePreviewContent(
             }
         }
 
-        // --- Row 5 — Full-width action buttons: follow + open trip -------
+        // --- Row 5 — Action buttons: Follow (icon-only) + Linea (ghost) + Corsa (filled)
+        //
+        // Layout mirrors iOS DoVe: Follow = compact icon-only 44dp square so the long
+        // localized label ("Follow vehicle"/"Segui il mezzo") never truncates. Linea =
+        // ghost/outlined labeled. Corsa = filled/primary labeled. The two labeled buttons
+        // share the remaining width with equal weight so they always fit without ellipsis.
         Row(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            val followBg = if (isFollowing) colors.accent else colors.textPrimary.copy(alpha = 0.08f)
-            val followFg = if (isFollowing) Color.White else colors.textPrimary
-            Row(
+            // Follow — icon-only compact square. Accessibility label mandatory (no text label).
+            val followBg = if (isFollowing) colors.accent else colors.accent.copy(alpha = 0.12f)
+            val followFg = if (isFollowing) Color.White else colors.accent
+            Box(
                 modifier = Modifier
-                    .weight(1f)
+                    .size(44.dp)
                     .background(followBg, RoundedCornerShape(12.dp))
                     .clickable(onClick = onToggleFollow)
-                    .padding(vertical = 10.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
+                    .semantics { testTag = "btn_vehicle_follow" },
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     painter = painterResource(LucideIcons.Crosshair),
-                    contentDescription = null,
-                    tint = followFg,
-                    modifier = Modifier.size(14.dp),
-                )
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    text = stringResource(
+                    contentDescription = stringResource(
                         if (isFollowing) R.string.vehicle_unfollow else R.string.vehicle_follow
                     ),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = followFg,
+                    tint = followFg,
+                    modifier = Modifier.size(18.dp),
                 )
             }
+
+            // Linea — ghost/outlined. Shown only when route is available.
+            if (onOpenLine != null) {
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .background(colors.textPrimary.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
+                        .clickable(onClick = onOpenLine)
+                        .padding(vertical = 10.dp)
+                        .semantics { testTag = "btn_vehicle_open_line" },
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        painter = painterResource(LucideIcons.Map),
+                        contentDescription = null,
+                        tint = colors.textPrimary,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.vehicle_open_line),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.textPrimary,
+                        maxLines = 1,
+                    )
+                }
+            }
+
+            // Corsa — filled/primary, visually dominant CTA.
             Row(
                 modifier = Modifier
                     .weight(1f)
-                    .background(colors.textPrimary.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
+                    .background(colors.accent, RoundedCornerShape(12.dp))
                     .clickable(onClick = onOpenTrip)
-                    .padding(vertical = 10.dp),
+                    .padding(vertical = 10.dp)
+                    .semantics { testTag = "btn_vehicle_open_trip" },
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
                     painter = painterResource(LucideIcons.Route),
                     contentDescription = null,
-                    tint = colors.textPrimary,
+                    tint = Color.White,
                     modifier = Modifier.size(14.dp),
                 )
                 Spacer(Modifier.width(6.dp))
@@ -386,7 +418,8 @@ internal fun VehiclePreviewContent(
                     text = stringResource(R.string.vehicle_open_trip),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold,
-                    color = colors.textPrimary,
+                    color = Color.White,
+                    maxLines = 1,
                 )
             }
         }

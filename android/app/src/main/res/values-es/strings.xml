@@ -259,6 +259,7 @@
     <string name="vehicle_status_fermo">Detenido</string>
     <string name="vehicle_status_in_arrivo">Llegando</string>
     <string name="vehicle_status_in_transito">En tránsito</string>
+    <string name="vehicle_open_line">Línea</string>
 
     <!-- StopDetailScreen — map app picker -->
     <string name="apri_in_mappe">Abrir en\u2026</string>

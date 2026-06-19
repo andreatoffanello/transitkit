@@ -61,6 +61,7 @@ import kotlinx.coroutines.launch
 fun MappaScreen(
     onNavigateToStop: (stopId: String, stopName: String) -> Unit = { _, _ -> },
     onOpenTripDetail: (tripId: String, fromStopId: String, routeName: String, routeColor: String) -> Unit = { _, _, _, _ -> },
+    onOpenLineDetail: (routeId: String) -> Unit = {},
     initialRouteId: String? = null,
     initialVehicleId: String? = null,
     initialPreviewStopId: String? = null,
@@ -531,6 +532,9 @@ fun MappaScreen(
                             operatorTimezoneId = viewModel.operatorTimezoneId,
                             isFollowing = isFollowingVehicle,
                             onToggleFollow = { isFollowingVehicle = !isFollowingVehicle },
+                            onOpenLine = route?.id?.let { rid ->
+                                { onOpenLineDetail(rid) }
+                            },
                             onOpenTrip = {
                                 val tid = vehicle.tripId ?: return@VehiclePreviewContent
                                 val encodedTrip = java.net.URLEncoder.encode(tid, "UTF-8")

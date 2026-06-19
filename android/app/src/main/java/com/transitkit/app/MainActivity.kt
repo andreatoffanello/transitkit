@@ -671,6 +671,10 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                     onOpenTripDetail = { tripId, fromStopId, routeName, routeColor ->
                         navController.navigate("trip/$tripId?fromStopId=$fromStopId&routeName=$routeName&routeColor=$routeColor")
                     },
+                    onOpenLineDetail = { routeId ->
+                        val encodedId = URLEncoder.encode(routeId, StandardCharsets.UTF_8.name())
+                        navController.navigate("line/$encodedId")
+                    },
                     initialVehicleId = vehicleId,
                     initialPreviewStopId = previewStopId,
                 )

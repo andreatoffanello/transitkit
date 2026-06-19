@@ -400,6 +400,7 @@
     <!-- Vehicle card — action buttons -->
     <string name="vehicle_follow">Follow vehicle</string>
     <string name="vehicle_unfollow">Stop following</string>
+    <string name="vehicle_open_line">Line</string>
     <string name="vehicle_open_trip">Open trip</string>
 
     <!-- Home redesign -->

@@ -259,6 +259,16 @@
     <string name="vehicle_status_fermo">Fermo</string>
     <string name="vehicle_status_in_arrivo">In arrivo</string>
     <string name="vehicle_status_in_transito">In transito</string>
+    <string name="vehicle_open_line">Linea</string>
+    <string name="vehicle_open_trip">Apri la corsa</string>
+    <string name="vehicle_follow">Segui il mezzo</string>
+    <string name="vehicle_unfollow">Smetti di seguire</string>
+    <string name="vehicle_next_stop">Prossima fermata:</string>
+    <string name="vehicle_stopped_at">Fermo a:</string>
+    <string name="vehicle_incoming_at">In arrivo a:</string>
+    <string name="vehicle_updated_sec">Aggiornato %1$d sec fa</string>
+    <string name="vehicle_updated_min">Aggiornato %1$d min fa</string>
+    <string name="vehicle_accessible">Accessibile con sedia a rotelle</string>
 
     <!-- StopDetailScreen — map app picker -->
     <string name="apri_in_mappe">Apri in\u2026</string>

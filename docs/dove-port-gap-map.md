@@ -39,6 +39,29 @@ bloccante), `442bc0a9` (force-update 5 lingue), `f4c74bec` (config appUpdate),
 
 ---
 
+## Nuovi candidati da DoVe + Movete (scan 2026-06-20)
+
+Portabili in transit-engine, in ordine di priorità. (Skip Venezia-specifico: banchine,
+feste/sagre, vaporetti, CMS, farmacie.)
+
+1. **⚡ PERF — eliminare i loop 60fps della mappa** (DoVe `ee2e8d3f`, `9027042c`,
+   `1502c4cc`). transit-engine ha: pulse marker mezzo via `TimelineView(.animation)`
+   = 60fps **per veicolo**; CADisplayLink glide 60fps; shader `MapBackground.metal`.
+   Frigge i device piccoli come faceva DoVe. Invariante DoVe: "mappa idle = zero loop
+   60fps", shader cap 30fps. **Alta priorità.** (Coerente con l'alone static su Android.)
+2. **Planner (MOTIS)** — Movete: indicatore RT per-leg "In orario" nel dettaglio
+   viaggio (`2a6225a8b1`); scorciatoie Casa/Lavoro nel location picker (`7e164c8570`).
+3. **Ricerca smart** fermate/linee — Movete `8cc1a9fe74` (token order-free, abbrevi,
+   operator-aware).
+4. **StopDetail** — partenze raggruppate per direzione always-on (Movete `133091db2f`);
+   overlay selezione linea sulla mappa StopDetail (Movete `915dca364c`); ritardo sotto
+   orari nella sequenza-fermate linea + ordine/scroll (DoVe `983d3721`).
+5. **Robustezza** — sanitize C1/CP1252 nel testo avvisi (Movete `c55183bfb3`);
+   conditional GET sul refresh dati (Movete `dddf21da49`).
+
+Già portati (cross-conferma DoVe+Movete): clamp delay `[-300,+1800]s`, in-app update,
+badge live su DepartureRow.
+
 ## ✅ Risolto: mappa nativa riabilitata (era un flag condiviso)
 
 `enableMap` era `false` (commit `f4d7f40`, 12 giu) per nascondere la mappa

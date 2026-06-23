@@ -13,7 +13,9 @@ struct StopMapSheet: View {
     var onShowAllDepartures: ((ResolvedStop) -> Void)?
 
     private var upcomingDepartures: [Departure] {
-        store.upcomingDepartures(forStopId: stop.id, limit: 5)
+        store.upcomingDepartures(forStopId: stop.id, limit: 5) { tripId in
+            tripId.flatMap { vehicleStore.reliableDelayMinutes(forTripId: $0) }
+        }
     }
 
     /// Unique routes serving this stop (for line badges).

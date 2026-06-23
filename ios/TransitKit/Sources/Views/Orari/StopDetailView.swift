@@ -16,6 +16,7 @@ private enum PlannerEntry: Identifiable {
 struct StopDetailView: View {
     let stop: ResolvedStop
     @Environment(ScheduleStore.self) private var store
+    @Environment(VehicleStore.self) private var vehicleStore
     @Environment(AlertStore.self) private var alertStore
     @Environment(DeepLinkRouter.self) private var router
     @State private var mapPosition: MapCameraPosition = .automatic
@@ -71,7 +72,9 @@ struct StopDetailView: View {
 
     private var upcomingDepartures: [Departure] {
         _ = refreshTick // ensures SwiftUI re-evaluates this when the tick fires
-        let deps = store.upcomingDepartures(forStopId: stop.id, limit: 15)
+        let deps = store.upcomingDepartures(forStopId: stop.id, limit: 15) { tripId in
+            tripId.flatMap { vehicleStore.reliableDelayMinutes(forTripId: $0) }
+        }
         guard let line = filterLine else { return deps }
         return deps.filter { $0.lineName == line }
     }

@@ -459,7 +459,9 @@ struct HomeTab: View {
     // MARK: - Stop Card (favorites)
 
     private func stopCard(_ stop: ResolvedStop, showLiveBadge: Bool, distanceMeters: Double? = nil) -> some View {
-        let departures = store.upcomingDepartures(forStopId: stop.id, limit: 3)
+        let departures = store.upcomingDepartures(forStopId: stop.id, limit: 3) { tripId in
+            tripId.flatMap { vehicleStore.reliableDelayMinutes(forTripId: $0) }
+        }
         let transitTypeIcon: Image = stopPinIcon(transitTypes: stop.transitTypes).image
         let isImminent = departures.first.map { isWithinFiveMinutes($0) } ?? false
 

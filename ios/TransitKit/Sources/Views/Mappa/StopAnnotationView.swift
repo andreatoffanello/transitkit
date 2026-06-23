@@ -159,7 +159,9 @@ struct StopPreviewCard: View {
 
     private var upcoming: [Departure] {
         _ = refreshTick
-        return store.upcomingDepartures(forStopId: stop.id, limit: 3)
+        return store.upcomingDepartures(forStopId: stop.id, limit: 3) { tripId in
+            tripId.flatMap { vehicleStore.reliableDelayMinutes(forTripId: $0) }
+        }
     }
 
     private func timeState(for dep: Departure) -> DepartureTimeState {

@@ -240,14 +240,38 @@ class ScheduleStore {
         return deduped
     }
 
-    func upcomingDepartures(forStopId stopId: String, limit: Int = 10) -> [Departure] {
+    /// Returns upcoming departures for a stop, sorted by EFFECTIVE departure time
+    /// (scheduled + RT delay). Late trips that have not yet physically arrived stay
+    /// in the list; early trips that have already left are dropped.
+    ///
+    /// - Parameter delayLookup: optional closure mapping `tripId → reliableDelayMinutes`.
+    ///   When `nil` (or the closure returns `nil` for a trip) the behaviour is
+    ///   byte-identical to the pre-RT path — no regression for the normal case.
+    ///   Mirrors DoVe `WaterBusViewModel.nextDepartures` sort + filter logic.
+    func upcomingDepartures(
+        forStopId stopId: String,
+        limit: Int = 10,
+        delayLookup: ((_ tripId: String?) -> Int?)? = nil
+    ) -> [Departure] {
         let deps = todayDepartures(forStopId: stopId)
         let nowMinutes = currentMinutesFromMidnight()
-        guard let idx = deps.firstIndex(where: { $0.minutesFromMidnight >= nowMinutes }) else {
+        // Effective minutes = scheduled + RT delay. With no delay lookup the
+        // effective value equals the scheduled one → same filter as before.
+        func effectiveMinutes(_ dep: Departure) -> Int {
+            let delay = delayLookup.flatMap { $0(dep.tripId) } ?? 0
+            return dep.minutesFromMidnight + delay
+        }
+        // Filter: keep departures whose EFFECTIVE time is still in the future.
+        // A late trip whose scheduled slot just passed but is physically still
+        // arriving stays in; an early trip that has already left is dropped.
+        let upcoming = deps.filter { effectiveMinutes($0) >= nowMinutes }
+        guard !upcoming.isEmpty else {
             return []  // Service ended for today — don't show past buses as "upcoming"
         }
-        let result = Array(deps[idx..<min(idx + limit, deps.count)])
-        return result
+        // Sort by effective time so countdowns are monotonically increasing
+        // regardless of RT delay. Mirrors DoVe's re-sort after applying rtDelay.
+        let sorted = upcoming.sorted { effectiveMinutes($0) < effectiveMinutes($1) }
+        return Array(sorted.prefix(limit))
     }
 
     // MARK: - Route details

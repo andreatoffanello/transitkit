@@ -231,7 +231,7 @@ internal fun StopDetailExpandedMap(
                 // sopra al dot" weird (issue segnalata). Senza cono resta
                 // solo il pallino blu + accuracy ring, leggibile a qualsiasi
                 // angolo di camera.
-                UserLocationPuck(withBearing = false)
+                UserLocationPuck()
 
                 // Camera della vista linea — DEVE vivere dentro lo scope mappa:
                 // emessa da fuori (callback del tap) il viewport la scarta.

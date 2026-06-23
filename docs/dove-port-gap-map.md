@@ -59,6 +59,21 @@ feste/sagre, vaporetti, CMS, farmacie.)
 5. **Robustezza** — ✅ sanitize C1/CP1252 nel testo avvisi iOS+Android (`b7ec41d`,
    Movete `c55183bfb3`); ⏳ conditional GET sul refresh dati (Movete `dddf21da49`).
 
+### Partenze live (porting Movete/DoVe) — stato
+- ✅ **LIVE badge pill + semantica delay-gated** iOS+Android (`dfbab5d`): pill "● LIVE"
+  (Movete/DoVe), compare solo con delay RT plausibile. Verificato a video entrambe.
+- Già presenti (no gap): RT merge nei countdown, grouping per direzione, timeline
+  corsa + current-stop, "apri mezzo reale su mappa" (departure→TripDetail→Vedi su mappa).
+- ⏳ Rimane: Android 2ª riga orario assoluto shiftato (iOS già ce l'ha); delay per-stop
+  in timeline corsa; "Orari di oggi" filtrati per linea; disclaimer RT per-operatore;
+  overlay selezione linea su mappa StopDetail.
+- 🔴 **FINDING IMPORTANTE — trip_id misti nello schedule:** `schedules.json` di appalcart
+  ha trip_id **reali numerici** (matchano l'RT) E **sintetici lunghi**
+  (`51831753802468724`, non matchano MAI). → badge/delay si vedono solo su ~metà delle
+  partenze. La fix a monte (più impattante del join route+stop+time) è far sì che la
+  pipeline dati preservi i trip_id GTFS reali invece di generarne sintetici. Decoded
+  feed: 8/9 trip con delay plausibile, ma molte partenze hanno trip_id sintetici.
+
 ### Stato porting (sessione 2026-06-20→23)
 Fatti: perf 60fps iOS (`32e015c`), planner Casa/Lavoro iOS (`bd2722d` + fix icona
 `e80a8bb`), sanitize avvisi iOS+Android (`b7ec41d`), **glide marker Android

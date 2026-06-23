@@ -56,8 +56,16 @@ feste/sagre, vaporetti, CMS, farmacie.)
 4. **StopDetail** — partenze raggruppate per direzione always-on (Movete `133091db2f`);
    overlay selezione linea sulla mappa StopDetail (Movete `915dca364c`); ritardo sotto
    orari nella sequenza-fermate linea + ordine/scroll (DoVe `983d3721`).
-5. **Robustezza** — sanitize C1/CP1252 nel testo avvisi (Movete `c55183bfb3`);
-   conditional GET sul refresh dati (Movete `dddf21da49`).
+5. **Robustezza** — ✅ sanitize C1/CP1252 nel testo avvisi iOS+Android (`b7ec41d`,
+   Movete `c55183bfb3`); ⏳ conditional GET sul refresh dati (Movete `dddf21da49`).
+
+### Stato porting non-vehicle (sessione 2026-06-20)
+Fatti: perf 60fps iOS (`32e015c`), planner Casa/Lavoro iOS (`bd2722d` + fix icona
+`e80a8bb`), sanitize avvisi iOS+Android (`b7ec41d`).
+Held (aspetta bus a Boone): glide Android SymbolLayer (5 file non committati).
+Rimane (non-vehicle): parità Android planner Casa/Lavoro · planner per-leg RT "In
+orario" · ricerca smart (dict Boone) · StopDetail per-direzione + overlay linea ·
+conditional GET refresh.
 
 Già portati (cross-conferma DoVe+Movete): clamp delay `[-300,+1800]s`, in-app update,
 badge live su DepartureRow.

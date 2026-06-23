@@ -111,10 +111,10 @@ struct DepartureRow: View {
     @ViewBuilder
     private var timeStack: some View {
         VStack(alignment: .trailing, spacing: 1) {
-            // LIVE dot = vehicle tracked in the positions feed (unchanged
-            // semantics — no regression). Delay quality is a separate signal
-            // that only shifts the times below, not whether the dot shows.
-            TimeDisplay(state: timeState, liveDot: vehicleStore.isLive(tripId: departure.tripId))
+            // LIVE pill = feed RT ha un delay plausibile (rtDelay != nil, dopo
+            // clamp −5…+30 min in VehicleStore). Parità Movete: non basta che
+            // il veicolo esista nel positions feed — deve avere timing affidabile.
+            TimeDisplay(state: timeState, liveDot: rtDelay != nil)
 
             // Absolute clock beneath the countdown. Shifted forward by the
             // plausibility-filtered RT delay when present; byte-for-byte the

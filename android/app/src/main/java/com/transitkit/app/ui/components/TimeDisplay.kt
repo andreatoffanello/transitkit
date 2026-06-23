@@ -149,15 +149,15 @@ fun TimeDisplay(
         ) {
             // Live dot inline — mai durante Departing (l'arrow pulse già lo segnala)
             // e mai per Passed (partenza è già andata, no point).
+            // Live badge (pill "● LIVE") — visibile solo nei case relativi.
+            // Mai durante Departing (l'arrow pulse già lo segnala) né Passed.
+            // Parità Movete: liveDot=true ≡ delay plausibile presente (non
+            // mera presenza veicolo nel positions feed).
             val showLiveDot = liveDot
                 && state !is DepartureTimeState.Departing
                 && state !is DepartureTimeState.Passed
             if (showLiveDot) {
-                Box(
-                    modifier = Modifier
-                        .size(7.dp)
-                        .background(colors.realtimeGreen, CircleShape),
-                )
+                LiveBadge()
             }
             when (state) {
                 is DepartureTimeState.Departing -> {

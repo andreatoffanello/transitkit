@@ -116,7 +116,10 @@ internal fun DepartureRow(
                 com.transitkit.app.ui.components.TimeDisplay(
                     state = timeState,
                     isEmphasis = isNext,
-                    liveDot = departure.isRealtime,
+                    // liveDot = delay plausibile presente (VehicleStore.reliableDelayMinutes
+                    // != null dopo clamp). Parità Movete: non basta la presenza del
+                    // veicolo nel positions feed — serve il timing affidabile.
+                    liveDot = departure.delay != null,
                 )
                 if (hasDelay) {
                     val delayMin = (departure.delay ?: 0) / 60

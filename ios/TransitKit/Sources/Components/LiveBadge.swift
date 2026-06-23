@@ -1,60 +1,37 @@
 import SwiftUI
 
-// MARK: - Live Badge
+// MARK: - LiveBadge
 
-/// A small green pulsing dot indicating real-time tracked status.
-/// Used in DepartureRow, LineDetailView header, HomeTab stop cards.
+/// Mini-chip "● LIVE" che appare prima del countdown quando il feed RT ha
+/// fornito un delay plausibile (dopo clamp di sanità in VehicleStore).
+/// L'assenza del chip significa "orario programmato puro" — l'utente sa che
+/// l'orario può scivolare senza preavviso.
 ///
-/// Variants:
-///   LiveBadge()                    → dot only
-///   LiveBadge(count: 3)            → "● 3 live"
-///   LiveBadge(label: "live")       → "● live"
+/// Parità Movete `liveBadge` (DepartureRow.swift, commit 960a2c0fbf).
+/// Non pulsante: il segnale è il chip stesso, non un'animazione.
 struct LiveBadge: View {
-    enum Style {
-        case dot                  // just the circle, smallest footprint
-        case chip(String)         // "● text" capsule pill
-    }
-
-    let style: Style
-    @State private var pulsing = false
-
-    init() { self.style = .dot }
-    init(count: Int) { self.style = .chip("\(count) live") }
-    init(label: String) { self.style = .chip(label) }
-
     var body: some View {
-        switch style {
-        case .dot:
-            dot
-        case .chip(let text):
-            HStack(spacing: 4) {
-                dot
-                Text(text)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.primary)
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(.regularMaterial, in: Capsule())
-        }
-    }
-
-    private var dot: some View {
-        ZStack {
+        HStack(spacing: 3) {
             Circle()
-                .fill(Color.green.opacity(0.3))
-                .frame(width: 10, height: 10)
-                .scaleEffect(pulsing ? 1.6 : 1.0)
-                .opacity(pulsing ? 0 : 1)
-
-            Circle()
-                .fill(Color.green)
-                .frame(width: 6, height: 6)
+                .fill(AppTheme.realtimeGreen)
+                .frame(width: 4, height: 4)
+            Text("LIVE")
+                .font(.system(size: 9, weight: .semibold, design: .rounded))
+                .foregroundStyle(AppTheme.realtimeGreen)
+                .tracking(0.3)
+                .fixedSize()
         }
-        .onAppear {
-            withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: false)) {
-                pulsing = true
-            }
-        }
+        .padding(.horizontal, 5)
+        .frame(height: 13)
+        .background(
+            Capsule(style: .continuous)
+                .fill(AppTheme.realtimeGreen.opacity(0.12))
+        )
+        .overlay(
+            Capsule(style: .continuous)
+                .stroke(AppTheme.realtimeGreen.opacity(0.25), lineWidth: 0.5)
+        )
+        .accessibilityLabel(String(localized: "live_badge_a11y"))
+        .accessibilityHidden(false)
     }
 }

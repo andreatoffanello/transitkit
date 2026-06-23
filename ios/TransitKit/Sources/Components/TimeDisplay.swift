@@ -27,8 +27,9 @@ enum DepartureTimeState {
 /// - **passed**: shows dimmed time for departed services
 struct TimeDisplay: View {
     let state: DepartureTimeState
-    /// Quando true, mostra il pallino live a sinistra del countdown/hh:mm,
-    /// dentro lo stesso frame così resta inline col numero senza gap.
+    /// Quando true, mostra il badge "LIVE" (pill capsule) a sinistra del
+    /// countdown. True ≡ feed RT ha un delay plausibile per questo trip
+    /// (VehicleStore.reliableDelayMinutes != nil). Parità Movete.
     var liveDot: Bool = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion

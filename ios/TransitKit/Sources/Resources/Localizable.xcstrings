@@ -4132,6 +4132,29 @@
         }
       }
     },
+    "live_badge_a11y": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Real-time data"
+          }
+        },
+        "es-419": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dato en tiempo real"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dato in tempo reale"
+          }
+        }
+      }
+    },
     "map_live_badge": {
       "extractionState": "manual",
       "localizations": {

@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreLocation
+import Observation
 
 /// Vista piena per selezione posizione nel planner (origine o destinazione).
 /// Niente sheet: viene pushata via NavigationDestination.
@@ -15,12 +16,16 @@ struct LocationPickerView: View {
 
     @Environment(ScheduleStore.self) private var store
     @Environment(LocationManager.self) private var locationManager
+    @Environment(SavedPlacesStore.self) private var savedPlacesStore
     @Environment(\.dismiss) private var dismiss
 
     @State private var query = ""
     @State private var showMapPicker = false
     @State private var mapPickedLocation: PlannerLocation? = nil
     @FocusState private var fieldFocused: Bool
+    /// When non-nil, the next chosen location (stop, map pin, or GPS) will
+    /// also be saved as this home/work key before dismissing.
+    @State private var assigningPlaceKey: SavedPlaceKey? = nil
 
     private var title: String {
         isOrigin
@@ -85,6 +90,10 @@ struct LocationPickerView: View {
             // e ci dismiss anche noi, in modo che si torni direttamente al PlannerScreen.
             guard !isShowing, let picked = mapPickedLocation else { return }
             mapPickedLocation = nil
+            if let key = assigningPlaceKey {
+                savedPlacesStore.setPlace(key, name: picked.name, coordinate: picked.coordinate)
+                assigningPlaceKey = nil
+            }
             onSelect(picked)
             // Piccolo delay per evitare conflitti con l'animazione di pop in corso
             // (senza il delay, dismiss viene ignorato quando la nav stack è ancora
@@ -125,11 +134,28 @@ struct LocationPickerView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
+    // MARK: - Pick helper (handles saved-place assignment)
+
+    /// Selects the location, optionally saving it as home/work first, then dismisses.
+    private func pick(_ location: PlannerLocation) {
+        if let key = assigningPlaceKey {
+            savedPlacesStore.setPlace(key, name: location.name, coordinate: location.coordinate)
+            assigningPlaceKey = nil
+        }
+        onSelect(location)
+        dismiss()
+    }
+
     // MARK: - Quick choices + suggerimenti vicini
 
     private var quickChoicesSection: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 8) {
+                if let key = assigningPlaceKey {
+                    assignBanner(key)
+                }
+                savedPlaceRow(.home)
+                savedPlaceRow(.work)
                 myLocationRow
                 mapPickRow
 
@@ -154,11 +180,10 @@ struct LocationPickerView: View {
         return Button {
             guard let loc = locationManager.location else { return }
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            onSelect(.userLocation(
+            pick(.userLocation(
                 name: String(localized: "planner_my_location"),
                 coordinate: loc.coordinate
             ))
-            dismiss()
         } label: {
             quickChoiceCell(
                 icon: LucideIcon.navigation.sized(18).foregroundStyle(AppTheme.accent).eraseToAnyView(),
@@ -190,6 +215,70 @@ struct LocationPickerView: View {
         }
         .buttonStyle(PressableButtonStyle())
         .accessibilityIdentifier("picker_map_pick")
+    }
+
+    // MARK: - Saved place shortcuts (Home / Work)
+
+    @ViewBuilder
+    private func savedPlaceRow(_ key: SavedPlaceKey) -> some View {
+        let saved = savedPlacesStore.savedPlace(key)
+        let title = key == .home
+            ? String(localized: "planner_picker_home")
+            : String(localized: "planner_picker_work")
+        let icon: LucideIcon = key == .home ? .house : .briefcase
+        let subtitle = saved?.name ?? String(localized: "planner_picker_set_address")
+
+        Button {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            if let saved {
+                pick(.place(name: saved.name, coordinate: saved.coordinate))
+            } else {
+                assigningPlaceKey = key
+                fieldFocused = true
+            }
+        } label: {
+            quickChoiceCell(
+                icon: icon.sized(18).foregroundStyle(AppTheme.textSecondary).eraseToAnyView(),
+                title: title,
+                subtitle: subtitle,
+                showChevron: saved != nil
+            )
+        }
+        .buttonStyle(PressableButtonStyle())
+        .accessibilityIdentifier("picker_saved_\(key.rawValue)")
+        .contextMenu {
+            if saved != nil {
+                Button(role: .destructive) {
+                    savedPlacesStore.removePlace(key)
+                } label: {
+                    Label(String(localized: "planner_picker_remove"), systemImage: "trash")
+                }
+            }
+        }
+    }
+
+    private func assignBanner(_ key: SavedPlaceKey) -> some View {
+        let message = key == .home
+            ? String(localized: "planner_picker_assign_home")
+            : String(localized: "planner_picker_assign_work")
+        return HStack(spacing: 8) {
+            LucideIcon.info.sized(14)
+                .foregroundStyle(AppTheme.textSecondary)
+            Text(message)
+                .font(.system(size: 12))
+                .foregroundStyle(AppTheme.textSecondary)
+            Spacer(minLength: 4)
+            Button(String(localized: "planner_picker_cancel")) {
+                assigningPlaceKey = nil
+            }
+            .font(.system(size: 12, weight: .medium))
+            .foregroundStyle(AppTheme.accent)
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Color(.secondarySystemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     private func quickChoiceCell(icon: AnyView, title: String, subtitle: String, showChevron: Bool = true) -> some View {
@@ -251,8 +340,7 @@ struct LocationPickerView: View {
             ForEach(Array(stops.enumerated()), id: \.element.id) { index, stop in
                 Button {
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    onSelect(.stop(stop))
-                    dismiss()
+                    pick(.stop(stop))
                 } label: {
                     stopRow(stop)
                 }

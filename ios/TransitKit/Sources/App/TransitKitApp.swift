@@ -8,6 +8,7 @@ struct TransitKitApp: App {
     @State private var store: ScheduleStore?
     @State private var favoritesManager: FavoritesManager?
     @State private var searchHistoryStore: SearchHistoryStore?
+    @State private var savedPlacesStore: SavedPlacesStore?
     @State private var locationManager = LocationManager()
     @State private var vehicleStore: VehicleStore = VehicleStore(vehiclePositionsUrl: nil)
     @State private var alertStore: AlertStore = AlertStore()
@@ -33,11 +34,12 @@ struct TransitKitApp: App {
         WindowGroup {
             ZStack {
                 Group {
-                    if let store, let favoritesManager, let searchHistoryStore, let operatorConfig, let pushManager {
+                    if let store, let favoritesManager, let searchHistoryStore, let savedPlacesStore, let operatorConfig, let pushManager {
                         ContentView(config: operatorConfig)
                             .environment(store)
                             .environment(favoritesManager)
                             .environment(searchHistoryStore)
+                            .environment(savedPlacesStore)
                             .environment(locationManager)
                             .environment(vehicleStore)
                             .environment(alertStore)
@@ -325,6 +327,7 @@ struct TransitKitApp: App {
             let favoritesMgr = FavoritesManager(operatorId: config.id, pushManager: push)
             favoritesManager = favoritesMgr
             searchHistoryStore = SearchHistoryStore(operatorId: config.id)
+            savedPlacesStore = SavedPlacesStore(operatorId: config.id)
             await scheduleStore.load()
             store = scheduleStore
             operatorConfig = config

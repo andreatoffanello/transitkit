@@ -31,6 +31,7 @@
 		28924DA06A3B5D02B0C0DCB6 /* StopAnnotationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5481BF9847C559057368FA6B /* StopAnnotationView.swift */; };
 		289F832C5077F291F197874C /* ScheduleLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64B8B11F2D7D9CAE4F81E2B /* ScheduleLoader.swift */; };
 		28B441367397CD46A65670E2 /* JourneyMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EF3176A50EBF273C1004513 /* JourneyMapView.swift */; };
+		29382E546A31B063C2171080 /* SavedPlacesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDA2514A710321C1860642FC /* SavedPlacesStore.swift */; };
 		2BCA1D7672AA34A413EA9F64 /* OrariTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 265421698770DB34151D287D /* OrariTab.swift */; };
 		2EA54AB0AABB09A86E3ED092 /* MappaTab+Actions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD2EE8B1342B1D8E6FD6E2E /* MappaTab+Actions.swift */; };
 		30C36588F7845ED1D525B5A6 /* OperatorInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 283D0F017FA3ADCC43B76457 /* OperatorInfoView.swift */; };
@@ -241,6 +242,7 @@
 		EB0D2941E87A9FC1F213D9C7 /* schedules.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = schedules.json; sourceTree = "<group>"; };
 		EC6BBEB0DCFFFF27DB881B02 /* SkeletonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkeletonView.swift; sourceTree = "<group>"; };
 		ECFB7E48F2DE54F148E94DA8 /* AlertToastOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertToastOverlay.swift; sourceTree = "<group>"; };
+		EDA2514A710321C1860642FC /* SavedPlacesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedPlacesStore.swift; sourceTree = "<group>"; };
 		EE4A2705F3CB1A7ECFDACC67 /* ExpandedMapOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandedMapOverlay.swift; sourceTree = "<group>"; };
 		F1C1A030C8B3A8CBB28C9B90 /* StopAlertsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopAlertsSection.swift; sourceTree = "<group>"; };
 		F64B8B11F2D7D9CAE4F81E2B /* ScheduleLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleLoader.swift; sourceTree = "<group>"; };
@@ -534,6 +536,7 @@
 				A171D8A0D7B978020D89F7F7 /* ConnectionsStore.swift */,
 				DA9BD090565D8838CFA04A8B /* FavoritesManager.swift */,
 				333291D9DBA313225407E8DC /* PushNotificationManager.swift */,
+				EDA2514A710321C1860642FC /* SavedPlacesStore.swift */,
 				FF18EC8C137B8A6F37B3A79F /* ScheduleStore.swift */,
 				55B43C749CFDA933F18B4CD4 /* SearchHistoryStore.swift */,
 				4B9FD10B5C48C0410259687C /* VehicleStore.swift */,
@@ -785,6 +788,7 @@
 				E45487C45B93C89C83457053 /* PushNotificationManager.swift in Sources */,
 				866260AC62EFEE67EC7A1C23 /* RemoteRoutingProvider.swift in Sources */,
 				5785D9F624777AC708F5FC1E /* RouteOverlay.swift in Sources */,
+				29382E546A31B063C2171080 /* SavedPlacesStore.swift in Sources */,
 				7A9F2EDF896D4F377F7AF931 /* Schedule.swift in Sources */,
 				289F832C5077F291F197874C /* ScheduleLoader.swift in Sources */,
 				9348F246B0AD7805171D1AC0 /* ScheduleStore.swift in Sources */,

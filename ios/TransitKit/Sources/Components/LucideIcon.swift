@@ -27,6 +27,8 @@ enum LucideIcon: String, CaseIterable {
     case navigation = "lucide-navigation"
     case signpost = "lucide-signpost"
     case route = "lucide-route"
+    case house = "lucide-house"
+    case briefcase = "lucide-briefcase"
     case globe = "lucide-globe"
     case externalLink = "lucide-external-link"
     case maximize2 = "lucide-maximize-2"

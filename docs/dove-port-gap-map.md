@@ -69,9 +69,16 @@ feste/sagre, vaporetti, CMS, farmacie.)
   confermata da codice DoVe. Visual live non catturato (dati RT ruotano) — da
   riprendere. (Android 2ª riga orario shiftato risulta GIÀ presente via
   realtimeDepartureTime — non è un gap.)
-- ⏳ Rimane: ordinamento partenze per orario EFFETTIVO (parte 2 di `983d3721`);
-  "Orari di oggi" filtrati per linea; disclaimer RT per-operatore; overlay
-  selezione linea su mappa StopDetail.
+- ✅ **Partenze filtrate/ordinate per orario EFFETTIVO** iOS+Android (`4ee913c`,
+  `983d3721` parte 2): le corse in ritardo non spariscono più dalla lista; ordine
+  per pianificato+ritardo. Verificato a video entrambe (lista corretta, no regress).
+  "Orari di oggi per linea" risulta GIÀ presente (filtro nell'orario completo).
+- ⏳ Rimane (marginale): disclaimer RT per-operatore (poco valore per appalcart);
+  overlay selezione linea su mappa StopDetail (L).
+- 🎯 **Il porting "partenze live" Movete/DoVe è essenzialmente COMPLETO.** Il valore
+  alto residuo NON è un altro porting discreto, è il **match route+stop+time**
+  (DoVe `rtDelaysByRouteStop`, L) o il fix pipeline trip_id sintetici → farebbe
+  comparire badge/ritardo/+Nmin su TUTTE le partenze invece di ~metà.
 - 🔴 **FINDING IMPORTANTE — trip_id misti nello schedule:** `schedules.json` di appalcart
   ha trip_id **reali numerici** (matchano l'RT) E **sintetici lunghi**
   (`51831753802468724`, non matchano MAI). → badge/delay si vedono solo su ~metà delle

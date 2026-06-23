@@ -59,13 +59,18 @@ feste/sagre, vaporetti, CMS, farmacie.)
 5. **Robustezza** — ✅ sanitize C1/CP1252 nel testo avvisi iOS+Android (`b7ec41d`,
    Movete `c55183bfb3`); ⏳ conditional GET sul refresh dati (Movete `dddf21da49`).
 
-### Stato porting non-vehicle (sessione 2026-06-20)
+### Stato porting (sessione 2026-06-20→23)
 Fatti: perf 60fps iOS (`32e015c`), planner Casa/Lavoro iOS (`bd2722d` + fix icona
-`e80a8bb`), sanitize avvisi iOS+Android (`b7ec41d`).
-Held (aspetta bus a Boone): glide Android SymbolLayer (5 file non committati).
+`e80a8bb`), sanitize avvisi iOS+Android (`b7ec41d`), **glide marker Android
+SymbolLayer (`ea98c8a`) — QA su bus reali 5/5 PASS, glide interpolato confermato**.
 Rimane (non-vehicle): parità Android planner Casa/Lavoro · planner per-leg RT "In
 orario" · ricerca smart (dict Boone) · StopDetail per-direzione + overlay linea ·
 conditional GET refresh.
+Follow-up: dead code `VehicleAnnotationsLayer` (ViewAnnotation) da rimuovere;
+profilare il rebuild FeatureCollection per-frame su flotte 50+; allineare opacity
+alone iOS(0.34)/Android(0.22 con blur) — diff intenzionale per renderer, ok.
+⚠️ Emulatore-5600: una sessione concorrente lancia `app.dove.venezia` (sterilità
+violata) — risolvere o la QA Android resta inaffidabile.
 
 Già portati (cross-conferma DoVe+Movete): clamp delay `[-300,+1800]s`, in-app update,
 badge live su DepartureRow.

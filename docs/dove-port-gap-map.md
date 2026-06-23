@@ -64,9 +64,14 @@ feste/sagre, vaporetti, CMS, farmacie.)
   (Movete/DoVe), compare solo con delay RT plausibile. Verificato a video entrambe.
 - Già presenti (no gap): RT merge nei countdown, grouping per direzione, timeline
   corsa + current-stop, "apri mezzo reale su mappa" (departure→TripDetail→Vedi su mappa).
-- ⏳ Rimane: Android 2ª riga orario assoluto shiftato (iOS già ce l'ha); delay per-stop
-  in timeline corsa; "Orari di oggi" filtrati per linea; disclaimer RT per-operatore;
-  overlay selezione linea su mappa StopDetail.
+- ✅ **"+N min" per-fermata nella timeline corsa** iOS+Android (`1215d16`, DoVe
+  `983d3721` parte 1): "+N min" arancione sotto le fermate non-passate. Fedeltà
+  confermata da codice DoVe. Visual live non catturato (dati RT ruotano) — da
+  riprendere. (Android 2ª riga orario shiftato risulta GIÀ presente via
+  realtimeDepartureTime — non è un gap.)
+- ⏳ Rimane: ordinamento partenze per orario EFFETTIVO (parte 2 di `983d3721`);
+  "Orari di oggi" filtrati per linea; disclaimer RT per-operatore; overlay
+  selezione linea su mappa StopDetail.
 - 🔴 **FINDING IMPORTANTE — trip_id misti nello schedule:** `schedules.json` di appalcart
   ha trip_id **reali numerici** (matchano l'RT) E **sintetici lunghi**
   (`51831753802468724`, non matchano MAI). → badge/delay si vedono solo su ~metà delle

@@ -3,10 +3,6 @@ package com.transitkit.app.ui.mappa
 import android.Manifest
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -29,7 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.semantics
@@ -55,7 +50,6 @@ import kotlinx.coroutines.launch
 @OptIn(
     ExperimentalPermissionsApi::class,
     ExperimentalMaterial3Api::class,
-    ExperimentalComposeUiApi::class,
 )
 @Composable
 fun MappaScreen(
@@ -254,18 +248,6 @@ fun MappaScreen(
 
     var showLinePicker by remember { mutableStateOf(false) }
 
-    // Pulse halo condiviso tra tutti i veicoli — 1 animazione, N letture
-    val pulseTransition = rememberInfiniteTransition(label = "vehicle_pulse")
-    val haloAlpha by pulseTransition.animateFloat(
-        initialValue = 0.42f,
-        targetValue = 0.16f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1800, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "halo_alpha",
-    )
-
     val selectedRoute = selectedRouteId?.let { id -> routes.firstOrNull { it.id == id } }
     val selectedLineColor = remember(selectedRoute?.color) {
         selectedRoute?.color?.takeIf { it.isNotBlank() }?.let { hex ->
@@ -358,40 +340,50 @@ fun MappaScreen(
                 accentColor = LocalTransitColors.current.accent,
             )
 
-            // Tap handler combinato fermate + (in futuro) veicoli SymbolLayer.
-            // Per i veicoli oggi ancora ViewAnnotation: il loro tap è dentro
-            // VehicleAnnotationsLayer. Qui solo le fermate.
-            MarkerTapHandler(
-                layerIds = listOf(STOPS_LAYER_ID),
-                onPinTap = { feature, _ ->
-                    val stopId = feature.getStringProperty(PROP_STOP_ID) ?: return@MarkerTapHandler
-                    val stop = stops.firstOrNull { it.id == stopId } ?: return@MarkerTapHandler
-                    lastAnnotationTapMs.set(System.currentTimeMillis())
-                    isFollowingVehicle = false
-                    viewModel.clearSelectedVehicle()
-                    viewModel.selectStop(stop)
-                },
-            )
-
-            VehicleAnnotationsLayer(
+            // ── Vehicle SymbolLayer (sostituisce ViewAnnotation) ──────────────
+            // GeoJsonSource + SymbolLayer + CircleLayer (halo statico, parità DoVe).
+            // Tap gestito in MarkerTapHandler qui sotto via queryRenderedFeatures.
+            VehicleSymbolLayer(
                 vehiclesWithColor = vehiclesWithColor,
                 selectedVehicle = selectedVehicle,
-                selectedRoute = selectedRoute,
                 routes = routes,
-                tier = tier,
-                haloAlpha = haloAlpha,
-                lastAnnotationTapMs = lastAnnotationTapMs,
-                onVehicleTap = { vehicle, routeColor ->
-                    viewModel.clearSelectedStop()
-                    viewModel.selectVehicle(vehicle, routeColor)
-                    isFollowingVehicle = true
-                    scope.launch {
-                        viewportState.flyTo(
-                            CameraOptions.Builder()
-                                .center(Point.fromLngLat(vehicle.lon, vehicle.lat))
-                                .zoom(maxOf(currentZoom, MapZoomLevels.vehicleFocus))
-                                .build()
-                        )
+            )
+
+            // ── Tap handler unificato fermate + veicoli ───────────────────────
+            // Ora entrambi i layer sono SymbolLayer nativi → un solo handler.
+            // Disambiguazione: se il feature ha property "vid" è un veicolo,
+            // altrimenti è una fermata (property "id").
+            MarkerTapHandler(
+                layerIds = listOf(VEHICLES_LAYER_ID, STOPS_LAYER_ID),
+                onPinTap = { feature, _ ->
+                    lastAnnotationTapMs.set(System.currentTimeMillis())
+                    val vehicleId = feature.getStringProperty(PROP_VEHICLE_ID)
+                    if (vehicleId != null) {
+                        // Veicolo tappato
+                        val match = vehiclesWithColor.firstOrNull {
+                            it.first.vehicleId == vehicleId
+                        } ?: return@MarkerTapHandler
+                        val (vehicle, routeColor) = match
+                        viewModel.clearSelectedStop()
+                        viewModel.selectVehicle(vehicle, routeColor)
+                        isFollowingVehicle = true
+                        scope.launch {
+                            viewportState.flyTo(
+                                CameraOptions.Builder()
+                                    .center(Point.fromLngLat(vehicle.lon, vehicle.lat))
+                                    .zoom(maxOf(currentZoom, MapZoomLevels.vehicleFocus))
+                                    .build()
+                            )
+                        }
+                    } else {
+                        // Fermata tappata
+                        val stopId = feature.getStringProperty(PROP_STOP_ID)
+                            ?: return@MarkerTapHandler
+                        val stop = stops.firstOrNull { it.id == stopId }
+                            ?: return@MarkerTapHandler
+                        isFollowingVehicle = false
+                        viewModel.clearSelectedVehicle()
+                        viewModel.selectStop(stop)
                     }
                 },
             )

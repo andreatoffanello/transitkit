@@ -3,7 +3,9 @@ package com.transitkit.app.ui.mappa
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.maps.MapboxStyleManager
 import com.mapbox.maps.extension.style.layers.addLayer
+import com.mapbox.maps.extension.style.layers.generated.CircleLayerDsl
 import com.mapbox.maps.extension.style.layers.generated.SymbolLayerDsl
+import com.mapbox.maps.extension.style.layers.generated.circleLayer
 import com.mapbox.maps.extension.style.layers.generated.symbolLayer
 import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.GeoJsonSource
@@ -41,5 +43,16 @@ internal object MarkerLayers {
     ) {
         if (style.styleLayerExists(layerId)) return
         style.addLayer(symbolLayer(layerId, sourceId, config))
+    }
+
+    /** Aggiunge un `CircleLayer` se non esiste già (es. alone/halo dei mezzi live). */
+    fun addCircleLayerIfMissing(
+        style: MapboxStyleManager,
+        layerId: String,
+        sourceId: String,
+        config: CircleLayerDsl.() -> Unit,
+    ) {
+        if (style.styleLayerExists(layerId)) return
+        style.addLayer(circleLayer(layerId, sourceId, config))
     }
 }

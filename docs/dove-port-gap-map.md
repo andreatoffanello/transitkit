@@ -44,15 +44,15 @@ bloccante), `442bc0a9` (force-update 5 lingue), `f4c74bec` (config appUpdate),
 Portabili in transit-engine, in ordine di priorità. (Skip Venezia-specifico: banchine,
 feste/sagre, vaporetti, CMS, farmacie.)
 
-1. **⚡ PERF — eliminare i loop 60fps della mappa** (DoVe `ee2e8d3f`, `9027042c`,
-   `1502c4cc`). transit-engine ha: pulse marker mezzo via `TimelineView(.animation)`
-   = 60fps **per veicolo**; CADisplayLink glide 60fps; shader `MapBackground.metal`.
-   Frigge i device piccoli come faceva DoVe. Invariante DoVe: "mappa idle = zero loop
-   60fps", shader cap 30fps. **Alta priorità.** (Coerente con l'alone static su Android.)
-2. **Planner (MOTIS)** — Movete: indicatore RT per-leg "In orario" nel dettaglio
-   viaggio (`2a6225a8b1`); scorciatoie Casa/Lavoro nel location picker (`7e164c8570`).
-3. **Ricerca smart** fermate/linee — Movete `8cc1a9fe74` (token order-free, abbrevi,
-   operator-aware).
+1. ✅ **PERF — loop 60fps eliminati — iOS** (`32e015c`): alone statico (pulse solo
+   sul selezionato) + shader Home 30fps + gate per tab. Idle = zero loop 60fps.
+   (Android: coperto dall'alone static della migrazione SymbolLayer held.)
+2. **Planner (MOTIS)** — ✅ scorciatoie Casa/Lavoro **iOS** (`bd2722d`, Movete
+   `7e164c8570`); ⏳ parità Android; ⏳ indicatore RT per-leg "In orario" nel
+   dettaglio viaggio (`2a6225a8b1`).
+3. **Ricerca smart** fermate/linee — Movete `8cc1a9fe74` (token order-free, abbrevi).
+   NB utente: dizionario abbreviazioni **Boone/operatore-specifico, non Venezia**
+   ("P.le" non esiste qui) → portare il meccanismo + dict adatto/config-driven.
 4. **StopDetail** — partenze raggruppate per direzione always-on (Movete `133091db2f`);
    overlay selezione linea sulla mappa StopDetail (Movete `915dca364c`); ritardo sotto
    orari nella sequenza-fermate linea + ordine/scroll (DoVe `983d3721`).

@@ -61,7 +61,11 @@ struct HomeTab: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                OperatorShaderBackground().ignoresSafeArea()
+                // Shader animato SOLO quando Home è il tab attivo.
+                // Fuori dalla Home (mappa, orari, ecc.) il bg è statico: non
+                // è visibile sotto gli altri hub e tenerlo a 30fps friggeva
+                // i device piccoli. Invariante: mappa idle = zero shader attivo.
+                OperatorShaderBackground(animated: selectedTab == 0).ignoresSafeArea()
 
                 ScrollViewReader { proxy in
                     ScrollView(showsIndicators: false) {

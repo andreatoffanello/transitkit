@@ -6,24 +6,42 @@ import SwiftUI
 ///
 /// Estratto da `HomeTab` per essere riusabile in Onboarding e altre schermate
 /// che vogliono ereditare lo stesso mood brandizzato.
+///
+/// PERF: animare SOLO in Home (o onboarding). Passare `animated: false` negli
+/// hub con mappe a schermo pieno — lì il bg è un frame statico, non è visibile
+/// e tenerlo a 30fps friggeva i device piccoli. Invariante:
+/// mappa idle = zero loop 60fps + shader inattivo (parità DoVe VeniceMapBackground).
 struct OperatorShaderBackground: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var thermalState: ProcessInfo.ThermalState = ProcessInfo.processInfo.thermalState
     @State private var isLowPowerMode: Bool = ProcessInfo.processInfo.isLowPowerModeEnabled
+    @State private var startDate = Date.now
 
     /// Boost globale all'opacità di tutti i layer. 1.0 = come la Home; 1.4
     /// circa = onboarding (texture più presente perché manca il foreground
     /// denso di card che la diluisce).
     var intensity: CGFloat = 1.0
 
+    /// Anima lo shader Metal + i blur. Spento (statico) fuori dalla Home, dove
+    /// la mappa copre tutto il display: tenere shader + 4 blur a 30fps sopra
+    /// una mappa già pesante friggeva i device piccoli. Vedi HomeTab.
+    /// Parità con DoVe `VeniceMapBackground(animated:)`.
+    var animated: Bool = true
+
     private var shouldAnimate: Bool {
-        scenePhase == .active
+        animated
+            && scenePhase == .active
             && !isLowPowerMode
             && thermalState != .serious
             && thermalState != .critical
     }
+
+    /// Frame "a regime" per lo stato statico — drift già avviato, non il t=0 piatto.
+    /// Valore fisso → nessun ricalcolo; il bg statico non è visibile sotto la mappa.
+    /// Parità con DoVe `frozenElapsed`.
+    private var frozenTime: Float { 8.0 }
 
     var body: some View {
         let (ar, ag, ab) = Self.rgbComponents(of: AppTheme.accent)
@@ -32,12 +50,18 @@ struct OperatorShaderBackground: View {
         GeometryReader { geo in
             Group {
                 if shouldAnimate {
-                    TimelineView(.animation(minimumInterval: 1.0 / 24.0)) { ctx in
-                        let t = Float(ctx.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1000.0))
+                    // Cap a ~30fps: il drift è lento (sin a ≤1.6 rad/s), 60fps bruciano
+                    // cicli su delta invisibili. `.periodic` schedula esattamente 30
+                    // frame/s indipendentemente dal refresh del display → dimezza il
+                    // costo shader+blur. Parità con DoVe (.periodic(by: 1/30)).
+                    TimelineView(.periodic(from: startDate, by: 1.0 / 30.0)) { ctx in
+                        let t = Float(ctx.date.timeIntervalSince(startDate).truncatingRemainder(dividingBy: 1000.0))
                         layersStack(size: geo.size, time: t, accent: (ar, ag, ab), isDark: isDark)
                     }
                 } else {
-                    layersStack(size: geo.size, time: 0, accent: (ar, ag, ab), isDark: isDark)
+                    // Statico: un solo frame, niente TimelineView. Shader + 4 blur
+                    // girano UNA sola volta → niente GPU continuo.
+                    layersStack(size: geo.size, time: frozenTime, accent: (ar, ag, ab), isDark: isDark)
                 }
             }
         }

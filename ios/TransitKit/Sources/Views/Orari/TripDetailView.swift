@@ -373,15 +373,25 @@ struct TripDetailView: View {
 
             Spacer(minLength: 6)
 
-            // Scheduled time at this stop (HH:mm). Dimmed for past stops,
-            // accent-colored on the origin to echo the "Ora" pill.
-            Text(timeHHmm)
-                .font(.system(size: 13, weight: isOrigin ? .semibold : .medium, design: .monospaced))
-                .foregroundStyle(
-                    isPast ? AppTheme.textTertiary
-                        : isOrigin ? lineColor
-                        : AppTheme.textSecondary
-                )
+            // Scheduled time at this stop (HH:mm) + live delay pill below.
+            // FUTURE stops: show "+N min" in orange below the planned time
+            // (trip-level delay, same as DoVe commit 983d3721). PAST stops:
+            // scheduled only, dimmed. Current stop: accent-colored.
+            let delayMin: Int? = (!isPast) ? liveDelayMinutes.flatMap { $0 > 0 ? $0 : nil } : nil
+            VStack(alignment: .trailing, spacing: 1) {
+                Text(timeHHmm)
+                    .font(.system(size: 13, weight: isOrigin ? .semibold : .medium, design: .monospaced))
+                    .foregroundStyle(
+                        isPast ? AppTheme.textTertiary
+                            : isOrigin ? lineColor
+                            : AppTheme.textSecondary
+                    )
+                if let delayMin {
+                    Text("+\(delayMin) min")
+                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(.orange)
+                }
+            }
 
             // Dock if available
             if let dock = stop.docks.first {

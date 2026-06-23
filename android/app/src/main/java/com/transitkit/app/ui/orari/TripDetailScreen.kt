@@ -268,6 +268,7 @@ fun TripDetailScreen(
                                 lineColor = lineColor,
                                 coincidences = stopCoincidences[stop.stopId] ?: emptyList(),
                                 routeColorByName = routeColorByName,
+                                delayMinutes = liveDelayMinutes ?: 0,
                                 onClick = { onNavigateToStop(stop.stopId) },
                             )
                         }
@@ -398,6 +399,7 @@ private fun TripStopRow(
     lineColor: Color,
     coincidences: List<String>,
     routeColorByName: Map<String, String> = emptyMap(),
+    delayMinutes: Int = 0,
     onClick: () -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
@@ -538,12 +540,31 @@ private fun TripStopRow(
                         )
                     }
                 }
-                Text(
-                    text = stop.departureTime.take(5),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontFamily = FontFamily.Monospace,
-                    color = if (isPast) TransitTheme.colors.textTertiary else TransitTheme.colors.textSecondary,
-                )
+                // Scheduled time + live delay below for future stops.
+                // FUTURE: "+N min" in orange below the planned time (trip-level
+                // delay, same as DoVe commit 983d3721). PAST: scheduled only.
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(1.dp),
+                ) {
+                    Text(
+                        text = stop.departureTime.take(5),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontFamily = FontFamily.Monospace,
+                        color = if (isPast) TransitTheme.colors.textTertiary else TransitTheme.colors.textSecondary,
+                    )
+                    if (!isPast && delayMinutes > 0) {
+                        Text(
+                            text = "+$delayMinutes min",
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFFFF9500),
+                            maxLines = 1,
+                            softWrap = false,
+                        )
+                    }
+                }
             }
             if (!isPast && coincidences.isNotEmpty()) {
                 Row(

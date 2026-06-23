@@ -615,8 +615,40 @@ class GtfsRtFetcher @Inject constructor(
                 else -> skip(source, wireType)
             }
         }
-        return text to language
+        return sanitizeFeedText(text) to language
     }
+
+    /**
+     * Some operators encode alert text as Windows-1252 but "smart" punctuation bytes
+     * leak through as raw C1 control codepoints (U+0080–U+009F): non-printing, so any
+     * font renders them as a tofu box □. Remap the CP1252 punctuation table to the
+     * intended Unicode glyph (en dash, curly quotes, apostrophe…), and drop the 5
+     * codepoints CP1252 leaves undefined. Accented Latin (à è ì é ù ò) and the degree
+     * sign decode as proper Unicode already and are left untouched.
+     */
+    private fun sanitizeFeedText(s: String): String {
+        if (s.none { it.code in 0x80..0x9F }) return s
+        val sb = StringBuilder(s.length)
+        for (ch in s) {
+            val code = ch.code
+            if (code in 0x80..0x9F) {
+                cp1252C1Map[code]?.let { sb.append(it) }   // undefined → dropped
+            } else {
+                sb.append(ch)
+            }
+        }
+        return sb.toString()
+    }
+
+    private val cp1252C1Map: Map<Int, Char> = mapOf(
+        0x80 to '€', 0x82 to '‚', 0x83 to 'ƒ', 0x84 to '„',
+        0x85 to '…', 0x86 to '†', 0x87 to '‡', 0x88 to 'ˆ',
+        0x89 to '‰', 0x8A to 'Š', 0x8B to '‹', 0x8C to 'Œ',
+        0x8E to 'Ž', 0x91 to '‘', 0x92 to '’', 0x93 to '“',
+        0x94 to '”', 0x95 to '•', 0x96 to '–', 0x97 to '—',
+        0x98 to '˜', 0x99 to '™', 0x9A to 'š', 0x9B to '›',
+        0x9C to 'œ', 0x9E to 'ž', 0x9F to 'Ÿ',
+    )
 
     // -------------------------------------------------------------------------
     // Protobuf primitives

@@ -658,8 +658,39 @@ private func decodeTranslation(_ data: Data) -> (text: String, language: String)
         default: r.skipField(wireType: tag.wire)
         }
     }
-    return (text, language)
+    return (sanitizeFeedText(text), language)
 }
+
+/// Some operators encode alert text as Windows-1252 but "smart" punctuation bytes
+/// leak through as raw C1 control codepoints (U+0080–U+009F): non-printing, so any
+/// font renders them as a tofu box □. Remap the CP1252 punctuation table to the
+/// intended Unicode glyph (en dash, curly quotes, apostrophe…), and drop the 5
+/// codepoints CP1252 leaves undefined. Accented Latin (à è ì é ù ò) and the degree
+/// sign decode as proper Unicode already and are left untouched.
+private func sanitizeFeedText(_ s: String) -> String {
+    guard s.unicodeScalars.contains(where: { (0x80...0x9F).contains($0.value) }) else { return s }
+    var out = String.UnicodeScalarView()
+    for scalar in s.unicodeScalars {
+        if (0x80...0x9F).contains(scalar.value) {
+            if let mapped = cp1252C1Map[scalar.value] {
+                out.append(mapped)
+            }   // CP1252-undefined control byte → dropped
+        } else {
+            out.append(scalar)
+        }
+    }
+    return String(out)
+}
+
+private let cp1252C1Map: [UInt32: Unicode.Scalar] = [
+    0x80: "\u{20AC}", 0x82: "\u{201A}", 0x83: "\u{0192}", 0x84: "\u{201E}",
+    0x85: "\u{2026}", 0x86: "\u{2020}", 0x87: "\u{2021}", 0x88: "\u{02C6}",
+    0x89: "\u{2030}", 0x8A: "\u{0160}", 0x8B: "\u{2039}", 0x8C: "\u{0152}",
+    0x8E: "\u{017D}", 0x91: "\u{2018}", 0x92: "\u{2019}", 0x93: "\u{201C}",
+    0x94: "\u{201D}", 0x95: "\u{2022}", 0x96: "\u{2013}", 0x97: "\u{2014}",
+    0x98: "\u{02DC}", 0x99: "\u{2122}", 0x9A: "\u{0161}", 0x9B: "\u{203A}",
+    0x9C: "\u{0153}", 0x9E: "\u{017E}", 0x9F: "\u{0178}",
+]
 
 // MARK: - Proto binary reader
 

@@ -1,4 +1,7 @@
-• A smoother, more reliable live map
-• Clearer vehicle and location markers
+• Cleaner, more readable home cards and line labels
+• Full timetable now grouped clearly by Weekdays / Saturday / Sunday
+• "Live" badges on departures that have a tracked bus
+• Tap a bus to open it on the map and follow it live
+• Smoother stop screen, sharper line maps, and a fix for opening a bus from a trip
 
-Plus general bug fixes and improvements.
+Plus polish and bug fixes across the app.

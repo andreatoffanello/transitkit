@@ -17,92 +17,42 @@ extension MappaTab {
     /// Current zoom tier derived from the live region span. `.city` renders nothing
     /// (clean high-zoom view — no clusters, no pins, no vehicles). `.neighborhood`
     /// shows stop +-square markers. `.street` shows full pin stops + live vehicles.
+    /// Usa `visibleRegion` (fresca dal `onMapCameraChange`) con fallback a `mapRegion`.
     var currentTier: MapZoomTier {
-        MapZoomTier(latitudeDelta: mapRegion.span.latitudeDelta)
+        MapZoomTier(latitudeDelta: (visibleRegion ?? mapRegion).span.latitudeDelta)
     }
 
+    /// Mappa SwiftUI (base unica, pattern Movete/DoVe): fermate come `Annotation`
+    /// dentro la `Map`; mezzi e puck come overlay via `proxy.convert` → sempre
+    /// sopra le fermate e billboard (in piedi) anche in 3D. Sostituisce la vecchia
+    /// `TransitMapView` UIKit (`MKMapView`) e il suo z-order via `zPriority`.
     var mapContent: some View {
-        TransitMapView(
-            region: $mapRegion,
-            stops: currentTier == .city ? [] : renderedStops,
-            vehicles: displayedVehicles,
-            polylines: cachedRoutePolylines,
-            pitch: is3D ? 45.0 : 0.0,
-            zoomLevel: zoomLevel,
-            tier: currentTier,
-            selectedStopId: selectedStop?.id,
-            selectedVehicleId: selectedVehicle?.vehicle.id,
-            selectedRouteColor: selectedRoute?.color,
-            showsUserLocation: config.features.enableGeolocation,
-            routeIdByTripId: store.routeIdByTripId,
-            routeLookup: { store.route(forId: $0) },
-            transitTypeForRoute: { route in
-                route.map { TransitType(gtfsRouteType: $0.transitType) } ?? .bus
-            },
-            onStopTap: { stop in
-                isFollowingVehicle = false
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                    selectedVehicle = nil
-                    if routeSelectedByVehicle {
-                        selectedRoute = nil
-                        selectedDirectionId = nil
-                        routeSelectedByVehicle = false
-                    }
-                    selectedStop = stop
-                }
-                // La preview card occupa ~36% dello schermo bottom; centriamo
-                // la fermata sopra la card spostando il center mappa a SUD
-                // (~22% dello span lat). Senza, la fermata finisce sotto la
-                // card subito dopo il tap.
-                let span = 0.005
-                let cardOffsetLat = span * 0.22
-                mapRegion = MKCoordinateRegion(
-                    center: CLLocationCoordinate2D(
-                        latitude: stop.lat - cardOffsetLat,
-                        longitude: stop.lng
-                    ),
-                    span: MKCoordinateSpan(latitudeDelta: span, longitudeDelta: span)
-                )
-                if isExpanded {
-                    withAnimation { isExpanded = false }
-                }
-            },
-            onVehicleTap: { vehicle in
-                let resolvedRouteId = vehicle.routeId.isEmpty
-                    ? (store.routeIdByTripId[vehicle.tripId] ?? "")
-                    : vehicle.routeId
-                let route = store.route(forId: resolvedRouteId)
-                let selection = VehicleSelection(vehicle: vehicle, route: route)
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                    selectedVehicle = selection
-                    selectedStop = nil
-                }
-                mapRegion = MKCoordinateRegion(
-                    center: CLLocationCoordinate2D(
-                        latitude: Double(vehicle.latitude),
-                        longitude: Double(vehicle.longitude)
-                    ),
-                    span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
-                )
-                if let r = route {
-                    selectRoute(r, directionId: r.directions.first?.directionId)
-                    routeSelectedByVehicle = true
-                }
-                isFollowingVehicle = true
-            },
-            onRegionChange: { region in
-                cameraTask?.cancel()
-                cameraTask = Task {
-                    try? await Task.sleep(for: .milliseconds(150))
-                    guard !Task.isCancelled else { return }
-                    let newZoom = MapZoomLevel(latitudeDelta: region.span.latitudeDelta)
-                    if newZoom != zoomLevel { zoomLevel = newZoom }
-                    visibleRegion = region
-                    updateAnnotations()
-                    refreshDisplayedVehicles()
+        MapReader { proxy in
+            Map(position: $cameraPosition) {
+                stopMapAnnotations
+                if selectedRoute != nil {
+                    RouteOverlay(polylines: cachedRoutePolylines, color: selectedRoute?.color)
                 }
             }
-        )
+            .mapStyle(.standard(elevation: .realistic, pointsOfInterest: .excludingAll))
+            .overlay(alignment: .topLeading) { vehicleMapOverlay(proxy: proxy) }
+            .overlay(alignment: .topLeading) { userPuckMapOverlay(proxy: proxy) }
+            .onMapCameraChange(frequency: .continuous) { ctx in
+                liveRegion = ctx.region   // re-render overlay a ogni frame
+            }
+            .onMapCameraChange(frequency: .onEnd) { ctx in
+                handleRegionChange(ctx.region)
+            }
+        }
+        // mapRegion/is3D sono lo stato "comando": qui pilotiamo la camera della
+        // Map. MKCoordinateRegion non è Equatable → chiave come array di Double.
+        .onChange(of: [
+            mapRegion.center.latitude, mapRegion.center.longitude,
+            mapRegion.span.latitudeDelta, mapRegion.span.longitudeDelta,
+            is3D ? 1.0 : 0.0
+        ]) { _, _ in
+            driveCamera()
+        }
         .onAppear {
             if !mapReady {
                 Task { @MainActor in
@@ -114,6 +64,152 @@ extension MappaTab {
             }
         }
         .ignoresSafeArea()
+    }
+
+    /// Fermate come `Annotation`. iOS 26: il `ForEach` deve stare in una
+    /// `@MapContentBuilder` dedicata, non inline nella `Map { }`.
+    @MapContentBuilder
+    var stopMapAnnotations: some MapContent {
+        let stops = currentTier == .city ? [] : renderedStops
+        ForEach(stops, id: \.id) { s in
+            Annotation(
+                "",
+                coordinate: CLLocationCoordinate2D(latitude: s.lat, longitude: s.lng),
+                anchor: currentTier == .street ? .bottom : .center
+            ) {
+                StopAnnotationView(
+                    stop: s,
+                    tier: currentTier,
+                    zoomLevel: zoomLevel,
+                    isSelected: selectedStop?.id == s.id,
+                    routeColor: selectedRoute?.color
+                )
+                .onTapGesture { handleStopTap(s) }
+            }
+        }
+    }
+
+    /// Mezzi live come overlay SwiftUI (sopra le fermate, glide morbido).
+    @ViewBuilder
+    func vehicleMapOverlay(proxy: MapProxy) -> some View {
+        let _ = liveRegion   // dipendenza → re-render a ogni frame camera
+        ZStack(alignment: .topLeading) {
+            Color.clear
+            ForEach(displayedVehicles) { v in
+                let resolvedRouteId = v.routeId.isEmpty
+                    ? (store.routeIdByTripId[v.tripId] ?? "")
+                    : v.routeId
+                let route = store.route(forId: resolvedRouteId)
+                AnimatedVehicleMarker(
+                    vehicle: v,
+                    proxy: proxy,
+                    routeColor: route?.color,
+                    transitType: route.map { TransitType(gtfsRouteType: $0.transitType) } ?? .bus,
+                    route: route,
+                    tier: currentTier,
+                    isSelected: selectedVehicle?.vehicle.id == v.id,
+                    onTap: { handleVehicleTap(v) }
+                )
+            }
+        }
+    }
+
+    /// Puck posizione utente come overlay SwiftUI (sopra tutto, billboard in 3D).
+    @ViewBuilder
+    func userPuckMapOverlay(proxy: MapProxy) -> some View {
+        let _ = liveRegion
+        if config.features.enableGeolocation,
+           let loc = locationManager.location,
+           let point = proxy.convert(loc.coordinate, to: .local),
+           point.x.isFinite, point.y.isFinite {
+            UserLocationDot()
+                .position(point)
+                .allowsHitTesting(false)
+        }
+    }
+
+    // MARK: - Camera driver + region change
+
+    /// Pilota la camera SwiftUI dalla region "comando" `mapRegion` + `is3D`.
+    func driveCamera() {
+        let region = mapRegion
+        let cam = MapCamera(
+            centerCoordinate: region.center,
+            distance: MappaTab.distanceForSpan(region.span),
+            heading: 0,
+            pitch: is3D ? 45 : 0
+        )
+        withAnimation(.easeInOut(duration: 0.35)) {
+            cameraPosition = .camera(cam)
+        }
+        // iOS NON fa fire affidabilmente `onMapCameraChange` per le mosse
+        // programmatiche (gotcha noto, parità Movete) → senza questo le fermate
+        // visibili non verrebbero ricalcolate dopo recenter/fit/tap/follow.
+        handleRegionChange(region)
+    }
+
+    /// Debounce 150ms a fine gesto: zoom tier, fermate visibili, mezzi.
+    func handleRegionChange(_ region: MKCoordinateRegion) {
+        cameraTask?.cancel()
+        cameraTask = Task {
+            try? await Task.sleep(for: .milliseconds(150))
+            guard !Task.isCancelled else { return }
+            let newZoom = MapZoomLevel(latitudeDelta: region.span.latitudeDelta)
+            if newZoom != zoomLevel { zoomLevel = newZoom }
+            visibleRegion = region
+            updateAnnotations()
+            refreshDisplayedVehicles()
+        }
+    }
+
+    // MARK: - Tap handlers (ex onStopTap / onVehicleTap)
+
+    func handleStopTap(_ stop: ResolvedStop) {
+        isFollowingVehicle = false
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+            selectedVehicle = nil
+            if routeSelectedByVehicle {
+                selectedRoute = nil
+                selectedDirectionId = nil
+                routeSelectedByVehicle = false
+            }
+            selectedStop = stop
+        }
+        // La preview card occupa ~36% bottom: centriamo la fermata sopra la card
+        // spostando il center a SUD (~22% dello span lat).
+        let span = 0.005
+        let cardOffsetLat = span * 0.22
+        mapRegion = MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: stop.lat - cardOffsetLat, longitude: stop.lng),
+            span: MKCoordinateSpan(latitudeDelta: span, longitudeDelta: span)
+        )
+        if isExpanded {
+            withAnimation { isExpanded = false }
+        }
+    }
+
+    func handleVehicleTap(_ vehicle: GtfsRtVehicle) {
+        let resolvedRouteId = vehicle.routeId.isEmpty
+            ? (store.routeIdByTripId[vehicle.tripId] ?? "")
+            : vehicle.routeId
+        let route = store.route(forId: resolvedRouteId)
+        let selection = VehicleSelection(vehicle: vehicle, route: route)
+        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+            selectedVehicle = selection
+            selectedStop = nil
+        }
+        mapRegion = MKCoordinateRegion(
+            center: CLLocationCoordinate2D(
+                latitude: Double(vehicle.latitude),
+                longitude: Double(vehicle.longitude)
+            ),
+            span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
+        )
+        if let r = route {
+            selectRoute(r, directionId: r.directions.first?.directionId)
+            routeSelectedByVehicle = true
+        }
+        isFollowingVehicle = true
     }
 
     // MARK: - Annotation update

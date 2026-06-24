@@ -16,12 +16,16 @@ struct ExpandedMapOverlay: View {
 
     @Environment(ScheduleStore.self) private var store
     @Environment(VehicleStore.self) private var vehicleStore
+    @Environment(LocationManager.self) private var locationManager
 
     @State private var is3D: Bool = true
     @State private var currentHeading: Double = 0
     /// Span camera corrente — pilota i tier dot→pin delle fermate linea
     /// (stesse soglie della mappa principale, `MapZoomLevels`).
     @State private var currentLatDelta: Double = 0.005
+    /// Region camera corrente — letta dagli overlay (mezzi/puck) per forzare
+    /// il re-render via `proxy.convert` a ogni frame di pan/zoom.
+    @State private var mapRegion: MKCoordinateRegion?
 
     @State private var selectedRouteId: String? = nil
     @State private var linePolylines: [CachedPolyline] = []
@@ -101,7 +105,12 @@ struct ExpandedMapOverlay: View {
                 .padding(.top, 8)
             }
         }
-        .onAppear { recenter() }
+        .onAppear {
+            // Garantisce un fix posizione per il puck overlay (LocationManager
+            // si ferma dopo il primo fix → se non già disponibile lo richiede).
+            locationManager.requestPermissionAndStart()
+            recenter()
+        }
         .task(id: selectedRouteId) {
             // Fetch + decode shape della linea selezionata, poi fit camera.
             guard let route = selectedRoute else { return }
@@ -115,43 +124,49 @@ struct ExpandedMapOverlay: View {
     private var mapLayer: some View {
         GeometryReader { geo in
             ZStack(alignment: .top) {
-                Map(
-                    position: $expandedMapPosition,
-                    bounds: MapCameraBounds(maximumDistance: MapZoomLevels.maxCameraDistance)
-                ) {
-                    UserAnnotation()
-
-                    if let route = selectedRoute {
-                        // Vista linea — il marker base della fermata è
-                        // sostituito dalle fermate della linea (la corrente
-                        // resta evidenziata via highlightedStopId).
-                        MapLineFocusContent(
-                            route: route,
-                            polylines: linePolylines,
-                            stops: lineStops,
-                            vehicles: lineVehicles,
-                            tier: tier,
-                            zoomLevel: zoomLevel,
-                            highlightedStopId: stop.id
-                        )
-                    } else if stop.docks.isEmpty {
-                        Annotation(stop.name, coordinate: stopCoordinate) {
-                            ZStack {
-                                Circle()
-                                    .fill(AppTheme.accent)
-                                    .frame(width: 32, height: 32)
-                                LucideIcon.signpost.sized(15)
-                                    .foregroundStyle(.white)
+                MapReader { proxy in
+                    Map(
+                        position: $expandedMapPosition,
+                        bounds: MapCameraBounds(maximumDistance: MapZoomLevels.maxCameraDistance)
+                    ) {
+                        if let route = selectedRoute {
+                            // Vista linea — il marker base della fermata è
+                            // sostituito dalle fermate della linea (la corrente
+                            // resta evidenziata via highlightedStopId). I mezzi
+                            // NON sono qui: sono overlay (vedi sotto).
+                            MapLineFocusContent(
+                                route: route,
+                                polylines: linePolylines,
+                                stops: lineStops,
+                                tier: tier,
+                                zoomLevel: zoomLevel,
+                                highlightedStopId: stop.id
+                            )
+                        } else if stop.docks.isEmpty {
+                            Annotation(stop.name, coordinate: stopCoordinate) {
+                                ZStack {
+                                    Circle()
+                                        .fill(AppTheme.accent)
+                                        .frame(width: 32, height: 32)
+                                    LucideIcon.signpost.sized(15)
+                                        .foregroundStyle(.white)
+                                }
+                                .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
                             }
-                            .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
                         }
                     }
-                }
-                .mapStyle(.standard(elevation: .realistic, pointsOfInterest: .excludingAll))
-                .ignoresSafeArea(.all)
-                .onMapCameraChange(frequency: .continuous) { ctx in
-                    currentHeading = ctx.camera.heading
-                    currentLatDelta = ctx.region.span.latitudeDelta
+                    .mapStyle(.standard(elevation: .realistic, pointsOfInterest: .excludingAll))
+                    .ignoresSafeArea(.all)
+                    // Mezzi live + puck come overlay SwiftUI via proxy.convert:
+                    // sempre sopra le fermate e billboard (in piedi) anche in 3D.
+                    // Pattern Movete/DoVe (SwiftUI Map non ha zPriority).
+                    .overlay(alignment: .topLeading) { vehicleOverlay(proxy: proxy) }
+                    .overlay(alignment: .topLeading) { userPuckOverlay(proxy: proxy) }
+                    .onMapCameraChange(frequency: .continuous) { ctx in
+                        currentHeading = ctx.camera.heading
+                        currentLatDelta = ctx.region.span.latitudeDelta
+                        mapRegion = ctx.region
+                    }
                 }
 
                 // Drag handle strip — swipe down per chiudere.
@@ -172,7 +187,7 @@ struct ExpandedMapOverlay: View {
                     is3D: is3D,
                     onToggle3D: toggle3D,
                     showsRecenter: true,
-                    onRecenter: recenter,
+                    onRecenter: centerOnUser,
                     showsResetBearing: hasBearingToReset,
                     onResetBearing: resetBearing,
                     onCollapse: collapse
@@ -180,6 +195,43 @@ struct ExpandedMapOverlay: View {
             }
         }
         .ignoresSafeArea(.all)
+    }
+
+    // MARK: - Overlay layers (mezzi + puck via proxy.convert)
+
+    /// Mezzi live della linea come overlay SwiftUI (non interattivi qui).
+    @ViewBuilder
+    private func vehicleOverlay(proxy: MapProxy) -> some View {
+        let _ = mapRegion   // dipendenza esplicita → re-render a ogni frame camera
+        if let route = selectedRoute {
+            ZStack(alignment: .topLeading) {
+                Color.clear
+                ForEach(lineVehicles) { v in
+                    AnimatedVehicleMarker(
+                        vehicle: v,
+                        proxy: proxy,
+                        routeColor: route.color,
+                        transitType: route.resolvedTransitType,
+                        route: route,
+                        tier: tier
+                    )
+                }
+            }
+            .allowsHitTesting(false)
+        }
+    }
+
+    /// Puck posizione utente come overlay SwiftUI (sopra tutto, billboard in 3D).
+    @ViewBuilder
+    private func userPuckOverlay(proxy: MapProxy) -> some View {
+        let _ = mapRegion
+        if let loc = locationManager.location,
+           let point = proxy.convert(loc.coordinate, to: .local),
+           point.x.isFinite, point.y.isFinite {
+            UserLocationDot()
+                .position(point)
+                .allowsHitTesting(false)
+        }
     }
 
     // MARK: - Actions
@@ -220,10 +272,29 @@ struct ExpandedMapOverlay: View {
         }
     }
 
+    /// Camera iniziale / al deselect linea: inquadra la FERMATA del dettaglio.
     private func recenter() {
         withAnimation(.spring(response: 0.42, dampingFraction: 0.85)) {
             expandedMapPosition = .camera(MapCamera(
                 centerCoordinate: stopCoordinate,
+                distance: 350,
+                heading: 0,
+                pitch: pitch
+            ))
+        }
+    }
+
+    /// Bottone "centra posizione": va sulla posizione REALE dell'utente.
+    /// Fallback alla fermata se la posizione non è ancora disponibile.
+    private func centerOnUser() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        guard let coord = locationManager.location?.coordinate else {
+            recenter()
+            return
+        }
+        withAnimation(.spring(response: 0.42, dampingFraction: 0.85)) {
+            expandedMapPosition = .camera(MapCamera(
+                centerCoordinate: coord,
                 distance: 350,
                 heading: 0,
                 pitch: pitch

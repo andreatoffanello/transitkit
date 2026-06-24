@@ -4,9 +4,11 @@ import MapKit
 // MARK: - Map Line Focus Content
 
 /// Contenuto riusabile per la "vista linea" dentro una SwiftUI `Map { }`:
-/// polilinea (tutte le direzioni) + fermate tiered + mezzi live della linea.
-/// Riusa i primitivi della mappa principale (`RouteOverlay`,
-/// `StopAnnotationView`, `VehicleAnnotationView`).
+/// polilinea (tutte le direzioni) + fermate tiered. I **mezzi live NON sono
+/// qui**: vanno resi come overlay SwiftUI via `MapProxy.convert` (vedi
+/// `AnimatedVehicleMarker`), perché SwiftUI `Map` non garantisce lo z-order tra
+/// `Annotation` e in 3D li ordina per profondità → un mezzo finirebbe sotto una
+/// fermata. Pattern Movete/DoVe.
 ///
 /// iOS 26: un `ForEach` direttamente nella closure di `Map { }` NON itera —
 /// il rendering vive qui dentro come `MapContent` dedicato (stesso pattern
@@ -15,7 +17,6 @@ struct MapLineFocusContent: MapContent {
     let route: APIRoute
     let polylines: [CachedPolyline]
     let stops: [ResolvedStop]
-    let vehicles: [GtfsRtVehicle]
     let tier: MapZoomTier
     let zoomLevel: MapZoomLevel
     /// Fermata evidenziata (es. la fermata del dettaglio corrente).
@@ -24,7 +25,6 @@ struct MapLineFocusContent: MapContent {
     var body: some MapContent {
         RouteOverlay(polylines: polylines, color: route.color)
         stopAnnotations
-        vehicleAnnotations
     }
 
     @MapContentBuilder
@@ -41,27 +41,6 @@ struct MapLineFocusContent: MapContent {
                     zoomLevel: zoomLevel,
                     isSelected: s.id == highlightedStopId,
                     routeColor: route.color
-                )
-            }
-        }
-    }
-
-    @MapContentBuilder
-    private var vehicleAnnotations: some MapContent {
-        ForEach(vehicles) { v in
-            Annotation(
-                "",
-                coordinate: CLLocationCoordinate2D(
-                    latitude: Double(v.latitude),
-                    longitude: Double(v.longitude)
-                )
-            ) {
-                VehicleAnnotationView(
-                    vehicle: v,
-                    routeColor: route.color,
-                    transitType: route.resolvedTransitType,
-                    tier: tier,
-                    route: route
                 )
             }
         }

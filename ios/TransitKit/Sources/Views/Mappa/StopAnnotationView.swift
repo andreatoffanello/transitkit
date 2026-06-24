@@ -109,8 +109,8 @@ struct StopAnnotationView: View {
             }
             .animation(.spring(duration: 0.25), value: isSelected)
             // Ancoraggio al bottom dell'host 60×60: il triangle tip coincide col
-            // bordo inferiore del frame. TransitMapView usa centerOffset = -30
-            // per mappare quel bordo al coordinate esatto della fermata.
+            // bordo inferiore del frame. La `Annotation(anchor: .bottom)` mappa
+            // quel bordo alla coordinata esatta della fermata (tier .street).
             .frame(width: 60, height: 60, alignment: .bottom)
             // Nome fermata sotto al pin (movete parity, come l'Android
             // SymbolLayer): overlay che sborda sotto il frame — l'host non

@@ -25,7 +25,6 @@
 		21F7ABB7A17A817FB3B56E1E /* OverflowBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1BB2090BF4778297476635A /* OverflowBadge.swift */; };
 		23DEEFDA9FD22463C9C348FD /* FilterChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7410BEEC0AEB17E6FFB2785 /* FilterChip.swift */; };
 		253B8533C1701FFDED93A5D0 /* VehicleDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D713C24D42DB86C1C7593BE /* VehicleDetailSheet.swift */; };
-		25F8BA243D5079C094A24A2F /* TransitMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3467B8169A684F3587919902 /* TransitMapView.swift */; };
 		2613A55B8C719E63F7C4FB48 /* PlannerLocation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0063DBA25418907674264AFF /* PlannerLocation.swift */; };
 		26367F96010FDBB436444C96 /* VehicleLiveCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12E595EE557B4B89C653DF2 /* VehicleLiveCard.swift */; };
 		28924DA06A3B5D02B0C0DCB6 /* StopAnnotationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5481BF9847C559057368FA6B /* StopAnnotationView.swift */; };
@@ -78,6 +77,7 @@
 		8E88CC564141F103CC24176B /* StopAlertsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C1A030C8B3A8CBB28C9B90 /* StopAlertsSection.swift */; };
 		8FC053721E290F04C1C289C0 /* OperatorTimeZone.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A54116D003C16BA9477E36C /* OperatorTimeZone.swift */; };
 		91D73AB4317976D04456A5D4 /* MapSearchPill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B464F0160D57BEE0DEF47B3 /* MapSearchPill.swift */; };
+		933179B0F53720308B676BCE /* MapOverlayMarkers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46501FC6188DB67493D43D91 /* MapOverlayMarkers.swift */; };
 		9348F246B0AD7805171D1AC0 /* ScheduleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF18EC8C137B8A6F37B3A79F /* ScheduleStore.swift */; };
 		970DD3E8ABA1AF549AAAC5B9 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 40C190F3ADD2E1B0E41BDFC6 /* Localizable.xcstrings */; };
 		97FD1942074FBC5A30261E46 /* LocationPickerMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8B6826165680E704A627FDF /* LocationPickerMap.swift */; };
@@ -164,12 +164,12 @@
 		3298ECC36B6DC09D4139EC06 /* TimeDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeDisplay.swift; sourceTree = "<group>"; };
 		33103B5EDE272DE94D3F38FD /* DepartureRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepartureRow.swift; sourceTree = "<group>"; };
 		333291D9DBA313225407E8DC /* PushNotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotificationManager.swift; sourceTree = "<group>"; };
-		3467B8169A684F3587919902 /* TransitMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransitMapView.swift; sourceTree = "<group>"; };
 		38AB28B4038DBF3ED421D1D0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		3D6B59FB234811C830B4142D /* ExpandedMapLineTrack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpandedMapLineTrack.swift; sourceTree = "<group>"; };
 		3D9E5FECBE60202A55805E87 /* OnboardingStoriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingStoriesView.swift; sourceTree = "<group>"; };
 		3ECCF222F6E839416B5E8973 /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
 		40C190F3ADD2E1B0E41BDFC6 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		46501FC6188DB67493D43D91 /* MapOverlayMarkers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapOverlayMarkers.swift; sourceTree = "<group>"; };
 		47BE6CB2EB2867D87CA8D146 /* DeepLinkRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkRouter.swift; sourceTree = "<group>"; };
 		488752BF581F957A86F7D779 /* PlannerHomeBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlannerHomeBox.swift; sourceTree = "<group>"; };
 		4A20EEA199B52A3A2B66325A /* FavoritesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FavoritesListView.swift; sourceTree = "<group>"; };
@@ -423,6 +423,7 @@
 				20EEB364FD8859B0CC69B811 /* Components */,
 				A338B0B04B601C99D134BD22 /* LinePickerSheet.swift */,
 				5058C4F2340AA7BEB6085B6A /* MapLineFocusContent.swift */,
+				46501FC6188DB67493D43D91 /* MapOverlayMarkers.swift */,
 				5F3436F501268CE8E925D853 /* MappaTab.swift */,
 				EAD2EE8B1342B1D8E6FD6E2E /* MappaTab+Actions.swift */,
 				718C5B6A9CC4184B6E40E212 /* MapZoomLevels.swift */,
@@ -430,7 +431,6 @@
 				5481BF9847C559057368FA6B /* StopAnnotationView.swift */,
 				21208B38164FE84DF7D65B2A /* StopMapLabel.swift */,
 				24A2F8550F9D65EFD7B990BA /* StopMapSheet.swift */,
-				3467B8169A684F3587919902 /* TransitMapView.swift */,
 				71858BFF6C4A52232A37DF83 /* VehicleAnnotationView.swift */,
 				4D713C24D42DB86C1C7593BE /* VehicleDetailSheet.swift */,
 			);
@@ -769,6 +769,7 @@
 				4202488BD8DE478C5F167B97 /* MapExpandedControls.swift in Sources */,
 				BC7894F2D9CE75723D0F692C /* MapFloatingOverlays.swift in Sources */,
 				11FD835B0A2539934E548D77 /* MapLineFocusContent.swift in Sources */,
+				933179B0F53720308B676BCE /* MapOverlayMarkers.swift in Sources */,
 				91D73AB4317976D04456A5D4 /* MapSearchPill.swift in Sources */,
 				5E5B23034730E1830246C761 /* MapZoomLevels.swift in Sources */,
 				2EA54AB0AABB09A86E3ED092 /* MappaTab+Actions.swift in Sources */,
@@ -810,7 +811,6 @@
 				379B6C3D2E804EEE3E5257C7 /* TimeDisplay.swift in Sources */,
 				A651F455DD5D78C38E388882 /* TransitKitApp.swift in Sources */,
 				98DE59309962AC1F29836503 /* TransitKitSecrets.swift in Sources */,
-				25F8BA243D5079C094A24A2F /* TransitMapView.swift in Sources */,
 				7F5F190ECED7C0E360386483 /* TripDetailView.swift in Sources */,
 				522D52776600CC2D56493829 /* VehicleAnnotationView.swift in Sources */,
 				253B8533C1701FFDED93A5D0 /* VehicleDetailSheet.swift in Sources */,

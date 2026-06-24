@@ -34,9 +34,17 @@ Ancora da splittare quando li tocchi:
 | `Models/GtfsRtDecoder.swift` | 685 | Decoder protobuf manuale — splittare per message type (VehiclePosition, TripUpdate, Alert) |
 | `Views/Orari/LinesListView.swift` | 514 | Splittare: header + search, row, sheet filtro direzione |
 | `Views/Home/HomeTab.swift` | 514 | Splittare: hero card, nearby stops section, favorites section, alerts banner |
-| `Views/Mappa/TransitMapView.swift` | 469 | UIViewRepresentable MKMapView — estraibile: delegate, annotation registry, camera controller |
 
 Pattern splitting: orchestrator `<Screen>View.swift` snello + sottocartella `<Screen>/` con subview + `Components/` per riusabili cross-feature. XcodeGen path glob `TransitKit/Sources` include tutto automaticamente — nessuna modifica a `project.yml` richiesta per nuovi file.
+
+## Mappa — base UNICA SwiftUI (no UIKit)
+
+**Tutte** le mappe usano SwiftUI `Map { }` (giu 2026: `TransitMapView` UIKit `MKMapView` eliminata). Pattern condiviso, parità Movete/DoVe:
+
+- **Fermate** = `Annotation` dentro la `Map` (layer base). Vedi `MapLineFocusContent` (`MapContent` riusabile: polilinee + fermate).
+- **Mezzi live + puck utente** = **overlay SwiftUI** sopra la `Map`, posizionati via `MapProxy.convert(coord, to:.local)`, NON `Annotation`/`UserAnnotation`. Componenti condivisi in `Views/Mappa/MapOverlayMarkers.swift` (`UserLocationDot`, `AnimatedVehicleMarker`). **WHY**: SwiftUI `Map` non ha `zPriority` e in 3D ordina per profondità → mezzi finirebbero sotto le fermate e `UserAnnotation()` viene resa nera/piatta. Gli overlay stanno sempre sopra e billboard (in piedi) anche in 3D.
+- **Guardia obbligatoria** su ogni `proxy.convert` + `.position`: `point.x.isFinite && point.y.isFinite` — in 3D pitchato convert può dare NaN → `.position(NaN)` crasha SwiftUI (EXC_BAD_ACCESS).
+- Mappa principale: `MappaTab` + `MappaTab+Actions.swift` (camera via `MapCameraPosition`, bridge da `mapRegion`/`is3D` con `onChange`). Mappa espansa: `Views/Orari/StopDetail/ExpandedMapOverlay.swift`.
 
 ## Store e Service
 

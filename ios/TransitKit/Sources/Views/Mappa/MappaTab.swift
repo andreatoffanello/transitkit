@@ -25,7 +25,14 @@ struct MappaTab: View {
     @Environment(LocationManager.self) var locationManager
 
     // MARK: Map state
+    /// Region "comando": le azioni (tap, fit linea, follow, recenter, deeplink)
+    /// scrivono qui. Un `onChange` pilota `cameraPosition` (SwiftUI `Map`).
     @State var mapRegion: MKCoordinateRegion
+    /// Camera della SwiftUI `Map`. Pilotata da `mapRegion`+`is3D`.
+    @State var cameraPosition: MapCameraPosition = .automatic
+    /// Region live (continuous) — letta dagli overlay mezzi/puck per forzare il
+    /// re-render via `proxy.convert` a ogni frame di pan/zoom.
+    @State var liveRegion: MKCoordinateRegion?
     @State var zoomLevel: MapZoomLevel = .far
     @State var visibleRegion: MKCoordinateRegion?
     @State var mapReady = false
@@ -106,6 +113,13 @@ struct MappaTab: View {
         )
         let span = Self.spanForZoom(config.map.defaultZoom)
         _mapRegion = State(initialValue: MKCoordinateRegion(center: center, span: span))
+        // is3D default true → entry 3D (pitch 45). La camera segue mapRegion via onChange.
+        _cameraPosition = State(initialValue: .camera(MapCamera(
+            centerCoordinate: center,
+            distance: Self.distanceForSpan(span),
+            heading: 0,
+            pitch: 45
+        )))
     }
 
     // MARK: - Body
@@ -248,6 +262,10 @@ struct MappaTab: View {
             }
         }
         .onAppear {
+            // Garantisce un fix posizione per il puck overlay (idempotente).
+            if config.features.enableGeolocation {
+                locationManager.requestPermissionAndStart()
+            }
             guard !didCenterOnDevice,
                   let loc = locationManager.location,
                   config.features.enableGeolocation else { return }
@@ -431,16 +449,17 @@ struct MappaTab: View {
 
     // MARK: - Map Controls actions
 
-    /// Recenter on default coordinates (geolocation button — same target as the
-    /// "reset view" button but at a tighter zoom). The actual "center on
-    /// user location" semantic is deferred: there is no CLLocation read here,
-    /// matching the pre-split behavior.
+    /// Bottone "centra posizione": va sulla posizione REALE dell'utente.
+    /// Fallback al centro operatore quando la posizione non è disponibile (o
+    /// la geolocalizzazione è disattivata).
     private func recenterOnDefault() {
-        mapRegion = MKCoordinateRegion(
-            center: CLLocationCoordinate2D(
+        let center = locationManager.location?.coordinate
+            ?? CLLocationCoordinate2D(
                 latitude: config.map.centerLat,
                 longitude: config.map.centerLng
-            ),
+            )
+        mapRegion = MKCoordinateRegion(
+            center: center,
             span: MKCoordinateSpan(latitudeDelta: 0.015, longitudeDelta: 0.015)
         )
     }
@@ -462,6 +481,14 @@ struct MappaTab: View {
         // zoom 12 ≈ 0.04 lat delta (city), zoom 14 ≈ 0.01 (neighborhood)
         let latDelta = 360.0 / pow(2.0, zoom)
         return MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: latDelta)
+    }
+
+    /// `MKCoordinateSpan` → distanza camera per `MapCamera(distance:)`.
+    /// Altezza viewport in metri / (2·tan(15°)). Mirror del vecchio
+    /// `TransitMapView.distance(forSpan:)`.
+    static func distanceForSpan(_ span: MKCoordinateSpan) -> CLLocationDistance {
+        let viewportHeight = span.latitudeDelta * 111_000.0
+        return viewportHeight / (2.0 * 0.2679)   // tan(15°) ≈ 0.2679
     }
 
     /// Rebinds the open vehicle card to the latest GtfsRtVehicle snapshot after

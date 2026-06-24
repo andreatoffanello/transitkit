@@ -29,6 +29,13 @@ import java.util.Calendar
 import java.util.TimeZone
 import javax.inject.Inject
 
+// Day-type bucket keys for the full-schedule selector. Shared with
+// [FullScheduleSheet.dayGroupLabel] (same package). Stable, non-overlapping —
+// each departure is fanned into every day-type it serves (see departuresByGroup).
+internal const val DAY_GROUP_WEEKDAYS = "weekdays"
+internal const val DAY_GROUP_SATURDAY = "saturday"
+internal const val DAY_GROUP_SUNDAY = "sunday"
+
 sealed class DeparturesState {
     object Loading : DeparturesState()
     data class Success(val departures: List<Departure>) : DeparturesState()
@@ -90,15 +97,34 @@ class StopDetailViewModel @Inject constructor(
     val rawDepartures: StateFlow<List<ResolvedDeparture>> = _rawDepartures.asStateFlow()
 
     /**
-     * All departures grouped by service-day signature (sorted weekday keys joined with ",").
-     * Key: e.g. "friday,monday,thursday,tuesday,wednesday" → Feriali
-     * For FullScheduleSheet day-group selector.
+     * All departures bucketed by DERIVED day-type — Weekdays / Saturday / Sunday —
+     * NOT by the raw GTFS service-calendar signature. A trip whose service_id runs
+     * all 7 days used to land in its own "ogni giorno" bucket, splitting a line's
+     * weekday service across two chips (the reported lone Parks & Rec line-E 07:17,
+     * plus the unreadable "Mo/Su" raw-day chips). Each departure is fanned into
+     * every day-type it actually serves, then deduped by (time, route, headsign)
+     * so a multi-day trip isn't doubled. Insertion order drives the chip order.
      */
     val departuresByGroup: StateFlow<Map<String, List<ResolvedDeparture>>> = _allDepartures
         .map { all ->
-            all.groupBy { dep ->
-                dep.serviceDays.map { it.lowercase() }.sorted().joinToString(",")
-            }.toSortedMap()
+            val weekdaySet = setOf("monday", "tuesday", "wednesday", "thursday", "friday")
+            val buckets = linkedMapOf(
+                DAY_GROUP_WEEKDAYS to mutableListOf<ResolvedDeparture>(),
+                DAY_GROUP_SATURDAY to mutableListOf<ResolvedDeparture>(),
+                DAY_GROUP_SUNDAY to mutableListOf<ResolvedDeparture>(),
+            )
+            for (dep in all) {
+                val days = dep.serviceDays.mapTo(mutableSetOf()) { it.lowercase() }
+                if (days.any { it in weekdaySet }) buckets.getValue(DAY_GROUP_WEEKDAYS).add(dep)
+                if ("saturday" in days) buckets.getValue(DAY_GROUP_SATURDAY).add(dep)
+                if ("sunday" in days) buckets.getValue(DAY_GROUP_SUNDAY).add(dep)
+            }
+            buckets
+                .filterValues { it.isNotEmpty() }
+                .mapValues { (_, deps) ->
+                    deps.distinctBy { Triple(it.departureTime, it.routeId, it.headsign) }
+                        .sortedBy { it.minutesFromMidnight }
+                }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 

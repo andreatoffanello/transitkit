@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -351,11 +353,14 @@ private fun LiveVehicleBox(
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                softWrap = false,
             )
             Text(
                 text = "·",
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                maxLines = 1,
             )
             Text(
                 text = if (late) stringResource(R.string.trip_delay_minutes, delayMinutes)
@@ -363,6 +368,8 @@ private fun LiveVehicleBox(
                 fontSize = 13.sp,
                 fontWeight = if (late) FontWeight.SemiBold else FontWeight.Normal,
                 color = if (late) orange else MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                softWrap = false,
             )
         }
 
@@ -431,6 +438,7 @@ private fun TripStopRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .height(IntrinsicSize.Min)
             .background(rowBg)
             .then(
                 if (isCurrent) {
@@ -452,56 +460,63 @@ private fun TripStopRow(
             .padding(end = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Timeline column
+        // Timeline column — FULL-HEIGHT rail (two halves meeting at the dot) so
+        // consecutive rows join into ONE continuous line. The old fixed 12dp
+        // stubs, centered in a taller row, left gaps between rows → the timeline
+        // rendered DASHED. fillMaxHeight resolves because the Row is measured with
+        // height(IntrinsicSize.Min).
         Box(
-            modifier = Modifier.width(52.dp),
+            modifier = Modifier
+                .width(52.dp)
+                .fillMaxHeight(),
             contentAlignment = Alignment.Center,
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                // Line above (not for first)
-                if (!isFirst) {
-                    Box(
-                        modifier = Modifier
-                            .width(2.dp)
-                            .height(12.dp)
-                            .background(lineAboveColor),
-                    )
-                }
-                // Dot
+            // Top half — hidden for first stop
+            if (!isFirst) {
                 Box(
                     modifier = Modifier
-                        .size(dotSize)
-                        .background(dotColor, CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    if (isTerminal && !isCurrent) {
-                        // Inner ring for terminal stops — matches screen background for hollow effect
-                        Box(
-                            modifier = Modifier
-                                .size(dotSize - 4.dp)
-                                .background(TransitTheme.colors.background, CircleShape),
-                        )
-                        Box(
-                            modifier = Modifier
-                                .size(dotSize - 8.dp)
-                                .background(dotColor, CircleShape),
-                        )
-                    } else if (isCurrent) {
-                        // Inner circle for current stop — matches screen background
-                        Box(
-                            modifier = Modifier
-                                .size(dotSize - 6.dp)
-                                .background(TransitTheme.colors.background, CircleShape),
-                        )
-                    }
-                }
-                // Line below (not for last)
-                if (!isLast) {
+                        .width(2.dp)
+                        .fillMaxHeight(0.5f)
+                        .background(lineAboveColor)
+                        .align(Alignment.TopCenter),
+                )
+            }
+            // Bottom half — hidden for last stop
+            if (!isLast) {
+                Box(
+                    modifier = Modifier
+                        .width(2.dp)
+                        .fillMaxHeight(0.5f)
+                        .background(lineBelowColor)
+                        .align(Alignment.BottomCenter),
+                )
+            }
+            // Dot — drawn OVER the rail (centered). Hollow terminal/current rings
+            // cover the rail at the node, preserving the hollow look.
+            Box(
+                modifier = Modifier
+                    .size(dotSize)
+                    .background(dotColor, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (isTerminal && !isCurrent) {
+                    // Inner ring for terminal stops — matches screen background for hollow effect
                     Box(
                         modifier = Modifier
-                            .width(2.dp)
-                            .height(12.dp)
-                            .background(lineBelowColor),
+                            .size(dotSize - 4.dp)
+                            .background(TransitTheme.colors.background, CircleShape),
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(dotSize - 8.dp)
+                            .background(dotColor, CircleShape),
+                    )
+                } else if (isCurrent) {
+                    // Inner circle for current stop — matches screen background
+                    Box(
+                        modifier = Modifier
+                            .size(dotSize - 6.dp)
+                            .background(TransitTheme.colors.background, CircleShape),
                     )
                 }
             }

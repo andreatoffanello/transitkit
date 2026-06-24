@@ -84,7 +84,7 @@ fun LineDetailScreen(
     onNavigateToStop: (stopId: String, stopName: String) -> Unit,
     onNavigateToAlert: (alertId: String) -> Unit = {},
     onNavigateToMap: (routeId: String) -> Unit = {},
-    onNavigateToTrip: (tripId: String, fromStopId: String, routeColor: String, headsign: String, routeName: String) -> Unit = { _, _, _, _, _ -> },
+    onShowVehicleOnMap: (vehicleId: String) -> Unit = {},
     viewModel: LineDetailViewModel = hiltViewModel(),
 ) {
     val route by viewModel.route.collectAsStateWithLifecycle()
@@ -103,7 +103,10 @@ fun LineDetailScreen(
         com.transitkit.app.ui.components.parseHexColor(route?.color, fallback = colors.accent)
     }
     val lineTextColor = remember(route?.textColor, lineColor) {
-        com.transitkit.app.ui.components.parseHexColor(route?.textColor, fallback = routeBadgeContrast(lineColor))
+        // Contrasto: usa il textColor GTFS SOLO se leggibile sul colore linea,
+        // altrimenti nero/bianco (fix linea E bianca su sfondo chiaro). Stessa
+        // logica del LineBadge.
+        com.transitkit.app.ui.components.lineTextColorOn(route?.textColor, lineColor)
     }
 
     Scaffold(
@@ -289,8 +292,8 @@ fun LineDetailScreen(
             }
 
             // "● N IN SERVIZIO" + horizontal scroll of compact live cards —
-            // Movete parity (May 2026). Tap drills into TripDetail so the user
-            // follows the vehicle stop-by-stop.
+            // Movete parity (May 2026). Tap opens the main map focused on that
+            // vehicle (transitkit://map/vehicle/{id}) — NOT the trip timeline.
             if (liveVehicleCards.isNotEmpty()) {
                 item {
                     InServizioHeader(count = liveVehicleCards.size, accent = lineColor)
@@ -304,18 +307,7 @@ fun LineDetailScreen(
                             LiveVehicleCardView(
                                 card = card,
                                 lineColor = lineColor,
-                                onClick = {
-                                    val tid = card.tripId
-                                    if (!tid.isNullOrBlank() && !card.firstStopId.isNullOrBlank()) {
-                                        onNavigateToTrip(
-                                            tid,
-                                            card.firstStopId,
-                                            card.routeColor,
-                                            card.headsign,
-                                            card.routeName,
-                                        )
-                                    }
-                                },
+                                onClick = { onShowVehicleOnMap(card.vehicleId) },
                             )
                         }
                     }
@@ -444,7 +436,9 @@ private fun LiveVehicleCardView(
     Surface(
         modifier = modifier
             .width(220.dp)
-            .clickable(enabled = !card.tripId.isNullOrBlank() && !card.firstStopId.isNullOrBlank()) {
+            // vehicleId is always present, so the card is always tappable → opens
+            // the vehicle on the map (no longer gated on tripId/firstStopId).
+            .clickable {
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 onClick()
             }

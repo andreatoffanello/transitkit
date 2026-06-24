@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.config.surfaceOverMap
 import com.transitkit.app.data.model.AlertSeverity
 import com.transitkit.app.data.model.ServiceAlert
 
@@ -53,7 +54,7 @@ internal fun HomeAlertChip(
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(10.dp))
-            .background(colors.glassFill)
+            .background(colors.surfaceOverMap)
             .clickable {
                 haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                 onClick()

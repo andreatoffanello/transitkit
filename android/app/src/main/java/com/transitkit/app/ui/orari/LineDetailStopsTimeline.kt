@@ -61,10 +61,23 @@ internal fun StopTimelineRow(
             // timeline reads as a comfortable scroll, not a packed list. Without
             // these, rows collapse to the badges' intrinsic height and the
             // sequence feels claustrophobic.
+            // height(IntrinsicSize.Min) gives the Row a BOUNDED height equal to its
+            // tallest child (the text column) so the timeline connector's
+            // fillMaxHeight() below actually resolves. Inside a LazyColumn the
+            // incoming max-height is Infinity and fillMaxHeight is a no-op against
+            // it → the connector collapsed into disconnected stubs (the "spezzata"
+            // timeline). heightIn(min) keeps the comfortable floor.
+            .height(IntrinsicSize.Min)
             .heightIn(min = 56.dp)
             .clickable(onClick = onClick)
             .semantics { contentDescription = "line_stop_${stop.id}" }
-            .padding(end = 16.dp, top = 6.dp, bottom = 6.dp),
+            // NO vertical padding on the Row: it would inset the timeline rail
+            // inside each row, leaving a 12dp dead gap between adjacent rows'
+            // connector halves → the rail rendered DASHED. The 6dp breathing is
+            // moved onto the text Column instead, so the rail (timeline Box) fills
+            // the FULL row height edge-to-edge and consecutive segments join into
+            // one continuous line.
+            .padding(end = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // Timeline column: full-height line + circle overlay
@@ -105,8 +118,9 @@ internal fun StopTimelineRow(
             )
         }
 
-        // Stop name + coincidence badges
-        Column(modifier = Modifier.weight(1f)) {
+        // Stop name + coincidence badges. The 6dp vertical breathing lives HERE
+        // (not on the Row) so the timeline rail stays continuous — see Row above.
+        Column(modifier = Modifier.weight(1f).padding(vertical = 6.dp)) {
             Text(
                 text = stop.name,
                 style = MaterialTheme.typography.bodyMedium,

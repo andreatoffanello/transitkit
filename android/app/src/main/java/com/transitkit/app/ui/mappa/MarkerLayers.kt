@@ -3,7 +3,6 @@ package com.transitkit.app.ui.mappa
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.maps.MapboxStyleManager
 import com.mapbox.maps.extension.style.layers.addLayer
-import com.mapbox.maps.extension.style.layers.addLayerBelow
 import com.mapbox.maps.extension.style.layers.generated.CircleLayerDsl
 import com.mapbox.maps.extension.style.layers.generated.LineLayerDsl
 import com.mapbox.maps.extension.style.layers.generated.SymbolLayerDsl
@@ -60,25 +59,24 @@ internal object MarkerLayers {
     }
 
     /**
-     * Aggiunge un `LineLayer` SOTTO [belowLayerId] (es. la polilinea della rotta
-     * sotto fermate e mezzi). Se il layer di riferimento non esiste ancora,
-     * fallback ad `addLayer` (in coda allo stack corrente) — sull'ordine di
-     * composizione la polilinea viene comunque aggiunta prima dei marker, quindi
-     * resta sotto. Idempotente.
+     * Aggiunge un `LineLayer` se non esiste. La posizione di rendering è decisa
+     * ESCLUSIVAMENTE dallo `slot` impostato in [config] (Mapbox Standard v3).
+     *
+     * NON usiamo `addLayerBelow`: passando una `LayerPosition` esplicita Mapbox
+     * IGNORA lo slot e infila la linea nel mid-stack, dove l'ambient lighting
+     * "night" dello Standard la scurisce a quasi-nero → la polilinea non prendeva
+     * il colore della linea in dark mode. Lo z-order rispetto a fermate/mezzi è
+     * garantito dall'ORDINE DI COMPOSIZIONE nello stesso slot "top":
+     * RoutePolylineLayer è composto PRIMA di StopSymbolLayer/VehicleSymbolLayer
+     * (MappaScreen), quindi la linea resta sotto i marker. Idempotente.
      */
-    fun addLineLayerBelowIfMissing(
+    fun addLineLayerIfMissing(
         style: MapboxStyleManager,
         layerId: String,
         sourceId: String,
-        belowLayerId: String,
         config: LineLayerDsl.() -> Unit,
     ) {
         if (style.styleLayerExists(layerId)) return
-        val layer = lineLayer(layerId, sourceId, config)
-        if (style.styleLayerExists(belowLayerId)) {
-            style.addLayerBelow(layer, belowLayerId)
-        } else {
-            style.addLayer(layer)
-        }
+        style.addLayer(lineLayer(layerId, sourceId, config))
     }
 }

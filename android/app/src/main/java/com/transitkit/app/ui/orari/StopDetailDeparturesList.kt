@@ -23,11 +23,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -59,19 +54,13 @@ import com.transitkit.app.config.toColor
 import com.transitkit.app.data.model.Departure
 import com.transitkit.app.data.model.ResolvedDeparture
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun DeparturesList(
     departures: List<Departure>,
-    availableRoutes: List<ResolvedDeparture> = emptyList(),
-    selectedRoute: String? = null,
-    onRouteSelected: (String?) -> Unit = {},
     onOpenFullSchedule: () -> Unit = {},
     operatorTimezone: String = "UTC",
     stopSequenceByRouteId: Map<String, String> = emptyMap(),
     onNavigateToTrip: (Departure) -> Unit = {},
-    listState: LazyListState = rememberLazyListState(),
-    trailingContent: LazyListScope.() -> Unit = {},
 ) {
     val colors = TransitTheme.colors
     val haptic = LocalHapticFeedback.current
@@ -91,82 +80,73 @@ internal fun DeparturesList(
     }
     val useGroups = directionGroups.size >= 2
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        state = listState,
-        contentPadding = PaddingValues(bottom = 88.dp),
-    ) {
-        // NB: la filter header (transit type + LineBadgeRow + "Upcoming
-        // departures") è renderizzata in [StopDetailScreen] sopra il when
-        // (state) — sempre visibile anche in caso di Empty/Error/Loading così
-        // l'utente può sempre tappare "Tutti" per ripulire il filtro.
-        item {
-            Text(
-                text = stringResource(R.string.label_oggi),
-                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = colors.textTertiary,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 6.dp),
-            )
-        }
+    // Plain Column (NOT LazyColumn): the whole stop body lives inside a single
+    // verticalScroll in StopDetailScreen so the map hero scrolls AWAY WITH the
+    // departures (iOS parity) instead of the list scrolling under a pinned map.
+    // The inline list is bounded (5+5 / take(8) per direction), so laziness is
+    // unnecessary and a nested same-direction scroll would crash.
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.label_oggi),
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = colors.textTertiary,
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 6.dp),
+        )
         if (useGroups) {
             directionGroups.forEachIndexed { groupIdx, (headsign, groupDeps) ->
-                item(key = "dir_header_$groupIdx") {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(
-                            start = 16.dp,
-                            end = 16.dp,
-                            top = if (groupIdx == 0) 0.dp else 14.dp,
-                            bottom = 6.dp,
-                        ),
-                    ) {
-                        Icon(
-                            painter = painterResource(LucideIcons.ArrowRight),
-                            contentDescription = null,
-                            tint = colors.textSecondary,
-                            modifier = Modifier.size(12.dp),
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text(
-                            text = headsign.ifBlank { stringResource(R.string.prossime_partenze) },
-                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                            color = colors.textSecondary,
-                        )
-                    }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = if (groupIdx == 0) 0.dp else 14.dp,
+                        bottom = 6.dp,
+                    ),
+                ) {
+                    Icon(
+                        painter = painterResource(LucideIcons.ArrowRight),
+                        contentDescription = null,
+                        tint = colors.textSecondary,
+                        modifier = Modifier.size(12.dp),
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = headsign.ifBlank { stringResource(R.string.prossime_partenze) },
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = colors.textSecondary,
+                    )
                 }
-                item(key = "dir_card_$groupIdx") {
-                    val visibleDeps = groupDeps.take(8)
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(colors.bgSecondary)
-                            .border(1.dp, colors.glassBorder, RoundedCornerShape(14.dp)),
-                    ) {
-                        visibleDeps.forEachIndexed { index, departure ->
-                            DepartureRow(
-                                departure = departure,
-                                isNext = groupIdx == 0 && index == 0,
-                                operatorTimezone = operatorTimezone,
-                                stopSequence = stopSequenceByRouteId[departure.routeId],
-                                onClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    onNavigateToTrip(departure)
-                                },
+                val visibleDeps = groupDeps.take(8)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(colors.bgSecondary)
+                        .border(1.dp, colors.glassBorder, RoundedCornerShape(14.dp)),
+                ) {
+                    visibleDeps.forEachIndexed { index, departure ->
+                        DepartureRow(
+                            departure = departure,
+                            isNext = groupIdx == 0 && index == 0,
+                            operatorTimezone = operatorTimezone,
+                            stopSequence = stopSequenceByRouteId[departure.routeId],
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onNavigateToTrip(departure)
+                            },
+                        )
+                        if (index < visibleDeps.lastIndex) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(start = 16.dp),
+                                color = colors.separator,
+                                thickness = 0.5.dp,
                             )
-                            if (index < visibleDeps.lastIndex) {
-                                HorizontalDivider(
-                                    modifier = Modifier.padding(start = 16.dp),
-                                    color = colors.separator,
-                                    thickness = 0.5.dp,
-                                )
-                            }
                         }
                     }
                 }
             }
-        } else item(key = "departure_card") {
+        } else {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -237,35 +217,31 @@ internal fun DeparturesList(
                 }
             }
         }
-        item {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                contentAlignment = Alignment.Center,
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            OutlinedButton(
+                onClick = onOpenFullSchedule,
+                shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(1.dp, colors.accent.copy(alpha = 0.6f)),
             ) {
-                OutlinedButton(
-                    onClick = onOpenFullSchedule,
-                    shape = RoundedCornerShape(20.dp),
-                    border = BorderStroke(1.dp, colors.accent.copy(alpha = 0.6f)),
-                ) {
-                    Icon(
-                        painterResource(LucideIcons.Clock),
-                        contentDescription = null,
-                        tint = colors.accent,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        stringResource(R.string.orario_completo),
-                        color = colors.accent,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
+                Icon(
+                    painterResource(LucideIcons.Clock),
+                    contentDescription = null,
+                    tint = colors.accent,
+                    modifier = Modifier.size(16.dp),
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    stringResource(R.string.orario_completo),
+                    color = colors.accent,
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
         }
-
-        trailingContent()
     }
 }
 

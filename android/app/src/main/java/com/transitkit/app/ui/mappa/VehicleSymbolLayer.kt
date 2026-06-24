@@ -130,6 +130,7 @@ internal fun VehicleSymbolLayer(
             // Parità DoVe: opacity fissa 0.22 a zoom ≥ VEH_NEAR_ZOOM, 0 prima.
             // Non pulsante — parità DoVe che usa step expression, non animator.
             MarkerLayers.addCircleLayerIfMissing(style, VEHICLES_HALO_LAYER_ID, VEHICLES_SOURCE_ID) {
+                slot("top")
                 filter(Expression.fromRaw("""["==", ["get", "$PROP_VEHICLE_LIVE"], 1]"""))
                 circleColor(Expression.fromRaw("""["get", "$PROP_VEHICLE_HALO"]"""))
                 circleRadius(13.0)
@@ -143,6 +144,9 @@ internal fun VehicleSymbolLayer(
 
             // ── 5. SymbolLayer (above halo) ───────────────────────────────────
             MarkerLayers.addPinLayerIfMissing(style, VEHICLES_LAYER_ID, VEHICLES_SOURCE_ID) {
+                // Top slot (above stops, which are added first) → vehicles stay the
+                // topmost overlay; keeps "mezzi sopra fermate, polilinea sotto".
+                slot("top")
                 iconImage(
                     Expression.fromRaw(
                         """["step", ["zoom"],

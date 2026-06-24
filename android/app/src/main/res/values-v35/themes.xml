@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.TransitKit" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Splash (identico a values-v31). -->
+        <item name="android:windowSplashScreenBackground">@color/ic_launcher_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_logo</item>
+
+        <!-- Android 15 (API 35) forza edge-to-edge per le app con targetSdk 35.
+             Questa app NON vuole edge-to-edge (Play Console lo segnala come
+             warning; lo chrome di sistema è gestito da statusBarColor /
+             navigationBarColor nel SideEffect di AppTheme.kt). Senza questo
+             opt-out la tab bar finiva sotto la gesture bar e in alto comparivano
+             inset doppi / scroll croppato.
+             L'opt-out ripristina il comportamento pre-15: il sistema riserva
+             status e navigation bar, i setter di colore tornano effettivi e gli
+             inset (NavigationBar windowInsets(0), padding schermate) tornano
+             corretti senza modifiche Compose.
+             NB: onorato su API 35, RIMOSSO su API 36 → quando si alzerà
+             targetSdk a 36 servirà il consumo esplicito degli inset. -->
+        <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
+    </style>
+</resources>

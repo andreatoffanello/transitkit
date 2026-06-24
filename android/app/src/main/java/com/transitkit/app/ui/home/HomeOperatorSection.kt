@@ -34,6 +34,7 @@ import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.OperatorConfig
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.config.surfaceOverMap
 import com.transitkit.app.ui.components.LiveIndicator
 
 // ---------------------------------------------------------------------------
@@ -113,7 +114,7 @@ internal fun OperatorReferenceCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(colors.bgSecondary)
+            .background(colors.surfaceOverMap)
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -231,7 +232,7 @@ internal fun HomeServiziLink(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(colors.bgSecondary)
+            .background(colors.surfaceOverMap)
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,

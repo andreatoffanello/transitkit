@@ -101,6 +101,7 @@ Documentazione completa: [`transitkit-console/CLAUDE.md`](https://github.com/and
 - UDID simulatore iOS 26: `1E7E7611-FB05-4BFD-8F50-8E7F0963E0A6` (`transitkit-ios26`, iPhone 16 Pro)
 - Location simulatori/emulatore: applicata da `scripts/setup-dev.sh [operator_id]` leggendo `shared/operators/<op>/config.json` → `map.centerLat/centerLng`. Default `appalcart` → Boone, NC (`36.2168,-81.6746`). Su iOS la posizione `simctl location set` è in-memory: rilanciare lo script dopo ogni reboot del simulatore.
 - AVD Android: `transitkit-android` (Pixel 6, API 34 — white-label: es. com.transitkit.appalcart)
+- AVD Android test Android 15: `transitkit-android-api35` (Pixel 6, API 35 — SOLO per verificare edge-to-edge / window insets su Android 15, che l'API 34 non riproduce). Porta console `5602` → serial `emulator-5602`. Avviare con `-port 5602`.
 - **Porta console Android PINNED: `5600`** → serial deterministico `emulator-5600`. Avviare SEMPRE con `-port 5600`. La porta è riservata a transitkit: nessun altro progetto deve usarla.
 - Package Android: `com.transitkit.{OPERATOR_ID}`
 

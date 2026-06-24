@@ -496,13 +496,15 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                             restoreState = false
                         }
                     },
-                    onNavigateToTrip = { tripId, fromStopId, routeColor, headsign, routeName ->
-                        val encodedTripId = URLEncoder.encode(tripId, StandardCharsets.UTF_8.name())
-                        val encodedFromStopId = URLEncoder.encode(fromStopId, StandardCharsets.UTF_8.name())
-                        val encodedColor = URLEncoder.encode(routeColor, StandardCharsets.UTF_8.name())
-                        val encodedHeadsign = URLEncoder.encode(headsign, StandardCharsets.UTF_8.name())
-                        val encodedRouteName = URLEncoder.encode(routeName, StandardCharsets.UTF_8.name())
-                        navController.navigate("trip/$encodedTripId?fromStopId=$encodedFromStopId&routeColor=$encodedColor&headsign=$encodedHeadsign&routeName=$encodedRouteName")
+                    onShowVehicleOnMap = { vehicleId ->
+                        // Line vehicle card → open the map focused on the vehicle
+                        // (same deep-link route the trip screen uses). Uri overload,
+                        // NOT navigate(route:String) — see TripDetail wiring below.
+                        val encoded = URLEncoder.encode(vehicleId, StandardCharsets.UTF_8.name())
+                        navController.navigate(
+                            android.net.Uri.parse("transitkit://map/vehicle/$encoded"),
+                            androidx.navigation.navOptions { launchSingleTop = true },
+                        )
                     },
                 )
             }
@@ -527,6 +529,7 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                         navController.navigate("stop/$encodedId?name=$encodedName")
                     },
                     initialRouteId = routeId,
+                    onBack = { navController.popBackStack() },
                 )
             }
             composable(
@@ -579,15 +582,16 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                         navController.navigate("stop/$encodedId")
                     },
                     onShowVehicleOnMap = { vehicleId ->
-                        // Reuse the existing deep-link route that MappaScreen already handles:
-                        // composable("mappa", deepLinks = [uriPattern = "transitkit://map/vehicle/{vehicleId}"]).
-                        // This pops back to the Mappa tab and passes `initialVehicleId` so the map
-                        // opens focused on that vehicle — same mechanism as the vehicle callout CTA.
+                        // Open the Mappa destination focused on this vehicle via its
+                        // navDeepLink (transitkit://map/vehicle/{vehicleId} → initialVehicleId).
+                        // MUST use the Uri overload: navigate(route:String) matches route
+                        // PATTERNS, not navDeepLink uriPatterns, so passing the URI string
+                        // there threw IllegalArgumentException and crashed the app.
                         val encoded = URLEncoder.encode(vehicleId, StandardCharsets.UTF_8.name())
-                        navController.navigate("transitkit://map/vehicle/$encoded") {
-                            popUpTo(Screen.Mappa.route) { inclusive = false }
-                            launchSingleTop = true
-                        }
+                        navController.navigate(
+                            android.net.Uri.parse("transitkit://map/vehicle/$encoded"),
+                            androidx.navigation.navOptions { launchSingleTop = true },
+                        )
                     },
                 )
             }

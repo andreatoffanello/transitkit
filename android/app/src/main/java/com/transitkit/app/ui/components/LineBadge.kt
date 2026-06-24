@@ -122,7 +122,7 @@ fun LineBadge(
 ) {
     val d = size.dims()
     val bg = parseHexColor(colorHex, fallback = Color(0xFF3B82F6))
-    val fg = resolveTextColor(textColorHex, background = bg)
+    val fg = lineTextColorOn(textColorHex, background = bg)
     val cd = stringResource(com.transitkit.app.R.string.cd_line_format, name)
 
     Row(
@@ -203,11 +203,17 @@ private fun Color.luminance(): Double {
 }
 
 /**
+ * Single source of truth for line/route text color contrast (used by [LineBadge]
+ * and any chip/label that paints a line name over its line color).
+ *
  * Returns a text color with WCAG-compliant contrast:
- * - Null / sentinel ("000000"/"FFFFFF") → auto-derive from background luminance.
- * - Provided value kept only if it passes 4.5:1 ratio; otherwise overridden.
+ * - Null / blank / sentinel ("000000"/"FFFFFF") → auto-derive from background luminance.
+ * - Provided GTFS value kept ONLY if it passes the 4.5:1 ratio against [background];
+ *   otherwise overridden to black/white for legibility. This is exactly the
+ *   "keep their color unless it doesn't contrast, then flip to readable" rule —
+ *   never paint white-on-light (the line-E illegibility bug).
  */
-private fun resolveTextColor(textColorHex: String?, background: Color): Color {
+fun lineTextColorOn(textColorHex: String?, background: Color): Color {
     val sentinels = setOf("", "000000", "FFFFFF", "000", "FFF")
     val cleaned = textColorHex?.trim()?.removePrefix("#")?.uppercase()
     if (cleaned.isNullOrEmpty() || cleaned in sentinels) {

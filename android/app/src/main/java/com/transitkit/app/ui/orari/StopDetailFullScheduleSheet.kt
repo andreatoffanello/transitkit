@@ -179,9 +179,12 @@ internal fun FullScheduleSheet(
                     val chipColor = route.routeColor.takeIf { it.isNotBlank() }
                         ?.let { runCatching { it.toColor() }.getOrNull() }
                         ?: colors.accent
-                    val routeTextColor = route.routeTextColor.takeIf { it.isNotBlank() }
-                        ?.let { runCatching { it.toColor() }.getOrNull() }
-                        ?: contrastOn(chipColor)
+                    // Contrasto: tieni il colore testo GTFS SOLO se leggibile sul
+                    // colore linea, altrimenti nero/bianco (fix linea E bianca su
+                    // sfondo chiaro). Stessa logica del LineBadge.
+                    val routeTextColor = com.transitkit.app.ui.components.lineTextColorOn(
+                        route.routeTextColor, chipColor,
+                    )
                     val isThis = filterRouteId == route.routeId
                     FilterChip(
                         selected = isThis,
@@ -276,20 +279,13 @@ internal fun FullScheduleSheet(
     } // end Surface
 }
 
-/** Maps a sorted weekday-key back to a human label. */
+/** Maps a derived day-type bucket key (see [departuresByGroup]) to a label. */
 @Composable
-private fun dayGroupLabel(key: String): String {
-    val days = key.split(",").toSet()
-    val weekdays = setOf("monday", "tuesday", "wednesday", "thursday", "friday")
-    return when {
-        days == weekdays -> stringResource(R.string.day_group_feriali)
-        days == setOf("saturday") -> stringResource(R.string.day_group_sabato)
-        days == setOf("sunday") -> stringResource(R.string.day_group_festivi)
-        days == setOf("saturday", "sunday") -> stringResource(R.string.day_group_weekend)
-        days.size == 7 -> stringResource(R.string.day_group_ogni_giorno)
-        days.size == 1 -> days.first().replaceFirstChar { it.uppercase() }.take(3)
-        else -> days.map { it.take(2).replaceFirstChar { c -> c.uppercase() } }.joinToString("/")
-    }
+private fun dayGroupLabel(key: String): String = when (key) {
+    DAY_GROUP_WEEKDAYS -> stringResource(R.string.day_group_feriali)
+    DAY_GROUP_SATURDAY -> stringResource(R.string.day_group_sabato)
+    DAY_GROUP_SUNDAY -> stringResource(R.string.day_group_festivi)
+    else -> key.replaceFirstChar { it.uppercase() }
 }
 
 @Composable

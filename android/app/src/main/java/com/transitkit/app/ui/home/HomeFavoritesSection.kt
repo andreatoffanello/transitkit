@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.config.surfaceOverMap
 import com.transitkit.app.data.model.Departure
 import com.transitkit.app.data.model.ResolvedStop
 import com.transitkit.app.ui.components.LineBadge
@@ -119,8 +120,8 @@ internal fun EmptyFavoritesCard(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = colors.glassFill,
-        tonalElevation = 2.dp,
+        color = colors.surfaceOverMap,
+        tonalElevation = 0.dp,
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
@@ -192,8 +193,8 @@ internal fun StopCard(
         },
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        color = colors.glassFill,
-        tonalElevation = 1.dp,
+        color = colors.surfaceOverMap,
+        tonalElevation = 0.dp,
     ) {
         Column(
             modifier = Modifier.padding(14.dp),

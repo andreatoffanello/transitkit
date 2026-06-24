@@ -106,15 +106,10 @@ internal fun PlannerHomeBox(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                // Tinta accent OPACA (compositata su surfaceOverMap): iOS qui
-                // usa adaptiveGlass che SFOCA lo shader dietro; Compose non ha
-                // backdrop blur, e la sola velatura 10% lasciava passare il
-                // rumore dello shader sotto i campi Da/A in dark.
-                .background(
-                    colors.accent.copy(alpha = 0.10f)
-                        .compositeOver(colors.surfaceOverMap),
-                    shape,
-                )
+                // Stessa identica superficie card di tutta la home
+                // (surfaceOverMap opaca): niente tinta accent qui — l'utente
+                // vuole UN solo materiale, coerente con card/blocchi/controlli.
+                .background(colors.surfaceOverMap, shape)
                 .semantics { testTag = "planner_home_box" },
         ) {
             // Row Da (origin) — icon column has dot + dashed line below

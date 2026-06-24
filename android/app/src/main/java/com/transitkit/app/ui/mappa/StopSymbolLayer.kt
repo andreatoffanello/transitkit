@@ -106,6 +106,10 @@ internal fun StopSymbolLayer(
             MarkerLayers.upsertSource(style, STOPS_SOURCE_ID, FeatureCollection.fromFeatures(features))
 
             MarkerLayers.addPinLayerIfMissing(style, STOPS_LAYER_ID, STOPS_SOURCE_ID) {
+                // Top slot: keeps stops above the route polyline (also top slot,
+                // inserted below this layer) AND above the Standard basemap, so
+                // both the markers and the colored line stay legible in dark mode.
+                slot("top")
                 iconImage(
                     Expression.fromRaw(
                         """["step", ["zoom"],

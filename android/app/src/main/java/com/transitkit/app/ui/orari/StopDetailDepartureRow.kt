@@ -116,10 +116,12 @@ internal fun DepartureRow(
                 com.transitkit.app.ui.components.TimeDisplay(
                     state = timeState,
                     isEmphasis = isNext,
-                    // liveDot = delay plausibile presente (VehicleStore.reliableDelayMinutes
-                    // != null dopo clamp). Parità Movete: non basta la presenza del
-                    // veicolo nel positions feed — serve il timing affidabile.
-                    liveDot = departure.delay != null,
+                    // liveDot = questa partenza ha info realtime: un veicolo reale nel
+                    // positions feed (isRealtime/isLive — ciò che la Home conta come
+                    // "N live ora") OPPURE un ritardo affidabile dal trip-updates feed.
+                    // Prima era gated SOLO sul delay → le partenze con un mezzo reale
+                    // ma senza trip-update non mostravano mai il LIVE (bug riportato).
+                    liveDot = departure.isRealtime || departure.delay != null,
                 )
                 if (hasDelay) {
                     val delayMin = (departure.delay ?: 0) / 60

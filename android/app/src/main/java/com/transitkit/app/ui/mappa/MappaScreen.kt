@@ -9,7 +9,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -43,7 +45,10 @@ import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.style.MapStyle
+import androidx.compose.ui.res.stringResource
+import com.transitkit.app.R
 import com.transitkit.app.config.LocalTransitColors
+import com.transitkit.app.config.LucideIcons
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -59,6 +64,7 @@ fun MappaScreen(
     initialRouteId: String? = null,
     initialVehicleId: String? = null,
     initialPreviewStopId: String? = null,
+    onBack: (() -> Unit)? = null,
     viewModel: MappaViewModel = hiltViewModel(),
 ) {
     val vehiclesWithColor by viewModel.vehiclesWithColor.collectAsStateWithLifecycle()
@@ -246,6 +252,34 @@ fun MappaScreen(
         )
     }
 
+    // Arrivo via "Vedi su mappa" dalla corsa / dalla pagina linea (deep link
+    // transitkit://map/vehicle/{id} → initialVehicleId): appena il veicolo
+    // richiesto è selezionato, parti GIÀ in FOLLOW (camera agganciata al mezzo)
+    // con fly-in focalizzato — stesso comportamento del tap sul marker. One-shot
+    // via `initialFollowApplied`: se poi l'utente spegne il follow non lo
+    // riaccendiamo a ogni update veicoli.
+    var initialFollowApplied by remember { mutableStateOf(false) }
+    LaunchedEffect(selectedVehicle, initialVehicleId) {
+        if (initialVehicleId == null || initialFollowApplied) return@LaunchedEffect
+        val sel = selectedVehicle ?: return@LaunchedEffect
+        if (sel.first.vehicleId != initialVehicleId) return@LaunchedEffect
+        initialFollowApplied = true
+        // Fly-in FOCALIZZATO prima (zoom sul veicolo), POI attiva il follow.
+        // Ordine importante: il re-center del follow (LaunchedEffect sopra) fa un
+        // flyTo SENZA zoom = mantiene lo zoom corrente. Se attivassi il follow
+        // prima, quel re-center partirebbe a metà della mia zoom-in e la
+        // annullerebbe (la camera restava a livello città). Aspetto che la
+        // zoom-in si assesti, poi aggancio il follow allo zoom giusto (16.5).
+        viewportState.flyTo(
+            CameraOptions.Builder()
+                .center(Point.fromLngLat(sel.first.lon, sel.first.lat))
+                .zoom(maxOf(currentZoom, MapZoomLevels.vehicleFocus))
+                .build()
+        )
+        delay(700)
+        isFollowingVehicle = true
+    }
+
     var showLinePicker by remember { mutableStateOf(false) }
 
     val selectedRoute = selectedRouteId?.let { id -> routes.firstOrNull { it.id == id } }
@@ -416,12 +450,26 @@ fun MappaScreen(
         // Top-start: search pill o dismiss chip
         // -----------------------------------------------------------------------
 
-        Box(
+        Row(
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .windowInsetsPadding(WindowInsets.statusBars)
                 .padding(start = 16.dp, top = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            // Back button — solo quando la mappa è PUSHATA (es. "Mostra su mappa"
+            // dalla pagina linea → rotta mappa_line, senza tab bar in basso).
+            // Senza questo l'utente restava intrappolato: il ✕ del chip rimuove
+            // solo la linea selezionata, NON chiude la schermata.
+            if (onBack != null) {
+                MapOverlayButton(
+                    iconRes = LucideIcons.ChevronLeft,
+                    contentDescription = stringResource(R.string.cd_indietro),
+                    onClick = onBack,
+                    buttonTestTag = "btn_map_back",
+                )
+            }
             if (selectedRoute != null) {
                 RouteDismissChip(
                     route = selectedRoute,

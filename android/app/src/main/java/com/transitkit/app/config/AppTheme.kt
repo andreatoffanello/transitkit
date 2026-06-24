@@ -191,7 +191,18 @@ private val transitTypography = Typography(
  * Light: White su quasi-bianco → invariato.
  */
 val TransitColors.surfaceOverMap: Color
-    get() = bgSecondary.compositeOver(background)
+    get() {
+        // Card OPACA e leggibile, ma NON un grigio piatto: in dark prende una
+        // leggera velatura del colore brand (accent) così resta coerente con lo
+        // shader teal/verde della home invece di sembrare un blocco grigio morto.
+        // È esattamente il "vetro che pescava il teal dello sfondo" del look
+        // originale, reso però opaco. In light resta pulita (bianca). UNICA
+        // superficie per card / input / blocchi / controlli mappa — un solo
+        // materiale, coerente ovunque.
+        val base = bgSecondary.compositeOver(bgSecondary.compositeOver(background))
+        return if (background.red > 0.5f) base
+        else accent.copy(alpha = 0.12f).compositeOver(base)
+    }
 
 // ---------------------------------------------------------------------------
 // Entry point composable

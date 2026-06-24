@@ -18,7 +18,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -84,7 +85,7 @@ fun StopDetailScreen(
     var showExpandedMap by remember { mutableStateOf(false) }
     val colors = TransitTheme.colors
     val isRefreshing = departuresState is DeparturesState.Loading
-    val listState = rememberLazyListState()
+    val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
 
@@ -167,10 +168,18 @@ fun StopDetailScreen(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            Column(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState),
+            ) {
                 // Hero map della fermata — iOS parity (item #5) + Movete parity
                 // (CompactMap "Colosseo"): 3D scenico, road labels, marker
                 // identico al main map. Tap → overlay espanso fullscreen.
+                // PRIMO elemento di un unico verticalScroll: scrolla via insieme
+                // alle partenze (parità iOS), non più mappa fissa + lista che
+                // scorre sotto. Le gesture mappa sono disabilitate nella hero,
+                // quindi il drag verticale propaga allo scroll del corpo.
                 resolvedStop?.let { stop ->
                     StopDetailMapHero(
                         stop = stop,
@@ -180,15 +189,15 @@ fun StopDetailScreen(
                     )
                 }
 
-                // Alerts chip — taps scroll the list to the AVVISI section
-                // pinned to the bottom of `DeparturesList`. Movete parity.
+                // Alerts chip — tap scrolla il corpo fino alla sezione AVVISI
+                // in fondo. Movete parity.
                 if (stopAlerts.isNotEmpty()) {
                     StopAlertsChip(
                         count = stopAlerts.size,
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             scope.launch {
-                                listState.animateScrollToItem(Int.MAX_VALUE)
+                                scrollState.animateScrollTo(scrollState.maxValue)
                             }
                         },
                     )
@@ -217,36 +226,30 @@ fun StopDetailScreen(
                             color = colors.accent,
                         )
                     }
-                    is DeparturesState.Success -> DeparturesList(
-                        departures = state.departures,
-                        availableRoutes = availableRoutes,
-                        selectedRoute = selectedRouteFilter,
-                        onRouteSelected = viewModel::selectRouteFilter,
-                        onOpenFullSchedule = { showFullSchedule = true },
-                        operatorTimezone = operatorTimezone,
-                        stopSequenceByRouteId = stopSequenceByRouteId,
-                        onNavigateToTrip = { dep ->
-                            onNavigateToTrip(
-                                dep.tripId,
-                                stopId,
-                                dep.routeColor ?: "",
-                                dep.headsign,
-                                dep.routeShortName,
+                    is DeparturesState.Success -> {
+                        DeparturesList(
+                            departures = state.departures,
+                            onOpenFullSchedule = { showFullSchedule = true },
+                            operatorTimezone = operatorTimezone,
+                            stopSequenceByRouteId = stopSequenceByRouteId,
+                            onNavigateToTrip = { dep ->
+                                onNavigateToTrip(
+                                    dep.tripId,
+                                    stopId,
+                                    dep.routeColor ?: "",
+                                    dep.headsign,
+                                    dep.routeShortName,
+                                )
+                            },
+                        )
+                        if (stopAlerts.isNotEmpty()) {
+                            AlertsSection(
+                                alerts = stopAlerts,
+                                routesById = routesById,
+                                onClick = onNavigateToAlert,
                             )
-                        },
-                        listState = listState,
-                        trailingContent = {
-                            if (stopAlerts.isNotEmpty()) {
-                                item(key = "alerts-section") {
-                                    AlertsSection(
-                                        alerts = stopAlerts,
-                                        routesById = routesById,
-                                        onClick = onNavigateToAlert,
-                                    )
-                                }
-                            }
-                        },
-                    )
+                        }
+                    }
                     is DeparturesState.Empty -> {
                         if (selectedRouteFilter != null) {
                             val filter: String = selectedRouteFilter!!
@@ -268,6 +271,8 @@ fun StopDetailScreen(
                     )
                     is DeparturesState.Error -> ErrorState(onRetry = { viewModel.loadDepartures() })
                 }
+
+                Spacer(Modifier.height(24.dp))
             }
         }
     }

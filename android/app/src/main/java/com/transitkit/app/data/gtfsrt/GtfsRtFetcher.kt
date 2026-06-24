@@ -129,7 +129,7 @@ class GtfsRtFetcher @Inject constructor(
         while (!source.exhausted()) {
             val (fieldNumber, wireType) = readTag(source) ?: break
             when {
-                fieldNumber == STU_DEPARTURE && wireType == WIRE_LEN -> {
+                (fieldNumber == STU_DEPARTURE || fieldNumber == STU_ARRIVAL) && wireType == WIRE_LEN -> {
                     val eventBytes = readLengthDelimited(source)
                     val eventSource = Buffer().write(eventBytes)
                     while (!eventSource.exhausted()) {
@@ -179,11 +179,18 @@ class GtfsRtFetcher @Inject constructor(
         const val TU_TRIP             = 1
         const val TU_STOP_TIME_UPDATE = 2
 
-        // StopTimeUpdate
-        const val STU_DEPARTURE = 2
+        // StopTimeUpdate: arrival = field 2, departure = field 4 (GTFS-RT spec).
+        // The AppalCART/ETA Transit feed carries delay in `arrival`; `departure`
+        // is absent — verified via `protoc --decode_raw` of the live trip-updates
+        // feed (stop_time_update → arrival(2) → { delay = field 1 }).
+        const val STU_ARRIVAL   = 2
+        const val STU_DEPARTURE = 4
 
-        // StopTimeEvent
-        const val STE_DELAY = 2
+        // StopTimeEvent: delay = field 1 (NOT 2 — field 2 is `time`). The old
+        // value 2 read `time`, found nothing, and returned 0 for every trip, so
+        // delays were silently flat-lined and the stop-list LIVE badge/“N min late”
+        // never reflected reality.
+        const val STE_DELAY = 1
 
         // VehiclePosition — standard GTFS-RT field numbers
         // (https://gtfs.org/realtime/reference/#message-vehicleposition)

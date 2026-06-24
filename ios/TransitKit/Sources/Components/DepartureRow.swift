@@ -28,6 +28,17 @@ struct DepartureRow: View {
         return vehicleStore.reliableDelayMinutes(forTripId: tripId)
     }
 
+    /// LIVE = info realtime presente: o un delay trip-update affidabile, O un
+    /// veicolo reale tracciato nel positions feed (ciò che la Home conta come
+    /// "N live"). Prima era gated solo sul delay → le partenze con un mezzo reale
+    /// ma senza trip-update non mostravano mai il LIVE. Parità con Android
+    /// (StopDetailDepartureRow: `isRealtime || delay != null`).
+    private var isLive: Bool {
+        if rtDelay != nil { return true }
+        guard let tripId = departure.tripId else { return false }
+        return vehicleStore.isLive(tripId: tripId)
+    }
+
     private var timeState: DepartureTimeState {
         scheduleStore.timeState(for: departure, delayMinutes: rtDelay)
     }
@@ -111,10 +122,10 @@ struct DepartureRow: View {
     @ViewBuilder
     private var timeStack: some View {
         VStack(alignment: .trailing, spacing: 1) {
-            // LIVE pill = feed RT ha un delay plausibile (rtDelay != nil, dopo
-            // clamp −5…+30 min in VehicleStore). Parità Movete: non basta che
-            // il veicolo esista nel positions feed — deve avere timing affidabile.
-            TimeDisplay(state: timeState, liveDot: rtDelay != nil)
+            // LIVE pill = delay trip-update plausibile (rtDelay != nil dopo clamp
+            // −5…+30 min) OPPURE veicolo reale presente nel positions feed. Vedi
+            // `isLive` — il countdown/clock sotto resta keyed sul solo rtDelay.
+            TimeDisplay(state: timeState, liveDot: isLive)
 
             // Absolute clock beneath the countdown. Shifted forward by the
             // plausibility-filtered RT delay when present; byte-for-byte the

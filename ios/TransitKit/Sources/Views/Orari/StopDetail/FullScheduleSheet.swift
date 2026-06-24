@@ -11,7 +11,7 @@ struct FullScheduleSheet: View {
     @State private var isReady = false
 
     private var allGroups: [DayGroup: [Departure]] {
-        store.departures(forStopId: stop.id)
+        store.fullScheduleDepartures(forStopId: stop.id)
     }
 
     private var sortedDayGroups: [DayGroup] {

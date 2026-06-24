@@ -366,6 +366,11 @@ struct MappaTab: View {
                 ),
                 span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
             )
+            // Arrivo da "Vedi su mappa" / card vettura / deep link map/vehicle →
+            // parti GIÀ in FOLLOW (come il tap diretto sul marker), così la camera
+            // resta agganciata al mezzo. followSelectedVehicleIfNeeded() gira a
+            // ogni refresh feed e ricentra alla stessa span. Parità Android.
+            isFollowingVehicle = true
         }
         .onChange(of: mapReady) { _, ready in
             guard ready else { return }

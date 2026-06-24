@@ -66,15 +66,13 @@ struct LineDetailView: View {
                             oppositeDirectionCount: oppositeDirectionCount,
                             lineColor: lineColor,
                             onVehicleTap: { vehicle in
-                                // Tap mirrors Movete: drill into the trip timeline so the
-                                // user follows this vehicle stop-by-stop. Fall back to the
-                                // map preview only if the trip isn't in the loaded
-                                // schedule (rare race during cold start).
-                                if let pair = store.firstDepartureAndStop(forTripId: vehicle.tripId) {
-                                    pushedTrip = TripTarget(departure: pair.0, fromStop: pair.1)
-                                } else {
-                                    router.pendingMapPreviewVehicleId = vehicle.id
-                                }
+                                // Tap su una vettura live → apre la vettura sulla MAPPA
+                                // (non la corsa). Parità con Android (onShowVehicleOnMap) e
+                                // col contratto di VehicleLiveCard ("opens the Mappa tab
+                                // centered on this vehicle"). Riusa il path già pronto:
+                                // ContentView passa alla tab Mappa e MappaTab focalizza la
+                                // vettura via pendingMapPreviewVehicleId.
+                                router.pendingMapPreviewVehicleId = vehicle.id
                             },
                             onSwitchDirection: {
                                 guard let other = route.directions

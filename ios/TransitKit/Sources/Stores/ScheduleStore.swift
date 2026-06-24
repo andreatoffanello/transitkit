@@ -208,6 +208,54 @@ class ScheduleStore {
         return result
     }
 
+    /// Departures bucketed by DERIVED day-type (Weekdays / Saturday / Sunday) for
+    /// the full-schedule sheet — NOT by the raw GTFS service-calendar signature.
+    /// A trip whose service runs all 7 days used to land in its own bucket,
+    /// fragmenting a line's weekday service (the lone line-E 07:17 under "every
+    /// day") and producing unreadable raw-day chips ("Mo/Su"). Each departure is
+    /// fanned into every day-type its service days touch, then deduped by
+    /// (time, route, headsign). Mirrors the Android fix.
+    ///
+    /// Intentionally SEPARATE from `departures(forStopId:)`, which keeps exact-day
+    /// grouping so `todayDepartures` stays day-precise (a Mon-only trip must not
+    /// leak into Tuesday via a coarse Weekdays bucket). Bucket ids "0_/1_/2_"
+    /// drive the chip order (Weekdays → Sat → Sun); the label comes from `days`.
+    func fullScheduleDepartures(forStopId stopId: String) -> [DayGroup: [Departure]] {
+        guard let response = scheduleResponse,
+              let apiStop = response.stops.first(where: { $0.id == stopId })
+        else { return [:] }
+
+        let buckets: [(DayGroup, Set<Weekday>)] = [
+            (DayGroup(id: "0_weekdays", days: [.mon, .tue, .wed, .thu, .fri]), [.mon, .tue, .wed, .thu, .fri]),
+            (DayGroup(id: "1_sat", days: [.sat]), [.sat]),
+            (DayGroup(id: "2_sun", days: [.sun]), [.sun]),
+        ]
+
+        var grouped: [DayGroup: [APIDeparture]] = [:]
+        for dep in apiStop.departures {
+            let serviceDays = Set(parseDayGroup(from: dep.serviceDays.sorted().joined(separator: ",")).days)
+            for (group, members) in buckets where !serviceDays.isDisjoint(with: members) {
+                grouped[group, default: []].append(dep)
+            }
+        }
+
+        var result: [DayGroup: [Departure]] = [:]
+        for (group, deps) in grouped {
+            let resolved = deps
+                .map { Departure(from: $0, route: routeById[$0.routeId], headsignMap: operatorConfig?.headsignMap) }
+                .sorted { $0.minutesFromMidnight < $1.minutesFromMidnight }
+            // Dedup by (time, route, headsign) — same as todayDepartures.
+            var seen: Set<String> = []
+            var deduped: [Departure] = []
+            for dep in resolved {
+                let key = "\(dep.time)|\(dep.routeId)|\(dep.headsign)"
+                if seen.insert(key).inserted { deduped.append(dep) }
+            }
+            result[group] = deduped
+        }
+        return result
+    }
+
     func todayDepartures(forStopId stopId: String) -> [Departure] {
         let allDeps = departures(forStopId: stopId)
         let today = currentWeekday()

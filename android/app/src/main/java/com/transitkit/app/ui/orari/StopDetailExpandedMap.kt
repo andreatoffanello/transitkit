@@ -1,11 +1,5 @@
 package com.transitkit.app.ui.orari
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -18,6 +12,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -53,11 +48,10 @@ import com.transitkit.app.ui.mappa.RoutePolylineLayer
 import com.transitkit.app.ui.mappa.StopSymbolLayer
 import com.transitkit.app.ui.mappa.UnifiedMapControlsPill
 import com.transitkit.app.ui.mappa.UserLocationPuck
-import com.transitkit.app.ui.mappa.VehicleAnnotationsLayer
+import com.transitkit.app.ui.mappa.VehicleSymbolLayer
 import com.transitkit.app.ui.mappa.applyTransitKitHeroStyleConfig
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Mappa fermata espansa a fullscreen — iOS parity (item #2 + #5).
@@ -120,16 +114,13 @@ internal fun StopDetailExpandedMap(
         )
     }
 
-    // Camera state polling — zoom (tier veicoli/fermate) + pitch + bearing
-    // per il pill (uguale a MappaScreen).
-    var currentZoom by remember { mutableDoubleStateOf(16.0) }
+    // Camera state polling — pitch + bearing per il pill (uguale a MappaScreen).
     var currentPitch by remember { mutableDoubleStateOf(45.0) }
     var currentBearing by remember { mutableDoubleStateOf(0.0) }
     LaunchedEffect(Unit) {
         while (true) {
             val cs = viewport.cameraState
             if (cs != null) {
-                currentZoom = cs.zoom
                 currentPitch = cs.pitch
                 currentBearing = cs.bearing
             }
@@ -137,20 +128,6 @@ internal fun StopDetailExpandedMap(
         }
     }
     val is3D by remember { derivedStateOf { currentPitch > 10.0 } }
-    val tier by remember { derivedStateOf { MapZoomLevels.tier(currentZoom) } }
-
-    // Pulse halo condiviso tra i veicoli — 1 animazione, N letture (main map parity).
-    val pulseTransition = rememberInfiniteTransition(label = "expanded_vehicle_pulse")
-    val haloAlpha by pulseTransition.animateFloat(
-        initialValue = 0.42f,
-        targetValue = 0.16f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1800, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "expanded_halo_alpha",
-    )
-    val lastAnnotationTapMs = remember { AtomicLong(0L) }
 
     // True solo dopo che una linea è stata selezionata almeno una volta —
     // distingue il deselect (camera back to stop) dalla composizione iniziale.
@@ -214,16 +191,12 @@ internal fun StopDetailExpandedMap(
                     accentColor = accent,
                 )
 
-                // Mezzi live della linea — lista vuota quando nessuna selezione.
-                VehicleAnnotationsLayer(
+                // Mezzi live della linea — SymbolLayer nativo (lista vuota quando
+                // nessuna selezione). Non interattivi qui: nessun tap handler.
+                VehicleSymbolLayer(
                     vehiclesWithColor = vehiclesWithColor,
                     selectedVehicle = null,
-                    selectedRoute = selectedRoute,
                     routes = routes,
-                    tier = tier,
-                    haloAlpha = haloAlpha,
-                    lastAnnotationTapMs = lastAnnotationTapMs,
-                    onVehicleTap = { _, _ -> },
                 )
 
                 // Puck SENZA bearing cone: con pitch 45° il cono di heading
@@ -288,6 +261,25 @@ internal fun StopDetailExpandedMap(
                         Brush.verticalGradient(
                             0f to colors.background.copy(alpha = 0.88f),
                             1f to Color.Transparent,
+                        )
+                    )
+            )
+
+            // Scrim status bar — le icone di sistema del Dialog sono chiare e NON
+            // controllabili via window API (la Dialog window le resetta dopo
+            // l'attach). Garantiamo il contrasto con uno scrim scuro dietro lo
+            // status bar, sopra la vignetta chiara (pattern maps immersive: icone
+            // bianche su velatura scura). Solo l'altezza dello status bar → non
+            // intacca il line track sottostante.
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .windowInsetsTopHeight(WindowInsets.statusBars)
+                    .align(Alignment.TopCenter)
+                    .background(
+                        Brush.verticalGradient(
+                            0f to Color.Black.copy(alpha = 0.45f),
+                            1f to Color.Black.copy(alpha = 0.12f),
                         )
                     )
             )

@@ -37,8 +37,8 @@ import com.transitkit.app.data.model.ResolvedDeparture
 // Same design as the iOS sibling. Scope: departure rows, line lists, stop
 // coincidences, filter chips, sheet headers, vehicle/trip cards.
 //
-// Map annotations (VehicleAnnotationView, StopAnnotationView) are NOT in
-// scope: they use custom shapes (dot + halo, pin + tail) and stay as-is.
+// Map markers (vehicles, stops) are NOT in scope: they render as native
+// SymbolLayer bitmaps (custom dot + halo, pin + tail), not as LineBadge.
 //
 // Single-operator-per-app product → no "operator logo" chip variant.
 // `showTransitIcon` toggles an optional left-side modal icon (bus / tram /

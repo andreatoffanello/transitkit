@@ -1,5 +1,4 @@
-• Tap a line on the stop map to see its full route and live buses
-• Sharper stop names and clearer map controls
-• Better readability in dark mode
+• A smoother, more reliable live map
+• Clearer vehicle and location markers
 
-Plus performance improvements and bug fixes.
+Plus general bug fixes and improvements.

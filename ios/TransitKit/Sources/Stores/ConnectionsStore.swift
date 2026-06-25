@@ -35,11 +35,11 @@ final class ConnectionsStore {
 
     // MARK: - Query
 
-    func query(origin: PlannerStop, destination: PlannerStop, after: Date) async -> [Journey] {
-        await provider.query(origin: origin, destination: destination, after: after)
+    func query(origin: PlannerStop, destination: PlannerStop, after: Date) async throws -> [Journey] {
+        try await provider.query(origin: origin, destination: destination, after: after)
     }
 
-    func queryArriveBy(origin: PlannerStop, destination: PlannerStop, before: Date) async -> [Journey] {
-        await provider.queryArriveBy(origin: origin, destination: destination, before: before)
+    func queryArriveBy(origin: PlannerStop, destination: PlannerStop, before: Date) async throws -> [Journey] {
+        try await provider.queryArriveBy(origin: origin, destination: destination, before: before)
     }
 }

@@ -51,7 +51,15 @@ class PlannerViewModel @Inject constructor(
     private val _isSearching = MutableStateFlow(false)
     val isSearching = _isSearching.asStateFlow()
 
-    enum class SearchError { SameStop, OutOfServiceArea }
+    /**
+     * Esito fallito dell'ultima ricerca. `Unreachable` (backend giù / rete
+     * assente / 5xx / decode — transitorio, con retry) è distinto dal genuino
+     * "nessun viaggio" (200 OK, zero itinerari → `journeys` vuoti, niente
+     * errore) e dall'input invalido. Prima un timeout del routing finiva
+     * mascherato da "nessun viaggio", una bugia che dava la colpa al viaggio
+     * invece che all'outage. Parità con iOS `PlannerScreen.isUnreachable`.
+     */
+    enum class SearchError { SameStop, OutOfServiceArea, Unreachable }
 
     private val _searchError = MutableStateFlow<SearchError?>(null)
     val searchError = _searchError.asStateFlow()
@@ -264,17 +272,31 @@ class PlannerViewModel @Inject constructor(
             _isSearching.value = true
             _hasSearched.value = true
             _searchError.value = null
-            val results = withContext(Dispatchers.IO) {
-                when (_whenSelection.value.mode) {
-                    1 -> connectionsStore.query(op, dp, _whenSelection.value.date.time)
-                    2 -> connectionsStore.queryArriveBy(op, dp, _whenSelection.value.date.time)
-                    else -> connectionsStore.query(op, dp, System.currentTimeMillis())
+            try {
+                val results = withContext(Dispatchers.IO) {
+                    when (_whenSelection.value.mode) {
+                        1 -> connectionsStore.query(op, dp, _whenSelection.value.date.time)
+                        2 -> connectionsStore.queryArriveBy(op, dp, _whenSelection.value.date.time)
+                        else -> connectionsStore.query(op, dp, System.currentTimeMillis())
+                    }
                 }
+                _journeys.value = results
+                _isSearching.value = false
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                // Timeout / connessione / 5xx / decode: il servizio percorsi non
+                // risponde. NON è "nessun viaggio" — è un outage, con retry.
+                android.util.Log.w("Planner", "routing error: ${e.message}")
+                _journeys.value = emptyList()
+                _searchError.value = SearchError.Unreachable
+                _isSearching.value = false
             }
-            _journeys.value = results
-            _isSearching.value = false
         }
     }
+
+    /** Retry dell'ultima ricerca dopo un outage (bottone "Riprova"). */
+    fun retry() = triggerSearch()
 
     private fun reset() {
         searchJob?.cancel()

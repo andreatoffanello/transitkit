@@ -450,6 +450,9 @@
     <string name="planner_downloading">Downloading schedules…</string>
     <string name="planner_same_stop">Origin and destination are the same</string>
     <string name="planner_out_of_service_area">Location is outside the service area</string>
+    <string name="planner_unreachable_title">Trip planner unavailable</string>
+    <string name="planner_unreachable_body">We can\'t reach the trip planning service. Check your connection and try again.</string>
+    <string name="planner_retry">Retry</string>
     <string name="planner_change">transfer</string>
     <string name="planner_changes">transfers</string>
     <string name="planner_walk_min">%1$d min walk</string>

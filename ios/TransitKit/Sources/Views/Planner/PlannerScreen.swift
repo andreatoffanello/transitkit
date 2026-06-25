@@ -23,6 +23,12 @@ struct PlannerScreen: View {
     @State private var journeys: [Journey] = []
     @State private var isSearching = false
     @State private var searchError: String? = nil
+    /// `true` quando l'ultima ricerca è fallita per backend irraggiungibile
+    /// (timeout / rete assente / 5xx / decode). Distinto da `searchError`
+    /// (same-stop / fuori area, dove il retry è inutile) e da `journeys` vuoti
+    /// con `hasSearched` (genuino "nessun viaggio"). Specchio Movete `SearchFailure.unreachable`.
+    @State private var isUnreachable = false
+    @State private var retryTick = 0
     @State private var hasSearched = false
     @State private var searchTask: Task<Void, Never>? = nil
     init(initialOrigin: PlannerLocation? = nil, initialDestination: PlannerLocation? = nil, initialWhen: WhenSelection = .now) {
@@ -205,6 +211,8 @@ struct PlannerScreen: View {
                         ProgressView()
                             .padding(.top, 40)
                             .frame(maxWidth: .infinity)
+                    } else if isUnreachable {
+                        unreachableView
                     } else if let error = searchError {
                         errorView(message: error)
                     } else if hasSearched && journeys.isEmpty {
@@ -237,6 +245,37 @@ struct PlannerScreen: View {
 
     private func errorView(message: String) -> some View {
         EmptyStateView(icon: .alertTriangle, title: message, tint: .orange)
+    }
+
+    /// Outage del servizio percorsi: messaggio onesto (è il backend, non il
+    /// viaggio) + retry. Distinto dal no-trips, dove il retry sarebbe inutile.
+    /// Specchio Movete `PlannerScreen.unreachableState`.
+    private var unreachableView: some View {
+        VStack(spacing: 20) {
+            EmptyStateView(
+                icon: .alertTriangle,
+                title: String(localized: "planner_unreachable_title"),
+                subtitle: String(localized: "planner_unreachable_body"),
+                tint: .orange
+            )
+            Button {
+                retryTick += 1
+                triggerSearch()
+            } label: {
+                Text(String(localized: "planner_retry"))
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(AppTheme.accent)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 11)
+                    .background(Capsule().fill(AppTheme.accent.opacity(0.22)))
+                    .overlay(Capsule().strokeBorder(AppTheme.accent.opacity(0.45), lineWidth: 1))
+            }
+            .buttonStyle(PlannerCardPressStyle())
+            .sensoryFeedback(.impact(weight: .light), trigger: retryTick)
+            .accessibilityIdentifier("planner_retry")
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 8)
     }
 
     @ViewBuilder
@@ -319,12 +358,12 @@ struct PlannerScreen: View {
     private func triggerSearch() {
         guard let o = origin, let d = destination else {
             searchTask?.cancel(); searchTask = nil
-            journeys = []; searchError = nil; hasSearched = false
+            journeys = []; searchError = nil; isUnreachable = false; hasSearched = false
             return
         }
         guard o.id != d.id else {
             searchTask?.cancel(); searchTask = nil
-            journeys = []
+            journeys = []; isUnreachable = false
             searchError = String(localized: "planner_same_stop")
             hasSearched = true
             return
@@ -337,7 +376,7 @@ struct PlannerScreen: View {
         // dare un errore chiaro invece di pianificare da una fermata casuale.
         if isOutsideServiceArea(o) || isOutsideServiceArea(d) {
             searchTask?.cancel(); searchTask = nil
-            journeys = []
+            journeys = []; isUnreachable = false
             searchError = String(localized: "planner_out_of_service_area")
             hasSearched = true
             return
@@ -346,21 +385,33 @@ struct PlannerScreen: View {
         let op = resolveStop(o)
         let dp = resolveStop(d)
 
-        searchError = nil; isSearching = true; hasSearched = true
+        searchError = nil; isUnreachable = false; isSearching = true; hasSearched = true
         let when = whenSelection
         searchTask?.cancel()
         searchTask = Task { @MainActor in
-            let results: [Journey]
-            switch when {
-            case .now:
-                results = await connectionsStore.query(origin: op, destination: dp, after: Date())
-            case .departAt(let date):
-                results = await connectionsStore.query(origin: op, destination: dp, after: date)
-            case .arriveBy(let date):
-                results = await connectionsStore.queryArriveBy(origin: op, destination: dp, before: date)
+            do {
+                let results: [Journey]
+                switch when {
+                case .now:
+                    results = try await connectionsStore.query(origin: op, destination: dp, after: Date())
+                case .departAt(let date):
+                    results = try await connectionsStore.query(origin: op, destination: dp, after: date)
+                case .arriveBy(let date):
+                    results = try await connectionsStore.queryArriveBy(origin: op, destination: dp, before: date)
+                }
+                guard !Task.isCancelled else { return }
+                journeys = results; isSearching = false
+            } catch {
+                // Una ricerca superata da una nuova (cancel) non è un outage:
+                // non sovrascrivere lo stato, la nuova query è già in volo.
+                guard !Task.isCancelled else { return }
+                // Timeout / connessione / 5xx / decode: il servizio percorsi non
+                // risponde. NON è "nessun viaggio" — è un outage, con retry.
+                #if DEBUG
+                print("[Planner] routing error: \(error)")
+                #endif
+                journeys = []; isUnreachable = true; isSearching = false
             }
-            guard !Task.isCancelled else { return }
-            journeys = results; isSearching = false
         }
     }
 }

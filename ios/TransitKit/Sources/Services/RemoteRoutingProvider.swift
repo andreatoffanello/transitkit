@@ -41,29 +41,20 @@ actor RemoteRoutingProvider {
 
     // MARK: - Public query API
 
-    func query(origin: PlannerStop, destination: PlannerStop, after: Date) async -> [Journey] {
-        await fetchSafe(origin: origin, destination: destination, time: after, arriveBy: false)
+    func query(origin: PlannerStop, destination: PlannerStop, after: Date) async throws -> [Journey] {
+        try await fetch(origin: origin, destination: destination, time: after, arriveBy: false)
     }
 
-    func queryArriveBy(origin: PlannerStop, destination: PlannerStop, before: Date) async -> [Journey] {
-        await fetchSafe(origin: origin, destination: destination, time: before, arriveBy: true)
+    func queryArriveBy(origin: PlannerStop, destination: PlannerStop, before: Date) async throws -> [Journey] {
+        try await fetch(origin: origin, destination: destination, time: before, arriveBy: true)
     }
 
     // MARK: - Networking
 
-    private func fetchSafe(
-        origin: PlannerStop, destination: PlannerStop, time: Date, arriveBy: Bool
-    ) async -> [Journey] {
-        do {
-            return try await fetch(origin: origin, destination: destination, time: time, arriveBy: arriveBy)
-        } catch {
-            #if DEBUG
-            print("[RemoteRoutingProvider] error: \(error)")
-            #endif
-            return []
-        }
-    }
-
+    /// Lancia su fallimento di trasporto (timeout, connessione, 5xx, decode): il
+    /// caller DEVE distinguere "backend irraggiungibile" da un 200 OK con zero
+    /// itinerari. Il vecchio `fetchSafe` inghiottiva tutto in `[]`, rendendo
+    /// l'outage indistinguibile da "nessun viaggio" — vedi `PlannerScreen`.
     private func fetch(
         origin: PlannerStop, destination: PlannerStop, time: Date, arriveBy: Bool
     ) async throws -> [Journey] {

@@ -424,6 +424,9 @@
     <string name="planner_downloading">Descargando datos…</string>
     <string name="planner_same_stop">Origen y destino son iguales</string>
     <string name="planner_out_of_service_area">La ubicación está fuera del área de servicio</string>
+    <string name="planner_unreachable_title">Planificador no disponible</string>
+    <string name="planner_unreachable_body">No podemos acceder al servicio de rutas. Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="planner_retry">Reintentar</string>
     <string name="planner_change">cambio</string>
     <string name="planner_changes">cambios</string>
     <string name="planner_walk_min">%1$d min a pie</string>

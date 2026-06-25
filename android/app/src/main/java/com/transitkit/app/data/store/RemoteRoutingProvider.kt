@@ -47,12 +47,16 @@ class RemoteRoutingProvider(
             append(arriveBy)
         }
         val request = Request.Builder().url(url).header("X-API-Key", apiKey).build()
-        val body = runCatching {
-            client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) return@withContext emptyList()
-                response.body?.string() ?: return@withContext emptyList()
-            }
-        }.getOrNull() ?: return@withContext emptyList()
+        // Lancia su fallimento di trasporto (timeout, connessione, 5xx, body
+        // nullo): il caller DEVE distinguere "backend irraggiungibile" da un
+        // 200 OK con zero itinerari. Inghiottire qui in `emptyList()` rendeva
+        // l'outage indistinguibile da "nessun viaggio" — vedi
+        // `PlannerViewModel.SearchError.Unreachable`. Un 200 che parsa a zero
+        // itinerari resta legittimamente vuoto (no-route), non un outage.
+        val body = client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) error("routing HTTP ${response.code}")
+            response.body?.string() ?: error("routing empty body")
+        }
         parseResponse(body, origin, destination)
     }
 

@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,6 +54,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -263,18 +265,25 @@ fun PlannerScreen(
                     }
                 }
                 searchError != null -> {
-                    val msg = when (searchError!!) {
+                    when (searchError!!) {
+                        PlannerViewModel.SearchError.Unreachable ->
+                            PlannerUnreachableState(onRetry = { viewModel.retry() })
                         PlannerViewModel.SearchError.SameStop ->
-                            stringResource(R.string.planner_same_stop)
+                            CenteredMessage {
+                                Text(
+                                    stringResource(R.string.planner_same_stop),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.error,
+                                )
+                            }
                         PlannerViewModel.SearchError.OutOfServiceArea ->
-                            stringResource(R.string.planner_out_of_service_area)
-                    }
-                    CenteredMessage {
-                        Text(
-                            msg,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.error,
-                        )
+                            CenteredMessage {
+                                Text(
+                                    stringResource(R.string.planner_out_of_service_area),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.error,
+                                )
+                            }
                     }
                 }
                 hasSearched && journeys.isEmpty() -> {
@@ -419,6 +428,61 @@ private fun SwapButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
                 .size(16.dp)
                 .rotate(rotation),
         )
+    }
+}
+
+// ─── PlannerUnreachableState ─────────────────────────────────────────────────
+// Outage del servizio percorsi: messaggio onesto (è il backend, non il viaggio)
+// + retry. Distinto dal no-trips, dove riprovare non cambierebbe l'esito.
+// Specchio iOS PlannerScreen.unreachableView.
+
+@Composable
+private fun PlannerUnreachableState(onRetry: () -> Unit) {
+    val colors = TransitTheme.colors
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            painterResource(LucideIcons.AlertTriangle),
+            contentDescription = null,
+            tint = colors.textSecondary.copy(alpha = 0.6f),
+            modifier = Modifier.size(30.dp),
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            stringResource(R.string.planner_unreachable_title),
+            style = MaterialTheme.typography.titleMedium,
+            color = colors.textPrimary,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            stringResource(R.string.planner_unreachable_body),
+            style = MaterialTheme.typography.bodyMedium,
+            color = colors.textSecondary,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        )
+        Spacer(Modifier.height(20.dp))
+        Box(
+            modifier = Modifier
+                .clip(CircleShape)
+                .background(colors.accent.copy(alpha = 0.22f))
+                .border(1.dp, colors.accent.copy(alpha = 0.45f), CircleShape)
+                .clickable { onRetry() }
+                .semantics { testTag = "planner-retry" }
+                .padding(horizontal = 24.dp, vertical = 10.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                stringResource(R.string.planner_retry),
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = colors.accent,
+            )
+        }
     }
 }
 

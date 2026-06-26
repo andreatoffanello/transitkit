@@ -9,6 +9,11 @@
   "region": "Boone, North Carolina",
   "country": "US",
   "timezone": "America/New_York",
+  "gtfs_rt": {
+    "vehicle_positions": "https://rt.transitkit.app/appalcart/vehicle-positions.pb",
+    "trip_updates": "https://rt.transitkit.app/appalcart/trip-updates.pb",
+    "alerts": "https://rt.transitkit.app/appalcart/alerts.pb"
+  },
   "locale": [
     "en"
   ],
@@ -549,10 +554,5 @@
       "storeUrl": "https://play.google.com/store/apps/details?id=com.transitkit.appalcart"
     }
   },
-  "logoUrl": "https://andreatoffanello.github.io/transitkit/appalcart/app-icon.png",
-  "gtfs_rt": {
-    "vehicle_positions": "https://rt.transitkit.app/appalcart/vehicle-positions.pb",
-    "trip_updates": "https://rt.transitkit.app/appalcart/trip-updates.pb",
-    "alerts": "https://rt.transitkit.app/appalcart/alerts.pb"
-  }
+  "logoUrl": "https://andreatoffanello.github.io/transitkit/appalcart/app-icon.png"
 }

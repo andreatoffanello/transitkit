@@ -225,6 +225,9 @@ export interface AppStrings {
   // Stop page — inline departures section header
   today: string
 
+  // Lines list — live vehicles badge ("N live")
+  live: string
+
   // Trip detail (svolgimento corsa)
   tripNoData: string
   tripTitlePrefix: string // "Linea " → "Linea 12"
@@ -372,6 +375,7 @@ const IT: AppStrings = {
   manifestFallbackDescription: 'Orari e fermate in tempo reale',
 
   today: 'Oggi',
+  live: 'live',
   tripNoData: 'Dettaglio corsa non disponibile',
   tripTitlePrefix: 'Linea ',
 
@@ -517,6 +521,7 @@ const EN: AppStrings = {
   manifestFallbackDescription: 'Real-time schedules and stops',
 
   today: 'Today',
+  live: 'live',
   tripNoData: 'Trip details unavailable',
   tripTitlePrefix: 'Line ',
 

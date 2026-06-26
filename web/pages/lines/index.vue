@@ -135,14 +135,24 @@
                 :locale="config?.locale[0]"
                 class="shrink-0"
               />
-              <span class="flex-1 text-sm font-medium truncate" style="color: var(--text-primary)">
+              <span class="flex-1 min-w-0 text-sm font-medium truncate" style="color: var(--text-primary)">
                 <span
                   v-if="searchQuery && route.longName"
                   v-html="highlightMatch(route.longName, searchQuery)"
                 />
                 <span v-else>{{ route.longName ?? route.name }}</span>
               </span>
-              <span v-if="stopCountByRoute.get(route.id)" class="text-xs font-medium shrink-0" style="color: var(--text-secondary)">
+              <!-- Live vehicles badge (GTFS-RT) -->
+              <span
+                v-if="liveCountByRoute.get(route.id)"
+                class="inline-flex items-center gap-1 shrink-0 text-[11px] font-bold px-1.5 py-0.5 rounded-md"
+                style="color: var(--color-live); background-color: var(--color-live-bg)"
+                :aria-label="`${liveCountByRoute.get(route.id)} ${s.live}`"
+              >
+                <span class="w-1.5 h-1.5 rounded-full animate-pulse" style="background-color: var(--color-live)" aria-hidden="true" />
+                {{ liveCountByRoute.get(route.id) }} {{ s.live }}
+              </span>
+              <span v-else-if="stopCountByRoute.get(route.id)" class="text-xs font-medium shrink-0" style="color: var(--text-secondary)">
                 {{ stopCountByRoute.get(route.id) }} {{ s.stops }}
               </span>
               <ChevronRight :size="16" :stroke-width="1.75" class="shrink-0" style="color: var(--text-tertiary)" aria-hidden="true" />
@@ -173,10 +183,18 @@
 import type { TransitType } from '~/types'
 import { filterRoutes, sortRoutes } from '~/utils/routes'
 import { highlightMatch } from '~/utils/highlight'
+import { buildTripRouteIndex } from '~/utils/schedule'
 import { Bus, TramFront, TrainFront, Ship, ChevronRight, Search, X, Route } from 'lucide-vue-next'
 
 const { config, schedules, pending } = await useOperator()
 const s = useStrings(config)
+
+// Live vehicles per route (GTFS-RT vehicle-positions) → "N live" badge.
+// Vehicles are keyed by tripId, so resolve trip → route via the schedule.
+const tripRouteIndex = computed(() =>
+  schedules.value ? buildTripRouteIndex(schedules.value) : new Map<string, string>(),
+)
+const { liveCountByRoute } = useLiveVehicles(config.value?.gtfsRt?.vehicle_positions, tripRouteIndex)
 
 const route = useRoute()
 const requestUrl = useRequestURL()

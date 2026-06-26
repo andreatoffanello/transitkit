@@ -23,6 +23,27 @@ export interface TripReconstruction {
 }
 
 /**
+ * Builds a tripId → routeId index from the compact departures. GTFS-RT vehicle
+ * feeds key vehicles by tripId (routeId is often empty), so this resolves a
+ * live vehicle's trip to its line — required for the "N live" badge on the
+ * lines list. O(total departures); memoize at the call site.
+ */
+export function buildTripRouteIndex(data: ScheduleData): Map<string, string> {
+  const map = new Map<string, string>()
+  for (const stop of data.stops) {
+    for (const arr of Object.values(stop.departures)) {
+      for (const c of arr) {
+        if (c.length <= 5) continue
+        const tripId = data.tripIds[Number(c[5])]
+        const routeId = data.routeIds[Number(c[1])]
+        if (tripId && routeId && !map.has(tripId)) map.set(tripId, routeId)
+      }
+    }
+  }
+  return map
+}
+
+/**
  * Reconstructs a trip's full stop sequence + per-stop scheduled times purely
  * from the already-loaded schedule JSON — no runtime API call, mirrors the iOS
  * `TripDetailView`. Scans every stop for a compact departure whose tripId index

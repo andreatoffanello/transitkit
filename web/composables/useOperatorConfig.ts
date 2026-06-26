@@ -22,11 +22,23 @@ export async function fetchOperatorConfig(
   operatorId: string,
   signal: AbortSignal,
 ): Promise<OperatorConfig> {
-  const cfg = await fetchJson<OperatorConfig>(`${cdnBase}/${operatorId}/config.json`, signal)
+  const raw = await fetchJson<Record<string, unknown>>(`${cdnBase}/${operatorId}/config.json`, signal)
+  const cfg = raw as unknown as OperatorConfig
   if (cfg.theme) {
     cfg.theme.primaryColor = cfg.theme.primaryColor.toLowerCase()
     cfg.theme.accentColor = cfg.theme.accentColor.toLowerCase()
     cfg.theme.textOnPrimary = cfg.theme.textOnPrimary.toLowerCase()
+  }
+  // Source configs (shared/operators, iOS bundle) store realtime endpoints under
+  // snake_case `gtfs_rt` with an `alerts` key; the web type uses `gtfsRt` with
+  // `service_alerts`. Map it so `useRealtime` gets `gtfsRt.trip_updates`.
+  const rtRaw = raw.gtfs_rt as Record<string, string> | undefined
+  if (!cfg.gtfsRt && rtRaw) {
+    cfg.gtfsRt = {
+      vehicle_positions: rtRaw.vehicle_positions,
+      trip_updates: rtRaw.trip_updates,
+      service_alerts: rtRaw.service_alerts ?? rtRaw.alerts,
+    }
   }
   return cfg
 }

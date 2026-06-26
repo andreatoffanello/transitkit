@@ -37,9 +37,11 @@ export function normalizeSchedules(raw: any): ScheduleData {
   // Build global index arrays first, then convert per-stop departures.
   const lineNameToIdx = new Map<string, number>()
   const headsignToIdx = new Map<string, number>()
+  const tripIdToIdx = new Map<string, number>()
   const lineNames: string[] = []
   const routeIds: string[] = []
   const headsigns: string[] = []
+  const tripIds: string[] = []
 
   for (const stop of (raw.stops ?? [])) {
     if (!Array.isArray(stop.departures)) continue
@@ -47,6 +49,7 @@ export function normalizeSchedules(raw: any): ScheduleData {
       const name = dep.routeName ?? ''
       const rid = dep.routeId ?? ''
       const hs = dep.headsign ?? ''
+      const tid = dep.tripId != null ? String(dep.tripId) : ''
       if (!lineNameToIdx.has(name)) {
         lineNameToIdx.set(name, lineNames.length)
         lineNames.push(name)
@@ -55,6 +58,10 @@ export function normalizeSchedules(raw: any): ScheduleData {
       if (!headsignToIdx.has(hs)) {
         headsignToIdx.set(hs, headsigns.length)
         headsigns.push(hs)
+      }
+      if (tid && !tripIdToIdx.has(tid)) {
+        tripIdToIdx.set(tid, tripIds.length)
+        tripIds.push(tid)
       }
     }
   }
@@ -70,8 +77,17 @@ export function normalizeSchedules(raw: any): ScheduleData {
       const lineIdx = lineNameToIdx.get(dep.routeName ?? '') ?? 0
       const headsignIdx = headsignToIdx.get(dep.headsign ?? '') ?? 0
       const time = String(dep.departureTime ?? '').slice(0, 5)
+      const tid = dep.tripId != null ? String(dep.tripId) : ''
+      const tripIdIdx = tid ? tripIdToIdx.get(tid) : undefined
       if (!groups.has(key)) groups.set(key, [])
-      groups.get(key)!.push([time, lineIdx, headsignIdx])
+      // Compact tuple: [time, lineIdx, headsignIdx, dock, _, tripIdIdx].
+      // tripIdIdx (index 5) is what decodeDepartures reads to resolve the trip —
+      // required by the trip-detail page. Omit the tail when there is no trip id.
+      groups.get(key)!.push(
+        tripIdIdx !== undefined
+          ? [time, lineIdx, headsignIdx, '', 0, tripIdIdx]
+          : [time, lineIdx, headsignIdx],
+      )
     }
     return { ...stop, departures: Object.fromEntries(groups) }
   })
@@ -81,7 +97,7 @@ export function normalizeSchedules(raw: any): ScheduleData {
     lineNames,
     routeIds,
     headsigns,
-    tripIds: [],
+    tripIds,
     routes: normalizeRoutes(raw.routes ?? []),
     stops: convertedStops,
   }

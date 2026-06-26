@@ -1,6 +1,6 @@
 <template>
   <div>
-    <!-- Back navigation -->
+    <!-- Back navigation (web needs an explicit back; iOS uses the nav bar) -->
     <div class="px-2 pt-2">
       <NuxtLink
         :to="fromLine ? `/lines/${fromLine.id}` : '/'"
@@ -12,84 +12,80 @@
       </NuxtLink>
     </div>
 
-    <!-- Stop identity -->
-    <div class="px-4 pt-2 pb-2">
-      <div class="flex items-center justify-between gap-3">
-        <div class="min-w-0 flex-1">
-          <h1 class="text-[22px] font-bold leading-tight" style="color: var(--text-primary)">
-            {{ stop.name }}
-          </h1>
-        </div>
-
-        <div class="flex items-center gap-1.5 shrink-0">
-          <!-- Favorite — Star, parity con iOS/Android -->
-          <button
-            v-if="config?.features?.enableFavorites"
-            type="button"
-            :aria-label="isFavorite(stop.id) ? s.removeFromFavorites : s.addToFavorites"
-            data-testid="btn_favorite"
-            class="fav-btn rounded-lg p-2 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
-            :class="{ 'fav-active': isFavorite(stop.id) }"
-            :style="{ color: isFavorite(stop.id) ? 'var(--color-primary)' : 'var(--text-tertiary)' }"
-            @click="$emit('toggle-favorite')"
+    <!-- Stop identity: name + transit-type row + favorite action -->
+    <div class="flex items-center gap-3 px-5 pt-5 pb-3">
+      <div class="min-w-0 flex-1">
+        <h1 class="text-[22px] font-bold leading-tight" style="color: var(--text-primary)">
+          {{ stop.name }}
+        </h1>
+        <div v-if="transitTypes.length" class="flex items-center gap-3 mt-1">
+          <span
+            v-for="t in transitTypes"
+            :key="t.key"
+            class="inline-flex items-center gap-1 text-xs font-medium"
+            style="color: var(--text-secondary)"
           >
-            <Star :size="20" :stroke-width="1.75" :fill="isFavorite(stop.id) ? 'currentColor' : 'none'" />
-          </button>
-
-          <!-- Navigate primary action — apre maps esterne (parity native quick action) -->
-          <a
-            v-if="stop.lat && stop.lng"
-            :href="`geo:${stop.lat},${stop.lng}?q=${stop.lat},${stop.lng}`"
-            :aria-label="s.navigate"
-            class="navigate-btn inline-flex items-center justify-center rounded-full transition-opacity active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
-            :style="{ color: 'var(--color-primary)', backgroundColor: 'color-mix(in srgb, var(--color-primary) 10%, transparent)' }"
-          >
-            <Navigation :size="18" :stroke-width="2" />
-          </a>
+            <component :is="t.icon" :size="12" :stroke-width="2" />
+            {{ t.label }}
+          </span>
         </div>
       </div>
 
-      <!-- Line badges horizontal scroll -->
-      <div
-        v-if="servingRoutes.length"
-        class="flex gap-1.5 mt-2.5 overflow-x-auto scrollbar-none pb-0.5"
-        role="list"
+      <button
+        v-if="config?.features?.enableFavorites"
+        type="button"
+        :aria-label="isFavorite(stop.id) ? s.removeFromFavorites : s.addToFavorites"
+        data-testid="btn_favorite"
+        class="fav-btn shrink-0 rounded-full p-2 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-400"
+        :class="{ 'fav-active': isFavorite(stop.id) }"
+        :style="{ color: isFavorite(stop.id) ? 'var(--color-primary)' : 'var(--text-tertiary)' }"
+        @click="$emit('toggle-favorite')"
       >
-        <LineBadge
-          v-for="r in servingRoutes"
-          :key="r.id"
-          :name="r.name"
-          :color="r.color"
-          :text-color="r.textColor"
-          :locale="config?.locale[0]"
-          role="listitem"
-        />
-      </div>
+        <Star :size="20" :stroke-width="1.75" :fill="isFavorite(stop.id) ? 'currentColor' : 'none'" />
+      </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Star, Navigation, ChevronLeft } from 'lucide-vue-next'
-import type { OperatorConfig, Route, ScheduleStop } from '~/types'
+import { Star, ChevronLeft, BusFront, TramFront, Train, Ship } from 'lucide-vue-next'
+import type { Component } from 'vue'
+import type { OperatorConfig, Route, ScheduleStop, TransitType } from '~/types'
 import type { AppStrings } from '~/utils/strings'
 
-defineProps<{
+const props = defineProps<{
   stop: ScheduleStop
   fromLine: Route | null
   servingRoutes: Route[]
   config: OperatorConfig | null | undefined
   s: AppStrings
-  canShare: boolean
-  copied: boolean
   isFavorite: (id: string) => boolean
 }>()
 
 defineEmits<{
   (e: 'toggle-favorite'): void
-  (e: 'share'): void
-  (e: 'copy-link'): void
 }>()
+
+const ICONS: Partial<Record<TransitType, Component>> = {
+  tram: TramFront, metro: Train, rail: Train, monorail: Train, ferry: Ship,
+}
+
+// Distinct transit modes served by this stop (iOS shows "Bus" / "Tram" etc.
+// in the identity header, not the line list — those are the filter chips).
+const transitTypes = computed(() => {
+  const seen = new Set<TransitType>()
+  const out: { key: string; icon: Component; label: string }[] = []
+  for (const r of props.servingRoutes) {
+    if (seen.has(r.transitType)) continue
+    seen.add(r.transitType)
+    out.push({
+      key: r.transitType,
+      icon: ICONS[r.transitType] ?? BusFront,
+      label: props.s.transitTypes[r.transitType] ?? r.transitType,
+    })
+  }
+  return out
+})
 </script>
 
 <style scoped>
@@ -99,9 +95,5 @@ defineEmits<{
 }
 .fav-active {
   transform: scale(1.12);
-}
-.navigate-btn {
-  width: 40px;
-  height: 40px;
 }
 </style>

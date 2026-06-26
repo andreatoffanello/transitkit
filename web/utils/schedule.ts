@@ -1,5 +1,94 @@
-import type { ScheduleData, Departure, DayGroup, Route } from '~/types'
+import type { ScheduleData, Departure, DayGroup, Route, ScheduleStop, TransitType } from '~/types'
 import type { AppStrings } from '~/utils/strings'
+
+// ---- Trip reconstruction (svolgimento corsa) ----
+
+export interface TripStopRow {
+  stop: ScheduleStop
+  /** Scheduled time at this stop, "HH:MM". */
+  time: string
+  minutesFromMidnight: number
+}
+
+export interface TripReconstruction {
+  rows: TripStopRow[]
+  lineName: string
+  routeId: string
+  headsign: string
+  color: string
+  textColor: string
+  transitType: TransitType
+  /** Origin departure time, "HH:MM". */
+  time: string
+}
+
+/**
+ * Reconstructs a trip's full stop sequence + per-stop scheduled times purely
+ * from the already-loaded schedule JSON — no runtime API call, mirrors the iOS
+ * `TripDetailView`. Scans every stop for a compact departure whose tripId index
+ * (compact[5]) maps to `tripId`, collects (stop, time), and sorts by time —
+ * which equals physical stop_sequence for any non-loop GTFS trip.
+ */
+export function reconstructTrip(
+  tripId: string,
+  data: ScheduleData,
+  headsignMap?: Record<string, string>,
+): TripReconstruction | null {
+  if (!tripId) return null
+  const tripIdx = data.tripIds.indexOf(tripId)
+  if (tripIdx === -1) return null
+
+  const stopMap = new Map<string, ScheduleStop>(data.stops.map(st => [st.id, st]))
+  const routeMap = new Map<string, Route>(data.routes.map(r => [r.id, r]))
+
+  const raw: { stopId: string; time: string; min: number; lineIdx: number; headsignIdx: number }[] = []
+
+  for (const stop of data.stops) {
+    let matched: (string | number)[] | undefined
+    for (const arr of Object.values(stop.departures)) {
+      matched = arr.find(c => c.length > 5 && Number(c[5]) === tripIdx)
+      if (matched) break
+    }
+    if (!matched) continue
+    const time = String(matched[0])
+    const [hStr, mStr] = time.split(':')
+    raw.push({
+      stopId: stop.id,
+      time,
+      min: parseInt(hStr ?? '0', 10) * 60 + parseInt(mStr ?? '0', 10),
+      lineIdx: Number(matched[1]),
+      headsignIdx: Number(matched[2]),
+    })
+  }
+
+  if (!raw.length) return null
+  raw.sort((a, b) => a.min - b.min)
+
+  const rows: TripStopRow[] = []
+  for (const r of raw) {
+    const stop = stopMap.get(r.stopId)
+    if (stop) rows.push({ stop, time: r.time.slice(0, 5), minutesFromMidnight: r.min })
+  }
+  if (!rows.length) return null
+
+  const first = raw[0]!
+  const lineName = data.lineNames[first.lineIdx] ?? ''
+  const routeId = data.routeIds[first.lineIdx] ?? ''
+  const rawHeadsign = data.headsigns[first.headsignIdx] ?? ''
+  const headsign = headsignMap?.[rawHeadsign] || rawHeadsign
+  const route = routeMap.get(routeId)
+
+  return {
+    rows,
+    lineName,
+    routeId,
+    headsign,
+    color: route?.color ?? '#888888',
+    textColor: route?.textColor ?? '#FFFFFF',
+    transitType: route?.transitType ?? 'bus',
+    time: rows[0]!.time,
+  }
+}
 
 const WEEKDAY_ABBR = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const
 const WEEKDAY_LABELS: Record<string, string> = {

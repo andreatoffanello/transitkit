@@ -16,15 +16,20 @@ export function useOperatorHead(config: Ref<OperatorConfig | null | undefined>) 
     style: [
       {
         innerHTML: computed(() => {
-          const primary = config.value?.theme.primaryColor ?? '#003366'
-          const accent = config.value?.theme.accentColor ?? '#0066cc'
+          // Parity con l'app nativa: il tint interattivo principale è
+          // l'ACCENT dell'operatore (iOS usa `AppTheme.accent` ~130× come tint
+          // globale; il primary è quasi inutilizzato). Il web mappa quindi il
+          // suo `--color-primary` (usato ovunque come tinta) sull'accentColor,
+          // e tiene il primaryColor come `--color-accent` per gli usi profondi.
+          const accent = config.value?.theme.accentColor ?? '#06845c'
+          const primary = config.value?.theme.primaryColor ?? '#165f9c'
           const textOnPrimary = config.value?.theme.textOnPrimary ?? '#ffffff'
-          return `:root { --color-primary: ${primary}; --color-accent: ${accent}; --color-text-on-primary: ${textOnPrimary}; }`
+          return `:root { --color-primary: ${accent}; --color-accent: ${primary}; --color-text-on-primary: ${textOnPrimary}; }`
         }),
       },
     ],
     meta: [
-      { name: 'theme-color', content: computed(() => config.value?.theme.primaryColor ?? '#003366') },
+      { name: 'theme-color', content: computed(() => config.value?.theme.accentColor ?? '#06845c') },
       { name: 'theme-color', content: '#111827', media: '(prefers-color-scheme: dark)' },
       { name: 'apple-mobile-web-app-title', content: computed(() => config.value?.brandName ?? config.value?.name ?? 'Transit') },
       { property: 'og:image', content: ogImageUrl },

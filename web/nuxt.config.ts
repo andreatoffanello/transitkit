@@ -15,7 +15,7 @@ export default defineNuxtConfig({
     },
   },
 
-  css: ['~/assets/css/main.css', 'maplibre-gl/dist/maplibre-gl.css'],
+  css: ['~/assets/css/main.css'],
 
   runtimeConfig: {
     public: {
@@ -33,6 +33,9 @@ export default defineNuxtConfig({
       headers: { 'cache-control': 'public, s-maxage=60, stale-while-revalidate=600' },
     },
     '/lines/**': {
+      isr: 300,
+    },
+    '/trip/**': {
       isr: 300,
     },
   },

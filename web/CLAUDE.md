@@ -6,9 +6,11 @@ PWA **Nuxt 4** (4.4.x) + Vue 3.5 + TypeScript strict, SSR + ISR su Vercel (prese
 
 ## Struttura cartelle
 
+**SCOPE (non negoziabile).** Questa NON è l'app in versione web. Unico caso d'uso: da QR → pagina fermata con le partenze (RT marcato vs no) → tap partenza → svolgimento corsa → tabellone per giorni → ricerca altra fermata / ricerca linea → fermata. NIENTE mappe, settings, info, onboarding app-like. Pagine `map`/`settings`/`info` ELIMINATE (giu 2026). Se serve altro, l'utente scarica l'app (banner). Non re-introdurre superfici fuori da questo flusso.
+
 | Path | Ruolo |
 |------|-------|
-| `pages/` | Route file-based Nuxt (home, stop, lines, info, map, settings, privacy) |
+| `pages/` | Route file-based Nuxt: `index` (ricerca), `stop/[stopId]`, `trip/[tripId]` (svolgimento corsa), `lines`, `privacy`/`support` (legali, store) |
 | `components/` | UI riusabile (no logica dati) |
 | `composables/` | State + logica (fetch, realtime, tema, i18n, favorites) |
 | `utils/` | Pure functions (operator resolution, schedule parse, color, fetchWithRetry) |
@@ -34,7 +36,6 @@ Ancora da splittare quando li tocchi:
 - `utils/strings.ts` — **363 righe**. i18n home-grown; ok per ora, valutare split per namespace se cresce.
 - `pages/lines/[lineId].vue` — **321 righe**.
 - `pages/lines/index.vue` — **276 righe**.
-- `pages/info/services/[serviceId].vue` — **254 righe**.
 - `utils/schedule.ts` — **222 righe**.
 
 Pattern splitting: orchestrator `pages/<route>.vue` snello + sottocartella `components/<feature>/` con subview + composables dedicati per logica stateful.
@@ -43,7 +44,7 @@ Pattern splitting: orchestrator `pages/<route>.vue` snello + sottocartella `comp
 
 - `useOperator` — carica `config.json` + `schedules.json` da CDN per l'`operatorId` corrente; normalizza formato iOS→web; usa `useAsyncData` con chiavi stabili per evitare hydration mismatch.
 - `useRealtime(departures, gtfsRtUrl)` — polling GTFS-RT ogni 30s via `rt.transitkit.app`; decode protobuf lazy; degrade silenzioso su CORS/404; espone `isLive`, `isLoading`, `lastUpdated`, `refresh`, `departures` merged.
-- `useTheme` — applica colori operator come CSS custom properties.
+- `useTheme` — segue lo schema di sistema (no toggle manuale: l'app è iOS-aligned). `initTheme` in `app.vue`.
 - `useStrings` — wrapper thin su `utils/strings.ts` (i18n senza lib esterna, basato su operator `lang`).
 - `useOperatorHead` — `useHead` per title/meta/OG per operatore.
 - `useFavoriteStops` / `useRecentStops` — localStorage, SSR-safe (guard su `import.meta.client`).
@@ -55,7 +56,6 @@ Pattern splitting: orchestrator `pages/<route>.vue` snello + sottocartella `comp
 - `PageHeader` — header route-aware con back button.
 - `DepartureRow` — riga singola partenza con delay realtime, accent color linea.
 - `LineBadge` — pill colorato con numero linea (color contrast WCAG via `utils/color`).
-- `StopMapHeader` — hero mappa statica Mapbox per pagina fermata.
 - `DayGroupTabs` — selettore servizio (feriale/festivo/ecc).
 - `AppDownloadBanner` — CTA app store iOS/Android.
 
@@ -93,5 +93,7 @@ Pattern splitting: orchestrator `pages/<route>.vue` snello + sottocartella `comp
 - **Mai** ignorare hydration mismatch sulle pagine realtime o sulle bindings `:style` con colori operator. I colori hex devono essere lowercase lato server e client (vedi comment in `useOperator.ts`).
 - **Mai** aggiungere logica a `pages/index.vue` (~599 righe) senza prima splittare in `components/home/`. Su `pages/stop/[stopId].vue` (305 orchestrator) aggiungi sottocomponenti in `components/stop/`, non inline.
 - **Mai** usare `font-size` per dimensionare icone SVG: sempre `width` + `height` espliciti.
+- **Mai** far cadere il `tripId` nella normalizzazione schedule. Il formato CDN iOS porta `tripId` su ogni partenza; `normalizeSchedules` ([useOperatorSchedule.ts](composables/useOperatorSchedule.ts)) DEVE costruire `tripIds[]` ed emettere la tupla compatta con `tripIdIdx` all'**indice 5** (`[time, lineIdx, headsignIdx, dock, _, tripIdIdx]`) — è ciò che `decodeDepartures` legge e da cui dipendono righe cliccabili + `reconstructTrip`. Senza, lo svolgimento corsa è morto ("Trip details unavailable") e le righe non linkano. Coperto da `tests/tripReconstruction.test.ts`.
+- **Svolgimento corsa** (`pages/trip/[tripId].vue`): ricostruito offline dallo schedule (`reconstructTrip` in [schedule.ts](utils/schedule.ts)) — porting di iOS `TripDetailView`, nessun endpoint dedicato. `?from=<stopId>` evidenzia l'origine ("Ora").
 - **Mai** leggere `localStorage` / `window` senza guard `import.meta.client` — rompe SSG.
 - **Mai** modificare `OPERATOR_HOSTS` senza prevedere redeploy Vercel (non è runtime config).

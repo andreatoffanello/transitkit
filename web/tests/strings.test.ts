@@ -54,7 +54,6 @@ describe('getStrings', () => {
     expect(s.noDepartures).toBeDefined()
     expect(s.stopNotFound).toBeDefined()
     expect(s.updatedRealtime).toBeDefined()
-    expect(s.openInGoogleMaps).toBeDefined()
     expect(s.linesPageTitle).toBeDefined()
     expect(s.lineNotFound).toBeDefined()
     expect(s.pageNotFound).toBeDefined()
@@ -67,7 +66,6 @@ describe('getStrings', () => {
     expect(s.noDepartures).toBeDefined()
     expect(s.stopNotFound).toBeDefined()
     expect(s.updatedRealtime).toBeDefined()
-    expect(s.openInGoogleMaps).toBeDefined()
     expect(s.linesPageTitle).toBeDefined()
     expect(s.lineNotFound).toBeDefined()
     expect(s.pageNotFound).toBeDefined()
@@ -119,11 +117,6 @@ describe('getStrings', () => {
     expect(getStrings('it').linePlural).toBe('linee')
     expect(getStrings('en').lineSingular).toBe('line')
     expect(getStrings('en').linePlural).toBe('lines')
-  })
-
-  it('shareStop: IT and EN', () => {
-    expect(getStrings('it').shareStop).toBe('Condividi fermata')
-    expect(getStrings('en').shareStop).toBe('Share stop')
   })
 
   it('updatedAt: IT and EN', () => {

@@ -34,7 +34,7 @@ describe('useOperatorHead', () => {
     // computed is already stubbed in setup.ts as fn => ({ value: fn() })
   })
 
-  it('calls useHead with theme-color meta containing the primary color from config', async () => {
+  it('calls useHead with theme-color meta containing the accent color from config (web tint = operator accent, parity con app)', async () => {
     const { useOperatorHead } = await import('~/composables/useOperatorHead')
 
     const config = { value: mockConfig }
@@ -49,10 +49,10 @@ describe('useOperatorHead', () => {
       m => m.name === 'theme-color' && !m.media,
     )
     expect(themeColorMeta).toBeDefined()
-    expect(resolveValue(themeColorMeta!.content)).toBe('#1b3a6b')
+    expect(resolveValue(themeColorMeta!.content)).toBe('#f5a623')
   })
 
-  it('calls useHead with default theme-color #003366 when config is null', async () => {
+  it('calls useHead with default theme-color #06845c when config is null', async () => {
     vi.resetModules()
     vi.stubGlobal('useHead', useHeadMock)
     vi.stubGlobal('computed', vi.fn((fn: () => unknown) => ({ value: fn() })))
@@ -72,7 +72,7 @@ describe('useOperatorHead', () => {
       m => m.name === 'theme-color' && !m.media,
     )
     expect(themeColorMeta).toBeDefined()
-    expect(resolveValue(themeColorMeta!.content)).toBe('#003366')
+    expect(resolveValue(themeColorMeta!.content)).toBe('#06845c')
   })
 
   it('passes apple-mobile-web-app-title containing config.name', async () => {
@@ -94,7 +94,7 @@ describe('useOperatorHead', () => {
     expect(resolveValue(appTitleMeta!.content)).toBe('AppalCART')
   })
 
-  it('style block innerHTML contains --color-primary with the primary color', async () => {
+  it('style block innerHTML maps --color-primary to the operator accent color (parity con app nativa)', async () => {
     vi.resetModules()
     vi.stubGlobal('useHead', useHeadMock)
     vi.stubGlobal('computed', vi.fn((fn: () => unknown) => ({ value: fn() })))
@@ -110,10 +110,10 @@ describe('useOperatorHead', () => {
     expect(styles).toHaveLength(1)
     const innerHTML = resolveValue(styles[0]!.innerHTML) as string
     expect(innerHTML).toContain('--color-primary')
-    expect(innerHTML).toContain('#1b3a6b')
+    expect(innerHTML).toContain('#f5a623')
   })
 
-  it('style block innerHTML contains --color-primary with default #003366 when config is null', async () => {
+  it('style block innerHTML contains --color-primary with default #06845c when config is null', async () => {
     vi.resetModules()
     vi.stubGlobal('useHead', useHeadMock)
     vi.stubGlobal('computed', vi.fn((fn: () => unknown) => ({ value: fn() })))
@@ -127,6 +127,6 @@ describe('useOperatorHead', () => {
     const styles = headOptions.style as Array<Record<string, unknown>>
     const innerHTML = resolveValue(styles[0]!.innerHTML) as string
     expect(innerHTML).toContain('--color-primary')
-    expect(innerHTML).toContain('#003366')
+    expect(innerHTML).toContain('#06845c')
   })
 })

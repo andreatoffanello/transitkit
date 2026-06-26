@@ -2,41 +2,11 @@
   <AppLayout>
     <div class="max-w-lg mx-auto md:max-w-xl lg:max-w-2xl">
 
-      <!-- Map header — only when coords are valid -->
-      <template v-if="!pending && stop && stop.lat && stop.lng">
-        <StopMapHeader
-          :lat="stop.lat"
-          :lng="stop.lng"
-          :primary-color="config?.theme?.primaryColor"
-          :aria-open-in-maps="s.openInMaps"
-        />
-      </template>
-      <!-- Hero skeleton: forma prima dei dati — riproduce silhouette del pin Signpost + bottom-corners -->
-      <div
-        v-else-if="pending"
-        class="relative w-full overflow-hidden skeleton-hero"
-        aria-hidden="true"
-      >
-        <div class="absolute inset-0 skeleton-shimmer" />
-        <!-- Pin placeholder al centro -->
-        <div class="absolute inset-0 flex items-center justify-center">
-          <div
-            class="rounded-full border-[3px] border-white"
-            style="width: 30px; height: 30px; background: var(--border); box-shadow: 0 2px 10px rgba(0,0,0,0.18)"
-          />
-        </div>
-        <!-- Expand FAB placeholder -->
-        <div
-          class="absolute bottom-3 right-3 rounded-xl"
-          style="width: 36px; height: 36px; background: rgba(255,255,255,0.6); backdrop-filter: blur(8px)"
-        />
-      </div>
-
       <!-- Identity skeleton -->
-      <div v-if="pending" class="px-4 pt-3 pb-2">
+      <div v-if="pending" class="px-5 pt-5 pb-2">
         <div class="flex items-center justify-between gap-3 mb-3">
           <div class="h-7 rounded-lg w-3/4 skeleton-shimmer" />
-          <div class="h-10 w-10 rounded-full skeleton-shimmer shrink-0" />
+          <div class="h-9 w-9 rounded-full skeleton-shimmer shrink-0" />
         </div>
         <div class="flex gap-1.5">
           <div class="h-6 w-12 rounded skeleton-shimmer" />
@@ -52,54 +22,15 @@
           :serving-routes="servingRoutes"
           :config="config"
           :s="s"
-          :can-share="canShare"
-          :copied="copied"
           :is-favorite="isFavorite"
           @toggle-favorite="toggleFavorite({ stopId: stopId, name: stop.name })"
-          @share="shareStop"
-          @copy-link="copyLink"
         />
 
-        <!-- Segmented control: Prossime / Orario — iOS pill style with ARIA tab pattern -->
-        <div
-          role="tablist"
-          :aria-label="s.upcomingDepartures + ' / ' + s.tabSchedule"
-          class="mx-4 mt-3 mb-4 flex p-1 rounded-xl gap-1"
-          style="background-color: rgba(120,120,128,0.12)"
-        >
-          <button
-            id="tab-prossime"
-            role="tab"
-            :aria-selected="activeTab === 'prossime'"
-            aria-controls="panel-prossime"
-            class="flex-1 py-1.5 px-3 rounded-[10px] text-sm font-semibold transition-all duration-150 active:opacity-70"
-            :style="activeTab === 'prossime'
-              ? { backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)', boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08)' }
-              : { color: 'var(--text-secondary)' }"
-            @click="activeTab = 'prossime'"
-          >
-            {{ s.tabUpcoming }}
-          </button>
-          <button
-            id="tab-orario"
-            role="tab"
-            :aria-selected="activeTab === 'orario'"
-            aria-controls="panel-orario"
-            class="flex-1 py-1.5 px-3 rounded-[10px] text-sm font-semibold transition-all duration-150 active:opacity-70 flex items-center justify-center gap-1.5"
-            :style="activeTab === 'orario'
-              ? { backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)', boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08)' }
-              : { color: 'var(--text-secondary)' }"
-            @click="activeTab = 'orario'"
-          >
-            {{ s.tabSchedule }}
-            <span v-if="isLive" class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: var(--color-live)" aria-hidden="true" />
-          </button>
-        </div>
-
         <StopUpcomingPanel
-          v-show="activeTab === 'prossime'"
           :s="s"
           :config="config"
+          :stop-id="stopId"
+          :has-schedule="hasSchedule"
           :serving-routes="servingRoutes"
           :filtered-upcoming-departures="filteredUpcomingDepartures"
           :filter-line="filterLine"
@@ -112,29 +43,6 @@
           @refresh="refreshRealtime"
           @update:filter-line="filterLine = $event"
           @update:show-all-upcoming="showAllUpcoming = $event"
-          @view-schedule="activeTab = 'orario'"
-        />
-
-        <StopSchedulePanel
-          v-show="activeTab === 'orario'"
-          :s="s"
-          :config="config"
-          :day-groups="dayGroups"
-          :departures-by-group="departuresByGroup"
-          :today-key="todayKey"
-          :is-live="isLive"
-          :now="now"
-          :now-min="nowMin"
-          :next-service-label="nextServiceLabel"
-        />
-
-        <StopShareActions
-          :stop="stop"
-          :s="s"
-          :can-share="canShare"
-          :copied="copied"
-          @share="shareStop"
-          @copy-link="copyLink"
         />
       </template>
 
@@ -153,12 +61,11 @@
 
 <script setup lang="ts">
 definePageMeta({ pageTransition: { name: 'page-slide-up', mode: 'out-in' } })
-import { onMounted, nextTick, ref, watch } from 'vue'
-import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getNextServiceDayGroupKey, getDayGroupLabel, computeNowMin, getNextDeparture } from '~/utils/schedule'
-import type { DayGroup, Departure, ScheduleStop, Route } from '~/types'
+import { onMounted, ref, watch } from 'vue'
+import { decodeDepartures, getTodayDayGroupKey, computeNowMin, getNextDeparture } from '~/utils/schedule'
+import type { Departure, ScheduleStop, Route } from '~/types'
 import { useStopHead } from '~/components/stop/useStopHead'
 
-const activeTab = ref<'prossime' | 'orario'>('prossime')
 const filterLine = ref<string | null>(null)
 const showAllUpcoming = ref(false)
 
@@ -183,30 +90,7 @@ const fromLine = computed(() => {
 watch(stopId, () => {
   filterLine.value = null
   showAllUpcoming.value = false
-  activeTab.value = 'prossime'
 })
-
-// Web Share API
-const canShare = ref(false)
-onMounted(() => {
-  canShare.value = typeof navigator !== 'undefined' && 'share' in navigator
-})
-
-async function shareStop() {
-  if (!stop.value || !canShare.value) return
-  try {
-    await navigator.share({ title: stop.value.name, url: window.location.href })
-  } catch { /* user cancelled */ }
-}
-
-const copied = ref(false)
-async function copyLink() {
-  try {
-    await navigator.clipboard.writeText(window.location.href)
-    copied.value = true
-    setTimeout(() => { copied.value = false }, 2000)
-  } catch { /* clipboard not available */ }
-}
 
 const pending = computed(() => !config.value || !schedules.value)
 
@@ -221,6 +105,8 @@ if (!stop.value && schedules.value) {
   if (byGtfsId) await navigateTo({ path: `/stop/${byGtfsId.id}`, query: route.query }, { redirectCode: 301 })
 }
 
+const hasSchedule = computed(() => (stop.value ? Object.keys(stop.value.departures).length > 0 : false))
+
 const departuresByGroup = computed<Record<string, Departure[]>>(() => {
   if (!stop.value || !schedules.value) return {}
   const result: Record<string, Departure[]> = {}
@@ -231,25 +117,9 @@ const departuresByGroup = computed<Record<string, Departure[]>>(() => {
   return result
 })
 
-const dayGroups = computed<DayGroup[]>(() =>
-  Object.keys(departuresByGroup.value).map(parseDayGroup),
-)
-
 const todayKey = computed(() =>
   stop.value ? getTodayDayGroupKey(stop.value.departures, config.value?.timezone) : null,
 )
-
-const nextServiceDayKey = computed(() =>
-  todayKey.value !== null
-    ? null
-    : getNextServiceDayGroupKey(stop.value?.departures ?? {}, config.value?.timezone)
-)
-
-const nextServiceLabel = computed(() => {
-  if (!nextServiceDayKey.value || !stop.value) return null
-  const dg = parseDayGroup(nextServiceDayKey.value)
-  return getDayGroupLabel(dg, s.value)
-})
 
 const servingRoutes = computed((): Route[] => {
   if (!stop.value || !schedules.value) return []
@@ -273,18 +143,13 @@ let interval: ReturnType<typeof setInterval>
 const { addStop } = useRecentStops()
 const { load: loadFavorites, toggleFavorite, isFavorite } = useFavoriteStops()
 
-onMounted(async () => {
+onMounted(() => {
   now.value = Date.now()
   interval = setInterval(() => { now.value = Date.now() }, 30_000)
   loadFavorites()
-  await nextTick()
-  const el = document.querySelector<HTMLElement>('[data-departure-future="true"]')
-  el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   if (stop.value) addStop({ stopId: stop.value.id, name: stop.value.name })
 })
 onUnmounted(() => clearInterval(interval))
-
-const nowMin = computed(() => computeNowMin(now.value, config.value?.timezone))
 
 const todayDepartures = computed<Departure[]>(() => {
   const key = todayKey.value
@@ -305,7 +170,7 @@ const upcomingDepartures = computed<Departure[]>(() => {
       const effectiveMin = d.minutesFromMidnight + Math.round((d.realtimeDelay ?? 0) / 60)
       return effectiveMin >= curNowMin && effectiveMin <= curNowMin + 120
     })
-    .slice(0, 10)
+    .slice(0, 15)
 })
 
 const filteredUpcomingDepartures = computed<Departure[]>(() => {

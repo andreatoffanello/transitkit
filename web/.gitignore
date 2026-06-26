@@ -27,3 +27,7 @@ logs
 test-results/
 playwright-report/
 .vercel
+
+# QA / tooling artifacts
+.designer-eye-qa/
+.playwright-mcp/

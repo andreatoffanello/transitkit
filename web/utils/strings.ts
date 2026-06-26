@@ -9,8 +9,6 @@ export interface AppStrings {
   noDepartures: string
   stopNotFound: string
   updatedRealtime: string
-  openInGoogleMaps: string
-  shareStop: string
   backToHome: string
 
   // Lines list
@@ -27,6 +25,9 @@ export interface AppStrings {
   // 404 catch-all
   pageNotFound: string
   pageNotFoundHint: string
+  pageNotFoundTitle: string
+  pageNotFoundBody: string
+  pageNotFoundBack: string
 
   // Home page
   linesAndSchedules: string
@@ -73,7 +74,6 @@ export interface AppStrings {
   // Aria labels
   ariaLoading: string
   ariaLinesAtStop: string
-  ariaDayGroupTabs: string
   ariaDirections: string
   ariaRealtimeData: string
   ariaLinesOfTypePrefix: string
@@ -141,8 +141,6 @@ export interface AppStrings {
   copiedFeedback: string
 
   // Stop page — tab labels
-  tabUpcoming: string
-  tabSchedule: string
 
   // Stop page — actions
   refresh: string
@@ -169,11 +167,6 @@ export interface AppStrings {
   // App download banner
   downloadApp: string
 
-  // Stop page — navigate / open in maps menu
-  navigate: string
-  openInMaps: string
-  departFromHere: string
-  arriveHere: string
 
   // Realtime degraded notice (used in UpcomingPanel when GTFS-RT is down)
   realtimeUnavailable: string
@@ -181,9 +174,6 @@ export interface AppStrings {
   // Bottom tab bar (mobile)
   tabHome: string
   tabLines: string
-  tabMap: string
-  tabInfo: string
-  tabSettings: string
 
   // Home — operator info card (parity native)
   homeOperatorsTitle: string
@@ -204,75 +194,18 @@ export interface AppStrings {
   // Home — schedule validity
   validUntil: string              // "Valid until {date}"
 
-  // Settings page
-  settingsTitle: string
-  settingsAppearance: string
-  settingsDarkTheme: string
-  settingsDark: string
-  settingsLight: string
-  settingsToggleDark: string      // aria-label
-  settingsInfo: string
-  settingsOfficialWebsite: string
-  settingsScheduleData: string
-  settingsSchedulesValidUntil: string
-  settingsExpiringSoon: string
-  settingsPoweredBy: string
 
-  // Map page
-  mapTitle: string
-  mapComingSoon: string
-  mapComingSoonBody: string
-  mapBrowseLines: string
-  mapBackHome: string
 
   // 404 page
-  pageNotFoundTitle: string
-  pageNotFoundBody: string
-  pageNotFoundBack: string
 
-  // Info page — section headers
-  infoServices: string
-  infoFares: string
-  infoFaresTitle: string
-  infoAccessibility: string
-  infoContacts: string
-  infoPhone: string
-  infoEmail: string
 
-  // Info/fares page
-  faresSectionTitle: string
-  faresNotes: string
-  faresPurchase: string
-  faresPurchaseOnline: string
-  faresNotAvailable: string
-  faresWhereToBy: string
 
-  // Info/accessibility page
-  accessibilityFeatures: string
-  accessibilityMoreInfo: string
-  accessibilityNotAvailable: string
-  accessibilityFallbackTitle: string
 
-  // Info/services page
-  serviceDescription: string
-  serviceDetails: string
-  serviceAudience: string
-  serviceHours: string
-  serviceFare: string
-  serviceArea: string
-  serviceHowItWorks: string
-  serviceNotes: string
-  serviceUsefulLinks: string
-  serviceNotFound: string
-  serviceFallbackTitle: string
 
   // PageHeader
   back: string
   backDefault: string
 
-  // AppSidebar theme toggle
-  switchToLight: string
-  switchToDark: string
 
   // AppDownloadBanner
   closeBanner: string
@@ -289,6 +222,13 @@ export interface AppStrings {
   manifestShortcutFavoritesSub: string
   manifestFallbackDescription: string
 
+  // Stop page — inline departures section header
+  today: string
+
+  // Trip detail (svolgimento corsa)
+  tripNoData: string
+  tripTitlePrefix: string // "Linea " → "Linea 12"
+
   // app.vue error boundary
   errorPageNotFound: string
   errorServiceUnavailable: string
@@ -304,8 +244,6 @@ const IT: AppStrings = {
   noDepartures: 'Nessuna partenza nelle prossime 2 ore.',
   stopNotFound: 'Fermata non trovata',
   updatedRealtime: 'Aggiornato in tempo reale',
-  openInGoogleMaps: 'Apri in Google Maps',
-  shareStop: 'Condividi fermata',
   backToHome: 'Torna alla home',
   all: 'Tutti',
   linesPageTitle: 'Linee',
@@ -316,6 +254,9 @@ const IT: AppStrings = {
   noStopsFoundHint: 'Non ci sono fermate disponibili per questa direzione.',
   pageNotFound: 'Pagina non trovata',
   pageNotFoundHint: 'La pagina che cerchi non esiste. Prova a cercare una linea.',
+  pageNotFoundTitle: 'Pagina non trovata',
+  pageNotFoundBody: 'La pagina che stai cercando non esiste o è stata spostata.',
+  pageNotFoundBack: 'Torna alla home',
   linesAndSchedules: 'Orari e linee',
   officialApp: 'App ufficiale',
   contacts: 'Contatti',
@@ -348,7 +289,6 @@ const IT: AppStrings = {
   todaySchedule: 'Orari di oggi',
   ariaLoading: 'Caricamento',
   ariaLinesAtStop: 'Linee che fermano qui',
-  ariaDayGroupTabs: 'Gruppi orari',
   ariaDirections: 'Direzioni',
   ariaRealtimeData: 'Dati in tempo reale',
   ariaLinesOfTypePrefix: 'Linee',
@@ -384,23 +324,14 @@ const IT: AppStrings = {
   locating: 'Localizzazione in corso...',
   distanceM: 'm',
   distanceKm: 'km',
-  tabUpcoming: 'Prossime',
-  tabSchedule: 'Orario',
   refresh: 'Aggiorna',
   share: 'Condividi',
   nextDepartureLabel: 'prossima',
   showMore: 'Mostra altri',
   downloadApp: 'Scarica app',
-  navigate: 'Naviga',
-  openInMaps: 'Apri in mappe',
-  departFromHere: 'Parti da qui',
-  arriveHere: 'Arriva qui',
   realtimeUnavailable: 'Orari non in tempo reale',
   tabHome: 'Home',
   tabLines: 'Linee',
-  tabMap: 'Mappa',
-  tabInfo: 'Info',
-  tabSettings: 'Impostazioni',
   homeOperatorsTitle: 'Chi muove la città',
   homeOperatorsAttribution: 'Orari e mezzi in tempo reale di {operator}',
   homeOperatorRoutes: '{n} linee',
@@ -417,66 +348,16 @@ const IT: AppStrings = {
 
   validUntil: 'Valido fino al {date}',
 
-  settingsTitle: 'Impostazioni',
-  settingsAppearance: 'Aspetto',
-  settingsDarkTheme: 'Tema scuro',
-  settingsDark: 'Scuro',
-  settingsLight: 'Chiaro',
-  settingsToggleDark: 'Attiva/disattiva tema scuro',
-  settingsInfo: 'Informazioni',
-  settingsOfficialWebsite: 'Sito ufficiale',
-  settingsScheduleData: 'Dati orari',
-  settingsSchedulesValidUntil: 'Orari validi fino al',
-  settingsExpiringSoon: 'In scadenza',
-  settingsPoweredBy: 'Powered by TransitKit',
 
-  mapTitle: 'Mappa',
-  mapComingSoon: 'Prossimamente',
-  mapComingSoonBody: 'Mappa interattiva con fermate, percorsi e tempi di percorrenza. In sviluppo.',
-  mapBrowseLines: 'Sfoglia le linee',
-  mapBackHome: 'Torna alla home',
 
-  pageNotFoundTitle: 'Pagina non trovata',
-  pageNotFoundBody: 'La pagina che stai cercando non esiste o è stata spostata.',
-  pageNotFoundBack: 'Torna alla home',
 
-  infoServices: 'Servizi',
-  infoFares: 'Tariffe',
-  infoFaresTitle: 'Tariffe e biglietti',
-  infoAccessibility: 'Accessibilità',
-  infoContacts: 'Contatti',
-  infoPhone: 'Telefono',
-  infoEmail: 'Email',
 
-  faresSectionTitle: 'Tariffe',
-  faresNotes: 'Note',
-  faresPurchase: 'Acquisto',
-  faresPurchaseOnline: 'Acquista online',
-  faresNotAvailable: 'Informazioni tariffarie non disponibili.',
-  faresWhereToBy: 'Dove acquistare',
 
-  accessibilityFeatures: 'Caratteristiche',
-  accessibilityMoreInfo: 'Maggiori informazioni',
-  accessibilityNotAvailable: 'Informazioni non disponibili.',
-  accessibilityFallbackTitle: 'Accessibilità',
 
-  serviceDescription: 'Descrizione',
-  serviceDetails: 'Dettagli',
-  serviceAudience: 'Chi può usarlo',
-  serviceHours: 'Orari',
-  serviceFare: 'Tariffa',
-  serviceArea: 'Area servita',
-  serviceHowItWorks: 'Come funziona',
-  serviceNotes: 'Note',
-  serviceUsefulLinks: 'Link utili',
-  serviceNotFound: 'Servizio non trovato.',
-  serviceFallbackTitle: 'Servizio',
 
   back: 'Indietro',
   backDefault: 'Indietro',
 
-  switchToLight: 'Passa al tema chiaro',
-  switchToDark: 'Passa al tema scuro',
 
   closeBanner: 'Chiudi',
 
@@ -489,6 +370,10 @@ const IT: AppStrings = {
   manifestShortcutFavorites: 'Preferiti',
   manifestShortcutFavoritesSub: 'Fermate preferite',
   manifestFallbackDescription: 'Orari e fermate in tempo reale',
+
+  today: 'Oggi',
+  tripNoData: 'Dettaglio corsa non disponibile',
+  tripTitlePrefix: 'Linea ',
 
   errorPageNotFound: 'Pagina non trovata',
   errorServiceUnavailable: 'Servizio temporaneamente non disponibile',
@@ -504,8 +389,6 @@ const EN: AppStrings = {
   noDepartures: 'No departures in the next 2 hours.',
   stopNotFound: 'Stop not found',
   updatedRealtime: 'Updated in real time',
-  openInGoogleMaps: 'Open in Google Maps',
-  shareStop: 'Share stop',
   backToHome: 'Back to home',
   all: 'All',
   linesPageTitle: 'Lines',
@@ -516,6 +399,9 @@ const EN: AppStrings = {
   noStopsFoundHint: 'There are no stops available for this direction.',
   pageNotFound: 'Page not found',
   pageNotFoundHint: 'The page you\'re looking for doesn\'t exist. Try browsing the lines.',
+  pageNotFoundTitle: 'Page not found',
+  pageNotFoundBody: 'The page you\'re looking for doesn\'t exist or has been moved.',
+  pageNotFoundBack: 'Back to home',
   linesAndSchedules: 'Schedules & Lines',
   officialApp: 'Official App',
   contacts: 'Contact',
@@ -548,7 +434,6 @@ const EN: AppStrings = {
   todaySchedule: "Today's schedule",
   ariaLoading: 'Loading',
   ariaLinesAtStop: 'Lines stopping here',
-  ariaDayGroupTabs: 'Schedule groups',
   ariaDirections: 'Directions',
   ariaRealtimeData: 'Real-time data',
   ariaLinesOfTypePrefix: 'Lines',
@@ -584,23 +469,14 @@ const EN: AppStrings = {
   locating: 'Locating...',
   distanceM: 'm',
   distanceKm: 'km',
-  tabUpcoming: 'Upcoming',
-  tabSchedule: 'Schedule',
   refresh: 'Refresh',
   share: 'Share',
   nextDepartureLabel: 'next',
   showMore: 'Show more',
   downloadApp: 'Get the app',
-  navigate: 'Navigate',
-  openInMaps: 'Open in maps',
-  departFromHere: 'Depart from here',
-  arriveHere: 'Arrive here',
   realtimeUnavailable: 'Live updates unavailable',
   tabHome: 'Home',
   tabLines: 'Lines',
-  tabMap: 'Map',
-  tabInfo: 'Info',
-  tabSettings: 'Settings',
   homeOperatorsTitle: 'Who moves the city',
   homeOperatorsAttribution: 'Schedules and live vehicles from {operator}',
   homeOperatorRoutes: '{n} routes',
@@ -617,66 +493,16 @@ const EN: AppStrings = {
 
   validUntil: 'Valid until {date}',
 
-  settingsTitle: 'Settings',
-  settingsAppearance: 'Appearance',
-  settingsDarkTheme: 'Dark mode',
-  settingsDark: 'Dark',
-  settingsLight: 'Light',
-  settingsToggleDark: 'Toggle dark mode',
-  settingsInfo: 'Information',
-  settingsOfficialWebsite: 'Official website',
-  settingsScheduleData: 'Schedule data',
-  settingsSchedulesValidUntil: 'Schedules valid until',
-  settingsExpiringSoon: 'Expiring soon',
-  settingsPoweredBy: 'Powered by TransitKit',
 
-  mapTitle: 'Map',
-  mapComingSoon: 'Coming soon',
-  mapComingSoonBody: 'Interactive map with stops, routes, and travel times. In development.',
-  mapBrowseLines: 'Browse lines',
-  mapBackHome: 'Back to home',
 
-  pageNotFoundTitle: 'Page not found',
-  pageNotFoundBody: 'The page you\'re looking for doesn\'t exist or has been moved.',
-  pageNotFoundBack: 'Back to home',
 
-  infoServices: 'Services',
-  infoFares: 'Fares',
-  infoFaresTitle: 'Fares & Passes',
-  infoAccessibility: 'Accessibility',
-  infoContacts: 'Contact',
-  infoPhone: 'Phone',
-  infoEmail: 'Email',
 
-  faresSectionTitle: 'Fares',
-  faresNotes: 'Notes',
-  faresPurchase: 'Purchase',
-  faresPurchaseOnline: 'Buy online',
-  faresNotAvailable: 'Fare information not available.',
-  faresWhereToBy: 'Where to buy',
 
-  accessibilityFeatures: 'Features',
-  accessibilityMoreInfo: 'More information',
-  accessibilityNotAvailable: 'Information not available.',
-  accessibilityFallbackTitle: 'Accessibility',
 
-  serviceDescription: 'Description',
-  serviceDetails: 'Details',
-  serviceAudience: 'Who can use it',
-  serviceHours: 'Hours',
-  serviceFare: 'Fare',
-  serviceArea: 'Service area',
-  serviceHowItWorks: 'How it works',
-  serviceNotes: 'Notes',
-  serviceUsefulLinks: 'Useful links',
-  serviceNotFound: 'Service not found.',
-  serviceFallbackTitle: 'Service',
 
   back: 'Back',
   backDefault: 'Back',
 
-  switchToLight: 'Switch to light mode',
-  switchToDark: 'Switch to dark mode',
 
   closeBanner: 'Close',
 
@@ -689,6 +515,10 @@ const EN: AppStrings = {
   manifestShortcutFavorites: 'Favorites',
   manifestShortcutFavoritesSub: 'Favorite stops',
   manifestFallbackDescription: 'Real-time schedules and stops',
+
+  today: 'Today',
+  tripNoData: 'Trip details unavailable',
+  tripTitlePrefix: 'Line ',
 
   errorPageNotFound: 'Page not found',
   errorServiceUnavailable: 'Service temporarily unavailable',

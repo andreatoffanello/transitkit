@@ -14,13 +14,16 @@
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
   --shadow-lg: 0 16px 48px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.06);
-  --color-primary: #003366;
-  --color-accent: #0066CC;
+  /* --color-primary = tint interattivo principale = ACCENT operatore (parità app nativa) */
+  --color-primary: #06845C;
+  --color-accent: #165F9C;
   --color-text-on-primary: #FFFFFF;
   --color-secondary: #E8F0FA;
-  /* Live/realtime semantic color — unico token usato ovunque (dot, badge "ora", badge "prossima") */
-  --color-live: #16a34a;
-  --color-live-bg: rgba(22, 163, 74, 0.12);
+  /* Live/realtime semantic color — iOS `realtimeGreen` (#22C55E): brillante e
+     distinto dal chrome accent (che per operatori "verdi" tipo appalcart è un
+     teal scuro), così il segnale live non si confonde col tint. */
+  --color-live: #22c55e;
+  --color-live-bg: rgba(34, 197, 94, 0.14);
 }
 
 html.dark {

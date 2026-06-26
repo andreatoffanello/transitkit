@@ -1180,9 +1180,13 @@ def main():
     size_mb = schedules_file.stat().st_size / (1024 * 1024)
     print(f"  {schedules_file.relative_to(REPO_ROOT)} ({size_mb:.1f} MB)")
 
-    # Write config.json for CDN consumers (strip pipeline-internal keys)
+    # Write config.json for CDN consumers (strip pipeline-internal keys).
+    # NB: keep `gtfs_rt` — the web client needs the realtime proxy endpoints
+    # (public `rt.transitkit.app/...` URLs, not secrets). Without it the web
+    # never shows live data. Only `gtfs_url` (raw upstream GTFS zip) and the
+    # build-only keys are stripped.
     cdn_config = {k: v for k, v in config.items()
-                  if k not in ("gtfs_url", "gtfs_rt", "exclude_patterns", "terminal_overrides")}
+                  if k not in ("gtfs_url", "exclude_patterns", "terminal_overrides")}
 
     # Publish the launcher icon next to the data so web clients show the same
     # brand logo as the native apps (header + sidebar), via cdn_config.logoUrl.

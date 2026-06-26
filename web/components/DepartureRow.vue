@@ -1,72 +1,57 @@
 <template>
-  <div
-    class="py-3 px-4 relative transition-colors duration-150"
-    :class="{ 'opacity-40': isPast }"
+  <component
+    :is="rootIs"
+    :to="linkTo || undefined"
+    class="flex items-center gap-2.5 py-3 px-4 transition-colors duration-150"
+    :class="{ 'opacity-40': isPast, 'active:bg-black/[0.03] dark:active:bg-white/[0.04] cursor-pointer': linkTo }"
     :aria-label="rowAriaLabel"
   >
-    <!-- "Prossima" pill — solo per la prima riga upcoming. Posizionata
-         dentro la flex column del row, non absolute, per essere robusta a
-         cambi di layout. -->
-    <div v-if="showNextLabel" class="mb-1.5">
-      <span
-        class="inline-block text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide"
-        style="background-color: var(--color-live); color: #fff; line-height: 1.2"
-      >{{ nextLabel ?? 'prossima' }}</span>
-    </div>
-
-    <div class="flex items-center gap-3">
-    <!-- Transit type icon square (line color bg) -->
-    <div
-      class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-      :style="{ backgroundColor: bgColor }"
-      aria-hidden="true"
-    >
-      <component :is="transitIcon" :size="16" color="white" :stroke-width="2" />
-    </div>
-
-    <!-- Line badge -->
+    <!-- Line badge — hidden when a line filter is active (every row is the same line) -->
     <LineBadge
+      v-if="!hideBadge"
       :name="departure.lineName"
       :color="departure.color"
       :text-color="departure.textColor"
       :locale="locale"
     />
 
-    <!-- Headsign + dock — up to 2 lines so the "going where" info stays readable on narrow screens -->
+    <!-- Destination -->
     <span
-      class="flex-1 text-[15px] font-medium headsign-clamp"
-      style="color: var(--text-primary); line-height: 1.25"
-    >
-      {{ departure.headsign }}<span
-        v-if="departure.dock"
-        class="text-xs ml-1"
-        style="color: var(--text-tertiary)"
-      >{{ s.dockPrefix }}{{ departure.dock }}</span>
-    </span>
+      class="flex-1 min-w-0 truncate text-[13px] font-semibold"
+      :style="{ color: isPast ? 'var(--text-tertiary)' : 'var(--text-primary)' }"
+    >{{ departure.headsign }}</span>
 
-    <!-- Time / countdown -->
-    <div class="flex items-center gap-1.5 shrink-0">
-      <span
-        v-if="departure.isRealtime"
-        class="w-1.5 h-1.5 rounded-full animate-pulse shrink-0"
-        style="background-color: var(--color-live)"
-        :aria-label="s.ariaRealtimeData"
-        role="img"
-      />
-      <div class="text-right">
-        <!-- Delayed -->
-        <template v-if="hasDelay">
+    <!-- Dock badge -->
+    <span
+      v-if="departure.dock"
+      class="shrink-0 text-[10px] font-extrabold px-1.5 py-0.5 rounded"
+      style="color: var(--text-primary); background-color: var(--bg-secondary); border: 1px solid var(--border)"
+    >{{ departure.dock }}</span>
+
+    <!-- Time stack: countdown (+ live dot) with absolute clock beneath -->
+    <div class="shrink-0 flex flex-col items-end leading-none whitespace-nowrap">
+      <template v-if="hasDelay">
+        <div class="flex items-center gap-1">
           <span
-            class="block text-[12px] line-through"
-            style="color: var(--text-tertiary); font-variant-numeric: tabular-nums"
-          >{{ displayTime }}</span>
+            v-if="departure.isRealtime"
+            class="w-1.5 h-1.5 rounded-full animate-pulse shrink-0"
+            style="background-color: var(--color-live)"
+            :aria-label="s.ariaRealtimeData"
+            role="img"
+          />
+          <span class="text-[15px] font-semibold text-orange-500" style="font-variant-numeric: tabular-nums">{{ realtimeTime }}</span>
+        </div>
+        <span class="text-[11px] line-through mt-0.5" style="color: var(--text-tertiary); font-variant-numeric: tabular-nums">{{ displayTime }}</span>
+      </template>
+      <template v-else>
+        <div class="flex items-center gap-1">
           <span
-            class="block text-[15px] font-semibold text-orange-500"
-            style="font-variant-numeric: tabular-nums"
-          >{{ realtimeTime }}</span>
-        </template>
-        <!-- Countdown or fixed time -->
-        <template v-else>
+            v-if="departure.isRealtime"
+            class="w-1.5 h-1.5 rounded-full animate-pulse shrink-0"
+            style="background-color: var(--color-live)"
+            :aria-label="s.ariaRealtimeData"
+            role="img"
+          />
           <span
             v-if="showCountdown && typeof effectiveMinutes === 'number' && effectiveMinutes >= 0 && effectiveMinutes <= 1"
             class="inline-flex items-center justify-center h-6 px-2.5 rounded-md text-xs font-bold"
@@ -74,7 +59,7 @@
           >{{ s.now }}</span>
           <span
             v-else-if="showCountdown && typeof effectiveMinutes === 'number' && effectiveMinutes > 1 && effectiveMinutes <= 30"
-            class="text-[17px] font-bold leading-none"
+            class="text-[17px] font-bold"
             style="color: var(--color-primary); font-variant-numeric: tabular-nums; letter-spacing: -0.03em"
           >{{ effectiveMinutes }}<span class="text-[11px] font-medium ml-0.5">min</span></span>
           <span
@@ -82,18 +67,15 @@
             class="text-[15px] font-semibold"
             style="font-variant-numeric: tabular-nums; letter-spacing: -0.02em; color: var(--text-primary)"
           >{{ displayTime }}</span>
-        </template>
-      </div>
+        </div>
+      </template>
     </div>
-    </div>
-  </div>
+  </component>
 </template>
 
 <script setup lang="ts">
-import { BusFront, TramFront, Train, Ship } from 'lucide-vue-next'
 import type { Departure } from '~/types'
 import { getStrings } from '~/utils/strings'
-import { normalizeHex } from '~/utils/color'
 import { formatClockTime } from '~/utils/clockTime'
 
 const props = defineProps<{
@@ -102,26 +84,23 @@ const props = defineProps<{
   locale?: string
   showCountdown?: boolean
   isPast?: boolean
-  showNextLabel?: boolean
-  nextLabel?: string
+  /** Hide the line badge (when a single-line filter is active). */
+  hideBadge?: boolean
+  /** When set, the row links to the trip detail (svolgimento corsa). */
+  fromStopId?: string
 }>()
 
 const s = computed(() => getStrings(props.locale))
 
-const transitIcon = computed(() => {
-  switch (props.departure.transitType) {
-    case 'tram': return TramFront
-    case 'metro':
-    case 'rail':
-    case 'monorail': return Train
-    case 'ferry': return Ship
-    default: return BusFront
-  }
-})
-
-const bgColor = computed(() =>
-  props.departure.color ? normalizeHex(props.departure.color) : 'var(--color-primary)'
+// Tap target → trip detail. Only when both the trip id and the originating
+// stop are known (so the trip view can highlight the right "Now" stop).
+const linkTo = computed(() =>
+  props.fromStopId && props.departure.tripId
+    ? `/trip/${props.departure.tripId}?from=${props.fromStopId}`
+    : null,
 )
+const NuxtLinkComp = resolveComponent('NuxtLink')
+const rootIs = computed(() => (linkTo.value ? NuxtLinkComp : 'div'))
 
 const delayMinutes = computed(() =>
   props.departure.realtimeDelay !== undefined
@@ -162,15 +141,3 @@ const rowAriaLabel = computed(() => {
   return `${s.value.lineLabel} ${props.departure.lineName}, ${props.departure.headsign}, ${timeDescription}`
 })
 </script>
-
-<style scoped>
-.headsign-clamp {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-}
-</style>

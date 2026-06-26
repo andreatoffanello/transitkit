@@ -45,54 +45,28 @@
       </ul>
     </nav>
 
-    <!-- Theme toggle -->
-    <div class="px-3 pb-5 pt-2" style="border-top: 1px solid var(--border)">
-      <button
-        @click="toggleTheme"
-        class="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-sm font-medium transition-colors duration-150"
-        style="color: var(--text-secondary)"
-        :aria-label="isDark ? s.switchToLight : s.switchToDark"
-      >
-        <component :is="isDark ? Sun : Moon" :size="20" :stroke-width="1.75" />
-        {{ isDark ? s.settingsLight : s.settingsDark }}
-      </button>
-    </div>
   </aside>
 </template>
 
 <script setup lang="ts">
-import { Home, Route, Map, Settings, Bus, Sun, Moon } from 'lucide-vue-next'
+import { Home, Route, Bus } from 'lucide-vue-next'
 import type { Component } from 'vue'
-import { WEB_MAP_READY } from '~/utils/features'
 
 interface Tab {
   path: string
   label: string
   icon: Component
-  feature?: string
 }
 
 const route = useRoute()
 const { config } = await useOperator()
-const { isDark, toggleTheme } = useTheme()
 
 const s = useStrings(config)
 
-const ALL_TABS = computed<Tab[]>(() => [
+const visibleTabs = computed<Tab[]>(() => [
   { path: '/', label: s.value.tabHome, icon: Home },
   { path: '/lines', label: s.value.tabLines, icon: Route },
-  // Web map is still a placeholder — hidden until WEB_MAP_READY, regardless of
-  // the (native-shared) `enableMap` flag. See web/utils/features.ts.
-  ...(WEB_MAP_READY ? [{ path: '/map', label: s.value.tabMap, icon: Map, feature: 'enableMap' }] : []),
-  { path: '/settings', label: s.value.tabSettings, icon: Settings },
 ])
-
-const visibleTabs = computed(() =>
-  ALL_TABS.value.filter(tab => {
-    if (!tab.feature) return true
-    return (config.value?.features as unknown as Record<string, boolean>)?.[tab.feature] ?? false
-  })
-)
 
 function isActive(path: string): boolean {
   if (path === '/') return route.path === '/'

@@ -1,8 +1,11 @@
 import type { OperatorConfig } from '~/types'
 
+// NB: `--color-primary` è il tint interattivo principale del web e mappa
+// sull'ACCENT dell'operatore — parità con l'app nativa, dove `AppTheme.accent`
+// è il tint globale. `--color-accent` tiene il primaryColor (uso profondo/raro).
 const DEFAULT_THEME = {
-  '--color-primary': '#003366',
-  '--color-accent': '#0066cc',
+  '--color-primary': '#06845c',
+  '--color-accent': '#165f9c',
   '--color-text-on-primary': '#ffffff',
 }
 
@@ -15,8 +18,8 @@ function applyTheme(cfg: OperatorConfig | null | undefined): void {
     }
   }
   else {
-    root.style.setProperty('--color-primary', cfg.theme.primaryColor)
-    root.style.setProperty('--color-accent', cfg.theme.accentColor)
+    root.style.setProperty('--color-primary', cfg.theme.accentColor)
+    root.style.setProperty('--color-accent', cfg.theme.primaryColor)
     root.style.setProperty('--color-text-on-primary', cfg.theme.textOnPrimary)
   }
 
@@ -27,7 +30,7 @@ function applyTheme(cfg: OperatorConfig | null | undefined): void {
     themeColorMeta.setAttribute('name', 'theme-color')
     document.head.appendChild(themeColorMeta)
   }
-  themeColorMeta.setAttribute('content', cfg?.theme.primaryColor ?? DEFAULT_THEME['--color-primary'])
+  themeColorMeta.setAttribute('content', cfg?.theme.accentColor ?? DEFAULT_THEME['--color-primary'])
 }
 
 export default defineNuxtPlugin((nuxtApp) => {

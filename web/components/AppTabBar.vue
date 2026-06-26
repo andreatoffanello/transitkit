@@ -42,36 +42,23 @@
 </template>
 
 <script setup lang="ts">
-import { Home, Route, Map, Settings } from 'lucide-vue-next'
+import { Home, Route } from 'lucide-vue-next'
 import type { Component } from 'vue'
-import { WEB_MAP_READY } from '~/utils/features'
 
 interface Tab {
   path: string
   label: string
   icon: Component
-  feature?: string
 }
 
 const route = useRoute()
 const { config } = await useOperator()
 const s = useStrings(config)
 
-const ALL_TABS = computed<Tab[]>(() => [
+const visibleTabs = computed<Tab[]>(() => [
   { path: '/', label: s.value.tabHome, icon: Home },
   { path: '/lines', label: s.value.tabLines, icon: Route },
-  // Web map is still a placeholder — hidden until WEB_MAP_READY, regardless of
-  // the (native-shared) `enableMap` flag. See web/utils/features.ts.
-  ...(WEB_MAP_READY ? [{ path: '/map', label: s.value.tabMap, icon: Map, feature: 'enableMap' }] : []),
-  { path: '/settings', label: s.value.tabSettings, icon: Settings },
 ])
-
-const visibleTabs = computed(() =>
-  ALL_TABS.value.filter(tab => {
-    if (!tab.feature) return true
-    return (config.value?.features as unknown as Record<string, boolean>)?.[tab.feature] ?? false
-  })
-)
 
 function isActive(path: string): boolean {
   if (path === '/') return route.path === '/'

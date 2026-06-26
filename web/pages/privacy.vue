@@ -77,11 +77,11 @@
             {{ t.contactLabel }}
           </p>
           <a
-            href="mailto:andrea.toffanello@gmail.com"
+            href="mailto:support@transitkit.app"
             class="inline-block mt-1 text-sm font-medium"
             style="color: var(--color-primary)"
           >
-            andrea.toffanello@gmail.com
+            support@transitkit.app
           </a>
         </section>
       </article>

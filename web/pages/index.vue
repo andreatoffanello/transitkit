@@ -112,52 +112,6 @@
       <!-- Main content area -->
       <div class="px-5 pb-10 space-y-8">
 
-        <!-- Fermate nelle vicinanze -->
-        <ClientOnly>
-          <section v-if="nearbyState !== 'denied' && (nearbyState === 'locating' || nearbyStops.length)">
-            <h2 class="text-xs font-semibold uppercase tracking-widest mb-3" style="color: var(--text-tertiary)">
-              {{ s.nearbyStops }}
-            </h2>
-
-            <!-- Skeleton / locating -->
-            <div
-              v-if="nearbyState === 'locating'"
-              class="rounded-2xl overflow-hidden divide-app"
-              style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border-color: var(--border)"
-            >
-              <div v-for="n in 3" :key="n" class="flex items-center gap-3 px-4 py-3.5">
-                <div class="w-4 h-4 rounded-full shrink-0 skeleton-shimmer" />
-                <div class="flex-1 h-3.5 rounded skeleton-shimmer" />
-                <div class="w-10 h-3 rounded skeleton-shimmer" />
-              </div>
-            </div>
-
-            <!-- Nearby stops list -->
-            <div
-              v-else-if="nearbyStops.length"
-              class="rounded-2xl overflow-hidden divide-app"
-              style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border-color: var(--border)"
-            >
-              <NuxtLink
-                v-for="item in nearbyStops"
-                :key="item.stop.id"
-                :to="`/stop/${item.stop.id}`"
-                :prefetch="false"
-                class="flex items-center gap-3 px-4 py-3.5 transition-opacity duration-150 active:opacity-70"
-              >
-                <Navigation :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
-                <span class="flex-1 text-[15px] font-medium truncate" style="color: var(--text-primary)">
-                  {{ item.stop.name }}
-                </span>
-                <span class="text-xs tabular-nums mr-1" style="color: var(--text-tertiary)">
-                  {{ formatDistance(item.distance) }}
-                </span>
-                <ChevronRight :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
-              </NuxtLink>
-            </div>
-          </section>
-        </ClientOnly>
-
         <!-- Preferiti / Recenti / Empty state — depend on localStorage -->
         <ClientOnly>
           <!-- Preferiti -->
@@ -432,8 +386,8 @@
 import { computeNowMin, getNextDeparture, sortStopsByNextDeparture } from '~/utils/schedule'
 import { highlightMatch } from '~/utils/highlight'
 import { formatClockTime } from '~/utils/clockTime'
-import type { ScheduleStop, ScheduleData } from '~/types'
-import { Search, X, MapPin, Navigation, Star, Clock, ChevronRight, Phone, Mail, Smartphone, Route, CalendarDays } from 'lucide-vue-next'
+import type { ScheduleData } from '~/types'
+import { Search, X, MapPin, Star, Clock, ChevronRight, Phone, Mail, Smartphone, Route, CalendarDays } from 'lucide-vue-next'
 
 const { config, schedules } = await useOperator()
 const s = useStrings(config)
@@ -472,46 +426,12 @@ const currentRoute = useRoute()
 const { recentStops, load } = useRecentStops()
 const { favoriteStops, load: loadFavorites } = useFavoriteStops()
 
-type NearbyState = 'idle' | 'locating' | 'ready' | 'denied'
-const nearbyState = ref<NearbyState>('idle')
-const nearbyStops = ref<{ stop: ScheduleStop; distance: number }[]>([])
-
-function haversineM(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371000
-  const dLat = (lat2 - lat1) * Math.PI / 180
-  const dLon = (lon2 - lon1) * Math.PI / 180
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-}
-
-function formatDistance(m: number): string {
-  if (m < 1000) return `${Math.round(m)} ${s.value.distanceM}`
-  return `${(m / 1000).toFixed(1)} ${s.value.distanceKm}`
-}
-
 const now = useState('now-ms', () => Date.now())
 onMounted(() => {
   load()
   loadFavorites()
   now.value = Date.now()
   setInterval(() => { now.value = Date.now() }, 30_000)
-
-  if (!schedules.value || !('geolocation' in navigator)) return
-  const stopsWithCoords = schedules.value.stops.filter(s => s.lat != null && s.lng != null)
-  if (!stopsWithCoords.length) return
-  nearbyState.value = 'locating'
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      const { latitude, longitude } = pos.coords
-      nearbyStops.value = stopsWithCoords
-        .map(stop => ({ stop, distance: haversineM(latitude, longitude, stop.lat!, stop.lng!) }))
-        .sort((a, b) => a.distance - b.distance)
-        .slice(0, 3)
-      nearbyState.value = 'ready'
-    },
-    () => { nearbyState.value = 'denied' },
-    { timeout: 10000, maximumAge: 60000 },
-  )
 })
 
 function formatDate(dateStr: string | undefined): string {

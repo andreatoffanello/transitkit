@@ -38,7 +38,7 @@ import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.data.gtfsrt.VehiclePosition
 import com.transitkit.app.data.model.ScheduleRoute
-import com.transitkit.app.ui.components.LiveIndicator
+import com.transitkit.app.ui.components.LiveBadge
 
 @Composable
 internal fun VehiclePreviewContent(
@@ -315,13 +315,7 @@ internal fun VehiclePreviewContent(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            LiveIndicator(size = 6.dp, animated = true)
-            Text(
-                text = stringResource(R.string.mappa_live),
-                style = MaterialTheme.typography.labelSmall,
-                color = colors.realtimeGreen,
-                fontWeight = FontWeight.SemiBold,
-            )
+            LiveBadge()
             if (freshnessText != null) {
                 Text(
                     text = "·",

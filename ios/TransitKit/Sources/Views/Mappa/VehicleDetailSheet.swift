@@ -317,9 +317,6 @@ struct VehicleDetailSheet: View {
     private var liveRow: some View {
         HStack(spacing: 6) {
             LiveBadge()
-            Text(String(localized: "map_live_badge"))
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(AppTheme.realtimeGreen)
             if let fresh = freshnessText {
                 Text("·")
                     .font(.caption)

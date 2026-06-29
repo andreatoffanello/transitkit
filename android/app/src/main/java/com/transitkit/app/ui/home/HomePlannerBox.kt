@@ -42,19 +42,16 @@ import com.transitkit.app.config.surfaceOverMap
 import com.transitkit.app.data.model.PlannerLocation
 import com.transitkit.app.ui.planner.PlannerViewModel
 import com.transitkit.app.ui.planner.WhenChipRow
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 // ---------------------------------------------------------------------------
 // PlannerHomeBox — two-row Da/A card, parità Movete PlannerHomeBox.
 // ---------------------------------------------------------------------------
 
-private val _hhmmHome = SimpleDateFormat("HH:mm", Locale.getDefault())
-
 @Composable
 internal fun PlannerHomeBox(
     plannerViewModel: PlannerViewModel,
     onNavigateToLocationPicker: (role: String) -> Unit,
+    onNavigateToAssign: (key: String) -> Unit,
     onNavigateToPlanner: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -188,20 +185,16 @@ internal fun PlannerHomeBox(
                 }
             }
         }
-        // ── When chip row (sinistra, scrollabile) + pulsante Cerca (destra) ──
-        // Le when-chips in modalità "Parti alle/Arriva entro" diventano 3
-        // (mode+ora+data): le mettiamo in un'area scrollabile orizzontale così
-        // il pulsante Cerca resta pinnato a destra e non va mai a capo.
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
+        // ── When chip row + pulsante Cerca ──────────────────────────────────
+        // In modalità "Parti alle/Arriva entro" compaiono i chip ora+data: per
+        // non tagliarli, il bottone Cerca scende a tutta larghezza sulla riga
+        // sotto. In "Adesso" resta inline a destra (un solo chip "Quando").
+        if (whenSel.mode != 0) {
             WhenChipRow(
                 selection = whenSel,
                 onSelectionChange = plannerViewModel::setWhenSelection,
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxWidth()
                     .horizontalScroll(rememberScrollState()),
             )
             SearchButton(
@@ -210,7 +203,29 @@ internal fun PlannerHomeBox(
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     launchPlanner()
                 },
+                modifier = Modifier.fillMaxWidth(),
             )
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                WhenChipRow(
+                    selection = whenSel,
+                    onSelectionChange = plannerViewModel::setWhenSelection,
+                    modifier = Modifier
+                        .weight(1f)
+                        .horizontalScroll(rememberScrollState()),
+                )
+                SearchButton(
+                    enabled = bothFilled,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        launchPlanner()
+                    },
+                )
+            }
         }
     }
 }
@@ -221,6 +236,7 @@ internal fun PlannerHomeBox(
 private fun SearchButton(
     enabled: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val colors = TransitTheme.colors
     // surfaceOverMap: il bottone sta sopra lo shader — bgSecondary glass
@@ -228,13 +244,13 @@ private fun SearchButton(
     val bg = if (enabled) colors.accent else colors.surfaceOverMap
     val fg = if (enabled) Color.White else colors.textTertiary
     Row(
-        modifier = Modifier
+        modifier = modifier
             .background(bg, RoundedCornerShape(percent = 50))
             .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 9.dp)
             .semantics { testTag = "planner_home_search" },
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
     ) {
         Icon(
             painter = painterResource(LucideIcons.Search),

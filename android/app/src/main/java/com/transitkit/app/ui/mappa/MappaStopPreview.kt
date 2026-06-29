@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -221,6 +222,7 @@ internal fun StopPreviewContent(
 
 @Composable
 private fun SheetDepartureRow(departure: ResolvedDeparture, operatorTimezoneId: String) {
+    val context = LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -237,6 +239,12 @@ private fun SheetDepartureRow(departure: ResolvedDeparture, operatorTimezoneId: 
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
-        TimeDisplay(state = departureTimeState(departure.departureTime, operatorTimezoneId))
+        TimeDisplay(
+            state = departureTimeState(
+                departure.departureTime,
+                operatorTimezoneId,
+                formatClock = { com.transitkit.app.ui.components.ClockTime.gtfs(it, context) },
+            ),
+        )
     }
 }

@@ -68,9 +68,7 @@ fun WhenChipRow(
         else -> stringResource(R.string.planner_now)
     }
     val operatorTz = LocalOperatorTimeZone.current
-    val timeFmt = remember(operatorTz) {
-        SimpleDateFormat("HH:mm", Locale.getDefault()).apply { timeZone = operatorTz }
-    }
+    val context = LocalContext.current
     val dateFmt = remember(operatorTz) {
         SimpleDateFormat("MMM d", Locale.getDefault()).apply { timeZone = operatorTz }
     }
@@ -128,7 +126,9 @@ fun WhenChipRow(
         if (selection.mode != 0) {
             WhenChip(
                 leadingIcon = null,
-                label = timeFmt.format(selection.date),
+                label = com.transitkit.app.ui.components.ClockTime.millis(
+                    selection.date.time, operatorTz, context,
+                ),
                 accent = true,
                 trailingChevron = false,
                 onClick = { showTimePicker = true },

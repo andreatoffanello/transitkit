@@ -1,0 +1,45 @@
+{
+  "name": "landing",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@fontsource/geist": "^5.2.9",
+    "@fontsource/geist-mono": "^5.2.8",
+    "@nuxt/content": "^3.14.0",
+    "@nuxtjs/i18n": "^10.4.0",
+    "@nuxtjs/tailwindcss": "^6.14.0",
+    "@pinia/nuxt": "^0.11.3",
+    "lucide-vue-next": "^1.0.0",
+    "nuxt": "^4.4.8",
+    "pinia": "^3.0.4",
+    "three": "^0.184.0",
+    "vue": "^3.5.35",
+    "vue-router": "^5.1.0"
+  },
+  "devDependencies": {
+    "@nuxt/test-utils": "^4.0.3",
+    "@playwright/test": "^1.61.0",
+    "@types/three": "^0.184.1",
+    "@vitest/ui": "^4.1.9",
+    "@vue/test-utils": "^2.4.11",
+    "better-sqlite3": "^12.10.1",
+    "jsdom": "^29.1.1",
+    "sharp": "^0.35.1",
+    "to-ico": "^1.1.5",
+    "vitest": "^4.1.9"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild",
+      "@parcel/watcher"
+    ]
+  }
+}

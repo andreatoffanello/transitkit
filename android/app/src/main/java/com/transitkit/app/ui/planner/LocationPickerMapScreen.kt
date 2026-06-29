@@ -91,6 +91,7 @@ private const val STOP_SNAP_DISTANCE_METERS = 25.0
 fun LocationPickerMapScreen(
     role: String,
     source: String,
+    assignKey: String? = null,
     plannerViewModel: PlannerViewModel,
     onConfirm: () -> Unit,
     onBack: () -> Unit,
@@ -179,11 +180,16 @@ fun LocationPickerMapScreen(
             )
         }
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-        when (source) {
-            "home" -> if (role == "origin") plannerViewModel.setHomeOrigin(pick)
-                      else plannerViewModel.setHomeDestination(pick)
-            else   -> if (role == "origin") plannerViewModel.setOrigin(pick)
-                      else plannerViewModel.setDestination(pick)
+        if (assignKey != null) {
+            // Assign mode: save as casa/lavoro shortcut, don't touch the trip
+            plannerViewModel.savedPlacesStore.setPlace(assignKey, pick.name, pick.lat, pick.lon)
+        } else {
+            when (source) {
+                "home" -> if (role == "origin") plannerViewModel.setHomeOrigin(pick)
+                          else plannerViewModel.setHomeDestination(pick)
+                else   -> if (role == "origin") plannerViewModel.setOrigin(pick)
+                          else plannerViewModel.setDestination(pick)
+            }
         }
         onConfirm()
     }

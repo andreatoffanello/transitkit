@@ -1,0 +1,93 @@
+/* Geist (self-hosted via @fontsource) — only the weights we use */
+@import '@fontsource/geist/400.css';
+@import '@fontsource/geist/500.css';
+@import '@fontsource/geist/600.css';
+@import '@fontsource/geist/700.css';
+@import '@fontsource/geist/800.css';
+@import '@fontsource/geist-mono/400.css';
+@import '@fontsource/geist-mono/500.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #000000;
+  --surface: #0a0b0d;
+  --surface-2: #101216;
+  --hairline: rgba(255, 255, 255, 0.08);
+  --hairline-strong: rgba(255, 255, 255, 0.14);
+  --text: #ffffff;
+  --text-2: rgba(255, 255, 255, 0.64);
+  --text-3: rgba(255, 255, 255, 0.4);
+  /* the hero's electric signal, as a reusable token (rgb triplet → flexible alpha) */
+  --cyan: 41, 200, 255;
+}
+
+@layer base {
+  html {
+    background: var(--bg);
+    color: var(--text);
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: #fff;
+    color: #000;
+  }
+  :focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.72);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+  :focus:not(:focus-visible) { outline: none; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
+
+@layer components {
+  .shell {
+    max-width: 1120px;
+    margin-inline: auto;
+    padding-inline: 24px;
+    width: 100%;
+  }
+  .section { padding-block: clamp(72px, 10vw, 128px); }
+  /* keep anchored section titles clear of the fixed nav */
+  :where(section[id]) { scroll-margin-top: 84px; }
+}
+
+@layer utilities {
+  /* the logo's metallic white→silver sheen, as text fill */
+  .text-sheen {
+    background: linear-gradient(135deg, #ffffff 0%, #cccccc 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .hairline { border-color: var(--hairline); }
+  .bg-grid {
+    background-image:
+      linear-gradient(var(--hairline) 1px, transparent 1px),
+      linear-gradient(90deg, var(--hairline) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+  /* the hero's ordered Bayer dither, echoed as a static 2D halftone — the page's
+     ownable texture system. Apply on a layer and fade it with a mask per use. */
+  .dither-field {
+    background-image: radial-gradient(rgba(var(--cyan), 0.55) 0.5px, transparent 0.85px);
+    background-size: 3px 3px;
+  }
+}

@@ -234,15 +234,17 @@
     <string name="cd_vista_2d">Vista 2D</string>
 
     <!-- Mappa — line picker pill + sheet -->
-    <string name="mappa_cerca_linea">Cerca linea</string>
-    <string name="mappa_line_picker_title">Cerca linea</string>
-    <string name="mappa_line_picker_placeholder">Nome o numero linea…</string>
+    <string name="mappa_cerca_linea">Cerca linea o fermata</string>
+    <string name="mappa_line_picker_title">Cerca</string>
+    <string name="mappa_line_picker_placeholder">Cerca linea o fermata</string>
     <string name="mappa_line_picker_section_metro">METRO</string>
     <string name="mappa_line_picker_section_tram">TRAM</string>
     <string name="mappa_line_picker_section_rail">FERROVIE</string>
     <string name="mappa_line_picker_section_bus">BUS</string>
     <string name="mappa_line_picker_section_ferry">TRAGHETTI</string>
     <string name="mappa_line_picker_section_other">ALTRO</string>
+    <string name="mappa_line_picker_section_lines">LINEE</string>
+    <string name="mappa_line_picker_section_stops">FERMATE</string>
     <string name="mappa_rimuovi_overlay">Rimuovi overlay</string>
 
     <!-- Mappa — stop sheet -->
@@ -252,7 +254,6 @@
 
     <!-- Mappa — vehicle sheet -->
     <string name="mappa_veicolo_live">Veicolo live</string>
-    <string name="mappa_live">Live</string>
     <string name="mappa_in_ritardo">In ritardo di %d min</string>
     <string name="mappa_in_anticipo">In anticipo di %d min</string>
     <string name="mappa_in_orario">In orario</string>
@@ -542,16 +543,29 @@
     <string name="planner_picker_map_hint">Tocca una fermata per selezionarla</string>
     <string name="planner_picker_map_resolving">Individuazione posizione…</string>
     <string name="planner_picker_my_location">Posizione attuale</string>
-    <string name="planner_picker_no_results">Nessuna fermata trovata</string>
+    <string name="planner_picker_no_results">Nessun risultato trovato</string>
     <string name="planner_picker_no_stop_nearby">Nessuna fermata vicina — centra la mappa su una fermata</string>
     <string name="planner_picker_pick_on_map">Scegli sulla mappa</string>
     <string name="planner_picker_pick_on_map_sub">Sposta la mappa per centrare una fermata</string>
-    <string name="planner_picker_search_placeholder">Cerca fermata…</string>
+    <string name="planner_picker_search_placeholder">Cerca fermate e luoghi…</string>
     <string name="planner_picker_section_nearby">Vicino a te</string>
     <string name="planner_picker_section_recent">Recenti</string>
     <string name="planner_picker_selected_position">Posizione selezionata</string>
     <string name="planner_picker_selected_stop">Fermata selezionata</string>
     <string name="planner_picker_walking_distance">%1$d m di distanza</string>
+
+    <!-- Saved places (casa/lavoro) — parità iOS -->
+    <string name="planner_picker_home">Casa</string>
+    <string name="planner_picker_work">Lavoro</string>
+    <string name="planner_picker_set_address">Imposta indirizzo</string>
+    <string name="planner_picker_edit">Modifica</string>
+    <string name="planner_picker_remove">Rimuovi</string>
+    <string name="planner_picker_assign_home">Imposta indirizzo casa</string>
+    <string name="planner_picker_assign_work">Imposta indirizzo lavoro</string>
+    <!-- Risultati misti fermate + luoghi -->
+    <string name="planner_picker_section_stops">Fermate</string>
+    <string name="planner_picker_section_places">Luoghi</string>
+    <string name="planner_picker_result_place">Luogo</string>
 
     <!-- App update check -->
     <string name="update_available_title">Aggiornamento disponibile</string>

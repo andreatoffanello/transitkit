@@ -1,0 +1,16 @@
+items:
+  - q: In cosa siete diversi da Transit App o Moovit?
+    a: >-
+      Sono aggregatori, pensati per le grandi città e per la loro crescita.
+      TransitKit ti dà un canale tuo, col tuo marchio e notifiche push che
+      controlli tu — un valore diverso, spesso complementare.
+  - q: E il nostro attuale fornitore di bigliettazione?
+    a: >-
+      Lo Standard resta fuori dalla bigliettazione, o rimanda al tuo provider
+      (Token Transit, Masabi) con un link diretto. Vuoi gestire in proprio anche i
+      pagamenti? È un modulo su misura sopra lo Standard.
+  - q: Cosa vi serve da noi per partire?
+    a: >-
+      L'URL del tuo feed GTFS, il feed in tempo reale se ce l'hai, e il tuo marchio
+      — logo e colori. Tutto qui. Ci occupiamo noi delle pubblicazioni su App Store
+      e Google Play, dell'hosting e dell'infrastruttura real-time e push.

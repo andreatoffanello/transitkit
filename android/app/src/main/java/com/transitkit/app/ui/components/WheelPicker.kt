@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -114,8 +115,11 @@ fun WheelPicker(
 }
 
 /**
- * Hour + minute wheels (24h) with a fixed colon separator, matching the iOS
- * wheel time picker. Indices map directly to hour (0..23) and minute (0..59).
+ * Hour + minute wheels with a fixed colon separator, matching the iOS wheel
+ * time picker. The `hour`/`onChange` contract is always 24h (0..23) so callers
+ * are timezone/format-agnostic, but the DISPLAY follows the device 12-/24-hour
+ * setting: on a 12-hour locale the hour wheel shows 1..12 and a third AM/PM
+ * column appears; on a 24-hour locale it shows 00..23 with no meridiem column.
  */
 @Composable
 fun WheelTimePicker(
@@ -125,19 +129,38 @@ fun WheelTimePicker(
     modifier: Modifier = Modifier,
 ) {
     val colors = TransitTheme.colors
-    val hours = remember { (0..23).map { "%02d".format(it) } }
+    val context = LocalContext.current
+    val is24 = remember { android.text.format.DateFormat.is24HourFormat(context) }
     val minutes = remember { (0..59).map { "%02d".format(it) } }
+
+    // 12h decomposition (unused in 24h mode): index 0 → "12", 1..11 → "1".."11".
+    val hourIdx = hour % 12
+    val amPmIdx = if (hour < 12) 0 else 1
+
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        WheelPicker(
-            items = hours,
-            selectedIndex = hour,
-            onSelectedIndexChange = { onChange(it, minute) },
-            modifier = Modifier.width(72.dp),
-        )
+        if (is24) {
+            val hours = remember { (0..23).map { "%02d".format(it) } }
+            WheelPicker(
+                items = hours,
+                selectedIndex = hour,
+                onSelectedIndexChange = { onChange(it, minute) },
+                modifier = Modifier.width(72.dp),
+            )
+        } else {
+            val hours12 = remember { (0..11).map { if (it == 0) "12" else it.toString() } }
+            WheelPicker(
+                items = hours12,
+                selectedIndex = hourIdx,
+                onSelectedIndexChange = { idx ->
+                    onChange(if (amPmIdx == 0) idx else idx + 12, minute)
+                },
+                modifier = Modifier.width(56.dp),
+            )
+        }
         Text(
             text = ":",
             style = MaterialTheme.typography.titleLarge,
@@ -151,5 +174,21 @@ fun WheelTimePicker(
             onSelectedIndexChange = { onChange(hour, it) },
             modifier = Modifier.width(72.dp),
         )
+        if (!is24) {
+            val amPm = remember {
+                java.text.DateFormatSymbols(context.resources.configuration.locales[0])
+                    .amPmStrings.toList()
+            }
+            WheelPicker(
+                items = amPm,
+                selectedIndex = amPmIdx,
+                onSelectedIndexChange = { idx ->
+                    onChange(if (idx == 0) hourIdx else hourIdx + 12, minute)
+                },
+                modifier = Modifier
+                    .padding(start = 10.dp)
+                    .width(64.dp),
+            )
+        }
     }
 }

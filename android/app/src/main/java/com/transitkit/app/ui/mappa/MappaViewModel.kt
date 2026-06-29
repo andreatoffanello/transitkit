@@ -118,6 +118,23 @@ class MappaViewModel @Inject constructor(
             else stopList.filter { it.routeIds.contains(routeId) }
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /** Unfiltered full stop list for the search picker (the `stops` flow above is route-filtered). */
+    val allStops: StateFlow<List<ResolvedStop>> =
+        scheduleRepository.stops
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Per-route stop-sequence subtitle ("A · B · C"), mirrors OrariViewModel.stopNamesByRouteId. */
+    val stopSequencesByRouteId: StateFlow<Map<String, String>> =
+        scheduleRepository.scheduleResponse
+            .map { schedule ->
+                schedule?.routes?.associate { route ->
+                    val stopNamesById = schedule.stops.associateBy({ it.id }, { it.name })
+                    val names = route.directions.firstOrNull()?.stopIds?.mapNotNull { stopNamesById[it] } ?: emptyList()
+                    route.id to names.joinToString(" · ")
+                } ?: emptyMap()
+            }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
     /** Vehicles paired with their GTFS route color (falls back to brand accent). */
     val vehiclesWithColor: StateFlow<List<Pair<VehiclePosition, Color>>> =
         combine(_vehicles, scheduleRepository.routes, _selectedRouteId) { vehicleList, routeList, routeId ->

@@ -110,10 +110,7 @@ struct WhenChipsRow: View {
     }
 
     private var timeLabel: String {
-        let f = DateFormatter()
-        f.dateFormat = "HH:mm"
-        f.timeZone = operatorTimeZone
-        return f.string(from: currentDate)
+        ClockTime.clock(currentDate, timeZone: operatorTimeZone)
     }
 
     // MARK: - Date chip (popover graphical picker)

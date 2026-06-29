@@ -84,11 +84,11 @@ internal fun VehiclePreviewContent(
         if (diff < -60_000L) null
         else ((diff + 30_000L) / 60_000L).toInt().coerceAtLeast(0)
     }
+    val etaContext = androidx.compose.ui.platform.LocalContext.current
     val etaClock: String? = predictedArrivalMs?.let {
-        val fmt = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).apply {
-            timeZone = java.util.TimeZone.getTimeZone(operatorTimezoneId)
-        }
-        fmt.format(java.util.Date(it))
+        com.transitkit.app.ui.components.ClockTime.millis(
+            it, java.util.TimeZone.getTimeZone(operatorTimezoneId), etaContext,
+        )
     }
     val ageSec = ((now / 1000L) - vehicle.timestamp).coerceAtLeast(0L)
     val freshnessText: String? = when {
@@ -268,7 +268,11 @@ internal fun VehiclePreviewContent(
                                         color = colors.textPrimary,
                                     )
                                     Text(
-                                        text = etaClock,
+                                        text = com.transitkit.app.ui.components.ClockTime.annotated(
+                                            etaClock,
+                                            MaterialTheme.typography.labelSmall.fontSize,
+                                            colors.textSecondary,
+                                        ),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = colors.textSecondary,
                                         fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
@@ -288,7 +292,11 @@ internal fun VehiclePreviewContent(
                                         )
                                     }
                                     Text(
-                                        text = etaClock,
+                                        text = com.transitkit.app.ui.components.ClockTime.annotated(
+                                            etaClock,
+                                            MaterialTheme.typography.labelSmall.fontSize,
+                                            colors.textSecondary,
+                                        ),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = colors.textSecondary,
                                         fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
@@ -296,7 +304,11 @@ internal fun VehiclePreviewContent(
                                 }
                                 else -> {
                                     Text(
-                                        text = etaClock,
+                                        text = com.transitkit.app.ui.components.ClockTime.annotated(
+                                            etaClock,
+                                            MaterialTheme.typography.titleSmall.fontSize,
+                                            colors.textPrimary,
+                                        ),
                                         style = MaterialTheme.typography.titleSmall,
                                         fontWeight = FontWeight.SemiBold,
                                         color = colors.textPrimary,

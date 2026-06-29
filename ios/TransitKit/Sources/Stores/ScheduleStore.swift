@@ -444,7 +444,8 @@ class ScheduleStore {
         let nowMinutes = cal.component(.hour, from: now) * 60 + cal.component(.minute, from: now)
         let delay = delayMinutes ?? 0
         let diff = departure.minutesFromMidnight + delay - nowMinutes
-        let displayTime = departure.shiftedTime(byMinutes: delay)
+        let displayTime = ClockTime.clock(gtfs: departure.shiftedTime(byMinutes: delay),
+                                          timeZone: operatorTimezone)
         if diff < 0 { return .passed(displayTime) }
         if diff == 0 { return .departing }
         if diff <= 60 { return .minutes(diff) }

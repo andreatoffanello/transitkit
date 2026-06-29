@@ -285,14 +285,20 @@ struct MappaTab: View {
             StopDetailView(stop: stop)
         }
         .fullScreenCover(isPresented: $showLinePicker) {
-            LinePickerSheet { route in
-                // Manual line selection — stop any active vehicle follow.
-                isFollowingVehicle = false
-                routeSelectedByVehicle = false
-                selectedVehicle = nil
-                selectRoute(route, directionId: route.directions.first?.directionId)
-                fitMapToRoute(route)
-            }
+            LinePickerSheet(
+                onSelect: { route in
+                    // Manual line selection — stop any active vehicle follow.
+                    isFollowingVehicle = false
+                    routeSelectedByVehicle = false
+                    selectedVehicle = nil
+                    selectRoute(route, directionId: route.directions.first?.directionId)
+                    fitMapToRoute(route)
+                },
+                onSelectStop: { stop in
+                    // Stop picked from search — focus it and show the preview card.
+                    handleStopTap(stop)
+                }
+            )
         }
         .onChange(of: router.pendingMapOpen) { _, newId in
             // Bare `transitkit://map` arrived — wipe any leftover selection so

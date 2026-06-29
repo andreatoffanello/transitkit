@@ -1,10 +1,8 @@
 import SwiftUI
 
+@MainActor
 private func formatJourneyTime(_ date: Date, tz: TimeZone) -> String {
-    let f = DateFormatter()
-    f.dateFormat = "HH:mm"
-    f.timeZone = tz
-    return f.string(from: date)
+    ClockTime.clock(date, timeZone: tz)
 }
 
 // MARK: - JourneyDetailView
@@ -146,12 +144,14 @@ struct JourneyDetailView: View {
     private var heroHeader: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text(formatJourneyTime(journey.departureTime, tz: operatorTimeZone))
-                    .font(.system(size: 28, weight: .bold).monospacedDigit())
+                ClockTime.styledText(formatJourneyTime(journey.departureTime, tz: operatorTimeZone),
+                                     size: 28, weight: .bold, design: .default, color: .primary)
+                    .monospacedDigit()
                 LucideIcon.arrowRight.sized(16)
                     .foregroundStyle(.secondary)
-                Text(formatJourneyTime(journey.arrivalTime, tz: operatorTimeZone))
-                    .font(.system(size: 28, weight: .bold).monospacedDigit())
+                ClockTime.styledText(formatJourneyTime(journey.arrivalTime, tz: operatorTimeZone),
+                                     size: 28, weight: .bold, design: .default, color: .primary)
+                    .monospacedDigit()
             }
             Text(headerSubtitle)
                 .font(.system(size: 15))
@@ -166,7 +166,7 @@ struct JourneyDetailView: View {
 
 // MARK: - Layout constants
 
-private let kTimeW:  CGFloat = 46
+private let kTimeW:  CGFloat = 56
 private let kNodeW:  CGFloat = 14
 private let kLineW:  CGFloat = 2.5
 private let kDotD:   CGFloat = 12
@@ -194,9 +194,10 @@ private struct EndpointRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: kColGap) {
-            Text(formatJourneyTime(time, tz: operatorTimeZone))
-                .font(.system(size: 13, weight: .semibold).monospacedDigit())
-                .foregroundStyle(.primary)
+            ClockTime.styledText(formatJourneyTime(time, tz: operatorTimeZone),
+                                 size: 13, weight: .semibold, design: .default, color: .primary)
+                .monospacedDigit()
+                .lineLimit(1)
                 .frame(width: kTimeW, alignment: .trailing)
                 .padding(.top, labelOffset)
 
@@ -288,8 +289,10 @@ private struct TransitLegView: View {
             if isDirectTransfer {
                 Color.clear.frame(width: kTimeW, height: 1)
             } else {
-                Text(tf(leg.boardTime))
-                    .font(.system(size: 13, weight: .semibold).monospacedDigit())
+                ClockTime.styledText(tf(leg.boardTime),
+                                     size: 13, weight: .semibold, design: .default, color: .primary)
+                    .monospacedDigit()
+                    .lineLimit(1)
                     .frame(width: kTimeW, alignment: .trailing)
                     .padding(.top, topOffset + 2)
             }
@@ -409,8 +412,10 @@ private struct TransitLegView: View {
 
     private var alightRow: some View {
         HStack(alignment: .top, spacing: kColGap) {
-            Text(tf(leg.alightTime))
-                .font(.system(size: 13, weight: .semibold).monospacedDigit())
+            ClockTime.styledText(tf(leg.alightTime),
+                                 size: 13, weight: .semibold, design: .default, color: .primary)
+                .monospacedDigit()
+                .lineLimit(1)
                 .frame(width: kTimeW, alignment: .trailing)
                 .padding(.top, 12)
 

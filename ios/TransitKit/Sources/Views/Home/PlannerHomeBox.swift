@@ -67,19 +67,31 @@ struct PlannerHomeBox: View {
                     }
                 }
 
-            // Chip "quando" a sinistra (scrollabili: in modalità parti/arriva
-            // diventano 3), pulsante Cerca pinnato a destra. L'utente compila
-            // Da/A, sceglie il quando, poi lancia esplicitamente — niente
+            // Chip "quando" + pulsante Cerca. In modalità "parti/arriva" i chip
+            // diventano 3 (mode+ora+data): per non tagliare la data, Cerca scende
+            // a tutta larghezza sulla riga sotto. In "adesso" (un solo chip) resta
+            // inline pinnato a destra. L'utente lancia esplicitamente — niente
             // auto-launch, niente race col pop delle picker.
-            HStack(spacing: 8) {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    WhenChipsRow(selection: $whenSelection)
-                        .padding(.vertical, 1)
+            if whenSelection == .now {
+                HStack(spacing: 8) {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        WhenChipsRow(selection: $whenSelection)
+                            .padding(.vertical, 1)
+                    }
+                    searchButton(fullWidth: false)
+                        .fixedSize()
                 }
-                searchButton
-                    .fixedSize()
+                .padding(.horizontal, 4)
+            } else {
+                VStack(spacing: 10) {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        WhenChipsRow(selection: $whenSelection)
+                            .padding(.vertical, 1)
+                    }
+                    searchButton(fullWidth: true)
+                }
+                .padding(.horizontal, 4)
             }
-            .padding(.horizontal, 4)
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("home_planner_block")
@@ -225,7 +237,7 @@ struct PlannerHomeBox: View {
 
     // MARK: - Search button
 
-    private var searchButton: some View {
+    private func searchButton(fullWidth: Bool) -> some View {
         Button {
             guard let o = origin, let d = destination else { return }
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()
@@ -236,6 +248,7 @@ struct PlannerHomeBox: View {
                 Text(String(localized: "planner_search_button"))
                     .font(.system(size: 14, weight: .semibold))
             }
+            .frame(maxWidth: fullWidth ? .infinity : nil)
             .foregroundStyle(canSearch ? .white : AppTheme.textTertiary)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)

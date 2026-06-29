@@ -3,9 +3,8 @@ package com.transitkit.app.ui.planner
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.compositionLocalOf
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import androidx.compose.ui.platform.LocalContext
+import com.transitkit.app.ui.components.ClockTime
 import java.util.TimeZone
 
 /**
@@ -15,11 +14,11 @@ import java.util.TimeZone
  */
 val LocalOperatorTimeZone = compositionLocalOf<TimeZone> { TimeZone.getTimeZone("UTC") }
 
-/** Epoch millis → "HH:mm" formatted in the operator's timezone. */
+/**
+ * Epoch millis → localized clock (12h/24h per device setting) in the operator's
+ * timezone.
+ */
 @Composable
 @ReadOnlyComposable
-internal fun formatEpochTime(epochMs: Long): String {
-    val fmt = SimpleDateFormat("HH:mm", Locale.getDefault())
-    fmt.timeZone = LocalOperatorTimeZone.current
-    return fmt.format(Date(epochMs))
-}
+internal fun formatEpochTime(epochMs: Long): String =
+    ClockTime.millis(epochMs, LocalOperatorTimeZone.current, LocalContext.current)

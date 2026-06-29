@@ -227,9 +227,10 @@ struct TripDetailView: View {
                             .foregroundStyle(AppTheme.textSecondary)
                     }
 
-                    Text(departure.time)
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundStyle(AppTheme.textSecondary)
+                    ClockTime.styledText(
+                        ClockTime.clock(gtfs: departure.time, timeZone: store.operatorTimezone),
+                        size: 12, color: AppTheme.textSecondary
+                    )
                 }
             }
 
@@ -379,13 +380,13 @@ struct TripDetailView: View {
             // scheduled only, dimmed. Current stop: accent-colored.
             let delayMin: Int? = (!isPast) ? liveDelayMinutes.flatMap { $0 > 0 ? $0 : nil } : nil
             VStack(alignment: .trailing, spacing: 1) {
-                Text(timeHHmm)
-                    .font(.system(size: 13, weight: isOrigin ? .semibold : .medium, design: .monospaced))
-                    .foregroundStyle(
-                        isPast ? AppTheme.textTertiary
-                            : isOrigin ? lineColor
-                            : AppTheme.textSecondary
-                    )
+                ClockTime.styledText(
+                    ClockTime.clock(gtfs: timeHHmm, timeZone: store.operatorTimezone),
+                    size: 13, weight: isOrigin ? .semibold : .medium,
+                    color: isPast ? AppTheme.textTertiary
+                        : isOrigin ? lineColor
+                        : AppTheme.textSecondary
+                )
                 if let delayMin {
                     Text("+\(delayMin) min")
                         .font(.system(size: 10, weight: .semibold, design: .monospaced))

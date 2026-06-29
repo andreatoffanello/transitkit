@@ -402,6 +402,9 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                     onNavigateToLocationPicker = { role ->
                         navController.navigate("location_picker/$role/home")
                     },
+                    onNavigateToAssign = { key ->
+                        navController.navigate("location_picker_assign/$key")
+                    },
                     plannerViewModel = plannerViewModel,
                 )
             }
@@ -644,6 +647,51 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                     onNavigateToMapPicker = {
                         navController.navigate("location_picker_map/$role/$source")
                     },
+                    onNavigateToAssign = { key ->
+                        navController.navigate("location_picker_assign/$key")
+                    },
+                )
+            }
+
+            // ── Assign saved place (Casa / Lavoro) ───────────────────────────────
+            composable(
+                route = "location_picker_assign/{key}",
+                arguments = listOf(
+                    navArgument("key") { type = NavType.StringType },
+                ),
+            ) { backStackEntry ->
+                val key = backStackEntry.arguments?.getString("key") ?: return@composable
+                LocationPickerScreen(
+                    role = "origin",    // non rilevante in assign mode
+                    source = "assign",
+                    assignKey = key,
+                    plannerViewModel = plannerViewModel,
+                    onBack = { navController.popBackStack() },
+                    onNavigateToMapPicker = {
+                        navController.navigate("location_picker_map_assign/$key")
+                    },
+                    onNavigateToAssign = null, // nested assign non supportato
+                )
+            }
+
+            // ── Map-based assign picker (Casa / Lavoro) ──────────────────────────
+            composable(
+                route = "location_picker_map_assign/{key}",
+                arguments = listOf(
+                    navArgument("key") { type = NavType.StringType },
+                ),
+            ) { backStackEntry ->
+                val key = backStackEntry.arguments?.getString("key") ?: return@composable
+                LocationPickerMapScreen(
+                    role = "origin",
+                    source = "assign",
+                    assignKey = key,
+                    plannerViewModel = plannerViewModel,
+                    onConfirm = {
+                        // Pop map + assign picker → ritorna alla schermata precedente (Home/Planner/Picker)
+                        navController.popBackStack("location_picker_assign/$key", inclusive = true)
+                    },
+                    onBack = { navController.popBackStack() },
                 )
             }
 

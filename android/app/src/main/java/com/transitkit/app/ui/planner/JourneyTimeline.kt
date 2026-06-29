@@ -55,7 +55,7 @@ import com.transitkit.app.ui.components.parseHexColor
 
 // ── Layout constants (shared with JourneyDetailScreen) ───────────────────────
 
-internal val K_TIME_W = 46.dp
+internal val K_TIME_W = 56.dp
 internal val K_NODE_W = 14.dp
 internal val K_LINE_W = 2.5.dp
 internal val K_DOT_D = 12.dp
@@ -123,9 +123,14 @@ internal fun BoardRow(
         Box(modifier = Modifier.width(K_TIME_W)) {
             if (!isDirectTransfer) {
                 Text(
-                    text = formatEpochTime(leg.departureTime),
+                    text = com.transitkit.app.ui.components.ClockTime.annotated(
+                        formatEpochTime(leg.departureTime),
+                        MaterialTheme.typography.bodySmall.fontSize, colors.textPrimary,
+                    ),
                     style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                     textAlign = TextAlign.End,
+                    softWrap = false,
+                    maxLines = 1,
                     modifier = Modifier.fillMaxWidth().padding(top = K_TIME_TOP_PAD),
                     color = colors.textPrimary,
                 )
@@ -301,7 +306,10 @@ internal fun IntermediateStopRow(stop: IntermediateStop, nodeColor: Color) {
             modifier = Modifier.weight(1f),
         )
         Text(
-            text = formatEpochTime(stop.arrivalTime),
+            text = com.transitkit.app.ui.components.ClockTime.annotated(
+                formatEpochTime(stop.arrivalTime),
+                MaterialTheme.typography.bodySmall.fontSize, colors.textTertiary,
+            ),
             style = MaterialTheme.typography.bodySmall,
             color = colors.textTertiary,
         )
@@ -323,9 +331,14 @@ internal fun AlightRow(
         modifier = Modifier.height(IntrinsicSize.Min),
     ) {
         Text(
-            text = formatEpochTime(leg.arrivalTime),
+            text = com.transitkit.app.ui.components.ClockTime.annotated(
+                formatEpochTime(leg.arrivalTime),
+                MaterialTheme.typography.bodySmall.fontSize, colors.textPrimary,
+            ),
             style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
             textAlign = TextAlign.End,
+            softWrap = false,
+            maxLines = 1,
             modifier = Modifier.width(K_TIME_W).padding(top = K_TIME_TOP_PAD),
             color = colors.textPrimary,
         )
@@ -439,9 +452,14 @@ internal fun EndpointRow(timeMs: Long, name: String, role: EndpointRole) {
         horizontalArrangement = Arrangement.spacedBy(K_COL_GAP),
     ) {
         Text(
-            text = formatEpochTime(timeMs),
+            text = com.transitkit.app.ui.components.ClockTime.annotated(
+                formatEpochTime(timeMs),
+                MaterialTheme.typography.bodySmall.fontSize, colors.textPrimary,
+            ),
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
+            softWrap = false,
+            maxLines = 1,
             modifier = Modifier.width(K_TIME_W).padding(top = K_TIME_TOP_PAD),
             textAlign = TextAlign.End,
             color = colors.textPrimary,

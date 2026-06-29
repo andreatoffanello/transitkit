@@ -47,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
@@ -410,6 +411,7 @@ private fun TripStopRow(
     onClick: () -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
     // `isCurrent` drives the highlight ring + accent text color for the
     // active row in the timeline. The "Now" pill — which actively claims a
     // bus is AT this stop — only renders when we have a real live vehicle.
@@ -562,11 +564,16 @@ private fun TripStopRow(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(1.dp),
                 ) {
+                    val timeColor = if (isPast) TransitTheme.colors.textTertiary else TransitTheme.colors.textSecondary
                     Text(
-                        text = stop.departureTime.take(5),
+                        text = com.transitkit.app.ui.components.ClockTime.annotated(
+                            com.transitkit.app.ui.components.ClockTime.gtfs(stop.departureTime, context),
+                            MaterialTheme.typography.labelMedium.fontSize,
+                            timeColor,
+                        ),
                         style = MaterialTheme.typography.labelMedium,
                         fontFamily = FontFamily.Monospace,
-                        color = if (isPast) TransitTheme.colors.textTertiary else TransitTheme.colors.textSecondary,
+                        color = timeColor,
                     )
                     if (!isPast && delayMinutes > 0) {
                         Text(

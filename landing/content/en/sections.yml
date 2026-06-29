@@ -1,0 +1,172 @@
+hero:
+  h1: Take back control of your rider experience.
+  sub: >-
+    Branded iOS and Android apps — plus web stop pages, QR, and push you control —
+    built on the GTFS feed you already publish. No aggregator. Nothing upfront.
+    Live in three weeks.
+  ctaPrimary:
+    label: Get your apps in 3 weeks
+    to: '#pricing'
+  ctaSecondary:
+    label: See how it works
+    to: '#how'
+  trustline: Native iOS + Android · Web + QR · Push you control
+
+trap:
+  eyebrow: The aggregator trap
+  title: In someone else's app, you're just a tenant.
+  body: >-
+    Moovit and Transit are built for big cities and their own growth — not yours.
+    Your routes are one option in a long list, your brand is a footnote, and the
+    relationship with your riders belongs to them.
+  points:
+    - Your name and colors, buried under theirs
+    - No push you can actually send
+    - Rider attention captured by the aggregator
+    - No say over what gets fixed first
+
+pedigree:
+  eyebrow: Track record
+  title: Built by a team that already ships transit apps.
+  intro: >-
+    We shipped production transit apps — realtime, journey planning, service
+    alerts — before we turned the work into a product. They're on the stores
+    right now.
+  items:
+    - icon: dove.png
+      name: DoVe
+      place: Venice
+      body: Realtime, schedules, alerts and journey planning in one multipurpose app.
+      ios: 'https://apps.apple.com/app/dove-venezia/id6740043854'
+      android: 'https://play.google.com/store/apps/details?id=app.dove.venezia'
+    - icon: movete.png
+      name: Movete
+      place: Rome
+      body: Six operators in a single app — realtime, schedules, alerts, journey planning.
+      ios: 'https://apps.apple.com/app/movete/id6768432396'
+      android: 'https://play.google.com/store/apps/details?id=com.movete.roma'
+    - icon: waterbus.png
+      name: Venice Airport Waterbus
+      place: Venice Airport
+      body: Schedules, journey planning and multi-service for the airport waterbus.
+      ios: 'https://apps.apple.com/app/venice-airport-waterbus/id6767351048'
+      android: 'https://play.google.com/store/apps/details?id=com.veniceairportwaterbus.app'
+
+pillars:
+  eyebrow: What you own
+  title: A rider-facing layer that's finally yours.
+  items:
+    - icon: smartphone
+      title: Branded native apps
+      body: >-
+        iOS and Android, in the App Store and Google Play under your name and
+        colors. Designed this year, not abandoned in 2019.
+    - icon: bell-ring
+      title: Push you control
+      body: >-
+        Service alerts fire automatically from your GTFS-RT, or write your own — a
+        detour, a holiday schedule, anything. A direct line to every rider's phone.
+    - icon: qr-code
+      title: Web stop pages + QR
+      body: >-
+        Real-time departures on a mobile page at every stop. Generate and manage
+        the QR codes riders scan. No download.
+    - icon: wrench
+      title: Maintenance included
+      body: >-
+        Ordinary upkeep and fixes come with the subscription. New custom work is
+        scoped and quoted up front. No surprises.
+
+how:
+  eyebrow: How it works
+  title: You publish clean GTFS. We do the rest.
+  steps:
+    - n: '01'
+      title: You publish GTFS(-RT)
+      body: The schedule and realtime feeds you already maintain. The only input we need.
+    - n: '02'
+      title: We build and brand it
+      body: Your feeds, your brand, shipped to both stores — plus web stop pages and your console.
+    - n: '03'
+      title: Live in 3 weeks
+      body: From kickoff to the App Store and Google Play. Nothing upfront, billed monthly or annually.
+  note: >-
+    No operations changes, nothing to rip out. We don't touch your scheduling,
+    AVL, or fare systems.
+
+positioning:
+  eyebrow: Same quality, none of the lock-in
+  title: Big-vendor polish, without the big-vendor build.
+  body: >-
+    A custom native-app program is a five-to-six-figure project and a year of your
+    time. An aggregator is free — and that's the problem: it isn't yours.
+    TransitKit is the third option.
+  colThem: A custom build
+  colUs: TransitKit
+  rows:
+    - them: $50k–$150k+ upfront
+      us: $0 upfront, monthly or annual
+    - them: 6–12 months to launch
+      us: 3 weeks to both stores
+    - them: Your team maintains it
+      us: Maintenance included
+    - them: Or a free aggregator that owns your riders
+      us: Your brand, your channel, your data
+  anchor: >-
+    There's no real incumbent price to undercut — the honest yardstick is a custom
+    build: five to six figures upfront and a year of your time. TransitKit is the
+    same outcome for $599/mo, nothing upfront, and the app is yours from week three.
+
+proof:
+  eyebrow: The engine, live
+  title: See it running — AppalRider.
+  body: >-
+    The first app on the TransitKit engine — live on the App Store and Google
+    Play, with real schedules and realtime for Boone, North Carolina.
+
+pricing:
+  eyebrow: Pricing
+  title: Transparent pricing. Nothing upfront.
+  sub: One operator, everything included. Pay annually and get two months free.
+  tiers:
+    - name: Standard
+      price: $599
+      period: /mo
+      priceNote: or $499/mo billed annually
+      tagline: The full standard feature set, plus ordinary maintenance and fixes.
+      highlighted: true
+      features:
+        - Branded iOS + Android apps
+        - Web stop pages + QR generator
+        - 'Real-time: positions, trip updates, alerts'
+        - Push notifications you control
+        - Operator console
+        - Ordinary maintenance & fixes
+      cta:
+        label: Book a demo
+        to: 'mailto:andrea@transitkit.app?subject=TransitKit%20—%20Standard'
+    - name: Custom
+      price: Custom
+      period: ''
+      tagline: Everything in Standard, plus modules built for you.
+      features:
+        - Everything in Standard
+        - Custom modules (e.g. fare payments)
+        - Priced to your scope
+      cta:
+        label: Talk to us
+        to: 'mailto:andrea@transitkit.app?subject=TransitKit%20—%20Custom'
+  always:
+    - No upfront investment
+    - Live in 3 weeks
+    - Billed monthly or annually
+    - Riders never tracked, data never sold
+
+finalCta:
+  title: Get the transit app your riders deserve.
+  body: >-
+    Send us your GTFS feed and your brand. We'll show you your own app, live, in a
+    demo this week.
+  cta:
+    label: Book a demo
+    to: 'mailto:andrea@transitkit.app?subject=TransitKit%20demo'

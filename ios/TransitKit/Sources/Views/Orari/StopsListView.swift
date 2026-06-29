@@ -15,26 +15,6 @@ struct StopsListView: View {
         self.recentIds = recentIds
     }
 
-    // MARK: - Fuzzy scoring
-
-    /// Returns a score 0-100 for how well `text` matches `query` (subsequence match).
-    private func fuzzyScore(_ text: String, query: String) -> Int {
-        let t = text.lowercased()
-        let q = query.lowercased()
-        // Exact prefix = highest score
-        if t.hasPrefix(q) { return 100 }
-        // Contains = high score
-        if t.contains(q) { return 80 }
-        // Subsequence check
-        var qi = q.startIndex
-        for char in t {
-            if qi < q.endIndex && char == q[qi] {
-                qi = q.index(after: qi)
-            }
-        }
-        return qi == q.endIndex ? 50 : 0
-    }
-
     // MARK: - Filtering
 
     private var filteredStops: [ResolvedStop] {
@@ -51,8 +31,8 @@ struct StopsListView: View {
                 // Fuzzy-scored filter: compute best score across name and id, drop zero-score items
                 let scored = result.compactMap { stop -> (stop: ResolvedStop, score: Int)? in
                     let score = max(
-                        fuzzyScore(stop.name, query: searchQuery),
-                        fuzzyScore(stop.id, query: searchQuery)
+                        FuzzySearch.score(stop.name, query: searchQuery),
+                        FuzzySearch.score(stop.id, query: searchQuery)
                     )
                     return score > 0 ? (stop, score) : nil
                 }
@@ -277,90 +257,3 @@ struct StopsListView: View {
     }
 }
 
-// MARK: - Stop Row Content (glass card)
-
-private struct StopRowContent: View {
-    let stop: ResolvedStop
-    let store: ScheduleStore
-
-    /// Primary transit type (for the leading icon).
-    private var primaryType: TransitType {
-        let priority: [TransitType] = [.ferry, .tram, .metro, .bus]
-        for type in priority {
-            if stop.transitTypes.contains(type) { return type }
-        }
-        return stop.transitTypes.first ?? .bus
-    }
-
-    /// Line badges: resolve route colors for each line at this stop.
-    private var lineBadges: [(name: String, route: APIRoute?)] {
-        stop.lineNames.prefix(6).map { name in
-            let route = store.routes.first { $0.name == name }
-            return (name, route)
-        }
-    }
-
-    var body: some View {
-        HStack(spacing: 8) {
-            VStack(alignment: .leading, spacing: 5) {
-                // Row 1: name  ·  Spacer  ·  modal type icons
-                HStack(spacing: 0) {
-                    Text(stop.name)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(AppTheme.textPrimary)
-                        .lineLimit(1)
-
-                    Spacer(minLength: 6)
-
-                    HStack(spacing: 4) {
-                        ForEach(Array(stop.transitTypes).sorted(by: { $0.rawValue < $1.rawValue }), id: \.self) { type in
-                            type.icon.sized(12)
-                                .foregroundStyle(AppTheme.textSecondary)
-                        }
-                    }
-                }
-
-                // Row 2: line badges
-                if !stop.lineNames.isEmpty {
-                    HStack(spacing: 4) {
-                        ForEach(lineBadges, id: \.name) { badge in
-                            LineBadge(
-                                name: badge.name,
-                                color: badge.route.flatMap(\.color) ?? "#666666",
-                                textColor: badge.route.flatMap(\.textColor) ?? "#FFFFFF",
-                                transitType: badge.route.map { TransitType(gtfsRouteType: $0.transitType) } ?? primaryType,
-                                size: .medium
-                            )
-                        }
-                        if stop.lineNames.count > 6 {
-                            Text("+\(stop.lineNames.count - 6)")
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(AppTheme.textTertiary)
-                                .padding(.horizontal, 5)
-                                .padding(.vertical, 3)
-                                .background(
-                                    AppTheme.textTertiary.opacity(0.12),
-                                    in: RoundedRectangle(cornerRadius: 4)
-                                )
-                        }
-                    }
-                }
-            }
-
-            LucideIcon.chevronRight.image
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(AppTheme.textTertiary)
-        }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 12)
-        .background(AppTheme.glassFill, in: RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(AppTheme.glassBorder, lineWidth: 1)
-        )
-        .contentShape(Rectangle())
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(String(format: NSLocalizedString("a11y_stop_lines_count", comment: "Accessibility label: stop name and line count"), stop.name, stop.lineNames.count))
-        .accessibilityAddTraits(.isButton)
-    }
-}

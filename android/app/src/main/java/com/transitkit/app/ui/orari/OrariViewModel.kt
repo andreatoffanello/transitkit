@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import com.transitkit.app.ui.components.fuzzyScore
 import javax.inject.Inject
 
 enum class OrariTab { STOPS, LINES }
@@ -169,27 +170,4 @@ class OrariViewModel @Inject constructor(
         _selectedTransitType.value = if (_selectedTransitType.value == type) null else type
     }
 
-    // Token-aware scorer: prefix > word-prefix > contains > subsequence (long queries only).
-    //
-    // The previous version always allowed subsequence matches and dragged in
-    // irrelevant results — e.g. searching "dog" against "Highland Crossing"
-    // matched D…O…G across two words and surfaced unrelated stops. We now
-    // gate subsequence to queries of 5+ characters, where the false-positive
-    // rate is much lower.
-    private fun fuzzyScore(text: String, query: String): Int {
-        val t = text.lowercase()
-        val q = query.lowercase()
-        if (q.isEmpty()) return 0
-        if (t.startsWith(q)) return 100
-        // Word-prefix: any whitespace-separated token starts with q. Captures
-        // "Boone" matching "Daniel Boone Inn" without falling to subsequence.
-        if (t.split(' ', '-', '/').any { it.startsWith(q) }) return 90
-        if (t.contains(q)) return 80
-        if (q.length < 5) return 0
-        var qi = 0
-        for (char in t) {
-            if (qi < q.length && char == q[qi]) qi++
-        }
-        return if (qi == q.length) 50 else 0
-    }
 }

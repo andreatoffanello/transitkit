@@ -13,14 +13,12 @@ struct JourneyCard: View {
         VStack(alignment: .leading, spacing: 10) {
             // Row 1: Times + Duration
             HStack(alignment: .firstTextBaseline) {
-                Text(timeLabel(journey.departureTime))
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(.primary)
+                ClockTime.styledText(timeLabel(journey.departureTime),
+                                     size: 22, weight: .bold, design: .default, color: .primary)
                 LucideIcon.chevronRight.sized(14)
                     .foregroundStyle(Color(.tertiaryLabel))
-                Text(timeLabel(journey.arrivalTime))
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(.primary)
+                ClockTime.styledText(timeLabel(journey.arrivalTime),
+                                     size: 22, weight: .bold, design: .default, color: .primary)
                 Spacer()
                 Text("\(journey.durationMinutes) min")
                     .font(.system(size: 15, weight: .semibold))
@@ -81,10 +79,7 @@ struct JourneyCard: View {
     }
 
     private func timeLabel(_ date: Date) -> String {
-        let f = DateFormatter()
-        f.dateFormat = "HH:mm"
-        f.timeZone = operatorTimeZone
-        return f.string(from: date)
+        ClockTime.clock(date, timeZone: operatorTimeZone)
     }
 }
 

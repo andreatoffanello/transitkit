@@ -91,16 +91,15 @@ struct TimeDisplay: View {
                             .alignmentGuide(.lastTextBaseline) { d in d[VerticalAlignment.center] }
                             .padding(.trailing, 4)
                     }
-                    Text(time)
-                        .font(.system(.headline, weight: .semibold).monospacedDigit())
-                        .foregroundStyle(AppTheme.textPrimary)
+                    ClockTime.styledText(time, size: 17, weight: .semibold, design: .default,
+                                         color: AppTheme.textPrimary)
+                        .monospacedDigit()
                         .contentTransition(.numericText())
                 }
 
             case .passed(let time):
-                Text(time)
-                    .font(.system(size: 13, weight: .medium, design: .monospaced))
-                    .foregroundStyle(AppTheme.textTertiary)
+                ClockTime.styledText(time, size: 13, weight: .medium,
+                                     color: AppTheme.textTertiary)
             }
         }
         .frame(minWidth: 52, alignment: .trailing)

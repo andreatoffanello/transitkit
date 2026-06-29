@@ -1,0 +1,16 @@
+items:
+  - q: How is this different from Transit App or Moovit?
+    a: >-
+      They're aggregators optimized for big cities and their own growth. TransitKit
+      gives you a branded, operator-owned channel with push alerts you control —
+      different value, often complementary.
+  - q: What about our existing fare collection vendor?
+    a: >-
+      Standard stays out of fare entirely, or deep-links to your provider (Token
+      Transit, Masabi). Want to own fare payments too? That's a custom module on
+      top of Standard.
+  - q: What do you need from us to get started?
+    a: >-
+      Your GTFS feed URL, your GTFS-realtime feed if you have one, and your brand —
+      logo and colors. That's it. We handle the App Store and Google Play
+      submissions, hosting, and the real-time and push infrastructure.

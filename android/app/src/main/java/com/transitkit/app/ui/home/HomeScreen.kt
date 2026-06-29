@@ -55,6 +55,7 @@ fun HomeScreen(
     onNavigateToStop: (stopId: String, stopName: String) -> Unit = { _, _ -> },
     onNavigateToPlanner: () -> Unit = {},
     onNavigateToLocationPicker: (role: String) -> Unit = {},
+    onNavigateToAssign: (key: String) -> Unit = {},
     plannerViewModel: PlannerViewModel,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
@@ -219,6 +220,7 @@ fun HomeScreen(
                 PlannerHomeBox(
                     plannerViewModel = plannerViewModel,
                     onNavigateToLocationPicker = onNavigateToLocationPicker,
+                    onNavigateToAssign = onNavigateToAssign,
                     onNavigateToPlanner = onNavigateToPlanner,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                 )

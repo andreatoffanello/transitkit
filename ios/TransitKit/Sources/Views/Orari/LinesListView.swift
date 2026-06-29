@@ -16,26 +16,6 @@ struct LinesListView: View {
         self.recentIds = recentIds
     }
 
-    // MARK: - Fuzzy scoring
-
-    /// Returns a score 0-100 for how well `text` matches `query` (subsequence match).
-    private func fuzzyScore(_ text: String, query: String) -> Int {
-        let t = text.lowercased()
-        let q = query.lowercased()
-        // Exact prefix = highest score
-        if t.hasPrefix(q) { return 100 }
-        // Contains = high score
-        if t.contains(q) { return 80 }
-        // Subsequence check
-        var qi = q.startIndex
-        for char in t {
-            if qi < q.endIndex && char == q[qi] {
-                qi = q.index(after: qi)
-            }
-        }
-        return qi == q.endIndex ? 50 : 0
-    }
-
     // MARK: - Deduplication
 
     /// Deduplicates routes by name, keeping the one with the most directions.
@@ -78,10 +58,10 @@ struct LinesListView: View {
                 // Fuzzy-scored filter: compute best score across name, longName and id
                 let scored = result.compactMap { route -> (route: APIRoute, score: Int)? in
                     let score = max(
-                        fuzzyScore(route.name, query: searchQuery),
+                        FuzzySearch.score(route.name, query: searchQuery),
                         max(
-                            fuzzyScore(route.longName ?? "", query: searchQuery),
-                            fuzzyScore(route.id, query: searchQuery)
+                            FuzzySearch.score(route.longName ?? "", query: searchQuery),
+                            FuzzySearch.score(route.id, query: searchQuery)
                         )
                     )
                     return score > 0 ? (route, score) : nil
@@ -273,120 +253,6 @@ struct LinesListView: View {
             .padding(.bottom, 80)
         }
         .scrollDismissesKeyboard(.interactively)
-    }
-}
-
-// MARK: - Line Row Content (glass card)
-
-private struct LineRowContent: View {
-    let route: APIRoute
-    let hasMultipleTypes: Bool
-    let store: ScheduleStore
-    let liveCount: Int
-
-    private var resolvedTransitType: TransitType { route.resolvedTransitType }
-
-    private var lineColor: Color {
-        // Use luminance to detect very light colors that would be invisible against the card background
-        let colorHex = route.color ?? "#000000"
-        let textOnColor = contrastingTextColor(for: colorHex)
-        // If white text is needed on this color, the color is dark enough to use as-is
-        // If black text is needed, the color is very light — fall back to accent
-        return textOnColor == "#FFFFFF" ? Color(hex: colorHex) : AppTheme.accent
-    }
-
-    var body: some View {
-        HStack(spacing: 12) {
-            // Line badge
-            LineBadge(
-                name: route.name,
-                color: route.color ?? "#000000",
-                textColor: route.textColor,
-                transitType: resolvedTransitType,
-                size: .large
-            )
-
-            VStack(alignment: .leading, spacing: 2) {
-                // APIRoute long name
-                Text(route.longName ?? route.name)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(AppTheme.textPrimary)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                // Stop sequence marquee — reads from pre-cached store dictionary (O(1))
-                if let sequence = store.routeStopSequences[route.id], !sequence.isEmpty {
-                    Text(sequence)
-                        .font(.system(size: 11))
-                        .foregroundStyle(AppTheme.textSecondary)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-
-                // Subtitle: transit type (only when multiple types) + direction count (only when >1)
-                let showTransitType = hasMultipleTypes
-                let showDirections = route.directions.count > 1
-                if showTransitType || showDirections {
-                    HStack(spacing: 6) {
-                        if showTransitType {
-                            resolvedTransitType.icon.sized(10)
-                                .foregroundStyle(AppTheme.textTertiary)
-                            Text(resolvedTransitType.displayName)
-                                .font(.caption2.weight(.medium))
-                                .foregroundStyle(AppTheme.textTertiary)
-                        }
-
-                        if showDirections {
-                            if showTransitType {
-                                Text("·")
-                                    .font(.caption2)
-                                    .foregroundStyle(AppTheme.textTertiary)
-                            }
-                            Text("↔ \(route.directions.count)")
-                                .font(.caption2.weight(.medium))
-                                .foregroundStyle(AppTheme.textTertiary)
-                        }
-                    }
-                }
-            }
-
-            Spacer(minLength: 8)
-
-            // Live vehicle count badge — chip statico senza animazione/material:
-            // dentro LazyVStack l'animazione pulsante di LiveBadge combinata col
-            // ri-render del vehicleStore ogni 15s creava layout instability.
-            if liveCount > 0 {
-                HStack(spacing: 4) {
-                    Circle()
-                        .fill(AppTheme.realtimeGreen)
-                        .frame(width: 6, height: 6)
-                    Text("\(liveCount) live")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(AppTheme.realtimeGreen)
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(AppTheme.realtimeGreen.opacity(0.12), in: Capsule())
-                .accessibilityIdentifier("line_live_badge_\(route.id)")
-            }
-
-            LucideIcon.chevronRight.image
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(AppTheme.textTertiary)
-        }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 12)
-        .background(AppTheme.glassFill, in: RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(AppTheme.glassBorder, lineWidth: 1)
-        )
-        .contentShape(Rectangle())
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(String(format: NSLocalizedString("line_badge_a11y", comment: ""), route.name))
-        .accessibilityHint(String(localized: "a11y_hint_show_line_stops"))
-        .accessibilityAddTraits(.isButton)
     }
 }
 

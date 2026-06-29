@@ -132,9 +132,12 @@ struct DepartureRow: View {
             // scheduled time otherwise — zero regression for non-live rows.
             switch timeState {
             case .minutes, .departing:
-                Text(departure.shiftedTime(byMinutes: rtDelay ?? 0))
-                    .font(.system(size: 11, weight: .medium, design: .monospaced))
-                    .foregroundStyle(isSoon ? AppTheme.realtimeGreen.opacity(0.8) : AppTheme.textSecondary)
+                ClockTime.styledText(
+                    ClockTime.clock(gtfs: departure.shiftedTime(byMinutes: rtDelay ?? 0),
+                                    timeZone: scheduleStore.operatorTimezone),
+                    size: 11, weight: .medium,
+                    color: isSoon ? AppTheme.realtimeGreen.opacity(0.8) : AppTheme.textSecondary
+                )
             default:
                 EmptyView()
             }

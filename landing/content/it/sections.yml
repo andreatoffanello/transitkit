@@ -1,0 +1,172 @@
+hero:
+  h1: Riprendi il controllo dell'esperienza dei tuoi passeggeri.
+  sub: >-
+    App native iOS e Android col tuo marchio — con le pagine web di fermata, i QR
+    e le push che gestisci tu — partendo dal GTFS che già pubblichi. Nessun
+    aggregatore, niente investimento iniziale. Online in tre settimane.
+  ctaPrimary:
+    label: Le tue app in 3 settimane
+    to: '#pricing'
+  ctaSecondary:
+    label: Come funziona
+    to: '#how'
+  trustline: iOS + Android nativo · Web + QR · Push che controlli tu
+
+trap:
+  eyebrow: La trappola dell'aggregatore
+  title: Nell'app di un altro, non sei a casa tua.
+  body: >-
+    Moovit e Transit sono pensati per le grandi città e per la loro crescita, non
+    per la tua. Le tue linee sono una voce in un lungo elenco, il tuo marchio
+    passa in secondo piano e il rapporto con i passeggeri lo tengono loro.
+  points:
+    - Il tuo nome e i tuoi colori, soffocati dai loro
+    - Nessuna push che puoi inviare davvero tu
+    - L'attenzione dei passeggeri va all'aggregatore
+    - Nessuna voce in capitolo su cosa sistemare prima
+
+pedigree:
+  eyebrow: Esperienza reale
+  title: Fatto da chi spedisce già app di trasporto.
+  intro: >-
+    Abbiamo spedito app di trasporto in produzione — realtime, journey planner,
+    avvisi di servizio — prima di farne un prodotto. Sono già sugli store.
+  items:
+    - icon: dove.png
+      name: DoVe
+      place: Venezia
+      body: Realtime, orari, avvisi e journey planner in un'unica app multiuso.
+      ios: 'https://apps.apple.com/app/dove-venezia/id6740043854'
+      android: 'https://play.google.com/store/apps/details?id=app.dove.venezia'
+    - icon: movete.png
+      name: Movete
+      place: Roma
+      body: Sei operatori in un'unica app — realtime, orari, avvisi, journey planner.
+      ios: 'https://apps.apple.com/app/movete/id6768432396'
+      android: 'https://play.google.com/store/apps/details?id=com.movete.roma'
+    - icon: waterbus.png
+      name: Venice Airport Waterbus
+      place: Aeroporto di Venezia
+      body: Orari, journey planner e multiservizio per il waterbus dell'aeroporto.
+      ios: 'https://apps.apple.com/app/venice-airport-waterbus/id6767351048'
+      android: 'https://play.google.com/store/apps/details?id=com.veniceairportwaterbus.app'
+
+pillars:
+  eyebrow: Quello che diventa tuo
+  title: Il canale verso i passeggeri, finalmente tuo.
+  items:
+    - icon: smartphone
+      title: App native col tuo marchio
+      body: >-
+        iOS e Android, su App Store e Google Play col tuo nome e i tuoi colori.
+        Disegnate quest'anno, non abbandonate nel 2019.
+    - icon: bell-ring
+      title: Push che controlli tu
+      body: >-
+        Gli avvisi di servizio partono in automatico dal tuo GTFS-RT, oppure
+        scrivi tu — una deviazione, un orario festivo, quello che vuoi. La linea
+        diretta al telefono di ogni passeggero.
+    - icon: qr-code
+      title: Pagine web di fermata + QR
+      body: >-
+        Partenze in tempo reale su una pagina mobile, a ogni fermata. Generi e
+        gestisci i QR code che i passeggeri inquadrano. Nessun download.
+    - icon: wrench
+      title: Manutenzione inclusa
+      body: >-
+        Manutenzione ordinaria e correzioni comprese nell'abbonamento. Gli
+        sviluppi su misura si quotano prima. Niente sorprese.
+
+how:
+  eyebrow: Come funziona
+  title: Tu pubblichi un GTFS pulito. Al resto pensiamo noi.
+  steps:
+    - n: '01'
+      title: Pubblichi il GTFS(-RT)
+      body: L'orario e i feed in tempo reale che già gestisci. L'unica cosa che ci serve.
+    - n: '02'
+      title: Costruiamo e ci mettiamo il tuo marchio
+      body: I tuoi feed, il tuo marchio, su entrambi gli store — più le pagine web di fermata e la console.
+    - n: '03'
+      title: Online in 3 settimane
+      body: Dall'avvio ad App Store e Google Play. Niente investimento iniziale, paghi mensile o annuale.
+  note: >-
+    Nessun cambiamento operativo, niente da sostituire. Non tocchiamo la
+    programmazione dell'esercizio, l'AVL o la bigliettazione.
+
+positioning:
+  eyebrow: Stessa qualità, zero vincoli
+  title: La qualità dei grandi, senza il cantiere dei grandi.
+  body: >-
+    Un'app nativa su misura è un progetto da cinque o sei cifre e un anno del tuo
+    tempo. Un aggregatore è gratis — ed è proprio lì il problema: non è tuo.
+    TransitKit è la terza via.
+  colThem: Un'app su misura
+  colUs: TransitKit
+  rows:
+    - them: $50k–$150k+ all'avvio
+      us: $0 all'avvio, mensile o annuale
+    - them: 6–12 mesi al lancio
+      us: 3 settimane su entrambi gli store
+    - them: La mantiene il tuo team
+      us: Manutenzione inclusa
+    - them: Oppure un aggregatore gratis che si tiene i tuoi passeggeri
+      us: Il tuo marchio, il tuo canale, i tuoi dati
+  anchor: >-
+    Non c'è un vero prezzo di mercato da battere — il metro onesto è un'app su
+    misura: cinque o sei cifre all'avvio e un anno del tuo tempo. TransitKit è lo
+    stesso risultato a $599/mese, zero iniziale, e dalla terza settimana l'app è tua.
+
+proof:
+  eyebrow: L'engine, dal vivo
+  title: Guardalo girare — AppalRider.
+  body: >-
+    La prima app costruita sull'engine TransitKit — live su App Store e Google
+    Play, con orari e tempo reale per Boone, North Carolina.
+
+pricing:
+  eyebrow: Prezzi
+  title: Prezzi trasparenti. Niente investimento iniziale.
+  sub: Un operatore, tutto incluso. Con il piano annuale, due mesi in omaggio.
+  tiers:
+    - name: Standard
+      price: $599
+      period: /mese
+      priceNote: oppure $499/mese col piano annuale
+      tagline: Tutte le feature standard, più manutenzione e correzioni ordinarie.
+      highlighted: true
+      features:
+        - App iOS + Android col tuo marchio
+        - Pagine web di fermata + generatore di QR
+        - 'Tempo reale: posizioni, aggiornamenti corse, avvisi'
+        - Notifiche push che controlli tu
+        - Console operatore
+        - Manutenzione ordinaria e correzioni
+      cta:
+        label: Prenota una demo
+        to: 'mailto:andrea@transitkit.app?subject=TransitKit%20—%20Standard'
+    - name: Su misura
+      price: Su misura
+      period: ''
+      tagline: Tutto lo Standard, più i moduli costruiti per te.
+      features:
+        - Tutto lo Standard
+        - Moduli su misura (es. pagamenti)
+        - Prezzo sul tuo progetto
+      cta:
+        label: Parliamone
+        to: 'mailto:andrea@transitkit.app?subject=TransitKit%20—%20Su%20misura'
+  always:
+    - Niente investimento iniziale
+    - Online in 3 settimane
+    - Fatturazione mensile o annuale
+    - Passeggeri mai tracciati, dati mai venduti
+
+finalCta:
+  title: L'app di trasporto che i tuoi passeggeri meritano.
+  body: >-
+    Mandaci il tuo feed GTFS e il tuo marchio. Questa settimana ti mostriamo la
+    tua app dal vivo, in una demo.
+  cta:
+    label: Prenota una demo
+    to: 'mailto:andrea@transitkit.app?subject=TransitKit%20demo'

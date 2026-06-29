@@ -37,6 +37,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
@@ -62,6 +63,7 @@ internal fun FullScheduleSheet(
     onDismiss: () -> Unit,
 ) {
     val colors = TransitTheme.colors
+    val context = LocalContext.current
     val sortedGroups = remember(departuresByGroup) { departuresByGroup.keys.toList() }
 
     var selectedGroup by remember(sortedGroups) { mutableStateOf(sortedGroups.firstOrNull()) }
@@ -260,7 +262,11 @@ internal fun FullScheduleSheet(
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
                                 Text(
-                                    hour,
+                                    com.transitkit.app.ui.components.ClockTime.annotated(
+                                        com.transitkit.app.ui.components.ClockTime.hourHeader(hour, context),
+                                        MaterialTheme.typography.titleSmall.fontSize,
+                                        colors.textTertiary,
+                                    ),
                                     style = MaterialTheme.typography.titleSmall.copy(fontFamily = FontFamily.Monospace),
                                     color = colors.textTertiary,
                                     fontWeight = FontWeight.SemiBold,
@@ -291,6 +297,7 @@ private fun dayGroupLabel(key: String): String = when (key) {
 @Composable
 private fun FullScheduleRow(dep: ResolvedDeparture) {
     val colors = TransitTheme.colors
+    val context = LocalContext.current
 
     Row(
         modifier = Modifier
@@ -301,7 +308,11 @@ private fun FullScheduleRow(dep: ResolvedDeparture) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
-            dep.departureTime.take(5),
+            com.transitkit.app.ui.components.ClockTime.annotated(
+                com.transitkit.app.ui.components.ClockTime.gtfs(dep.departureTime, context),
+                MaterialTheme.typography.bodyMedium.fontSize,
+                colors.textPrimary,
+            ),
             style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
             color = colors.textPrimary,
             fontWeight = FontWeight.Medium,

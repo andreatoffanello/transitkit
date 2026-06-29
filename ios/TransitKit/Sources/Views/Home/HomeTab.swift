@@ -244,6 +244,15 @@ struct HomeTab: View {
         }
         .padding(.horizontal, 16)
         .frame(height: 44)
+        // Sticky header opaco: senza un background il contenuto scrollato (la card
+        // planner è adaptiveGlass, traslucida) trasparirebbe dietro "AppalRider /
+        // città" creando un overlap di testo. Material frosted esteso nella safe
+        // area top per occludere e dare gerarchia (blur/vibrancy).
+        .background {
+            Rectangle()
+                .fill(.regularMaterial)
+                .ignoresSafeArea(edges: .top)
+        }
     }
 
     // MARK: - Alert Chip

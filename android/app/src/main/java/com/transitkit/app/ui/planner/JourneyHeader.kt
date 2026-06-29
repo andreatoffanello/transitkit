@@ -33,7 +33,10 @@ internal fun JourneyHeader(journey: Journey) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = formatEpochTime(journey.departureTime),
+                text = com.transitkit.app.ui.components.ClockTime.annotated(
+                    formatEpochTime(journey.departureTime),
+                    MaterialTheme.typography.headlineMedium.fontSize, colors.textPrimary,
+                ),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = colors.textPrimary,
@@ -47,7 +50,10 @@ internal fun JourneyHeader(journey: Journey) {
             )
             Spacer(Modifier.width(8.dp))
             Text(
-                text = formatEpochTime(journey.arrivalTime),
+                text = com.transitkit.app.ui.components.ClockTime.annotated(
+                    formatEpochTime(journey.arrivalTime),
+                    MaterialTheme.typography.headlineMedium.fontSize, colors.textPrimary,
+                ),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = colors.textPrimary,

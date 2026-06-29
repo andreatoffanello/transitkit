@@ -1,0 +1,23 @@
+{
+  "nav": {
+    "product": "Prodotto",
+    "how": "Come funziona",
+    "pricing": "Prezzi",
+    "faq": "FAQ",
+    "cta": "Prenota una demo"
+  },
+  "faq": { "heading": "Domande frequenti" },
+  "seo": { "title": "TransitKit — App di trasporto brandizzate per operatori" },
+  "a11y": {
+    "skipToContent": "Vai al contenuto",
+    "openMenu": "Apri menu",
+    "switchLanguage": "Cambia lingua"
+  },
+  "footer": {
+    "tagline": "App di trasporto brandizzate per operatori.",
+    "console": "Console operatore",
+    "privacy": "Privacy",
+    "onePager": "One-pager (PDF)",
+    "rights": "Tutti i diritti riservati."
+  }
+}

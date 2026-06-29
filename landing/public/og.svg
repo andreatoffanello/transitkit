@@ -1,0 +1,23 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sheen" x1="430" y1="210" x2="780" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#cccccc"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="600" cy="300" r="520" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#161616"/>
+      <stop offset="1" stop-color="#000000"/>
+    </radialGradient>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <path d="M60 0H0V60" fill="none" stroke="#ffffff" stroke-opacity="0.05" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="#000000"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <g transform="translate(434,232) scale(4.6)">
+    <path fill="url(#sheen)" d="M55.39,20.78l7.32,14.64c.13.27-.06.58-.36.58h-8.11c-.15,0-.29-.09-.36-.22l-3.44-6.87c-.14-.27-.52-.3-.69-.04l-4.64,6.96c-.07.11-.2.18-.33.18h-8.39c-.22,0-.4-.18-.4-.4v-17.2c0-.22-.18-.4-.4-.4h-8.2c-.22,0-.4.18-.4.4v17.2c0,.22-.18.4-.4.4h-8.2c-.22,0-.4-.18-.4-.4v-17.2c0-.22-.18-.4-.4-.4h-8.2c-.22,0-.4-.18-.4-.4v-8.2c0-.22.18-.4.4-.4h35.2c.22,0,.4.18.4.4v11.78c0,.4.51.55.73.22l8.15-12.22c.07-.11.2-.18.33-.18h8.04c.32,0,.51.36.33.62l-7.17,10.75c-.08.12-.09.27-.02.4Z"/>
+  </g>
+  <text x="600" y="470" text-anchor="middle" font-family="Menlo, monospace" font-size="30" letter-spacing="2" fill="#ffffff" fill-opacity="0.92">Branded transit apps for operators</text>
+  <text x="600" y="520" text-anchor="middle" font-family="Menlo, monospace" font-size="22" letter-spacing="3" fill="#ffffff" fill-opacity="0.42">TRANSITKIT.APP</text>
+</svg>

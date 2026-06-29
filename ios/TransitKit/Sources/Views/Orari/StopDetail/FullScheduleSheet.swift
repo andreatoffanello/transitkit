@@ -204,10 +204,11 @@ struct FullScheduleSheet: View {
                     if let hourDeps = grouped[hour] {
                         // Hour separator
                         HStack(spacing: 6) {
-                            Text(hour)
-                                .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                                .foregroundStyle(AppTheme.textTertiary)
-                                .frame(width: 24, alignment: .trailing)
+                            ClockTime.styledText(
+                                ClockTime.hourHeader(gtfsHour: hour, timeZone: store.operatorTimezone),
+                                size: 13, weight: .semibold, color: AppTheme.textTertiary
+                            )
+                            .frame(width: 46, alignment: .trailing)
                             Rectangle()
                                 .fill(AppTheme.separatorLine)
                                 .frame(height: 0.5)
@@ -219,10 +220,11 @@ struct FullScheduleSheet: View {
                         // Departure rows
                         ForEach(hourDeps) { dep in
                             HStack(spacing: 10) {
-                                Text(dep.time)
-                                    .font(.system(size: 15, weight: .medium, design: .monospaced))
-                                    .foregroundStyle(AppTheme.textPrimary)
-                                    .frame(width: 52, alignment: .leading)
+                                ClockTime.styledText(
+                                    ClockTime.clock(gtfs: dep.time, timeZone: store.operatorTimezone),
+                                    size: 15, weight: .medium, color: AppTheme.textPrimary
+                                )
+                                .frame(width: 74, alignment: .leading)
 
                                 LineBadge(departure: dep, size: .large)
 

@@ -80,6 +80,8 @@ fun MappaScreen(
     val tripDelays by viewModel.tripDelays.collectAsStateWithLifecycle()
     val liveCountByRouteId by viewModel.liveCountByRouteId.collectAsStateWithLifecycle()
     val routePolylines by viewModel.routePolylines.collectAsStateWithLifecycle()
+    val allStops by viewModel.allStops.collectAsStateWithLifecycle()
+    val stopSequences by viewModel.stopSequencesByRouteId.collectAsStateWithLifecycle()
 
     // Location permission
     val locationPermission = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -615,11 +617,12 @@ fun MappaScreen(
         if (showLinePicker) {
             LinePickerSheet(
                 routes = routes,
+                stops = allStops,
                 liveCounts = liveCountByRouteId,
+                stopSequences = stopSequences,
                 onDismiss = { showLinePicker = false },
-                onSelectRoute = { routeId ->
-                    viewModel.selectRoute(routeId)
-                },
+                onSelectRoute = { routeId -> viewModel.selectRoute(routeId) },
+                onSelectStop = { stop -> viewModel.selectStop(stop) },
             )
         }
     }

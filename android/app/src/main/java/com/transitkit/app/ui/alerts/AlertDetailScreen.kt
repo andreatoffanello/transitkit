@@ -58,9 +58,9 @@ import com.transitkit.app.data.model.AlertSeverity
 import com.transitkit.app.data.model.ResolvedStop
 import com.transitkit.app.data.model.ScheduleRoute
 import com.transitkit.app.data.model.ServiceAlert
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import android.content.Context
+import com.transitkit.app.ui.components.ClockTime
+import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
@@ -291,6 +291,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.metadataCardItem(
 
     item {
         val colors = TransitTheme.colors
+        val context = LocalContext.current
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
@@ -303,7 +304,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.metadataCardItem(
                     MetadataRow(
                         icon = LucideIcons.Clock,
                         label = stringResource(R.string.alert_meta_when),
-                        value = formatPeriod(periodStart, periodEnd),
+                        value = formatPeriod(periodStart, periodEnd, context),
                     )
                 }
                 if (hasCause) {
@@ -364,14 +365,10 @@ private fun MetadataRow(icon: Int, label: String, value: String?) {
     }
 }
 
-private val periodFormatter: SimpleDateFormat by lazy {
-    SimpleDateFormat("d MMM, HH:mm", Locale.getDefault())
-}
-
-private fun formatPeriod(start: Long?, end: Long?): String {
-    val fmt = periodFormatter
-    val s = start?.let { fmt.format(Date(it * 1000L)) }
-    val e = end?.let { fmt.format(Date(it * 1000L)) }
+private fun formatPeriod(start: Long?, end: Long?, context: Context): String {
+    val tz = TimeZone.getDefault()
+    val s = start?.let { ClockTime.dayAtTime(it * 1000L, tz, context) }
+    val e = end?.let { ClockTime.dayAtTime(it * 1000L, tz, context) }
     return when {
         s != null && e != null -> "$s — $e"
         s != null -> "From $s"

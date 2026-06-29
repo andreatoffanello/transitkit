@@ -1,0 +1,23 @@
+{
+  "nav": {
+    "product": "Product",
+    "how": "How it works",
+    "pricing": "Pricing",
+    "faq": "FAQ",
+    "cta": "Book a demo"
+  },
+  "faq": { "heading": "Frequently asked questions" },
+  "seo": { "title": "TransitKit — Branded transit apps for operators" },
+  "a11y": {
+    "skipToContent": "Skip to content",
+    "openMenu": "Open menu",
+    "switchLanguage": "Switch language"
+  },
+  "footer": {
+    "tagline": "Branded transit apps for operators.",
+    "console": "Operator console",
+    "privacy": "Privacy",
+    "onePager": "One-pager (PDF)",
+    "rights": "All rights reserved."
+  }
+}

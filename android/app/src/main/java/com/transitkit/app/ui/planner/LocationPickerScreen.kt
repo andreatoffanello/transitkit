@@ -7,10 +7,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,6 +17,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -35,6 +35,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +47,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -54,59 +56,93 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.data.api.GeocodeResult
+import com.transitkit.app.data.api.MapboxGeocodingService
 import com.transitkit.app.data.model.PlannerLocation
 import com.transitkit.app.data.model.ResolvedStop
+import com.transitkit.app.data.store.SavedPlace
+import com.transitkit.app.data.store.SavedPlaceKeys
+import com.transitkit.app.ui.components.LineBadge
+import com.transitkit.app.ui.components.LineBadgeSize
 import com.transitkit.app.ui.components.stopIcon
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 /**
- * Full-screen stop / location picker.
+ * Full-screen stop / location picker. Doppio uso via [assignKey]:
+ * - null: seleziona una posizione come origine/destinazione del viaggio.
+ * - non-null: modalità assign — la stessa UI ma salva solo la scorciatoia
+ *   casa/lavoro e torna indietro senza toccare il viaggio. Parità iOS
+ *   LocationPickerSearch + LocationPickerAssignSheet.
+ *
+ * La pagina assign è raggiunta via push navigation (route
+ * `location_picker_assign/{key}`) — MAI tramite Dialog/BottomSheet.
  *
  * role   = "origin" | "destination"
- * source = "home"   | "planner"
- *
- * Empty-state shows quick choices (My location / Pick on map) + Nearby + Recent.
- * Typing filters the full stop list.
+ * assignKey = null | "home" | "work"
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocationPickerScreen(
     role: String,
     source: String,
+    assignKey: String? = null,
     plannerViewModel: PlannerViewModel,
     onBack: () -> Unit,
     onNavigateToMapPicker: () -> Unit,
+    onNavigateToAssign: ((key: String) -> Unit)? = null,
 ) {
     val colors = TransitTheme.colors
     val haptic = LocalHapticFeedback.current
+    val scope = rememberCoroutineScope()
+    val isAssigning = assignKey != null
+
     val allStops by plannerViewModel.allStops.collectAsStateWithLifecycle()
     val currentLocation by plannerViewModel.currentLocation.collectAsStateWithLifecycle()
     val recentStops by plannerViewModel.recentStops.collectAsStateWithLifecycle()
+    val savedPlaces by plannerViewModel.savedPlacesStore.savedPlaces.collectAsStateWithLifecycle()
 
-    var query by remember { mutableStateOf("") }
-    var isFiltering by remember { mutableStateOf(false) }
+    // In assign mode, pre-fill the search field with the existing saved address (if any).
+    val initialQuery = remember(assignKey) {
+        if (assignKey != null) plannerViewModel.savedPlacesStore.savedPlace(assignKey)?.name ?: "" else ""
+    }
+    var query by remember { mutableStateOf(initialQuery) }
+    var isSearching by remember { mutableStateOf(false) }
+    var geocodeResults by remember { mutableStateOf<List<GeocodeResult>>(emptyList()) }
     val focusRequester = remember { FocusRequester() }
 
-    val filtered = remember(query, allStops) {
+    val mapCenter = plannerViewModel.mapFallbackCenter
+    val language = java.util.Locale.getDefault().language.takeIf { it.isNotBlank() } ?: "en"
+    val operatorCountry = plannerViewModel.operatorCountry
+
+    // Filtered GTFS stops
+    val filteredStops = remember(query, allStops) {
         if (query.isBlank()) emptyList()
         else allStops.asSequence()
             .filter { it.name.contains(query.trim(), ignoreCase = true) }
-            .take(60)
+            .take(40)
             .toList()
     }
 
-    val nearby = remember(currentLocation, allStops) {
-        if (currentLocation == null || allStops.isEmpty()) emptyList()
-        else plannerViewModel.nearbyStops(limit = 5)
-    }
-
+    // Debounced forward geocode (only when query is long enough)
     LaunchedEffect(query) {
-        isFiltering = query.isNotBlank()
-        if (query.isNotBlank()) {
-            delay(120)
-            isFiltering = false
+        val trimmed = query.trim()
+        if (trimmed.length < 2) {
+            geocodeResults = emptyList()
+            isSearching = query.isNotBlank()
+            return@LaunchedEffect
         }
+        isSearching = true
+        delay(300)
+        val bias = currentLocation ?: Pair(mapCenter.first, mapCenter.second)
+        geocodeResults = MapboxGeocodingService.forwardGeocode(
+            query = trimmed,
+            biasNear = bias,
+            language = language,
+            country = operatorCountry,
+        )
+        isSearching = false
     }
 
     LaunchedEffect(Unit) {
@@ -114,34 +150,46 @@ fun LocationPickerScreen(
         focusRequester.requestFocus()
     }
 
-    fun onStopSelected(stop: ResolvedStop) {
-        val loc = PlannerLocation.fromStop(stop)
+    // Commit in assign mode → persist scorciatoia e torna indietro.
+    // Commit in select mode → aggiorna origine/destinazione del planner.
+    fun commit(name: String, lat: Double, lon: Double, gtfsId: String?, kind: PlannerLocation.Kind) {
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-        when (source) {
-            "home" -> if (role == "origin") plannerViewModel.setHomeOrigin(loc)
-                      else plannerViewModel.setHomeDestination(loc)
-            else   -> if (role == "origin") plannerViewModel.setOrigin(loc)
-                      else plannerViewModel.setDestination(loc)
+        if (assignKey != null) {
+            if (kind == PlannerLocation.Kind.CurrentLocation) {
+                // Resolve readable name before saving
+                scope.launch {
+                    val resolved = MapboxGeocodingService.reverseGeocode(lat, lon, language)
+                    plannerViewModel.savedPlacesStore.setPlace(assignKey, resolved?.takeIf { it.isNotBlank() } ?: name, lat, lon)
+                    onBack()
+                }
+            } else {
+                plannerViewModel.savedPlacesStore.setPlace(assignKey, name, lat, lon)
+                onBack()
+            }
+        } else {
+            val loc = PlannerLocation(kind = kind, name = name, lat = lat, lon = lon, stopId = gtfsId)
+            when (source) {
+                "home" -> if (role == "origin") plannerViewModel.setHomeOrigin(loc)
+                          else plannerViewModel.setHomeDestination(loc)
+                else   -> if (role == "origin") plannerViewModel.setOrigin(loc)
+                          else plannerViewModel.setDestination(loc)
+            }
+            onBack()
         }
-        onBack()
     }
 
-    fun onUseCurrentLocation() {
-        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-        val loc = currentLocation ?: return
-        val planner = PlannerLocation(
-            kind = PlannerLocation.Kind.CurrentLocation,
-            name = "My location",
-            lat = loc.first,
-            lon = loc.second,
-        )
-        when (source) {
-            "home" -> if (role == "origin") plannerViewModel.setHomeOrigin(planner)
-                      else plannerViewModel.setHomeDestination(planner)
-            else   -> if (role == "origin") plannerViewModel.setOrigin(planner)
-                      else plannerViewModel.setDestination(planner)
-        }
-        onBack()
+    val myLocationLabel = stringResource(R.string.planner_picker_my_location)
+
+    val title = when (assignKey) {
+        SavedPlaceKeys.HOME -> stringResource(R.string.planner_picker_assign_home)
+        SavedPlaceKeys.WORK -> stringResource(R.string.planner_picker_assign_work)
+        else -> if (role == "origin") stringResource(R.string.planner_picker_origin_title)
+                else stringResource(R.string.planner_picker_destination_title)
+    }
+
+    val nearby = remember(currentLocation, allStops) {
+        if (currentLocation == null || allStops.isEmpty()) emptyList()
+        else plannerViewModel.nearbyStops(limit = 5)
     }
 
     Scaffold(
@@ -149,10 +197,7 @@ fun LocationPickerScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = if (role == "origin")
-                            stringResource(R.string.planner_picker_origin_title)
-                        else
-                            stringResource(R.string.planner_picker_destination_title),
+                        text = title,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                     )
@@ -168,15 +213,10 @@ fun LocationPickerScreen(
                 },
                 actions = {
                     TextButton(onClick = onBack) {
-                        Text(
-                            stringResource(R.string.cancel),
-                            color = colors.accent,
-                        )
+                        Text(stringResource(R.string.cancel), color = colors.accent)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colors.background,
-                ),
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.background),
             )
         },
         containerColor = colors.background,
@@ -221,26 +261,47 @@ fun LocationPickerScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 12.dp)
                     .focusRequester(focusRequester)
-                    .semantics { contentDescription = "Search stops" },
+                    .semantics { contentDescription = "Search stops and places" },
             )
 
             if (query.isEmpty()) {
                 EmptyStateContent(
+                    isAssigning = isAssigning,
                     locationAvailable = currentLocation != null,
-                    onUseLocation = ::onUseCurrentLocation,
+                    savedHome = savedPlaces[SavedPlaceKeys.HOME],
+                    savedWork = savedPlaces[SavedPlaceKeys.WORK],
+                    onUseSaved = { place ->
+                        commit(place.name, place.lat, place.lon, null, PlannerLocation.Kind.Place)
+                    },
+                    onAssign = { key -> onNavigateToAssign?.invoke(key) },
+                    onRemove = { key -> plannerViewModel.savedPlacesStore.removePlace(key) },
+                    onUseLocation = {
+                        val loc = currentLocation
+                        if (loc != null) {
+                            commit(myLocationLabel, loc.first, loc.second, null, PlannerLocation.Kind.CurrentLocation)
+                        }
+                    },
                     onPickOnMap = {
                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                         onNavigateToMapPicker()
                     },
                     nearby = nearby,
                     recents = recentStops,
-                    onStopSelected = ::onStopSelected,
+                    onStopSelected = { stop ->
+                        commit(stop.name, stop.lat, stop.lon, stop.id, PlannerLocation.Kind.Stop)
+                    },
                 )
             } else {
-                StopResultsList(
-                    isFiltering = isFiltering,
-                    results = filtered,
-                    onSelect = ::onStopSelected,
+                MixedResultsList(
+                    isSearching = isSearching,
+                    stops = filteredStops,
+                    places = geocodeResults,
+                    onSelectStop = { stop ->
+                        commit(stop.name, stop.lat, stop.lon, stop.id, PlannerLocation.Kind.Stop)
+                    },
+                    onSelectPlace = { result ->
+                        commit(result.name, result.lat, result.lon, null, PlannerLocation.Kind.Place)
+                    },
                 )
             }
         }
@@ -251,7 +312,13 @@ fun LocationPickerScreen(
 
 @Composable
 private fun EmptyStateContent(
+    isAssigning: Boolean,
     locationAvailable: Boolean,
+    savedHome: SavedPlace?,
+    savedWork: SavedPlace?,
+    onUseSaved: (SavedPlace) -> Unit,
+    onAssign: (String) -> Unit,
+    onRemove: (String) -> Unit,
     onUseLocation: () -> Unit,
     onPickOnMap: () -> Unit,
     nearby: List<Pair<ResolvedStop, Double>>,
@@ -264,13 +331,19 @@ private fun EmptyStateContent(
     ) {
         item("quick_choices") {
             QuickChoicesSection(
+                isAssigning = isAssigning,
                 locationAvailable = locationAvailable,
+                savedHome = savedHome,
+                savedWork = savedWork,
+                onUseSaved = onUseSaved,
+                onAssign = onAssign,
+                onRemove = onRemove,
                 onUseLocation = onUseLocation,
                 onPickOnMap = onPickOnMap,
             )
         }
 
-        if (nearby.isNotEmpty()) {
+        if (!isAssigning && nearby.isNotEmpty()) {
             item("nearby_header") {
                 SectionHeader(text = stringResource(R.string.planner_picker_section_nearby))
             }
@@ -284,7 +357,7 @@ private fun EmptyStateContent(
             }
         }
 
-        if (recents.isNotEmpty()) {
+        if (!isAssigning && recents.isNotEmpty()) {
             item("recent_header") {
                 SectionHeader(text = stringResource(R.string.planner_picker_section_recent))
             }
@@ -323,11 +396,17 @@ private fun IndentedDivider() {
     )
 }
 
-// ── Quick choices ─────────────────────────────────────────────────────────────
+// ── Quick choices + saved places ─────────────────────────────────────────────
 
 @Composable
 private fun QuickChoicesSection(
+    isAssigning: Boolean,
     locationAvailable: Boolean,
+    savedHome: SavedPlace?,
+    savedWork: SavedPlace?,
+    onUseSaved: (SavedPlace) -> Unit,
+    onAssign: (String) -> Unit,
+    onRemove: (String) -> Unit,
     onUseLocation: () -> Unit,
     onPickOnMap: () -> Unit,
 ) {
@@ -338,7 +417,27 @@ private fun QuickChoicesSection(
             .padding(horizontal = 16.dp, vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        // Primary action: My location (filled accent background when available)
+        // Casa/Lavoro — non mostrare in assign mode (stai già impostando una)
+        if (!isAssigning) {
+            SavedPlaceRow(
+                iconRes = LucideIcons.Home,
+                title = stringResource(R.string.planner_picker_home),
+                saved = savedHome,
+                onUse = { savedHome?.let(onUseSaved) },
+                onAssign = { onAssign(SavedPlaceKeys.HOME) },
+                onRemove = { onRemove(SavedPlaceKeys.HOME) },
+            )
+            SavedPlaceRow(
+                iconRes = LucideIcons.Briefcase,
+                title = stringResource(R.string.planner_picker_work),
+                saved = savedWork,
+                onUse = { savedWork?.let(onUseSaved) },
+                onAssign = { onAssign(SavedPlaceKeys.WORK) },
+                onRemove = { onRemove(SavedPlaceKeys.WORK) },
+            )
+        }
+
+        // My location
         QuickChoiceRow(
             iconRes = LucideIcons.Crosshair,
             iconTint = if (locationAvailable) colors.accent else colors.textTertiary,
@@ -352,7 +451,8 @@ private fun QuickChoicesSection(
             enabled = locationAvailable,
             onClick = onUseLocation,
         )
-        // Secondary action: Pick on map (lighter visual weight)
+
+        // Pick on map
         QuickChoiceRow(
             iconRes = LucideIcons.MapPin,
             iconTint = colors.textSecondary,
@@ -363,6 +463,119 @@ private fun QuickChoicesSection(
             enabled = true,
             onClick = onPickOnMap,
         )
+    }
+}
+
+/** Scorciatoia casa/lavoro. Impostata → tap = usa, menu ⋯ = Modifica/Rimuovi.
+ *  Non impostata → tap = apre la pagina assign (via onAssign), chevron a destra. */
+@Composable
+private fun SavedPlaceRow(
+    iconRes: Int,
+    title: String,
+    saved: SavedPlace?,
+    onUse: () -> Unit,
+    onAssign: () -> Unit,
+    onRemove: () -> Unit,
+) {
+    val colors = TransitTheme.colors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { if (saved != null) onUse() else onAssign() }
+            .background(colors.bgSecondary, RoundedCornerShape(14.dp))
+            .padding(start = 14.dp, top = 12.dp, bottom = 12.dp, end = 4.dp)
+            .semantics { testTag = "saved_place_row_$title" },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .background(colors.accent.copy(alpha = 0.12f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painterResource(iconRes),
+                contentDescription = null,
+                tint = colors.accent,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                color = colors.textPrimary,
+            )
+            Text(
+                text = saved?.name ?: stringResource(R.string.planner_picker_set_address),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.textTertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        if (saved != null) {
+            var menuExpanded by remember { mutableStateOf(false) }
+            Box {
+                IconButton(
+                    onClick = { menuExpanded = true },
+                    modifier = Modifier
+                        .size(36.dp)
+                        .semantics { testTag = "saved_place_menu_$title" },
+                ) {
+                    Icon(
+                        painterResource(LucideIcons.MoreHorizontal),
+                        contentDescription = title,
+                        tint = colors.textTertiary,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+                DropdownMenu(
+                    expanded = menuExpanded,
+                    onDismissRequest = { menuExpanded = false },
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.planner_picker_edit)) },
+                        leadingIcon = {
+                            Icon(
+                                painterResource(LucideIcons.Pencil),
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        },
+                        onClick = { menuExpanded = false; onAssign() },
+                    )
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                stringResource(R.string.planner_picker_remove),
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                painterResource(LucideIcons.Trash2),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        },
+                        onClick = { menuExpanded = false; onRemove() },
+                    )
+                }
+            }
+        } else {
+            Icon(
+                painterResource(LucideIcons.ChevronRight),
+                contentDescription = null,
+                tint = colors.textTertiary,
+                modifier = Modifier
+                    .size(16.dp)
+                    .padding(end = 8.dp),
+            )
+        }
     }
 }
 
@@ -378,7 +591,10 @@ private fun QuickChoiceRow(
     onClick: () -> Unit,
 ) {
     val colors = TransitTheme.colors
-    val containerColor = if (isPrimary) colors.bgSecondary else colors.glassFill.copy(alpha = 0.5f)
+    // Use bgSecondary for both variants: glassFill.copy(alpha=0.5f) replaces (not
+    // multiplies) the alpha and renders as 50%-white in dark mode — a light-gray
+    // card that makes icon and text illegible. bgSecondary is dark-aware.
+    val containerColor = colors.bgSecondary
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -423,17 +639,19 @@ private fun QuickChoiceRow(
     }
 }
 
-// ── Search results ────────────────────────────────────────────────────────────
+// ── Mixed results (stops + places) ───────────────────────────────────────────
 
 @Composable
-private fun StopResultsList(
-    isFiltering: Boolean,
-    results: List<ResolvedStop>,
-    onSelect: (ResolvedStop) -> Unit,
+private fun MixedResultsList(
+    isSearching: Boolean,
+    stops: List<ResolvedStop>,
+    places: List<GeocodeResult>,
+    onSelectStop: (ResolvedStop) -> Unit,
+    onSelectPlace: (GeocodeResult) -> Unit,
 ) {
     val colors = TransitTheme.colors
     when {
-        isFiltering && results.isEmpty() -> {
+        isSearching && stops.isEmpty() && places.isEmpty() -> {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -447,7 +665,7 @@ private fun StopResultsList(
                 )
             }
         }
-        results.isEmpty() -> {
+        stops.isEmpty() && places.isEmpty() -> {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -469,14 +687,26 @@ private fun StopResultsList(
             }
         }
         else -> {
+            // Partiziona: fermate GTFS (più rilevanti) + luoghi/indirizzi, con header sezione.
+            // Parità iOS resultsList: "FERMATE" / "LUOGHI".
             LazyColumn(contentPadding = PaddingValues(bottom = 32.dp)) {
-                items(results, key = { "result_${it.id}" }) { stop ->
-                    StopResultRow(
-                        stop = stop,
-                        distanceMeters = null,
-                        onClick = { onSelect(stop) },
-                    )
-                    IndentedDivider()
+                if (stops.isNotEmpty()) {
+                    item("header_stops") {
+                        SectionHeader(stringResource(R.string.planner_picker_section_stops))
+                    }
+                    items(stops, key = { "stop_${it.id}" }) { stop ->
+                        StopResultRow(stop = stop, distanceMeters = null, onClick = { onSelectStop(stop) })
+                        IndentedDivider()
+                    }
+                }
+                if (places.isNotEmpty()) {
+                    item("header_places") {
+                        SectionHeader(stringResource(R.string.planner_picker_section_places))
+                    }
+                    items(places, key = { "place_${it.id}" }) { result ->
+                        PlaceResultRow(result = result, onClick = { onSelectPlace(result) })
+                        IndentedDivider()
+                    }
                 }
             }
         }
@@ -513,7 +743,7 @@ private fun StopResultRow(
                 modifier = Modifier.size(16.dp),
             )
         }
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = stop.name,
                 style = MaterialTheme.typography.bodyLarge,
@@ -522,25 +752,88 @@ private fun StopResultRow(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            val sub = when {
-                distanceMeters != null && stop.routeNames.isNotEmpty() ->
-                    stringResource(R.string.planner_picker_walking_distance, distanceMeters.roundToInt()) +
-                        " · " + stop.routeNames.take(4).joinToString(" · ")
-                distanceMeters != null ->
-                    stringResource(R.string.planner_picker_walking_distance, distanceMeters.roundToInt())
-                stop.routeNames.isNotEmpty() ->
-                    stop.routeNames.take(5).joinToString(" · ")
-                else -> ""
-            }
-            if (sub.isNotEmpty()) {
+            // Distance label (if applicable)
+            if (distanceMeters != null) {
                 Text(
-                    text = sub,
+                    text = stringResource(R.string.planner_picker_walking_distance, distanceMeters.roundToInt()),
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.textTertiary,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                 )
             }
+            // Line badges: use colored pills when color data is available,
+            // fallback to plain text when routeColors is empty (legacy data).
+            if (stop.routeNames.isNotEmpty()) {
+                if (stop.routeColors.isNotEmpty()) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        stop.routeNames.take(5).forEachIndexed { i, routeName ->
+                            LineBadge(
+                                name = routeName.take(5),
+                                colorHex = stop.routeColors.getOrNull(i),
+                                size = LineBadgeSize.Small,
+                            )
+                        }
+                    }
+                } else {
+                    Text(
+                        text = stop.routeNames.take(5).joinToString(" · "),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.textTertiary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlaceResultRow(
+    result: GeocodeResult,
+    onClick: () -> Unit,
+) {
+    val colors = TransitTheme.colors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .semantics { contentDescription = result.name },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .background(colors.glassFill, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painterResource(LucideIcons.MapPin),
+                contentDescription = null,
+                tint = colors.textSecondary,
+                modifier = Modifier.size(16.dp),
+            )
+        }
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = result.name,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                color = colors.textPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            val subtitle = result.locality?.takeIf { it.isNotBlank() }
+                ?: stringResource(R.string.planner_picker_result_place)
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.textTertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }

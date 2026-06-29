@@ -235,15 +235,17 @@
     <string name="cd_vista_2d">2D view</string>
 
     <!-- Mappa — line picker pill + sheet -->
-    <string name="mappa_cerca_linea">Search route</string>
-    <string name="mappa_line_picker_title">Search route</string>
-    <string name="mappa_line_picker_placeholder">Route name or number…</string>
+    <string name="mappa_cerca_linea">Search line or stop</string>
+    <string name="mappa_line_picker_title">Search</string>
+    <string name="mappa_line_picker_placeholder">Search line or stop</string>
     <string name="mappa_line_picker_section_metro">METRO</string>
     <string name="mappa_line_picker_section_tram">TRAM</string>
     <string name="mappa_line_picker_section_rail">RAIL</string>
     <string name="mappa_line_picker_section_bus">BUS</string>
     <string name="mappa_line_picker_section_ferry">FERRY</string>
     <string name="mappa_line_picker_section_other">OTHER</string>
+    <string name="mappa_line_picker_section_lines">LINES</string>
+    <string name="mappa_line_picker_section_stops">STOPS</string>
     <string name="mappa_rimuovi_overlay">Remove overlay</string>
 
     <!-- Mappa — stop sheet -->
@@ -253,7 +255,6 @@
 
     <!-- Mappa — vehicle sheet -->
     <string name="mappa_veicolo_live">Live vehicle</string>
-    <string name="mappa_live">Live</string>
     <string name="mappa_in_ritardo">%d min late</string>
     <string name="mappa_in_anticipo">%d min early</string>
     <string name="mappa_in_orario">On time</string>
@@ -494,8 +495,8 @@
     <string name="planner_picker_location_inactive">Location unavailable</string>
     <string name="planner_picker_pick_on_map">Pick on map</string>
     <string name="planner_picker_pick_on_map_sub">Move the map to center on a stop</string>
-    <string name="planner_picker_search_placeholder">Search stop…</string>
-    <string name="planner_picker_no_results">No stops found</string>
+    <string name="planner_picker_search_placeholder">Search stops and places…</string>
+    <string name="planner_picker_no_results">No results found</string>
     <string name="planner_picker_confirm">Confirm</string>
     <string name="planner_picker_map_hint">Tap a stop to select it</string>
     <string name="planner_picker_loading_stops">Loading stops…</string>
@@ -506,6 +507,18 @@
     <string name="planner_picker_selected_stop">Selected stop</string>
     <string name="planner_picker_map_resolving">Resolving location…</string>
     <string name="planner_picker_no_stop_nearby">No nearby stop — center the map on a stop</string>
+    <!-- Saved places (casa/lavoro) — parità iOS -->
+    <string name="planner_picker_home">Home</string>
+    <string name="planner_picker_work">Work</string>
+    <string name="planner_picker_set_address">Set address</string>
+    <string name="planner_picker_edit">Edit</string>
+    <string name="planner_picker_remove">Remove</string>
+    <string name="planner_picker_assign_home">Set Home address</string>
+    <string name="planner_picker_assign_work">Set Work address</string>
+    <!-- Risultati misti fermate + luoghi -->
+    <string name="planner_picker_section_stops">Stops</string>
+    <string name="planner_picker_section_places">Places</string>
+    <string name="planner_picker_result_place">Place</string>
 
     <!-- iOS parity: home sections (sentence case) -->
     <string name="home_section_favorites">Favorite stops</string>

@@ -76,7 +76,9 @@ fun JourneyCard(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(
-                        text = depFmt,
+                        text = com.transitkit.app.ui.components.ClockTime.annotated(
+                            depFmt, MaterialTheme.typography.headlineSmall.fontSize, colors.textPrimary,
+                        ),
                         style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                         color = colors.textPrimary,
                     )
@@ -87,7 +89,9 @@ fun JourneyCard(
                         modifier = Modifier.size(14.dp),
                     )
                     Text(
-                        text = arrFmt,
+                        text = com.transitkit.app.ui.components.ClockTime.annotated(
+                            arrFmt, MaterialTheme.typography.headlineSmall.fontSize, colors.textPrimary,
+                        ),
                         style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                         color = colors.textPrimary,
                     )

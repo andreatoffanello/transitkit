@@ -1,50 +1,78 @@
 import SwiftUI
 import MapKit
 
-/// Line picker bottom sheet.
+/// Line + stop picker, opened from the map.
 ///
-/// Movete-style: custom search field at top, sectioned list by transit type
-/// (METRO / TRAM / BUS / FERRY / …), each row shows route color badge + name +
-/// live vehicle count. Tapping a row selects the route on the map.
+/// Reuses the exact card rows of the Lines and Stops tabs (`LineRowContent` /
+/// `StopRowContent`) and the shared `FuzzySearch` scorer, so the search here is
+/// identical to the rest of the app — no per-screen drift.
+///
+/// - Empty query → browse all lines (live-first, then alphabetical).
+/// - Typing → fuzzy results: **lines first** (they have precedence on the map),
+///   then matching **stops** under a "Fermate" header. Stops only ever surface
+///   once the user starts typing.
 struct LinePickerSheet: View {
     @Environment(ScheduleStore.self) private var store
     @Environment(VehicleStore.self) private var vehicleStore
     @Environment(\.dismiss) private var dismiss
 
     let onSelect: (APIRoute) -> Void
+    let onSelectStop: (ResolvedStop) -> Void
 
     @State private var searchText = ""
     @FocusState private var searchFocused: Bool
 
-    /// Section ordering — matches transit hierarchy (metro first, smaller modes last).
-    private let sectionOrder: [TransitType] = [
-        .metro, .rail, .tram, .monorail, .trolleybus, .bus, .ferry,
-        .cable_tram, .gondola, .funicular
-    ]
-
-    private var filtered: [APIRoute] {
-        guard !searchText.isEmpty else { return store.routes }
-        let q = searchText.lowercased()
-        return store.routes.filter {
-            $0.name.lowercased().contains(q) ||
-            ($0.longName ?? "").lowercased().contains(q)
-        }
+    private var hasMultipleTransitTypes: Bool {
+        Set(store.routes.map { $0.resolvedTransitType }).count > 1
     }
 
-    /// Group by transit type and sort: live count desc, then name asc.
-    private var grouped: [(TransitType, [APIRoute])] {
-        let byType = Dictionary(grouping: filtered) { $0.resolvedTransitType }
-        return sectionOrder.compactMap { type -> (TransitType, [APIRoute])? in
-            guard let routes = byType[type], !routes.isEmpty else { return nil }
-            let sorted = routes.sorted { a, b in
-                let aCount = vehicleStore.liveCount(forRouteId: a.id)
-                let bCount = vehicleStore.liveCount(forRouteId: b.id)
-                if aCount != bCount { return aCount > bCount }
+    private var isSearching: Bool { !searchText.isEmpty }
+
+    // MARK: - Filtering
+
+    /// Lines — empty query: live-first then alphabetical. Typing: fuzzy-scored.
+    private var lineResults: [APIRoute] {
+        guard isSearching else {
+            return store.routes.sorted { a, b in
+                let la = vehicleStore.liveCount(forRouteId: a.id)
+                let lb = vehicleStore.liveCount(forRouteId: b.id)
+                if la != lb { return la > lb }
                 return a.name.localizedStandardCompare(b.name) == .orderedAscending
             }
-            return (type, sorted)
         }
+        let scored = store.routes.compactMap { route -> (route: APIRoute, score: Int)? in
+            let score = max(
+                FuzzySearch.score(route.name, query: searchText),
+                max(
+                    FuzzySearch.score(route.longName ?? "", query: searchText),
+                    FuzzySearch.score(route.id, query: searchText)
+                )
+            )
+            return score > 0 ? (route, score) : nil
+        }
+        return scored
+            .sorted { $0.score != $1.score ? $0.score > $1.score : $0.route.name.localizedStandardCompare($1.route.name) == .orderedAscending }
+            .map(\.route)
     }
+
+    /// Stops — only surfaced while typing; lines take precedence on the map.
+    private var stopResults: [ResolvedStop] {
+        guard isSearching else { return [] }
+        let scored = store.stops.compactMap { stop -> (stop: ResolvedStop, score: Int)? in
+            let score = max(
+                FuzzySearch.score(stop.name, query: searchText),
+                FuzzySearch.score(stop.id, query: searchText)
+            )
+            return score > 0 ? (stop, score) : nil
+        }
+        return scored
+            .sorted { $0.score != $1.score ? $0.score > $1.score : $0.stop.name.localizedStandardCompare($1.stop.name) == .orderedAscending }
+            .map(\.stop)
+    }
+
+    private var hasResults: Bool { !lineResults.isEmpty || !stopResults.isEmpty }
+
+    // MARK: - Body
 
     var body: some View {
         NavigationStack {
@@ -56,24 +84,14 @@ struct LinePickerSheet: View {
 
                 Divider()
 
-                if grouped.isEmpty {
-                    emptyState
+                if hasResults {
+                    resultsList
                 } else {
-                    ScrollView {
-                        LazyVStack(spacing: 0, pinnedViews: .sectionHeaders) {
-                            ForEach(grouped, id: \.0) { type, routes in
-                                Section {
-                                    liveRoutesGroup(routes: routes)
-                                } header: {
-                                    sectionHeader(type: type, count: routes.count)
-                                }
-                            }
-                        }
-                    }
+                    emptyState
                 }
             }
-            .background(Color(.systemBackground))
-            .navigationTitle(Text(String(localized: "lines_title")))
+            .background(AppTheme.background)
+            .navigationTitle(Text(String(localized: "map_search_title")))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -81,10 +99,65 @@ struct LinePickerSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
-        // Search field stays unfocused on open — keeps the section browse
-        // experience clean; tap to focus when needed.
+    }
+
+    // MARK: - Results
+
+    private var resultsList: some View {
+        ScrollView(showsIndicators: false) {
+            LazyVStack(spacing: 8) {
+                // Lines — when searching alongside stops, label the section.
+                if isSearching && !lineResults.isEmpty && !stopResults.isEmpty {
+                    sectionHeader(String(localized: "lines_title"))
+                }
+                ForEach(lineResults) { route in
+                    Button {
+                        onSelect(route)
+                        dismiss()
+                    } label: {
+                        LineRowContent(
+                            route: route,
+                            hasMultipleTypes: hasMultipleTransitTypes,
+                            store: store,
+                            liveCount: vehicleStore.liveCount(forRouteId: route.id)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("line_row_\(route.id)")
+                }
+
+                // Stops — only present while typing.
+                if !stopResults.isEmpty {
+                    sectionHeader(String(localized: "stops"))
+                        .padding(.top, lineResults.isEmpty ? 0 : 8)
+                    ForEach(stopResults) { stop in
+                        Button {
+                            onSelectStop(stop)
+                            dismiss()
+                        } label: {
+                            StopRowContent(stop: stop, store: store)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("stop_row_\(stop.id)")
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .padding(.bottom, 40)
+        }
+        .scrollDismissesKeyboard(.interactively)
+    }
+
+    private func sectionHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(AppTheme.textTertiary)
+            .textCase(.uppercase)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 4)
+            .padding(.bottom, 2)
     }
 
     // MARK: - Search Field
@@ -114,107 +187,7 @@ struct LinePickerSheet: View {
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
     }
 
-    // MARK: - Section Header
-
-    private func sectionHeader(type: TransitType, count: Int) -> some View {
-        HStack(spacing: 6) {
-            type.icon.sized(11)
-                .foregroundStyle(Color(hex: colorForTransitType(type)))
-            Text(sectionTitle(type))
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .textCase(.uppercase)
-                .kerning(0.5)
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 8)
-        .background(Color(.systemBackground))
-    }
-
-    // MARK: - Live/Static split rendering
-
-    @ViewBuilder
-    private func liveRoutesGroup(routes: [APIRoute]) -> some View {
-        let liveRoutes = routes.filter { vehicleStore.liveCount(forRouteId: $0.id) > 0 }
-        let staticRoutes = routes.filter { vehicleStore.liveCount(forRouteId: $0.id) == 0 }
-        let hasMix = !liveRoutes.isEmpty && !staticRoutes.isEmpty
-
-        if hasMix {
-            liveSubHeader
-        }
-        ForEach(Array(liveRoutes.enumerated()), id: \.element.id) { idx, route in
-            routeButton(route: route)
-            if idx < liveRoutes.count - 1 {
-                Divider().padding(.leading, 64)
-            }
-        }
-        if hasMix {
-            scheduleSubHeader
-        }
-        ForEach(Array(staticRoutes.enumerated()), id: \.element.id) { idx, route in
-            routeButton(route: route)
-            if idx < staticRoutes.count - 1 {
-                Divider().padding(.leading, 64)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func routeButton(route: APIRoute) -> some View {
-        Button {
-            onSelect(route)
-            dismiss()
-        } label: {
-            LinePickerRow(
-                route: route,
-                vehicleCount: vehicleStore.liveCount(forRouteId: route.id)
-            )
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("line_row_\(route.id)")
-    }
-
-    private var liveSubHeader: some View {
-        HStack(spacing: 5) {
-            Circle().fill(AppTheme.realtimeGreen).frame(width: 6, height: 6)
-            Text(String(localized: "line_picker_live_now"))
-                .font(.caption.weight(.medium))
-                .foregroundStyle(.secondary)
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 6)
-        .background(Color(.secondarySystemBackground))
-    }
-
-    private var scheduleSubHeader: some View {
-        HStack(spacing: 5) {
-            LucideIcon.clock.sized(10).foregroundStyle(.secondary)
-            Text(String(localized: "line_picker_schedule_only"))
-                .font(.caption.weight(.medium))
-                .foregroundStyle(.secondary)
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 6)
-        .background(Color(.secondarySystemBackground))
-    }
-
-    private func sectionTitle(_ type: TransitType) -> String {
-        switch type {
-        case .metro: return "Metro"
-        case .tram: return "Tram"
-        case .rail: return "Ferrovie"
-        case .bus: return "Bus"
-        case .ferry: return "Traghetti"
-        case .trolleybus: return "Filobus"
-        case .monorail: return "Monorail"
-        case .cable_tram: return "Cable Tram"
-        case .gondola: return "Funivia"
-        case .funicular: return "Funicolare"
-        }
-    }
+    // MARK: - Empty
 
     private var emptyState: some View {
         EmptyStateView(
@@ -222,41 +195,5 @@ struct LinePickerSheet: View {
             title: String(localized: "no_matching_line"),
             subtitle: String(localized: "empty_no_results_subtitle")
         )
-    }
-}
-
-// MARK: - Row
-
-private struct LinePickerRow: View {
-    let route: APIRoute
-    let vehicleCount: Int
-
-    var body: some View {
-        HStack(spacing: 12) {
-            LineBadge(route: route, size: .medium)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(route.longName ?? route.name)
-                    .font(.system(size: 15))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-            }
-
-            Spacer()
-
-            if vehicleCount > 0 {
-                HStack(spacing: 4) {
-                    Circle().fill(AppTheme.realtimeGreen).frame(width: 8, height: 8)
-                    Text("\(vehicleCount)")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-            }
-            // 0 live vehicles: render nothing — cleaner than a placeholder dash.
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .frame(minHeight: 48)
-        .contentShape(Rectangle())
     }
 }

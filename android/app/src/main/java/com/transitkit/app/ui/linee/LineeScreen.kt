@@ -22,8 +22,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -47,21 +45,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import com.transitkit.app.ui.components.RouteRow
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -245,7 +237,7 @@ private fun LineeContent(
                         .border(1.dp, colors.glassBorder, RoundedCornerShape(16.dp)),
                 ) {
                     favoriteRoutes.forEachIndexed { idx, route ->
-                        RouteListItem(route, stopNamesByRouteId[route.id], liveCountByRouteId[route.id] ?: 0, colors) { onRouteClick(route.id) }
+                        RouteRow(route, stopNamesByRouteId[route.id], liveCountByRouteId[route.id] ?: 0) { onRouteClick(route.id) }
                         if (idx < favoriteRoutes.lastIndex) {
                             HorizontalDivider(modifier = Modifier.padding(start = 76.dp), color = colors.separator, thickness = 0.5.dp)
                         }
@@ -271,7 +263,7 @@ private fun LineeContent(
                         .border(1.dp, colors.glassBorder, RoundedCornerShape(16.dp)),
                 ) {
                     recentRoutes.forEachIndexed { idx, route ->
-                        RouteListItem(route, stopNamesByRouteId[route.id], liveCountByRouteId[route.id] ?: 0, colors) { onRouteClick(route.id) }
+                        RouteRow(route, stopNamesByRouteId[route.id], liveCountByRouteId[route.id] ?: 0) { onRouteClick(route.id) }
                         if (idx < recentRoutes.lastIndex) {
                             HorizontalDivider(modifier = Modifier.padding(start = 76.dp), color = colors.separator, thickness = 0.5.dp)
                         }
@@ -349,7 +341,7 @@ private fun LineeContent(
                                     .border(1.dp, colors.glassBorder, RoundedCornerShape(16.dp)),
                             ) {
                                 typeRoutes.forEachIndexed { idx, route ->
-                                    RouteListItem(route, stopNamesByRouteId[route.id], liveCountByRouteId[route.id] ?: 0, colors) { onRouteClick(route.id) }
+                                    RouteRow(route, stopNamesByRouteId[route.id], liveCountByRouteId[route.id] ?: 0) { onRouteClick(route.id) }
                                     if (idx < typeRoutes.lastIndex) {
                                         HorizontalDivider(modifier = Modifier.padding(start = 76.dp), color = colors.separator, thickness = 0.5.dp)
                                     }
@@ -376,7 +368,7 @@ private fun LineeContent(
                         .background(colors.bgSecondary)
                         .border(1.dp, colors.glassBorder, shape),
                 ) {
-                    RouteListItem(route, stopNamesByRouteId[route.id], liveCountByRouteId[route.id] ?: 0, colors) { onRouteClick(route.id) }
+                    RouteRow(route, stopNamesByRouteId[route.id], liveCountByRouteId[route.id] ?: 0) { onRouteClick(route.id) }
                     if (!isLast) {
                         HorizontalDivider(modifier = Modifier.padding(start = 76.dp), color = colors.separator, thickness = 0.5.dp)
                     }
@@ -399,111 +391,6 @@ private fun SectionLabel(text: String, colors: TransitColors) {
         color = colors.textTertiary,
         modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp),
     )
-}
-
-// ---------------------------------------------------------------------------
-// Route list item
-// ---------------------------------------------------------------------------
-
-@Composable
-private fun RouteListItem(
-    route: ScheduleRoute,
-    stopSequence: String?,
-    liveCount: Int,
-    colors: TransitColors,
-    onClick: () -> Unit = {},
-) {
-    val haptic = LocalHapticFeedback.current
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                onClick()
-            }
-            .semantics { contentDescription = "route_row_${route.id}" }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        com.transitkit.app.ui.components.LineBadge(
-            route = route,
-            // iOS LinesListView parity: route rows are Large without icon
-            // (the modal chip is rendered separately in the row metadata).
-            size = com.transitkit.app.ui.components.LineBadgeSize.Large,
-        )
-
-        Column(modifier = Modifier.weight(1f)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Text(
-                    text = route.longName.ifBlank { route.name },
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colors.textPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f, fill = false),
-                )
-                if (route.directions.size > 1) {
-                    Text("↔ ${route.directions.size}", style = MaterialTheme.typography.labelSmall, color = colors.textSecondary)
-                }
-            }
-            val seq = stopSequence?.takeIf { it.isNotBlank() }
-            if (seq != null) {
-                Text(
-                    text = seq,
-                    style = MaterialTheme.typography.labelSmall,
-                    fontSize = 11.sp,
-                    color = colors.textTertiary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            } else {
-                route.directions.firstOrNull()?.let { dir ->
-                    val subtitle = dir.headsign
-                    if (subtitle.isNotBlank() && !subtitle.equals(route.longName, ignoreCase = true)) {
-                        Text(subtitle, style = MaterialTheme.typography.labelSmall, color = colors.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
-                }
-            }
-        }
-
-        // iOS parity (item #17): live count chip statico, prima della chevron.
-        // STATICO — niente pulse animation. RouteListItem vive in LazyColumn
-        // che ricompone periodicamente (vehicle store refresh); un
-        // `infiniteRepeatable` qui causerebbe layout instability.
-        if (liveCount > 0) {
-            LiveCountStaticBadge(count = liveCount, colors = colors)
-        }
-        Icon(painterResource(LucideIcons.ChevronRight), null, tint = colors.textTertiary, modifier = Modifier.size(18.dp))
-    }
-}
-
-@Composable
-private fun LiveCountStaticBadge(count: Int, colors: TransitColors) {
-    Row(
-        modifier = Modifier
-            .background(colors.realtimeGreen.copy(alpha = 0.12f), RoundedCornerShape(50))
-            .padding(horizontal = 8.dp, vertical = 3.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(5.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .size(5.dp)
-                .background(colors.realtimeGreen, androidx.compose.foundation.shape.CircleShape),
-        )
-        Text(
-            text = pluralStringResource(R.plurals.lines_live_count, count, count),
-            fontSize = 11.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = colors.realtimeGreen,
-        )
-    }
 }
 
 // ---------------------------------------------------------------------------

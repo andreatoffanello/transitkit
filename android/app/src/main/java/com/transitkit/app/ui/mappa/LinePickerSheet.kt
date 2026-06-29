@@ -1,5 +1,7 @@
 package com.transitkit.app.ui.mappa
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,7 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,8 +29,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,18 +38,23 @@ import androidx.compose.ui.unit.dp
 import com.transitkit.app.R
 import com.transitkit.app.config.LocalTransitColors
 import com.transitkit.app.config.LucideIcons
+import com.transitkit.app.data.model.ResolvedStop
 import com.transitkit.app.data.model.ScheduleRoute
 import com.transitkit.app.ui.components.HideBottomBarWhileVisible
 import com.transitkit.app.ui.components.LineBadge
 import com.transitkit.app.ui.components.LineBadgeSize
-import com.transitkit.app.ui.components.LiveIndicator
+import com.transitkit.app.ui.components.RouteRow
 import com.transitkit.app.ui.components.TransitSearchBar
+import com.transitkit.app.ui.components.fuzzyScore
 
 /**
- * Line picker — full-screen overlay shown above the map. Lives inside
+ * Line + stop picker — full-screen overlay shown above the map. Lives inside
  * [MappaScreen]'s composition so it inherits the activity's status-bar
  * chrome, and hides the activity tab bar for as long as it's visible via
  * [HideBottomBarWhileVisible] so the picker reads as a second-level screen.
+ *
+ * Blank query: per-transit-type grouped sections with [RouteRow].
+ * Typing: fuzzy-matched lines (first, precedence) + stops under "FERMATE" header.
  *
  * Tap a row → caller updates view-model + closes overlay. Back gesture also
  * dismisses (see [BackHandler]).
@@ -55,9 +62,12 @@ import com.transitkit.app.ui.components.TransitSearchBar
 @Composable
 internal fun LinePickerSheet(
     routes: List<ScheduleRoute>,
+    stops: List<ResolvedStop>,
     liveCounts: Map<String, Int>,
+    stopSequences: Map<String, String>,
     onDismiss: () -> Unit,
     onSelectRoute: (routeId: String) -> Unit,
+    onSelectStop: (ResolvedStop) -> Unit,
 ) {
     HideBottomBarWhileVisible()
     BackHandler(onBack = onDismiss)
@@ -65,17 +75,33 @@ internal fun LinePickerSheet(
     val colors = LocalTransitColors.current
     var query by remember { mutableStateOf("") }
 
-    // Filter by query, then sort: live-vehicle routes first, then alpha by short name.
-    val filteredRoutes = remember(query, routes, liveCounts) {
-        val base = if (query.isBlank()) routes
-        else routes.filter { route ->
-            route.name.contains(query, ignoreCase = true) ||
-                route.longName.contains(query, ignoreCase = true)
-        }
-        base.sortedWith(
+    // Blank-state: live-first sort within each section.
+    val sortedRoutes = remember(routes, liveCounts) {
+        routes.sortedWith(
             compareByDescending<ScheduleRoute> { liveCounts[it.id] ?: 0 }
                 .thenBy { it.name }
         )
+    }
+
+    // Search results (query non-blank).
+    val lineResults = remember(query, routes, liveCounts) {
+        if (query.isBlank()) emptyList()
+        else if (query.length < 2) routes.filter { r ->
+            r.name.contains(query, ignoreCase = true) || r.longName.contains(query, ignoreCase = true)
+        }
+        else routes
+            .filter { r -> maxOf(fuzzyScore(r.longName.ifBlank { r.name }, query), fuzzyScore(r.name, query)) > 0 }
+            .sortedByDescending { r -> maxOf(fuzzyScore(r.longName.ifBlank { r.name }, query), fuzzyScore(r.name, query)) }
+    }
+
+    val stopResults = remember(query, stops) {
+        if (query.isBlank()) emptyList()
+        else if (query.length < 2) stops.filter { it.name.contains(query, ignoreCase = true) }
+        else stops
+            .map { stop -> stop to fuzzyScore(stop.name, query) }
+            .filter { (_, score) -> score > 0 }
+            .sortedByDescending { (_, score) -> score }
+            .map { (stop, _) -> stop }
     }
 
     // Section order mirrors movete — metro first, bus last (of the common modes), other at bottom.
@@ -115,7 +141,7 @@ internal fun LinePickerSheet(
                 placeholder = stringResource(R.string.mappa_line_picker_placeholder),
                 onQueryChange = { query = it },
                 a11yTag = "line_picker_search",
-                capitalization = KeyboardCapitalization.Characters,
+                capitalization = KeyboardCapitalization.None,
                 modifier = Modifier.padding(horizontal = 20.dp),
             )
 
@@ -129,14 +155,15 @@ internal fun LinePickerSheet(
             ) {
                 if (query.isBlank()) {
                     sectionOrder.forEach { type ->
-                        val routesForType = filteredRoutes.filter { it.transitType == type }
+                        val routesForType = sortedRoutes.filter { it.transitType == type }
                         if (routesForType.isNotEmpty()) {
                             item(key = "header_$type") {
                                 SectionHeader(type)
                             }
                             items(routesForType, key = { it.id }) { route ->
-                                LinePickerRow(
+                                RouteRow(
                                     route = route,
+                                    stopSequence = stopSequences[route.id],
                                     liveCount = liveCounts[route.id] ?: 0,
                                     onClick = {
                                         onSelectRoute(route.id)
@@ -147,12 +174,13 @@ internal fun LinePickerSheet(
                         }
                     }
                     // Any routes with unknown / uncommon transit type land under "ALTRO".
-                    val other = filteredRoutes.filter { it.transitType !in sectionOrder }
+                    val other = sortedRoutes.filter { it.transitType !in sectionOrder }
                     if (other.isNotEmpty()) {
                         item(key = "header_other") { SectionHeader(-1) }
                         items(other, key = { it.id }) { route ->
-                            LinePickerRow(
+                            RouteRow(
                                 route = route,
+                                stopSequence = stopSequences[route.id],
                                 liveCount = liveCounts[route.id] ?: 0,
                                 onClick = {
                                     onSelectRoute(route.id)
@@ -162,16 +190,36 @@ internal fun LinePickerSheet(
                         }
                     }
                 } else {
-                    // While typing, skip section headers for tighter results list.
-                    items(filteredRoutes, key = { it.id }) { route ->
-                        LinePickerRow(
+                    // Lines first (precedence), then stops under a section header.
+                    val hasLines = lineResults.isNotEmpty()
+                    val hasStops = stopResults.isNotEmpty()
+
+                    if (hasLines && hasStops) {
+                        item(key = "header_lines") {
+                            SectionHeader(type = null, label = stringResource(R.string.mappa_line_picker_section_lines))
+                        }
+                    }
+                    items(lineResults, key = { "line_${it.id}" }) { route ->
+                        RouteRow(
                             route = route,
+                            stopSequence = stopSequences[route.id],
                             liveCount = liveCounts[route.id] ?: 0,
                             onClick = {
                                 onSelectRoute(route.id)
                                 onDismiss()
                             },
                         )
+                    }
+                    if (hasStops) {
+                        item(key = "header_stops") {
+                            SectionHeader(type = null, label = stringResource(R.string.mappa_line_picker_section_stops))
+                        }
+                        items(stopResults, key = { "stop_${it.id}" }) { stop ->
+                            StopPickerRow(stop = stop, onClick = {
+                                onSelectStop(stop)
+                                onDismiss()
+                            })
+                        }
                     }
                 }
             }
@@ -180,9 +228,9 @@ internal fun LinePickerSheet(
 }
 
 @Composable
-private fun SectionHeader(type: Int) {
+private fun SectionHeader(type: Int? = null, label: String? = null) {
     val colors = LocalTransitColors.current
-    val label = when (type) {
+    val text = label ?: when (type) {
         0 -> stringResource(R.string.mappa_line_picker_section_tram)
         1 -> stringResource(R.string.mappa_line_picker_section_metro)
         2 -> stringResource(R.string.mappa_line_picker_section_rail)
@@ -191,7 +239,7 @@ private fun SectionHeader(type: Int) {
         else -> stringResource(R.string.mappa_line_picker_section_other)
     }
     Text(
-        text = label,
+        text = text,
         style = MaterialTheme.typography.labelSmall,
         fontWeight = FontWeight.Bold,
         color = colors.textTertiary,
@@ -202,53 +250,49 @@ private fun SectionHeader(type: Int) {
 }
 
 @Composable
-private fun LinePickerRow(
-    route: ScheduleRoute,
-    liveCount: Int,
-    onClick: () -> Unit,
-) {
+private fun StopPickerRow(stop: ResolvedStop, onClick: () -> Unit) {
     val colors = LocalTransitColors.current
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 10.dp)
-            .semantics { testTag = "line_picker_row_${route.id}" },
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .semantics { testTag = "line_picker_stop_${stop.id}" },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        LineBadge(route = route, size = LineBadgeSize.Medium)
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = route.longName.ifBlank { route.name },
+                text = stop.name,
                 style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
                 color = colors.textPrimary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (route.longName.isNotBlank() && route.longName != route.name) {
-                Text(
-                    text = route.name,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colors.textSecondary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-        if (liveCount > 0) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                LiveIndicator(size = 6.dp, animated = false)
-                Text(
-                    text = "$liveCount",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = colors.realtimeGreen,
-                    fontWeight = FontWeight.SemiBold,
-                )
+            val routeNames = stop.routeNames.take(6)
+            val routeColorHexes = stop.routeColors.take(6)
+            if (routeNames.isNotEmpty()) {
+                Spacer(Modifier.height(4.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    routeNames.forEachIndexed { i, n ->
+                        LineBadge(
+                            name = n,
+                            colorHex = routeColorHexes.getOrElse(i) { "" },
+                            size = LineBadgeSize.Small,
+                        )
+                    }
+                    if (stop.routeNames.size > 6) {
+                        Text(
+                            text = "+${stop.routeNames.size - 6}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = colors.textTertiary,
+                            modifier = Modifier
+                                .background(colors.textTertiary.copy(alpha = 0.12f), RoundedCornerShape(4.dp))
+                                .padding(horizontal = 5.dp, vertical = 3.dp),
+                        )
+                    }
+                }
             }
         }
     }

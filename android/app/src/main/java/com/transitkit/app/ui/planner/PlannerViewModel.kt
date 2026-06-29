@@ -9,6 +9,7 @@ import com.transitkit.app.data.model.PlannerStop
 import com.transitkit.app.data.model.ResolvedStop
 import com.transitkit.app.data.repository.ScheduleRepository
 import com.transitkit.app.data.store.ConnectionsStore
+import com.transitkit.app.data.store.SavedPlacesStore
 import com.transitkit.app.data.store.SearchHistoryStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -29,6 +30,7 @@ class PlannerViewModel @Inject constructor(
     private val scheduleRepository: ScheduleRepository,
     private val config: OperatorConfig,
     private val searchHistoryStore: SearchHistoryStore,
+    val savedPlacesStore: SavedPlacesStore,
 ) : ViewModel() {
 
     data class WhenSelection(
@@ -112,6 +114,9 @@ class PlannerViewModel @Inject constructor(
 
     /** Operator timezone ID (e.g. "America/New_York") — drives clock display + picker. */
     val operatorTimezone: String get() = config.timezone
+
+    /** ISO 3166-1 alpha-2 country code from operator config (e.g. "US", "IT"). */
+    val operatorCountry: String get() = config.country
 
     /** Recently used stops (most recent first), resolved against the loaded stop list. */
     val recentStops: StateFlow<List<ResolvedStop>> = combine(

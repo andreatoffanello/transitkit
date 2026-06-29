@@ -83,13 +83,11 @@ struct VehicleDetailSheet: View {
         return cal.date(byAdding: .second, value: seconds, to: today)
     }
 
-    /// "HH:mm" in operator tz for the predicted arrival.
+    /// Localized clock (12h/24h per device setting) in operator tz for the
+    /// predicted arrival.
     private var etaClockText: String? {
         guard let arrival = predictedArrival else { return nil }
-        let fmt = DateFormatter()
-        fmt.dateFormat = "HH:mm"
-        fmt.timeZone = scheduleStore.operatorTimezone
-        return fmt.string(from: arrival)
+        return ClockTime.clock(arrival, timeZone: scheduleStore.operatorTimezone)
     }
 
     /// Maps the predicted arrival to the same four-state model used everywhere
@@ -293,22 +291,18 @@ struct VehicleDetailSheet: View {
                 }
             }
         case .absolute(let time):
-            Text(time)
-                .font(.system(.headline, weight: .semibold).monospacedDigit())
-                .foregroundStyle(AppTheme.textPrimary)
+            ClockTime.styledText(time, size: 17, weight: .semibold, design: .default,
+                                 color: AppTheme.textPrimary)
+                .monospacedDigit()
                 .contentTransition(.numericText())
         case .passed(let time):
-            Text(time)
-                .font(.system(size: 13, weight: .medium, design: .monospaced))
-                .foregroundStyle(AppTheme.textTertiary)
+            ClockTime.styledText(time, size: 13, weight: .medium, color: AppTheme.textTertiary)
         }
     }
 
     @ViewBuilder
     private func etaSecondary(_ clock: String) -> some View {
-        Text(clock)
-            .font(.system(size: 11, weight: .medium, design: .monospaced))
-            .foregroundStyle(AppTheme.textSecondary)
+        ClockTime.styledText(clock, size: 11, weight: .medium, color: AppTheme.textSecondary)
     }
 
     // MARK: - Live + freshness row

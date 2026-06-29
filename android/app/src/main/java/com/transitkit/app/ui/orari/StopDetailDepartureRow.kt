@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -35,6 +36,7 @@ internal fun DepartureRow(
     onClick: () -> Unit = {},
 ) {
     val colors = TransitTheme.colors
+    val context = LocalContext.current
     val displayTime = departure.realtimeDepartureTime ?: departure.departureTime
     val hasDelay = (departure.delay ?: 0) > 0
 
@@ -112,6 +114,7 @@ internal fun DepartureRow(
                 val timeState = com.transitkit.app.ui.components.departureTimeState(
                     displayTime,
                     operatorTimezone,
+                    formatClock = { com.transitkit.app.ui.components.ClockTime.gtfs(it, context) },
                 )
                 com.transitkit.app.ui.components.TimeDisplay(
                     state = timeState,

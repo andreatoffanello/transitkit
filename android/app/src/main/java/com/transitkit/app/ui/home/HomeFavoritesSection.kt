@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -263,8 +264,13 @@ internal fun StopCardDepartureRow(
     operatorTimezone: String,
 ) {
     val colors = TransitTheme.colors
+    val context = LocalContext.current
     val rawTime = departure.realtimeDepartureTime ?: departure.departureTime
-    val timeState = departureTimeState(rawTime, operatorTimezone)
+    val timeState = departureTimeState(
+        rawTime,
+        operatorTimezone,
+        formatClock = { com.transitkit.app.ui.components.ClockTime.gtfs(it, context) },
+    )
 
     Row(
         modifier = Modifier

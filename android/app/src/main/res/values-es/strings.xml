@@ -234,15 +234,17 @@
     <string name="cd_vista_2d">Vista 2D</string>
 
     <!-- Mappa — line picker pill + sheet -->
-    <string name="mappa_cerca_linea">Buscar ruta</string>
-    <string name="mappa_line_picker_title">Buscar ruta</string>
-    <string name="mappa_line_picker_placeholder">Nombre o número de ruta…</string>
+    <string name="mappa_cerca_linea">Buscar ruta o parada</string>
+    <string name="mappa_line_picker_title">Buscar</string>
+    <string name="mappa_line_picker_placeholder">Buscar ruta o parada</string>
     <string name="mappa_line_picker_section_metro">METRO</string>
     <string name="mappa_line_picker_section_tram">TRANVÍA</string>
     <string name="mappa_line_picker_section_rail">TREN</string>
     <string name="mappa_line_picker_section_bus">AUTOBÚS</string>
     <string name="mappa_line_picker_section_ferry">FERRY</string>
     <string name="mappa_line_picker_section_other">OTROS</string>
+    <string name="mappa_line_picker_section_lines">LÍNEAS</string>
+    <string name="mappa_line_picker_section_stops">PARADAS</string>
     <string name="mappa_rimuovi_overlay">Quitar superposición</string>
 
     <!-- Mappa — stop sheet -->
@@ -252,7 +254,6 @@
 
     <!-- Mappa — vehicle sheet -->
     <string name="mappa_veicolo_live">Vehículo en vivo</string>
-    <string name="mappa_live">En vivo</string>
     <string name="mappa_in_ritardo">%d min de retraso</string>
     <string name="mappa_in_anticipo">%d min adelantado</string>
     <string name="mappa_in_orario">A tiempo</string>

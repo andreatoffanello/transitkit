@@ -99,22 +99,27 @@ fun computeDepartureTimeState(
  * fails so the caller always has something to render.
  *
  * @param relativeThreshold see [computeDepartureTimeState]
+ * @param formatClock maps the raw GTFS time string to the clock label shown to
+ *   the user. Defaults to the raw "HH:mm" (24h) for non-UI callers that only
+ *   read the countdown; composable callers pass `{ ClockTime.gtfs(it, context) }`
+ *   so the clock respects the device 12-/24-hour setting.
  */
 fun departureTimeState(
     timeStr: String,
     operatorTimezoneId: String = "UTC",
     relativeThreshold: Int = 60,
+    formatClock: (String) -> String = { it.take(5) },
 ): DepartureTimeState {
-    val hhmm = timeStr.take(5)
+    val clock = formatClock(timeStr)
     return try {
         val parts = timeStr.split(":")
         val depMinutes = parts[0].toInt() * 60 + parts[1].toInt()
         val tz = java.util.TimeZone.getTimeZone(operatorTimezoneId)
         val cal = java.util.Calendar.getInstance(tz)
         val nowMin = cal.get(java.util.Calendar.HOUR_OF_DAY) * 60 + cal.get(java.util.Calendar.MINUTE)
-        computeDepartureTimeState(depMinutes, nowMin, hhmm, relativeThreshold)
+        computeDepartureTimeState(depMinutes, nowMin, clock, relativeThreshold)
     } catch (_: Exception) {
-        DepartureTimeState.Absolute(hhmm)
+        DepartureTimeState.Absolute(clock)
     }
 }
 
@@ -198,7 +203,7 @@ fun TimeDisplay(
                 }
                 is DepartureTimeState.Absolute -> {
                     Text(
-                        text = state.clock,
+                        text = ClockTime.annotated(state.clock, 15.sp, colors.textPrimary),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = colors.textPrimary,
@@ -206,7 +211,7 @@ fun TimeDisplay(
                 }
                 is DepartureTimeState.Passed -> {
                     Text(
-                        text = state.clock,
+                        text = ClockTime.annotated(state.clock, 13.sp, colors.textTertiary),
                         fontSize = 13.sp,
                         color = colors.textTertiary,
                     )
@@ -264,7 +269,7 @@ private fun ClockText(
     tint: Color,
 ) {
     Text(
-        text = clock,
+        text = ClockTime.annotated(clock, fontSize, tint),
         fontSize = fontSize,
         fontWeight = FontWeight.Medium,
         color = tint,

@@ -30,6 +30,10 @@ export default defineNuxtConfig({
     '/it': { prerender: true },
     '/privacy': { prerender: true },
     '/it/privacy': { prerender: true },
+    '/terms': { prerender: true },
+    '/it/terms': { prerender: true },
+    '/refunds': { prerender: true },
+    '/it/refunds': { prerender: true },
   },
 
   app: {

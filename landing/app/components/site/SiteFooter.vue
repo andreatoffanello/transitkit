@@ -14,7 +14,9 @@ const year = 2026
 
       <nav class="footer__links" aria-label="Footer">
         <a :href="site.consoleUrl">{{ t('footer.console') }}</a>
+        <NuxtLinkLocale to="/terms">{{ t('footer.terms') }}</NuxtLinkLocale>
         <NuxtLinkLocale to="/privacy">{{ t('footer.privacy') }}</NuxtLinkLocale>
+        <NuxtLinkLocale to="/refunds">{{ t('footer.refunds') }}</NuxtLinkLocale>
         <a :href="`mailto:${site.contactEmail}`">{{ site.contactEmail }}</a>
         <LocaleSwitch />
       </nav>

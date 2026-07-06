@@ -34,6 +34,8 @@ export default defineNuxtConfig({
     '/it/terms': { prerender: true },
     '/refunds': { prerender: true },
     '/it/refunds': { prerender: true },
+    '/pricing': { prerender: true },
+    '/it/pricing': { prerender: true },
   },
 
   app: {

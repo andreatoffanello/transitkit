@@ -83,6 +83,7 @@ fun LineeScreen(
     val favoriteRouteIds by viewModel.favoriteRouteIds.collectAsStateWithLifecycle()
     val liveCountByRouteId by viewModel.liveCountByRouteId.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val linesGenuinelyEmpty by viewModel.linesGenuinelyEmpty.collectAsStateWithLifecycle()
     val scheduleLoadError by viewModel.scheduleLoadError.collectAsStateWithLifecycle()
 
     // Force the viewmodel into LINES mode
@@ -142,6 +143,7 @@ fun LineeScreen(
             routes = routes,
             stopNamesByRouteId = stopNamesByRouteId,
             query = searchQuery,
+            linesGenuinelyEmpty = linesGenuinelyEmpty,
             colors = colors,
             recentRouteIds = recentRouteIds,
             favoriteRouteIds = favoriteRouteIds,
@@ -163,6 +165,7 @@ private fun LineeContent(
     routes: List<ScheduleRoute>,
     stopNamesByRouteId: Map<String, String>,
     query: String,
+    linesGenuinelyEmpty: Boolean = false,
     colors: TransitColors,
     recentRouteIds: List<String> = emptyList(),
     favoriteRouteIds: List<String> = emptyList(),
@@ -201,7 +204,13 @@ private fun LineeContent(
     val context = LocalContext.current
     val listState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() }
 
-    if (routes.isEmpty() && !showRecents && !showFavorites) {
+    // Show the "no lines available" empty state only when it's genuine: either the
+    // user is actively searching (a real no-match) OR the schedule has loaded with
+    // zero routes (`linesGenuinelyEmpty`, derived atomically from the repository and
+    // seeded false). This never fires in the transient-empty windows (cold-start
+    // first-collection, or tab-switch/debounce settle) that briefly lie that the
+    // operator has no service.
+    if (routes.isEmpty() && (query.isNotBlank() || linesGenuinelyEmpty) && !showRecents && !showFavorites) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,

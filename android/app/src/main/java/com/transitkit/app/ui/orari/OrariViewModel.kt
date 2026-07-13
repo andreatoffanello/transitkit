@@ -118,6 +118,21 @@ class OrariViewModel @Inject constructor(
             .sortedByDescending { r -> maxOf(fuzzyScore(r.longName.ifBlank { r.name }, query), fuzzyScore(r.name, query)) }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /** True ONLY when the schedule has finished loading AND the operator genuinely
+     *  has zero routes. Derived atomically from repository.isLoading + repository.routes
+     *  (unfiltered by tab/search) and seeded `false`, so the "no lines available"
+     *  empty state never flashes in any of the transient-empty windows:
+     *   - first-collection: WhileSubscribed flows emit seed defaults for one frame
+     *     before the real upstream propagates on cold start;
+     *   - tab-switch/debounce: the tab-filtered `routes` above empties until
+     *     `_selectedTab == LINES` + the 300ms debounce settle.
+     *  In both, repository.routes is already non-empty → this stays false. */
+    val linesGenuinelyEmpty: StateFlow<Boolean> = combine(
+        repository.isLoading, repository.routes
+    ) { loading, routes ->
+        !loading && routes.isEmpty()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
     val scheduleLoadError: StateFlow<String?> = repository.loadError
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 

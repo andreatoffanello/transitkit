@@ -141,8 +141,13 @@ class ScheduleRepository @Inject constructor(
         if (_scheduleResponse.value != null) return // memory short-circuit (iOS parity)
         val cached = withContext(Dispatchers.IO) { loadFromCache() }
         if (cached != null) {
-            // Show UI immediately from disk
-            val cachedSchedule = parseAndApply(cached)
+            // Parsing the cached schedule (a multi-MB JSON + index build) takes real
+            // time on device; flag loading around it so the UI shows a spinner rather
+            // than a premature "empty" state — `_routes` stays [] until parseAndApply
+            // finishes, and without this the cold-cache path silently held isLoading=false,
+            // making the Lines tab render "No routes available" for the whole parse.
+            _isLoading.value = true
+            val cachedSchedule = try { parseAndApply(cached) } finally { _isLoading.value = false }
             // Skip background CDN check if data was just fetched from network (parity iOS)
             val isDataFresh = System.currentTimeMillis() - lastFetchedFromNetworkAt < CDN_FRESH_THRESHOLD_MS
             if (!isDataFresh) {

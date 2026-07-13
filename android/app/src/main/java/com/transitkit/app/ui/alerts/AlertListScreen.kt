@@ -112,13 +112,18 @@ fun AlertListScreen(
         containerColor = colors.background,
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
-            FilterRow(
-                filter = filter,
-                mineCount = myAlerts.size,
-                allCount = alerts.size,
-                showMineChip = myLineIds.isNotEmpty(),
-                onSelect = { filter = it },
-            )
+            // Show the mine/all filter only when it's meaningful — alerts exist AND
+            // the user has favourite lines to filter by. Otherwise a lone "All 0"
+            // chip floats over the empty state (filler UI the design bar bans).
+            if (alerts.isNotEmpty() && myLineIds.isNotEmpty()) {
+                FilterRow(
+                    filter = filter,
+                    mineCount = myAlerts.size,
+                    allCount = alerts.size,
+                    showMineChip = myLineIds.isNotEmpty(),
+                    onSelect = { filter = it },
+                )
+            }
 
             when {
                 visible.isEmpty() -> AlertEmptyState(

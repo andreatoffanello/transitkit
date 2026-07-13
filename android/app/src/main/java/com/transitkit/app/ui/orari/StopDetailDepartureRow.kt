@@ -33,6 +33,7 @@ internal fun DepartureRow(
     isNext: Boolean = false,
     operatorTimezone: String = "UTC",
     stopSequence: String? = null,
+    showHeadsign: Boolean = true,
     onClick: () -> Unit = {},
 ) {
     val colors = TransitTheme.colors
@@ -84,24 +85,28 @@ internal fun DepartureRow(
 
             Spacer(Modifier.width(10.dp))
 
-            // Destination (headsign) + description (stop sequence) — static ellipsis.
+            // Destination (headsign) + path — hidden when the panel already shows
+            // this destination as a "→ headsign" group header (otherwise the same
+            // destination is printed 2-3× per row-group; the header carries it once).
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = departure.headsign,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colors.textPrimary,
-                    maxLines = 1,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                )
-                if (stopSequence != null && stopSequence != departure.headsign) {
+                if (showHeadsign) {
                     Text(
-                        text = stopSequence,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colors.textTertiary,
+                        text = departure.headsign,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.textPrimary,
                         maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                     )
+                    if (stopSequence != null && stopSequence != departure.headsign) {
+                        Text(
+                            text = stopSequence,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.textTertiary,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        )
+                    }
                 }
             }
 

@@ -131,6 +131,9 @@ internal fun DeparturesList(
                             isNext = groupIdx == 0 && index == 0,
                             operatorTimezone = operatorTimezone,
                             stopSequence = stopSequenceByRouteId[departure.routeId],
+                            // Destination is already shown once as the "→ headsign"
+                            // group header above — don't reprint it in every row.
+                            showHeadsign = false,
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 onNavigateToTrip(departure)

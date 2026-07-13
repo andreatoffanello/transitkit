@@ -48,7 +48,13 @@ struct AlertListView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            filterBar
+            // Show the mine/all filter only when it's actually meaningful — i.e.
+            // there are alerts to filter AND the user has favourite lines to
+            // filter by. Otherwise a lone "All 0" pill floats over the empty
+            // state (filler UI the design bar bans).
+            if !activeAlerts.isEmpty && !myLineIds.isEmpty {
+                filterBar
+            }
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }

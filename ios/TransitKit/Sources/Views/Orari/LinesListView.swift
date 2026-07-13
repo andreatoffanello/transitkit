@@ -189,6 +189,16 @@ struct LinesListView: View {
                         .padding(.horizontal, 4)
                 }
 
+                // "All lines" header — distinguishes the full list from the
+                // Recent section above; without it the two read as duplicated lines.
+                if searchQuery.isEmpty && !recentAPIRoutes.isEmpty {
+                    Text(String(localized: "all_lines"))
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(AppTheme.textTertiary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 4)
+                }
+
                 ForEach(groupedAPIRoutes, id: \.type) { group in
                     VStack(alignment: .leading, spacing: 10) {
                         // Category header — only shown when multiple transit types are present

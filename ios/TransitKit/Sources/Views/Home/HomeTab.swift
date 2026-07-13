@@ -96,7 +96,12 @@ struct HomeTab: View {
                             }
                             .padding(.horizontal, 16)
                             .padding(.top, 16)
-                            .padding(.bottom, 100)
+                            // The ScrollView already insets content to the tab-bar top,
+                            // so this is the footer gap ABOVE the bar. 100pt left the
+                            // disclaimer ghosting at the bar on short content; 40pt is a
+                            // clean footer margin that keeps it clear + fully readable at
+                            // the scroll terminus without a big empty band.
+                            .padding(.bottom, 40)
                             .animation(.spring(duration: 0.4, bounce: 0.2), value: updateChecker.softUpdate)
                         }
                     }
@@ -699,7 +704,9 @@ struct HomeTab: View {
         }
         .buttonStyle(PressableCardStyle())
         .accessibilityIdentifier("home_operator_info_card")
-        .accessibilityLabel(String(localized: "services_title"))
+        // No explicit label — was a copy-paste of the Servizi tile ("services_title"),
+        // which made VoiceOver announce two adjacent "Servizi" buttons. Letting the
+        // card expose its own content reads the operator + live count + routes.
     }
 
     // MARK: - Servizi link

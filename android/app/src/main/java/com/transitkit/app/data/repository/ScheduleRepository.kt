@@ -16,6 +16,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -64,6 +66,11 @@ class ScheduleRepository @Inject constructor(
 
     // Singleton-scoped scope for background work that outlives any ViewModel
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    // Serializes first-load so N ViewModels calling load() in the same
+    // startup/navigation frame share ONE fetch+parse instead of each racing
+    // its own (see load()).
+    private val loadMutex = Mutex()
 
     private val cacheFile: File get() = File(context.filesDir, "schedule_${config.id}_cache.json")
     private val etagFile: File get() = File(context.filesDir, "schedule_${config.id}_etag.txt")
@@ -137,42 +144,54 @@ class ScheduleRepository @Inject constructor(
     }
 
     suspend fun load() {
-        if (_isLoading.value) return
-        if (_scheduleResponse.value != null) return // memory short-circuit (iOS parity)
-        val cached = withContext(Dispatchers.IO) { loadFromCache() }
-        if (cached != null) {
-            // Parsing the cached schedule (a multi-MB JSON + index build) takes real
-            // time on device; flag loading around it so the UI shows a spinner rather
-            // than a premature "empty" state — `_routes` stays [] until parseAndApply
-            // finishes, and without this the cold-cache path silently held isLoading=false,
-            // making the Lines tab render "No routes available" for the whole parse.
-            _isLoading.value = true
-            val cachedSchedule = try { parseAndApply(cached) } finally { _isLoading.value = false }
-            // Skip background CDN check if data was just fetched from network (parity iOS)
-            val isDataFresh = System.currentTimeMillis() - lastFetchedFromNetworkAt < CDN_FRESH_THRESHOLD_MS
-            if (!isDataFresh) {
-                repositoryScope.launch {
-                    val (freshJson, freshSchedule) = fetchFromCdn() ?: return@launch
-                    if (freshSchedule.lastUpdated != cachedSchedule?.lastUpdated) {
-                        saveToCache(freshJson)
-                        parseAndApply(freshJson)
-                        lastFetchedFromNetworkAt = System.currentTimeMillis()
-                    }
-                }
-            }
-        } else {
-            // Cold start — must wait for network
+        // Fast path: schedule already in memory (iOS parity). `_scheduleResponse`
+        // is only ever set, never reset, so once populated every caller returns
+        // here without touching the lock or `isLoading`.
+        if (_scheduleResponse.value != null) return
+
+        // The whole fetch-once must be atomic. The previous guard —
+        // `if (_isLoading.value) return` before the cache-read suspension —
+        // had a TOCTOU hole: `_isLoading` was published only AFTER
+        // `loadFromCache()`, so any concurrent load() (e.g. Home's init still
+        // reading the cache while navigation spins up another ViewModel) slipped
+        // past the guard and ran its own fetch + multi-MB parse + background-CDN
+        // GET. On a constrained device that redundant work stalled the first
+        // parse and left `isLoading=false && routes=[]` for seconds, flashing
+        // "No routes available". Serializing here collapses the N racing callers
+        // into one; the loser re-checks `_scheduleResponse` and returns.
+        loadMutex.withLock {
+            if (_scheduleResponse.value != null) return
+            // Publish loading BEFORE the first suspension point so the empty
+            // window never opens — collectors see the spinner, not the empty state.
             _isLoading.value = true
             try {
-                val result = fetchFromCdn()
-                if (result == null) {
-                    _loadError.value = "Impossibile caricare gli orari. Controlla la connessione."
-                    return
+                val cached = withContext(Dispatchers.IO) { loadFromCache() }
+                if (cached != null) {
+                    val cachedSchedule = parseAndApply(cached)
+                    // Skip background CDN check if data was just fetched from network (parity iOS)
+                    val isDataFresh = System.currentTimeMillis() - lastFetchedFromNetworkAt < CDN_FRESH_THRESHOLD_MS
+                    if (!isDataFresh) {
+                        repositoryScope.launch {
+                            val (freshJson, freshSchedule) = fetchFromCdn() ?: return@launch
+                            if (freshSchedule.lastUpdated != cachedSchedule?.lastUpdated) {
+                                saveToCache(freshJson)
+                                parseAndApply(freshJson)
+                                lastFetchedFromNetworkAt = System.currentTimeMillis()
+                            }
+                        }
+                    }
+                } else {
+                    // Cold start — must wait for network
+                    val result = fetchFromCdn()
+                    if (result == null) {
+                        _loadError.value = "Impossibile caricare gli orari. Controlla la connessione."
+                        return
+                    }
+                    val (freshJson, _) = result
+                    withContext(Dispatchers.IO) { saveToCache(freshJson) }
+                    parseAndApply(freshJson)
+                    lastFetchedFromNetworkAt = System.currentTimeMillis()
                 }
-                val (freshJson, _) = result
-                withContext(Dispatchers.IO) { saveToCache(freshJson) }
-                parseAndApply(freshJson)
-                lastFetchedFromNetworkAt = System.currentTimeMillis()
             } catch (_: Exception) {
                 _loadError.value = "Impossibile caricare gli orari. Controlla la connessione."
             } finally {

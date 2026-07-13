@@ -1,5 +1,4 @@
-• Save Home and Work as shortcuts to plan your trips in one tap
-• Search any address — not just stops — when planning a trip
-• Faster, smarter search for lines and stops
+• Smoother, more reliable line and stop browsing
+• Cleaner departure boards and service alerts
 
-Plus more improvements and bug fixes.
+Plus performance improvements and bug fixes.

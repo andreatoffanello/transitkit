@@ -8,7 +8,7 @@ describe('getStrings', () => {
     expect(s.minutes).toBe('min')
     expect(s.backToHome).toBe('Torna alla home')
     expect(s.weekdayLabels.mon).toBe('Lun')
-    expect(s.weekdayGroupNames.weekdays).toBe('Lun-Ven')
+    expect(s.weekdayGroupNames.weekdays).toBe('Lun–Ven')
     expect(s.transitTypes.bus).toBe('Bus')
   })
 
@@ -17,7 +17,7 @@ describe('getStrings', () => {
     expect(s.now).toBe('Now')
     expect(s.backToHome).toBe('Back to home')
     expect(s.weekdayLabels.mon).toBe('Mon')
-    expect(s.weekdayGroupNames.weekdays).toBe('Mon-Fri')
+    expect(s.weekdayGroupNames.weekdays).toBe('Mon–Fri')
     expect(s.transitTypes.rail).toBe('Rail')
   })
 

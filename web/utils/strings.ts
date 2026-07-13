@@ -270,9 +270,9 @@ const IT: AppStrings = {
     fri: 'Ven', sat: 'Sab', sun: 'Dom',
   },
   weekdayGroupNames: {
-    weekdays: 'Lun-Ven',
+    weekdays: 'Lun–Ven',
     everyday: 'Ogni giorno',
-    weekdaysSat: 'Lun-Sab',
+    weekdaysSat: 'Lun–Sab',
   },
   transitTypes: {
     bus: 'Bus', tram: 'Tram', metro: 'Metro', rail: 'Treno',
@@ -294,7 +294,7 @@ const IT: AppStrings = {
   dockPrefix: 'Dock ',
   lineLabel: 'Linea',
   stops: 'fermate',
-  searchStops: 'Cerca fermata...',
+  searchStops: 'Cerca fermata…',
   searchLines: 'Cerca linea…',
   noLinesFound: 'Nessuna linea trovata',
   clearFilters: 'Cancella filtri',
@@ -412,9 +412,9 @@ const EN: AppStrings = {
     fri: 'Fri', sat: 'Sat', sun: 'Sun',
   },
   weekdayGroupNames: {
-    weekdays: 'Mon-Fri',
+    weekdays: 'Mon–Fri',
     everyday: 'Every day',
-    weekdaysSat: 'Mon-Sat',
+    weekdaysSat: 'Mon–Sat',
   },
   transitTypes: {
     bus: 'Bus', tram: 'Tram', metro: 'Metro', rail: 'Rail',
@@ -436,7 +436,7 @@ const EN: AppStrings = {
   dockPrefix: 'Dock ',
   lineLabel: 'Line',
   stops: 'stops',
-  searchStops: 'Search stop...',
+  searchStops: 'Search stop…',
   searchLines: 'Search line…',
   noLinesFound: 'No lines found',
   clearFilters: 'Clear filters',

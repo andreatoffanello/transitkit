@@ -128,13 +128,14 @@
               class="flex items-center gap-3 px-4 py-3 transition-all active:opacity-70 hover-row"
               style="border-color: var(--border)"
             >
-              <LineBadge
-                :name="route.name"
-                :color="route.color"
-                :text-color="route.textColor"
-                :locale="config?.locale[0]"
-                class="shrink-0"
-              />
+              <span class="w-16 shrink-0 flex">
+                <LineBadge
+                  :name="route.name"
+                  :color="route.color"
+                  :text-color="route.textColor"
+                  :locale="config?.locale[0]"
+                />
+              </span>
               <span class="flex-1 min-w-0 text-sm font-medium truncate" style="color: var(--text-primary)">
                 <span
                   v-if="searchQuery && route.longName"

@@ -15,11 +15,13 @@
       :locale="locale"
     />
 
-    <!-- Destination -->
+    <!-- Destination — hidden when the panel already shows it as a group header -->
     <span
+      v-if="!hideHeadsign"
       class="flex-1 min-w-0 truncate text-[13px] font-semibold"
       :style="{ color: isPast ? 'var(--text-tertiary)' : 'var(--text-primary)' }"
     >{{ departure.headsign }}</span>
+    <span v-else class="flex-1" aria-hidden="true" />
 
     <!-- Dock badge -->
     <span
@@ -86,6 +88,8 @@ const props = defineProps<{
   isPast?: boolean
   /** Hide the line badge (when a single-line filter is active). */
   hideBadge?: boolean
+  /** Hide the destination text (when the panel already groups rows under a "→ headsign" header). */
+  hideHeadsign?: boolean
   /** When set, the row links to the trip detail (svolgimento corsa). */
   fromStopId?: string
 }>()

@@ -19,8 +19,7 @@
       </template>
     </PageHeader>
 
-    <div class="max-w-lg mx-auto md:max-w-xl lg:max-w-2xl px-4 pt-4 pb-8">
-      <h1 class="sr-only">{{ route?.longName ?? route?.name ?? '' }}</h1>
+    <div class="max-w-lg mx-auto md:max-w-xl lg:max-w-2xl px-4 pt-4" style="padding-bottom: calc(var(--download-banner-offset, 0px) + 1.5rem)">
 
       <div v-if="pending" aria-busy="true" :aria-label="s.ariaLoading">
         <!-- LineBadge placeholder -->

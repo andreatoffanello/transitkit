@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
-import { decodeDepartures, getTodayDayGroupKey, parseDayGroup, getDayGroupLabel, getNextServiceDayGroupKey, computeNowMin, getNextDeparture, sortStopsByNextDeparture } from '~/utils/schedule'
+import { decodeDepartures, getTodayDayGroupKey, getTodayDayGroupKeys, parseDayGroup, getDayGroupLabel, getNextServiceDayGroupKey, computeNowMin, getNextDeparture, sortStopsByNextDeparture } from '~/utils/schedule'
 import { getStrings } from '~/utils/strings'
 import type { ScheduleData } from '~/types'
 
@@ -137,10 +137,10 @@ describe('getDayGroupLabel', () => {
   const it_strings = getStrings('it')
   const en_strings = getStrings('en')
 
-  it('weekdays: IT → Lun-Ven, EN → Mon-Fri', () => {
+  it('weekdays: IT → Lun–Ven, EN → Mon–Fri', () => {
     const dg = parseDayGroup('mon,tue,wed,thu,fri')
-    expect(getDayGroupLabel(dg, it_strings)).toBe('Lun-Ven')
-    expect(getDayGroupLabel(dg, en_strings)).toBe('Mon-Fri')
+    expect(getDayGroupLabel(dg, it_strings)).toBe('Lun–Ven')
+    expect(getDayGroupLabel(dg, en_strings)).toBe('Mon–Fri')
   })
 
   it('everyday: IT → Ogni giorno, EN → Every day', () => {
@@ -161,10 +161,10 @@ describe('getDayGroupLabel', () => {
     expect(getDayGroupLabel(dg, en_strings)).toBe('Sat')
   })
 
-  it('mon-sat (6 days): IT → Lun-Sab, EN → Mon-Sat', () => {
+  it('mon-sat (6 days): IT → Lun–Sab, EN → Mon–Sat', () => {
     const dg = parseDayGroup('mon,tue,wed,thu,fri,sat')
-    expect(getDayGroupLabel(dg, it_strings)).toBe('Lun-Sab')
-    expect(getDayGroupLabel(dg, en_strings)).toBe('Mon-Sat')
+    expect(getDayGroupLabel(dg, it_strings)).toBe('Lun–Sab')
+    expect(getDayGroupLabel(dg, en_strings)).toBe('Mon–Sat')
   })
 })
 
@@ -221,6 +221,44 @@ describe('getTodayDayGroupKey', () => {
     const key = getTodayDayGroupKey(departures as any, 'Invalid/Timezone')
     expect(key).toBe('mon,tue,wed,thu,fri')
     vi.restoreAllMocks()
+  })
+})
+
+describe('getTodayDayGroupKeys (union — calendari frammentati)', () => {
+  afterEach(() => vi.restoreAllMocks())
+
+  it('unisce TUTTE le key che contengono oggi, non solo la prima', () => {
+    // Regressione AppalCART: la domenica è spezzata tra il calendario
+    // "everyday" e "mon+sun"; prendere solo la prima key nascondeva tutte
+    // le corse domenicali (e i mezzi live) → "No departures" su fermate servite.
+    const departures: Record<string, (string | number)[][]> = {
+      'sun,mon,tue,wed,thu,fri,sat': [['07:00', 0, 0]],
+      'sun,mon': [['13:07', 1, 0], ['13:27', 1, 0]],
+      'sat': [['09:00', 0, 0]],
+    }
+    vi.spyOn(Date.prototype, 'getDay').mockReturnValue(0) // domenica
+    const keys = getTodayDayGroupKeys(departures)
+    expect(keys).toEqual(['sun,mon,tue,wed,thu,fri,sat', 'sun,mon'])
+    expect(keys).not.toContain('sat')
+  })
+
+  it('restituisce [] se nessuna key contiene oggi', () => {
+    vi.spyOn(Date.prototype, 'getDay').mockReturnValue(0) // domenica
+    const keys = getTodayDayGroupKeys({ 'mon,tue,wed,thu,fri': [['07:00', 0, 0]] })
+    expect(keys).toEqual([])
+  })
+
+  it('rispetta il timezone fornito', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2024-01-10T12:00:00Z')) // mercoledì a NY
+    const departures: Record<string, (string | number)[][]> = {
+      'mon,tue,wed,thu,fri': [['08:00', 0, 0]],
+      'wed': [['12:00', 0, 0]],
+      'sat,sun': [['10:00', 0, 0]],
+    }
+    const keys = getTodayDayGroupKeys(departures as any, 'America/New_York')
+    expect(keys).toEqual(['mon,tue,wed,thu,fri', 'wed'])
+    vi.useRealTimers()
   })
 })
 

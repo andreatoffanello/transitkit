@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import { normalizeHex } from '~/utils/color'
+import { normalizeHex, readableTextColor } from '~/utils/color'
 import { getStrings } from '~/utils/strings'
 
 const props = defineProps<{
@@ -26,8 +26,13 @@ const props = defineProps<{
 const bgColor = computed(() =>
   props.color ? normalizeHex(props.color) : 'var(--color-primary)'
 )
-const fgColor = computed(() =>
-  props.textColor ? normalizeHex(props.textColor) : 'var(--color-text-on-primary)'
-)
+// Prefer the feed's route_text_color; if it's blank (common — every AppalCART
+// route leaves it empty) derive a legible black/white from the background
+// luminance instead of blindly using white, which fails WCAG on light routes.
+const fgColor = computed(() => {
+  if (props.textColor) return normalizeHex(props.textColor)
+  if (props.color) return readableTextColor(props.color)
+  return 'var(--color-text-on-primary)'
+})
 const ariaLabel = computed(() => `${getStrings(props.locale).lineLabel} ${props.name}`)
 </script>

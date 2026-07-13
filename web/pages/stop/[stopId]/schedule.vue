@@ -20,15 +20,15 @@
         </h1>
 
         <!-- Day selector (capsule chips) -->
-        <div v-if="dayGroups.length > 1" class="flex gap-2 overflow-x-auto scrollbar-none px-5 pb-3">
+        <div v-if="dayGroups.length > 1" ref="dayStripRef" class="flex gap-2 overflow-x-auto scrollbar-none px-5 pb-3">
           <button
             v-for="dg in dayGroups"
             :key="dg.id"
             class="shrink-0 h-10 px-4 rounded-full text-[15px] transition-all duration-150 active:opacity-70"
-            :style="selectedKey === dg.id
+            :style="activeKey === dg.id
               ? { backgroundColor: 'var(--color-primary)', color: 'var(--color-text-on-primary)', fontWeight: 600 }
               : { backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border)', fontWeight: 500 }"
-            :aria-pressed="selectedKey === dg.id"
+            :aria-pressed="activeKey === dg.id"
             @click="selectDay(dg.id)"
           >
             {{ dayLabel(dg) }}
@@ -58,11 +58,11 @@
         </div>
 
         <!-- Hour-grouped board -->
-        <div class="px-1 pb-24">
+        <div class="px-1" style="padding-bottom: calc(var(--download-banner-offset, 0px) + 1.5rem)">
           <template v-if="hourGroups.length">
             <div v-for="hg in hourGroups" :key="hg.hour">
               <div class="flex items-center gap-2 px-4 pt-3 pb-1">
-                <span class="text-[13px] font-semibold tabular-nums w-6 text-right" style="color: var(--text-tertiary); font-family: ui-monospace, monospace">{{ hg.hour }}</span>
+                <span class="text-[13px] font-semibold tabular-nums w-14 text-right" style="color: var(--text-tertiary); font-family: ui-monospace, monospace">{{ formatClockHour(hg.hour, config?.locale[0]) }}</span>
                 <span class="flex-1 h-px" style="background-color: var(--border)" />
               </div>
               <div
@@ -70,7 +70,7 @@
                 :key="dep.id"
                 class="flex items-center gap-2.5 px-4 py-1.5"
               >
-                <span class="w-[68px] shrink-0 whitespace-nowrap text-[15px] font-medium tabular-nums" style="color: var(--text-primary); font-family: ui-monospace, monospace">{{ formatClockTime(dep.time, config?.locale[0]) }}</span>
+                <span class="w-[68px] shrink-0 whitespace-nowrap text-right text-[15px] font-medium tabular-nums" style="color: var(--text-primary); font-family: ui-monospace, monospace">{{ formatClockTime(dep.time, config?.locale[0]) }}</span>
                 <LineBadge :name="dep.lineName" :color="dep.color" :text-color="dep.textColor" :locale="config?.locale[0]" />
                 <span class="flex-1 min-w-0 truncate text-sm" style="color: var(--text-secondary)">{{ dep.headsign }}</span>
                 <span
@@ -101,8 +101,8 @@
 definePageMeta({ pageTransition: { name: 'page-slide-up', mode: 'out-in' } })
 import { ref } from 'vue'
 import { ChevronLeft, Clock } from 'lucide-vue-next'
-import { decodeDepartures, parseDayGroup, getDayGroupLabel, getTodayDayGroupKey } from '~/utils/schedule'
-import { formatClockTime } from '~/utils/clockTime'
+import { decodeDepartures, parseDayGroup, getDayGroupLabel, getTodayDayGroupKeys } from '~/utils/schedule'
+import { formatClockTime, formatClockHour } from '~/utils/clockTime'
 import type { Departure, ScheduleStop, Route, DayGroup } from '~/types'
 
 const route = useRoute()
@@ -135,9 +135,19 @@ const dayGroups = computed<DayGroup[]>(() =>
 const selectedKey = ref<string | null>(null)
 const filterLine = ref<string | null>(null)
 
-const todayKey = computed(() =>
-  stop.value ? getTodayDayGroupKey(stop.value.departures, config.value?.timezone) : null,
-)
+// A weekday can be split across several service calendars (e.g. an "everyday"
+// group + a "sun,mon" group). Default the schedule tab to the today-group with
+// the MOST service, so a rider never lands on a near-empty calendar while the
+// real timetable hides in another tab. (Same root as the upcoming-board fix.)
+const todayKey = computed(() => {
+  if (!stop.value) return null
+  const keys = getTodayDayGroupKeys(stop.value.departures, config.value?.timezone)
+  if (keys.length === 0) return null
+  return keys.reduce(
+    (best, k) => (stop.value!.departures[k]?.length ?? 0) > (stop.value!.departures[best]?.length ?? 0) ? k : best,
+    keys[0]!,
+  )
+})
 
 const activeKey = computed(() =>
   selectedKey.value ?? todayKey.value ?? dayGroups.value[0]?.id ?? null,
@@ -147,6 +157,19 @@ function selectDay(key: string) {
   selectedKey.value = key
   filterLine.value = null
 }
+
+// Keep the highlighted day-group tab visible: on a narrow screen the strip is
+// horizontally scrollable and the default (today's rich) group can sit clipped
+// off the right edge, so the active pill isn't seen until the user scrolls.
+const dayStripRef = ref<HTMLElement | null>(null)
+function scrollActiveTabIntoView() {
+  nextTick(() => {
+    const el = dayStripRef.value?.querySelector('[aria-pressed="true"]') as HTMLElement | null
+    el?.scrollIntoView({ inline: 'center', block: 'nearest' })
+  })
+}
+onMounted(scrollActiveTabIntoView)
+watch(activeKey, scrollActiveTabIntoView)
 
 function dayLabel(dg: DayGroup): string {
   return getDayGroupLabel(dg, s.value)

@@ -197,6 +197,25 @@ export function getTodayDayGroupKey(
 }
 
 /**
+ * ALL day-group keys whose day set includes today. A GTFS calendar can
+ * fragment a single weekday across multiple service signatures — e.g. an
+ * "everyday" calendar (`sun,mon,tue,wed,thu,fri,sat`) AND a "mon+sun" calendar
+ * (`sun,mon`) both run on Sunday. The upcoming board must UNION them: picking
+ * only the first match (see `getTodayDayGroupKey`) silently drops the trips in
+ * every other group — which on AppalCART hides all live Sunday service and
+ * shows "No departures" at served stops. Groups are disjoint by serviceDays
+ * signature (a trip belongs to exactly one calendar), so no dedup is needed.
+ */
+export function getTodayDayGroupKeys(
+  departures: Record<string, (string | number)[][]>,
+  timezone?: string,
+): string[] {
+  const dayIndex = resolveTodayIndex(timezone)
+  const todayAbbr = WEEKDAY_ABBR[dayIndex] ?? ''
+  return Object.keys(departures).filter(key => key.split(',').includes(todayAbbr))
+}
+
+/**
  * Given the departures map and a reference date, find the next day group key
  * that has service (i.e., the nearest upcoming day after today that appears
  * in the departures map). Returns null if no future day group is found.
@@ -337,10 +356,10 @@ export function getNextDeparture(
 ): Departure | null {
   const stop = scheduleData.stops.find(s => s.id === stopId)
   if (!stop) return null
-  const todayKey = getTodayDayGroupKey(stop.departures, timezone)
-  if (!todayKey) return null
-  const compact = stop.departures[todayKey]
-  if (!compact) return null
+  const todayKeys = getTodayDayGroupKeys(stop.departures, timezone)
+  if (todayKeys.length === 0) return null
+  const compact = todayKeys.flatMap(k => stop.departures[k] ?? [])
+  if (compact.length === 0) return null
   const deps = decodeDepartures(compact, scheduleData, headsignMap)
   const nowMin = computeNowMin(nowMs, timezone)
   return deps

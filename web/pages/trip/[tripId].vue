@@ -1,6 +1,6 @@
 <template>
   <AppLayout>
-    <div class="max-w-lg mx-auto md:max-w-xl lg:max-w-2xl">
+    <div class="max-w-lg mx-auto md:max-w-xl lg:max-w-2xl" style="padding-bottom: calc(var(--download-banner-offset, 0px) + 1.5rem)">
 
       <!-- Back navigation -->
       <div class="px-2 pt-2">
@@ -21,7 +21,7 @@
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-1.5">
               <ChevronRight :size="12" :stroke-width="2" class="shrink-0" style="color: var(--text-secondary)" />
-              <p class="text-[16px] font-semibold truncate" style="color: var(--text-primary)">{{ trip.headsign }}</p>
+              <h1 class="text-[16px] font-semibold truncate" style="color: var(--text-primary)">{{ trip.headsign }}</h1>
             </div>
             <div class="flex items-center gap-2 mt-0.5">
               <span class="text-xs" style="color: var(--text-secondary)">{{ trip.rows.length }} {{ s.stops }}</span>

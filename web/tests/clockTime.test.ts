@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatClockTime } from '~/utils/clockTime'
+import { formatClockTime, formatClockHour } from '~/utils/clockTime'
 
 describe('formatClockTime', () => {
   // === 24-hour (non-en locale) ===
@@ -78,5 +78,32 @@ describe('formatClockTime', () => {
 
   it('returns malformed string unchanged', () => {
     expect(formatClockTime('not-a-time', 'en')).toBe('not-a-time')
+  })
+})
+
+describe('formatClockHour (schedule hour dividers)', () => {
+  it('en → 12-hour with period, no minutes', () => {
+    expect(formatClockHour('13', 'en')).toBe('1 PM')
+    expect(formatClockHour('00', 'en')).toBe('12 AM')
+    expect(formatClockHour('12', 'en')).toBe('12 PM')
+    expect(formatClockHour('07', 'en')).toBe('7 AM')
+    expect(formatClockHour('23', 'en')).toBe('11 PM')
+  })
+
+  it('non-en → 24-hour zero-padded', () => {
+    expect(formatClockHour('13', 'it')).toBe('13')
+    expect(formatClockHour('7', 'it')).toBe('07')
+    expect(formatClockHour('0', undefined)).toBe('00')
+  })
+
+  it('wraps GTFS overflow hours (25 → 1 AM / 01)', () => {
+    expect(formatClockHour('25', 'en')).toBe('1 AM')
+    expect(formatClockHour('24', 'en')).toBe('12 AM')
+    expect(formatClockHour('25', 'it')).toBe('01')
+  })
+
+  it('accepts a number and tolerates garbage', () => {
+    expect(formatClockHour(15, 'en')).toBe('3 PM')
+    expect(formatClockHour('xx', 'en')).toBe('xx')
   })
 })

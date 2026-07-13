@@ -143,10 +143,22 @@
                   </span>
                   <span
                     v-if="favoriteNextDepartures[stop.stopId]"
-                    class="block text-xs tabular-nums truncate"
-                    style="color: var(--text-tertiary)"
+                    class="flex items-center gap-1.5 mt-0.5"
                   >
-                    {{ favoriteNextDepartures[stop.stopId] }}
+                    <LineBadge
+                      :name="favoriteNextDepartures[stop.stopId]!.lineName"
+                      :color="favoriteNextDepartures[stop.stopId]!.lineColor"
+                      :text-color="favoriteNextDepartures[stop.stopId]!.lineTextColor"
+                      :locale="config?.locale[0]"
+                    />
+                    <span
+                      class="text-xs tabular-nums"
+                      :style="favoriteNextDepartures[stop.stopId]!.minutesFromNow <= 5
+                        ? 'color: var(--color-live); font-weight: 600; letter-spacing: -0.01em'
+                        : 'color: var(--text-tertiary); letter-spacing: -0.01em'"
+                    >
+                      {{ favoriteNextDepartures[stop.stopId]!.timeLabel }}
+                    </span>
                   </span>
                 </span>
                 <ChevronRight :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
@@ -337,7 +349,7 @@
           <Smartphone :size="16" :stroke-width="1.75" style="color: var(--color-primary); opacity: 0.7" class="shrink-0" />
           <span class="flex-1 min-w-0">
             <span class="block text-[15px] font-medium truncate" style="color: var(--text-primary)">{{ config.store.title }}</span>
-            <span v-if="config.store.subtitle" class="block text-xs truncate" style="color: var(--text-tertiary)">{{ config.store.subtitle }}</span>
+            <span v-if="config.store.subtitle" class="block text-xs line-clamp-2" style="color: var(--text-tertiary)">{{ config.store.subtitle }}</span>
           </span>
           <ChevronRight :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
         </NuxtLink>
@@ -468,28 +480,17 @@ const sortedRecentStops = computed(() => {
   return sortStopsByNextDeparture(recentStops.value, schedules.value, now.value, config.value?.timezone, config.value?.headsignMap)
 })
 
-const favoriteNextDepartures = computed<Record<string, string>>(() => {
-  const result: Record<string, string> = {}
-  const nowMin = computeNowMin(now.value, config.value?.timezone)
-  for (const fav of favoriteStops.value) {
-    if (!schedules.value) continue
-    const dep = getNextDeparture(fav.stopId, schedules.value, now.value, config.value?.timezone, config.value?.headsignMap)
-    if (!dep) continue
-    const diff = dep.minutesFromMidnight - nowMin
-    if (diff < 0) continue
-    if (diff === 0) result[fav.stopId] = `${dep.lineName} · ${s.value.now}`
-    else if (diff < 60) result[fav.stopId] = `${dep.lineName} · ${diff} ${s.value.minutes}`
-    else result[fav.stopId] = `${dep.lineName} · ${formatClockTime(dep.time, config.value?.locale?.[0])}`
-  }
-  return result
-})
+type NextDepInfo = { lineName: string; lineColor?: string; lineTextColor?: string; timeLabel: string; minutesFromNow: number }
 
-const recentNextDepartures = computed<Record<string, { lineName: string; lineColor?: string; lineTextColor?: string; timeLabel: string; minutesFromNow: number }>>(() => {
-  const result: Record<string, { lineName: string; lineColor?: string; lineTextColor?: string; timeLabel: string; minutesFromNow: number }> = {}
+// Next upcoming departure per stop, as a rich object (badge color + live-aware
+// time label). Shared by Favorites and Recent so both sections render the same
+// coloured LineBadge + highlighted time (previously Favorites showed flat grey).
+function buildNextDepartures(stops: { stopId: string }[]): Record<string, NextDepInfo> {
+  const result: Record<string, NextDepInfo> = {}
+  if (!schedules.value) return result
   const nowMin = computeNowMin(now.value, config.value?.timezone)
-  for (const recent of recentStops.value) {
-    if (!schedules.value) continue
-    const dep = getNextDeparture(recent.stopId, schedules.value, now.value, config.value?.timezone, config.value?.headsignMap)
+  for (const st of stops) {
+    const dep = getNextDeparture(st.stopId, schedules.value, now.value, config.value?.timezone, config.value?.headsignMap)
     if (!dep) continue
     const diff = dep.minutesFromMidnight - nowMin
     if (diff < 0) continue
@@ -498,10 +499,13 @@ const recentNextDepartures = computed<Record<string, { lineName: string; lineCol
     if (diff === 0) timeLabel = s.value.now
     else if (diff < 60) timeLabel = `${diff} ${s.value.minutes}`
     else timeLabel = formatClockTime(dep.time, config.value?.locale?.[0])
-    result[recent.stopId] = { lineName: dep.lineName, lineColor: route?.color, lineTextColor: route?.textColor, timeLabel, minutesFromNow: diff }
+    result[st.stopId] = { lineName: dep.lineName, lineColor: route?.color, lineTextColor: route?.textColor, timeLabel, minutesFromNow: diff }
   }
   return result
-})
+}
+
+const favoriteNextDepartures = computed(() => buildNextDepartures(favoriteStops.value))
+const recentNextDepartures = computed(() => buildNextDepartures(recentStops.value))
 
 useHead({
   title: computed(() => `${config.value?.brandName ?? config.value?.name ?? ''} — ${s.value.linesAndSchedules}`),

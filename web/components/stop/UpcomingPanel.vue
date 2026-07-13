@@ -59,6 +59,7 @@
               :locale="config?.locale[0]"
               :from-stop-id="stopId"
               :hide-badge="filterLine !== null"
+              :hide-headsign="true"
               :show-countdown="true"
             />
           </div>

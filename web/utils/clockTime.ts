@@ -37,3 +37,24 @@ export function formatClockTime(hhmm: string, locale?: string): string {
   // Non-English: return 24-hour "HH:MM"
   return `${String(hour24).padStart(2, '0')}:${mm}`
 }
+
+/**
+ * formatClockHour — hour-only label for schedule hour-group dividers.
+ *  - locale 'en' → 12-hour with period, no minutes ("1 PM", "12 AM", "12 PM").
+ *  - other locales → 24-hour "HH".
+ * Keeps the divider consistent with the 12h/24h format used by the rows
+ * (formatClockTime); previously the dividers always showed raw 24-hour hours.
+ * Accepts a 1/2-digit hour string or number; wraps GTFS overflow hours mod 24.
+ */
+export function formatClockHour(hh: string | number, locale?: string): string {
+  const rawHour = typeof hh === 'number' ? hh : parseInt(hh, 10)
+  if (Number.isNaN(rawHour)) return String(hh)
+  const hour24 = ((rawHour % 24) + 24) % 24
+  const lang = (locale ?? '').split('-')[0]?.toLowerCase()
+  if (lang === 'en') {
+    const period = hour24 < 12 ? 'AM' : 'PM'
+    const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12
+    return `${hour12} ${period}`
+  }
+  return String(hour24).padStart(2, '0')
+}

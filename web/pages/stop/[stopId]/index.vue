@@ -62,7 +62,7 @@
 <script setup lang="ts">
 definePageMeta({ pageTransition: { name: 'page-slide-up', mode: 'out-in' } })
 import { onMounted, ref, watch } from 'vue'
-import { decodeDepartures, getTodayDayGroupKey, computeNowMin, getNextDeparture } from '~/utils/schedule'
+import { decodeDepartures, getTodayDayGroupKeys, computeNowMin, getNextDeparture } from '~/utils/schedule'
 import type { Departure, ScheduleStop, Route } from '~/types'
 import { useStopHead } from '~/components/stop/useStopHead'
 
@@ -117,8 +117,8 @@ const departuresByGroup = computed<Record<string, Departure[]>>(() => {
   return result
 })
 
-const todayKey = computed(() =>
-  stop.value ? getTodayDayGroupKey(stop.value.departures, config.value?.timezone) : null,
+const todayKeys = computed(() =>
+  stop.value ? getTodayDayGroupKeys(stop.value.departures, config.value?.timezone) : [],
 )
 
 const servingRoutes = computed((): Route[] => {
@@ -151,15 +151,16 @@ onMounted(() => {
 })
 onUnmounted(() => clearInterval(interval))
 
-const todayDepartures = computed<Departure[]>(() => {
-  const key = todayKey.value
-  if (!key) return []
-  return departuresByGroup.value[key] ?? []
-})
+const todayDepartures = computed<Departure[]>(() =>
+  todayKeys.value
+    .flatMap(key => departuresByGroup.value[key] ?? [])
+    .sort((a, b) => a.minutesFromMidnight - b.minutesFromMidnight),
+)
 
 const { departures: realtimeDepartures, isLive, isLoading: realtimeLoading, lastUpdated: realtimeLastUpdated, refresh: refreshRealtime } = useRealtime(
   todayDepartures,
   config.value?.gtfsRt?.trip_updates,
+  { timezone: config.value?.timezone, locale: config.value?.locale?.[0] },
 )
 
 const upcomingDepartures = computed<Departure[]>(() => {

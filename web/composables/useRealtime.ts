@@ -1,5 +1,7 @@
 import type { Ref } from 'vue'
 import type { Departure } from '~/types'
+import { computeNowMin } from '~/utils/schedule'
+import { formatClockTime } from '~/utils/clockTime'
 
 /**
  * Pure merge function — exported for unit testing.
@@ -48,6 +50,7 @@ function getFeedMessage(): Promise<import('protobufjs').Type> {
 export function useRealtime(
   departures: Ref<Departure[]>,
   gtfsRtUrl: string | undefined,
+  opts: { timezone?: string; locale?: string } = {},
 ) {
   const isLive = ref(false)
   const isLoading = ref(false)
@@ -101,8 +104,11 @@ export function useRealtime(
       merged.value = departures.value
     } finally {
       isLoading.value = false
-      const now = new Date()
-      lastUpdated.value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+      // Refresh time in the operator's timezone + 12h (for en locale),
+      // consistent with the departure rows — not browser-local 24h.
+      const nowMin = computeNowMin(Date.now(), opts.timezone)
+      const hhmm = `${String(Math.floor(nowMin / 60)).padStart(2, '0')}:${String(nowMin % 60).padStart(2, '0')}`
+      lastUpdated.value = formatClockTime(hhmm, opts.locale)
     }
   }
 

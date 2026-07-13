@@ -19,7 +19,11 @@
   --hairline-strong: rgba(255, 255, 255, 0.14);
   --text: #ffffff;
   --text-2: rgba(255, 255, 255, 0.64);
-  --text-3: rgba(255, 255, 255, 0.4);
+  /* 0.4 was 3.66:1 — fails WCAG AA. Used for eyebrows, hero sub-label, footer,
+     the inactive language toggle and pricing trust line (all small text). 0.55
+     clears AA (~6:1) on #000 and the #0a0b0d/#101216 surfaces, still a tier
+     below --text-2 (0.64). */
+  --text-3: rgba(255, 255, 255, 0.55);
   /* the hero's electric signal, as a reusable token (rgb triplet → flexible alpha) */
   --cyan: 41, 200, 255;
 }

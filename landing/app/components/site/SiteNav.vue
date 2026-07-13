@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const { t } = useI18n()
 const localePath = useLocalePath()
+const router = useRouter()
 const scrolled = ref(false)
 
 const links = [
@@ -61,7 +62,16 @@ onBeforeUnmount(() => {
 
 function go(href: string, e: MouseEvent) {
   e.preventDefault()
-  document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })
+  const target = document.querySelector(href)
+  if (target) {
+    target.scrollIntoView({ behavior: 'smooth' })
+  } else {
+    // These sections only exist on the homepage — from a sub-page (terms,
+    // pricing, …) the anchor is absent, so navigate to the localized homepage
+    // and let Nuxt's scrollBehavior land on the hash. Previously this silently
+    // no-op'd, leaving the whole nav dead on every sub-page.
+    router.push(`${localePath('/')}${href}`)
+  }
 }
 </script>
 

@@ -26,10 +26,21 @@ function onMove(e: PointerEvent) {
 }
 function reset() { tx.value = 0; ty.value = 0 }
 
+const router = useRouter()
+const localePath = useLocalePath()
+
 function onHashClick(e: MouseEvent) {
   if (!isHash.value) return
   e.preventDefault()
-  document.querySelector(props.to)?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' })
+  const target = document.querySelector(props.to)
+  if (target) {
+    target.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' })
+  } else {
+    // The target section only lives on the homepage; from a sub-page (e.g. the
+    // "Book a demo" CTA in the shared nav on /terms or /pricing) navigate to the
+    // localized homepage + hash instead of silently doing nothing.
+    router.push(`${localePath('/')}${props.to}`)
+  }
 }
 
 const cls = computed(() => [

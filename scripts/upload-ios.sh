@@ -50,11 +50,13 @@ echo "==> Staging resources for $OPERATOR_ID"
 RESOURCES_DIR="$IOS_DIR/TransitKit/Sources/Resources"
 
 CONFIG_SRC="$ROOT_DIR/shared/operators/$OPERATOR_ID/config.json"
-SCHEDULES_SRC="$ROOT_DIR/output/$OPERATOR_ID/schedules.json"
 [ -f "$CONFIG_SRC" ] || { echo "ERROR: missing $CONFIG_SRC"; exit 1; }
-[ -f "$SCHEDULES_SRC" ] || { echo "ERROR: missing $SCHEDULES_SRC"; exit 1; }
 cp "$CONFIG_SRC" "$RESOURCES_DIR/config.json"
-cp "$SCHEDULES_SRC" "$RESOURCES_DIR/schedules.json"
+
+# ScheduleLoader reads memory → disk cache → CDN; it never falls back to the
+# bundle. `resources:` in project.yml globs this whole directory, so a copy
+# left here by an older build would ship ~6 MB of dead weight.
+rm -f "$RESOURCES_DIR/schedules.json"
 
 FIREBASE_SRC="$ROOT_DIR/shared/operators/$OPERATOR_ID/firebase/GoogleService-Info.plist"
 if [ -f "$FIREBASE_SRC" ]; then
@@ -94,15 +96,26 @@ if [ ! -d "$ARCHIVE_PATH" ]; then
 fi
 echo "  ✓ Archive: $ARCHIVE_PATH"
 
-# ---------- Export to local IPA ----------
+# ---------- Export + upload to App Store Connect ----------
 #
-# ExportOptions.plist uses `destination: export` (not `upload`) because the
-# `upload` path of `xcodebuild -exportArchive` does not consistently honor
-# the -authenticationKey* flags and ends up requesting an Xcode-keychain
-# account ("No Accounts with App Store Connect Access"). We export the
-# signed IPA locally first, then upload it with `altool` which DOES read
-# the ASC API key from the explicit flags.
-echo "==> Exporting signed IPA"
+# ExportOptions.plist sets `destination: upload`, so -exportArchive signs AND
+# uploads in one step, leaving no .ipa on disk. Don't look for one: an
+# "IPA missing" check here reports EXPORT FAILED on a *successful* upload.
+#
+# Fallback if Apple 500s on this path (it has before): flip ExportOptions to
+# `destination: export`, then upload the emitted .ipa with
+#   xcrun altool --upload-app --type ios --file "$EXPORT_DIR"/*.ipa \
+#     --apiKey "$ASC_API_KEY_ID" --apiIssuer "$ASC_API_ISSUER_ID"
+# altool reads the key from those flags; keep the two in sync.
+#
+# grep alone can't gate this: it exits 1 when a clean run matches none of its
+# patterns, so `| grep ... || true` (and pipefail) can't tell success from
+# failure. Take xcodebuild's own status via PIPESTATUS and keep the full log —
+# the interesting errors (e.g. "bundle version ... already been used") are
+# server-side and appear nowhere else.
+EXPORT_LOG="$BUILD_DIR/export-$OPERATOR_ID.log"
+echo "==> Exporting + uploading to App Store Connect"
+set +e
 xcodebuild \
     -exportArchive \
     -archivePath "$ARCHIVE_PATH" \
@@ -112,27 +125,19 @@ xcodebuild \
     -authenticationKeyPath "$ASC_API_KEY_PATH" \
     -authenticationKeyID "$ASC_API_KEY_ID" \
     -authenticationKeyIssuerID "$ASC_API_ISSUER_ID" 2>&1 | \
-    grep --line-buffered -E "error:|EXPORT SUCCEEDED|EXPORT FAILED|\*\* EXPORT" || true
+    tee "$EXPORT_LOG" | \
+    grep --line-buffered -E "error:|Starting upload|EXPORT SUCCEEDED|EXPORT FAILED|\*\* EXPORT"
+EXPORT_STATUS=${PIPESTATUS[0]}
+set -e
 
-IPA_PATH=$(find "$EXPORT_DIR" -maxdepth 1 -name "*.ipa" | head -1)
-if [ -z "$IPA_PATH" ] || [ ! -f "$IPA_PATH" ]; then
-    echo "EXPORT FAILED — no IPA produced under $EXPORT_DIR"
+if [ "$EXPORT_STATUS" -ne 0 ]; then
+    echo "EXPORT/UPLOAD FAILED (xcodebuild exit $EXPORT_STATUS) — full log: $EXPORT_LOG"
     exit 1
 fi
-echo "  ✓ IPA: $IPA_PATH"
-
-# ---------- Upload to App Store Connect via altool ----------
-echo "==> Uploading to App Store Connect"
-xcrun altool \
-    --upload-app \
-    --type ios \
-    --file "$IPA_PATH" \
-    --apiKey "$ASC_API_KEY_ID" \
-    --apiIssuer "$ASC_API_ISSUER_ID" 2>&1 | \
-    grep --line-buffered -E "Upload successful|UPLOAD SUCCEEDED|error|ERROR|Warning|Redundant Binary|No suitable" || true
+echo "  ✓ Uploaded to App Store Connect"
 
 echo ""
-echo "==> If the upload step printed 'Upload successful', the build is in"
-echo "    App Store Connect. Processing usually takes 5–15 min — you'll"
-echo "    get an email when it's done. Track at"
+echo "==> Build uploaded. Apple processing takes 5–15 min; it does not appear"
+echo "    in the API immediately after upload, so a missing build right after"
+echo "    this step means 'not indexed yet', not 'upload failed'. Track at"
 echo "    https://appstoreconnect.apple.com/apps"

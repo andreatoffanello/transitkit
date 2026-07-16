@@ -534,7 +534,7 @@
     }
   ],
   "appLinks": {
-    "ios": "https://apps.apple.com/app/id000000000",
+    "ios": "https://apps.apple.com/us/app/appalrider/id6770484267",
     "android": "https://play.google.com/store/apps/details?id=com.transitkit.appalcart"
   },
   "privacyUrl": "https://appalcart.transitkit.app/privacy",
@@ -549,6 +549,12 @@
     "messageEs": "Por favor actualiza la aplicación para continuar.",
     "whatsNewEn": "New features and improvements are available.",
     "whatsNewIt": "Nuove funzionalità e miglioramenti disponibili.",
-    "whatsNewEs": "Nuevas funciones y mejoras disponibles."
+    "whatsNewEs": "Nuevas funciones y mejoras disponibles.",
+    "android": {
+      "minVersionCode": 1,
+      "latestVersionCode": 0,
+      "force": false,
+      "storeUrl": "https://play.google.com/store/apps/details?id=com.transitkit.appalcart"
+    }
   }
 }

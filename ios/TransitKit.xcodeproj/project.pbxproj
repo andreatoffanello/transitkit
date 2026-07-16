@@ -84,7 +84,6 @@
 		9348F246B0AD7805171D1AC0 /* ScheduleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF18EC8C137B8A6F37B3A79F /* ScheduleStore.swift */; };
 		970DD3E8ABA1AF549AAAC5B9 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 40C190F3ADD2E1B0E41BDFC6 /* Localizable.xcstrings */; };
 		97FD1942074FBC5A30261E46 /* LocationPickerMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8B6826165680E704A627FDF /* LocationPickerMap.swift */; };
-		98A9534E14CA4F1B1DF87822 /* schedules.json in Resources */ = {isa = PBXBuildFile; fileRef = EB0D2941E87A9FC1F213D9C7 /* schedules.json */; };
 		98DE59309962AC1F29836503 /* TransitKitSecrets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CFE1A3C3B1313A7B5790B4D /* TransitKitSecrets.swift */; };
 		9A874A83ACA91FBB5CE2D435 /* MapBackground.metal in Sources */ = {isa = PBXBuildFile; fileRef = 15E2A948C884E4A05BA72913 /* MapBackground.metal */; };
 		9D390E6832E56529BB46181F /* LinePickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A338B0B04B601C99D134BD22 /* LinePickerSheet.swift */; };
@@ -249,7 +248,6 @@
 		E7E5839E8A1674A88E34D940 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E9B060B8A74782E4B03194E6 /* ServiceDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceDetailView.swift; sourceTree = "<group>"; };
 		EAD2EE8B1342B1D8E6FD6E2E /* MappaTab+Actions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MappaTab+Actions.swift"; sourceTree = "<group>"; };
-		EB0D2941E87A9FC1F213D9C7 /* schedules.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = schedules.json; sourceTree = "<group>"; };
 		EC6BBEB0DCFFFF27DB881B02 /* SkeletonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkeletonView.swift; sourceTree = "<group>"; };
 		ECFB7E48F2DE54F148E94DA8 /* AlertToastOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertToastOverlay.swift; sourceTree = "<group>"; };
 		EDA2514A710321C1860642FC /* SavedPlacesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedPlacesStore.swift; sourceTree = "<group>"; };
@@ -423,7 +421,6 @@
 				CBEC1A6267CB199440951134 /* InfoPlist.xcstrings */,
 				40C190F3ADD2E1B0E41BDFC6 /* Localizable.xcstrings */,
 				E07F94E282CDCFF351388627 /* PrivacyInfo.xcprivacy */,
-				EB0D2941E87A9FC1F213D9C7 /* schedules.json */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -710,7 +707,6 @@
 				970DD3E8ABA1AF549AAAC5B9 /* Localizable.xcstrings in Resources */,
 				471155655BEDD99FC715AB7E /* PrivacyInfo.xcprivacy in Resources */,
 				35FDAB23947D090227ED347E /* config.json in Resources */,
-				98A9534E14CA4F1B1DF87822 /* schedules.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

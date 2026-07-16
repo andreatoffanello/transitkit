@@ -41,16 +41,12 @@ mkdir -p "$RESOURCES_DIR"
 cp "$CONFIG_SRC" "$RESOURCES_DIR/config.json"
 echo "  ✓ Copied config.json"
 
-# ---------- Copy schedules.json ----------
-
-SCHEDULES_SRC="$ROOT_DIR/output/$OPERATOR_ID/schedules.json"
-if [ ! -f "$SCHEDULES_SRC" ]; then
-    echo "ERROR: Schedules not found at $SCHEDULES_SRC"
-    exit 1
-fi
-
-cp "$SCHEDULES_SRC" "$RESOURCES_DIR/schedules.json"
-echo "  ✓ Copied schedules.json"
+# ---------- Drop any stale bundled schedules.json ----------
+#
+# ScheduleLoader reads memory → disk cache → CDN; it never falls back to the
+# bundle. `resources:` in project.yml globs this whole directory, so a copy
+# left here by an older build would ship ~6 MB of dead weight.
+rm -f "$RESOURCES_DIR/schedules.json"
 
 # ---------- Copy GoogleService-Info.plist (optional — push notifications) ----------
 #

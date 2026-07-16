@@ -16,11 +16,6 @@
     "accentColor": "#4CAF50",
     "textOnPrimary": "#FFFFFF"
   },
-  "store": {
-    "title": "RFTA Transit - Aspen Bus",
-    "subtitle": "Schedules & live departures for Roaring Fork Valley",
-    "keywords": "rfta,aspen,bus,transit,glenwood springs,ski,velocirfta,brt"
-  },
   "map": {
     "centerLat": 39.35,
     "centerLng": -107.0,

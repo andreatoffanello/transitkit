@@ -2,19 +2,67 @@
   <Teleport to="body">
     <div
       v-if="visible"
-      class="fixed left-0 right-0 z-30 flex items-center justify-between px-4 gap-3 download-banner"
+      class="fixed left-0 right-0 z-30 flex items-center gap-2 pl-4 pr-2 download-banner"
       style="background-color: var(--color-primary); color: var(--color-text-on-primary)"
       role="banner"
     >
-      <span class="text-sm font-semibold flex-1 truncate">{{ label }}</span>
-      <div class="flex items-center gap-3 shrink-0">
+      <!-- Mobile: un solo CTA verso lo store del dispositivo, tutta la riga tappabile -->
+      <a
+        v-if="storeUrl"
+        :href="storeUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="banner-cta flex items-center gap-3 flex-1 min-w-0 py-2 -my-2"
+      >
+        <svg
+          v-if="platform === 'ios'"
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+          class="shrink-0"
+        >
+          <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.1 22C7.78 22.05 6.8 20.68 5.96 19.47C4.25 17 2.94 12.45 4.7 9.39C5.57 7.87 7.13 6.91 8.82 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"/>
+        </svg>
+        <svg
+          v-else
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden="true"
+          class="shrink-0"
+        >
+          <path d="M3 20.5V3.5C3 2.91 3.34 2.39 3.84 2.15L13.69 12L3.84 21.85C3.34 21.6 3 21.09 3 20.5ZM16.81 15.12L6.05 21.34L14.54 12.85L16.81 15.12ZM20.16 10.81C20.5 11.08 20.75 11.5 20.75 12C20.75 12.5 20.53 12.9 20.18 13.18L17.89 14.5L15.39 12L17.89 9.5L20.16 10.81ZM6.05 2.66L16.81 8.88L14.54 11.15L6.05 2.66Z"/>
+        </svg>
+        <span class="text-sm font-semibold flex-1 truncate">{{ label }}</span>
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+          class="shrink-0 opacity-70"
+        >
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </a>
+
+      <!-- Desktop: nessuno store "del dispositivo", restano entrambe le scelte -->
+      <template v-else>
+        <span class="text-sm font-semibold flex-1 truncate">{{ label }}</span>
         <a
           v-if="appLinks?.ios"
           :href="appLinks.ios"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="App Store"
-          class="opacity-90 hover:opacity-100 transition-opacity"
+          class="p-2 opacity-90 hover:opacity-100 transition-opacity"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.1 22C7.78 22.05 6.8 20.68 5.96 19.47C4.25 17 2.94 12.45 4.7 9.39C5.57 7.87 7.13 6.91 8.82 6.88C10.1 6.86 11.32 7.75 12.11 7.75C12.89 7.75 14.37 6.68 15.92 6.84C16.57 6.87 18.39 7.1 19.56 8.82C19.47 8.88 17.39 10.1 17.41 12.63C17.44 15.65 20.06 16.66 20.09 16.67C20.06 16.74 19.67 18.11 18.71 19.5ZM13 3.5C13.73 2.67 14.94 2.04 15.94 2C16.07 3.17 15.6 4.35 14.9 5.19C14.21 6.04 13.07 6.7 11.95 6.61C11.8 5.46 12.36 4.26 13 3.5Z"/>
@@ -26,24 +74,25 @@
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Google Play"
-          class="opacity-90 hover:opacity-100 transition-opacity"
+          class="p-2 opacity-90 hover:opacity-100 transition-opacity"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M3 20.5V3.5C3 2.91 3.34 2.39 3.84 2.15L13.69 12L3.84 21.85C3.34 21.6 3 21.09 3 20.5ZM16.81 15.12L6.05 21.34L14.54 12.85L16.81 15.12ZM20.16 10.81C20.5 11.08 20.75 11.5 20.75 12C20.75 12.5 20.53 12.9 20.18 13.18L17.89 14.5L15.39 12L17.89 9.5L20.16 10.81ZM6.05 2.66L16.81 8.88L14.54 11.15L6.05 2.66Z"/>
           </svg>
         </a>
-        <button
-          type="button"
-          :aria-label="getStrings(props.locale).closeBanner"
-          class="p-1 opacity-80 hover:opacity-100 transition-opacity"
-          @click="dismiss"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
-      </div>
+      </template>
+
+      <button
+        type="button"
+        :aria-label="getStrings(props.locale).closeBanner"
+        class="p-2 shrink-0 opacity-80 hover:opacity-100 transition-opacity"
+        @click="dismiss"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
     </div>
   </Teleport>
 </template>
@@ -60,13 +109,32 @@ const props = defineProps<{
 
 const STORAGE_KEY = 'app-banner-dismissed'
 const visible = ref(false)
+const platform = ref<'ios' | 'android' | null>(null)
 
 const label = computed(() => getStrings(props.locale).downloadApp)
 
+// Store del dispositivo. null su desktop → il template mostra entrambe le scelte.
+const storeUrl = computed(() => {
+  if (platform.value === 'ios') return props.appLinks?.ios
+  if (platform.value === 'android') return props.appLinks?.android
+  return undefined
+})
+
+function detectPlatform(): 'ios' | 'android' | null {
+  const ua = navigator.userAgent
+  if (/Android/i.test(ua)) return 'android'
+  // iPadOS 13+ si dichiara Macintosh: il touch è l'unico discriminante affidabile.
+  if (/iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'ios'
+  return null
+}
+
 onMounted(() => {
-  // Only show if at least one store link is configured
-  const hasLink = !!(props.appLinks?.ios || props.appLinks?.android)
-  visible.value = hasLink && localStorage.getItem(STORAGE_KEY) !== '1'
+  platform.value = detectPlatform()
+  // Su mobile serve il link dello store giusto: senza, la banner è un vicolo cieco.
+  const hasTarget = platform.value
+    ? !!storeUrl.value
+    : !!(props.appLinks?.ios || props.appLinks?.android)
+  visible.value = hasTarget && localStorage.getItem(STORAGE_KEY) !== '1'
 })
 
 function dismiss() {
@@ -104,5 +172,13 @@ onUnmounted(() => {
     max-width: 480px;
     margin: 0 auto;
   }
+}
+.banner-cta {
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.banner-cta:active {
+  opacity: 0.72;
+  transform: scale(0.985);
 }
 </style>

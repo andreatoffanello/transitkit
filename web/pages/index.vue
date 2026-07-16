@@ -342,21 +342,6 @@
           </div>
         </section>
 
-        <!-- CTA esplora linee — operator URL già in "Chi muove la città" sopra -->
-        <NuxtLink
-          v-if="config?.store"
-          to="/lines"
-          prefetch
-          class="flex items-center gap-3 rounded-2xl px-4 py-3.5 transition-opacity duration-150 active:opacity-70"
-          style="background-color: color-mix(in srgb, var(--color-primary) 6%, var(--bg-elevated)); box-shadow: var(--shadow-sm); border: 1px solid color-mix(in srgb, var(--color-primary) 15%, var(--border))"
-        >
-          <Smartphone :size="16" :stroke-width="1.75" style="color: var(--color-primary); opacity: 0.7" class="shrink-0" />
-          <span class="flex-1 min-w-0">
-            <span class="block text-[15px] font-medium truncate" style="color: var(--text-primary)">{{ config.store.title }}</span>
-            <span v-if="config.store.subtitle" class="block text-xs line-clamp-2" style="color: var(--text-tertiary)">{{ config.store.subtitle }}</span>
-          </span>
-          <ChevronRight :size="16" :stroke-width="1.75" style="color: var(--text-tertiary)" class="shrink-0" />
-        </NuxtLink>
 
         <!-- Schedule freshness -->
         <div v-if="schedules?.validUntil" class="flex items-center justify-center gap-2">
@@ -403,7 +388,7 @@ import { computeNowMin, getNextDeparture, sortStopsByNextDeparture } from '~/uti
 import { highlightMatch } from '~/utils/highlight'
 import { formatClockTime } from '~/utils/clockTime'
 import type { ScheduleData } from '~/types'
-import { Search, X, MapPin, Star, Clock, ChevronRight, Phone, Mail, Smartphone, Route, CalendarDays } from 'lucide-vue-next'
+import { Search, X, MapPin, Star, Clock, ChevronRight, Phone, Mail, Route, CalendarDays } from 'lucide-vue-next'
 
 const { config, schedules } = await useOperator()
 const s = useStrings(config)

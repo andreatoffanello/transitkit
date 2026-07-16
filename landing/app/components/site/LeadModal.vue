@@ -148,7 +148,6 @@ onBeforeUnmount(() => {
                     class="lead__input"
                     type="text"
                     autocomplete="name"
-                    :placeholder="t('lead.namePh')"
                     required
                   />
                 </label>
@@ -160,7 +159,6 @@ onBeforeUnmount(() => {
                     class="lead__input"
                     type="text"
                     autocomplete="organization"
-                    :placeholder="t('lead.agencyPh')"
                     required
                   />
                 </label>
@@ -172,7 +170,6 @@ onBeforeUnmount(() => {
                     class="lead__input"
                     type="email"
                     autocomplete="email"
-                    :placeholder="t('lead.emailPh')"
                     required
                   />
                 </label>

@@ -2,7 +2,7 @@
   <AppLayout>
     <PageHeader :title="s.linesPageTitle" />
 
-    <div class="max-w-lg mx-auto md:max-w-xl lg:max-w-2xl px-4 pb-8">
+    <div class="max-w-lg mx-auto md:max-w-xl lg:max-w-2xl px-5 pb-8">
 
       <div v-if="pending" aria-busy="true" :aria-label="s.ariaLoading">
         <!-- Search bar placeholder -->

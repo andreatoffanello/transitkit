@@ -5,10 +5,11 @@
       <!-- Top bar compatto — parity con homeTopBar native (logo + brand + region + settings) — hidden on desktop (sidebar shows it) -->
       <header class="flex items-center gap-2.5 px-5 pt-3 pb-3 lg:hidden">
         <img
-          :src="config?.logoUrl ?? '/icons/icon-180.png'"
+          :src="appLogoUrl"
           alt=""
-          class="shrink-0 rounded-full object-cover"
+          class="shrink-0 object-contain"
           style="width: 32px; height: 32px"
+          @error="onLogoError"
         />
         <div class="min-w-0 flex-1">
           <h1 class="text-[15px] font-semibold leading-tight truncate" style="color: var(--text-primary)">
@@ -287,15 +288,18 @@
             class="flex items-center gap-3.5 rounded-2xl px-3.5 py-3 transition-opacity active:opacity-80"
             style="background-color: var(--bg-elevated); box-shadow: var(--shadow-sm); border: 1px solid var(--border)"
           >
-            <!-- Logo operatore (fallback gradient + Bus se asset manca) -->
+            <!-- Logo REALE dell'operatore (la mela AppalCART), non l'icona
+                 dell'app: qui parliamo di chi gestisce il servizio.
+                 Parity con l'imageset iOS SourceOperatorLogo. -->
             <div
               class="shrink-0 flex items-center justify-center overflow-hidden"
               style="width: 44px; height: 44px; border-radius: 12px; background-color: color-mix(in srgb, var(--color-primary) 12%, transparent)"
             >
               <img
-                src="/icons/icon-192.png"
+                :src="operatorLogoUrl"
                 alt=""
                 class="w-full h-full object-cover"
+                @error="onOperatorLogoError"
               />
             </div>
             <div class="flex-1 min-w-0">
@@ -403,6 +407,20 @@ import { Search, X, MapPin, Star, Clock, ChevronRight, Phone, Mail, Smartphone, 
 
 const { config, schedules } = await useOperator()
 const s = useStrings(config)
+
+// Il bus dell'app (foreground trasparente), non `config.logoUrl` — quello è
+// l'icona launcher col fondo. Parity con l'header iOS (imageset OperatorLogo).
+const operatorId = useState<string>('operatorId')
+const appLogoUrl = ref(`/brand/${operatorId.value}/app-logo.png`)
+function onLogoError() {
+  appLogoUrl.value = '/icons/icon-180.png'
+}
+
+// Logo reale dell'operatore — solo nella card "chi muove la città".
+const operatorLogoUrl = ref(`/brand/${operatorId.value}/operator-logo.jpg`)
+function onOperatorLogoError() {
+  operatorLogoUrl.value = '/icons/icon-192.png'
+}
 
 const searchStopQuery = ref('')
 

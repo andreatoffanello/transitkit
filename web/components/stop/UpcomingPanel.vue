@@ -1,5 +1,5 @@
 <template>
-  <section class="px-4 mb-6">
+  <section class="px-5 mb-6">
 
     <!-- Line filter chips (badges act as filters, parity con iOS) -->
     <div

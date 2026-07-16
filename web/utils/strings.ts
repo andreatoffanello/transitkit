@@ -205,7 +205,7 @@ export interface AppStrings {
   // AppDownloadBanner
   closeBanner: string
 
-  // AppSidebar / AppTabBar aria
+  // AppTopBar / AppTabBar aria
   mainNavAriaLabel: string
 
   // OG / manifest

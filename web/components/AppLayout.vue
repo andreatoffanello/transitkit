@@ -5,9 +5,9 @@
       :operator-name="config?.name"
       :locale="config?.locale?.[0]"
     />
-    <AppSidebar />
+    <AppTopBar />
     <main
-      class="app-main lg:ml-60 min-h-screen"
+      class="app-main lg:pt-4 min-h-screen"
       style="background-color: var(--bg-secondary); padding-bottom: var(--download-banner-offset, 0px)"
     >
       <slot />

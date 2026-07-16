@@ -16,7 +16,6 @@ const mockConfig: OperatorConfig = {
     accentColor: '#0055FF',
     textOnPrimary: '#FFFFFF',
   },
-  store: { title: 'TestOp', subtitle: 'Orari', keywords: 'bus' },
   map: { centerLat: 45.0, centerLng: 10.0, defaultZoom: 13 },
   features: {
     enableMap: true,

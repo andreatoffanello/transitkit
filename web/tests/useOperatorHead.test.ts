@@ -14,7 +14,6 @@ const mockConfig: OperatorConfig = {
   timezone: 'America/New_York',
   locale: ['en'],
   theme: { primaryColor: '#1b3a6b', accentColor: '#f5a623', textOnPrimary: '#ffffff' },
-  store: { title: '', subtitle: '', keywords: '' },
   map: { centerLat: 36.2, centerLng: -81.6, defaultZoom: 13 },
   features: { enableMap: true, enableGeolocation: false, enableFavorites: false, enableNotifications: false },
 }

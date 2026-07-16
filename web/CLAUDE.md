@@ -32,10 +32,10 @@ Post-refactor (aprile 2026):
 
 Ancora da splittare quando li tocchi:
 
-- `pages/index.vue` — **~599 righe**. Home con ricerca fermate, recenti, favoriti, download banner. Estrarre in `components/home/` (HomeSearch, RecentStopsSection, FavoritesSection, DownloadBanner).
+- `pages/index.vue` — **558 righe**. Home con ricerca fermate, recenti, favoriti, brand header. Estrarre in `components/home/` (HomeSearch, RecentStopsSection, FavoritesSection, OperatorCard).
 - `utils/strings.ts` — **363 righe**. i18n home-grown; ok per ora, valutare split per namespace se cresce.
-- `pages/lines/[lineId].vue` — **321 righe**.
-- `pages/lines/index.vue` — **276 righe**.
+- `pages/lines/[lineId].vue` — **327 righe**.
+- `pages/lines/index.vue` — **294 righe**.
 - `utils/schedule.ts` — **222 righe**.
 
 Pattern splitting: orchestrator `pages/<route>.vue` snello + sottocartella `components/<feature>/` con subview + composables dedicati per logica stateful.
@@ -51,13 +51,26 @@ Pattern splitting: orchestrator `pages/<route>.vue` snello + sottocartella `comp
 
 ## Components principali
 
-- `AppLayout` — shell (sidebar + content).
-- `AppSidebar` / `AppTabBar` — nav desktop / mobile.
+- `AppLayout` — shell (topbar + content + tab bar).
+- `AppTopBar` / `AppTabBar` — nav desktop (sticky, blur+vibrancy) / mobile. La sidebar `lg:ml-60` è stata sostituita dalla topbar (lug 2026) per parity con l'header nativo iOS.
 - `PageHeader` — header route-aware con back button.
 - `DepartureRow` — riga singola partenza con delay realtime, accent color linea.
 - `LineBadge` — pill colorato con numero linea (color contrast WCAG via `utils/color`).
 - `DayGroupTabs` — selettore servizio (feriale/festivo/ecc).
-- `AppDownloadBanner` — CTA app store iOS/Android.
+- `AppDownloadBanner` — CTA store. Su iOS/Android **l'intera riga** è un link allo store del dispositivo (UA sniffing; iPadOS 13+ si dichiara `Macintosh` → discriminato via `navigator.maxTouchPoints`); su desktop restano entrambe le icone. Coperto da `e2e/app-banner.spec.ts`.
+
+## Brand — app ≠ operatore (GOTCHA)
+
+Sono due identità diverse, con due loghi e due nomi. Sbagliarli è già successo due volte:
+
+| Superficie | Immagine | Testo |
+|---|---|---|
+| Topbar desktop + header mobile home | bus dell'**app** (`/brand/{op}/app-logo.png`) | `config.brandName` → "AppalRider" |
+| Card "chi muove la città" | logo **reale operatore** (`/brand/{op}/operator-logo.jpg`) | `config.name` → "AppalCART" |
+
+- **`config.logoUrl` NON è un logo**: punta a `app-icon.png`, cioè l'icona launcher **col fondo**. Usarla in un header dà un'icona squadrata al posto del bus. Il bus trasparente è `app-icon-foreground.png`.
+- Gli asset di brand **non sono sul CDN** (lì c'è solo `app-icon.png`): il web li serve da `web/public/brand/{operatorId}/`. Nuovo operatore → copiare lì `app-logo.png` (= `app-icon-foreground.png`) e `operator-logo.jpg` da `shared/operators/{op}/brand/`, altrimenti scatta il fallback (bus Lucide / `icon-192.png`).
+- Parity con gli imageset iOS: `OperatorLogo` = bus app, `SourceOperatorLogo` = logo operatore (vedi CLAUDE.md di root).
 
 ## Pattern comuni
 
@@ -83,16 +96,18 @@ Pattern splitting: orchestrator `pages/<route>.vue` snello + sottocartella `comp
 
 ## Test
 
-- **Unit** (Vitest, `tests/`): 19 file. Coprono composables (useOperator, useRealtime, useFavoriteStops, useRecentStops, useOperatorHead), utils (color, schedule, strings, highlight, fetchWithRetry), componenti (DepartureRow), server routes (sitemap, robots, manifest, jsonld), business logic (linesFilter, operators).
-- **E2E** (Playwright, `e2e/`): hydration mismatch, JSON-LD validity, filtro linee, smoke test, back button su pagina stop.
+- **Unit** (Vitest, `tests/`): 20 file (341 test). Coprono composables (useOperator, useRealtime, useFavoriteStops, useRecentStops, useOperatorHead), utils (color, schedule, strings, highlight, fetchWithRetry), componenti (DepartureRow), server routes (sitemap, robots, manifest, jsonld), business logic (linesFilter, operators).
+- **E2E** (Playwright, `e2e/`): hydration mismatch, JSON-LD validity, filtro linee, smoke test, back button su pagina stop, link store del banner (`app-banner`).
+- **GOTCHA porta**: `playwright.config.ts` punta a `localhost:3000` con `reuseExistingServer` — se lì gira il dev server di un ALTRO progetto (la landing sta spesso sulla 3000), i test girano contro quello e falliscono in modo incomprensibile. Verificare cosa risponde sulla 3000 prima di sbattere la testa.
 - Run: `npm run test` (vitest), `npm run test:e2e` (playwright). Config: `vitest.config.ts`, `playwright.config.ts`.
 
 ## Cosa NON fare
 
 - **Mai** inserire URL upstream GTFS-RT (es. `s3.amazonaws.com/...`, endpoint operatore diretto) in config — tutto real-time passa da `rt.transitkit.app/{op}/{feed}.pb`. Solo `gtfs_url` (zip static schedule) resta diretto.
 - **Mai** ignorare hydration mismatch sulle pagine realtime o sulle bindings `:style` con colori operator. I colori hex devono essere lowercase lato server e client (vedi comment in `useOperator.ts`).
-- **Mai** aggiungere logica a `pages/index.vue` (~599 righe) senza prima splittare in `components/home/`. Su `pages/stop/[stopId].vue` (305 orchestrator) aggiungi sottocomponenti in `components/stop/`, non inline.
+- **Mai** aggiungere logica a `pages/index.vue` (558 righe) senza prima splittare in `components/home/`. Su `pages/stop/[stopId].vue` (305 orchestrator) aggiungi sottocomponenti in `components/stop/`, non inline.
 - **Mai** usare `font-size` per dimensionare icone SVG: sempre `width` + `height` espliciti.
+- **Mai** stampare in UI campi di `config` che sono metadata.** Il blocco `store` (`title`/`subtitle`/`keywords`) è stato **rimosso** dai config (lug 2026): nessun client lo leggeva — iOS non l'aveva nel modello, Android lo dichiarava solo per Moshi senza usarlo mai, il web lo mostrava in una card in home. Quella card stampava `store.title` = "Boone Bus — Community App": una stringa che **non è mai esistita su nessuno store** (il listing è "AppalRider"), con icona telefono e link a `/lines`. Il nome dell'app viene da `brandName`, quello dell'operatore da `name`. Se serve copy per lo store, vive in `docs/business/store/` e nelle console — non in `config.json`.
 - **Mai** far cadere il `tripId` nella normalizzazione schedule. Il formato CDN iOS porta `tripId` su ogni partenza; `normalizeSchedules` ([useOperatorSchedule.ts](composables/useOperatorSchedule.ts)) DEVE costruire `tripIds[]` ed emettere la tupla compatta con `tripIdIdx` all'**indice 5** (`[time, lineIdx, headsignIdx, dock, _, tripIdIdx]`) — è ciò che `decodeDepartures` legge e da cui dipendono righe cliccabili + `reconstructTrip`. Senza, lo svolgimento corsa è morto ("Trip details unavailable") e le righe non linkano. Coperto da `tests/tripReconstruction.test.ts`.
 - **Svolgimento corsa** (`pages/trip/[tripId].vue`): ricostruito offline dallo schedule (`reconstructTrip` in [schedule.ts](utils/schedule.ts)) — porting di iOS `TripDetailView`, nessun endpoint dedicato. `?from=<stopId>` evidenzia l'origine ("Ora").
 - **Mai** leggere `localStorage` / `window` senza guard `import.meta.client` — rompe SSG.

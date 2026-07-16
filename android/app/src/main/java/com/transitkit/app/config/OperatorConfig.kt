@@ -100,7 +100,6 @@ data class OperatorConfig(
     val timezone: String,
     val locale: List<String>,
     val theme: ThemeConfig,
-    val store: StoreConfig,
     val map: MapConfig,
     val features: FeaturesConfig,
     @Json(name = "routing_endpoint") val routingEndpoint: String? = null,
@@ -125,14 +124,6 @@ data class OperatorConfig(
         @Json(name = "accentColor") val accentColor: String,
         @Json(name = "textOnPrimary") val textOnPrimary: String,
         @Json(name = "secondaryColor") val secondaryColor: String? = null,
-    )
-
-    @Immutable
-    @JsonClass(generateAdapter = true)
-    data class StoreConfig(
-        val title: String,
-        val subtitle: String,
-        val keywords: String,
     )
 
     @Immutable

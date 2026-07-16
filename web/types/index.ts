@@ -11,7 +11,6 @@ export interface OperatorConfig {
   timezone: string
   locale: string[]
   theme: ThemeConfig
-  store: StoreConfig
   map: MapConfig
   features: FeaturesConfig
   contact?: ContactConfig
@@ -30,12 +29,6 @@ export interface ThemeConfig {
   accentColor: string
   textOnPrimary: string
   secondaryColor?: string
-}
-
-export interface StoreConfig {
-  title: string
-  subtitle: string
-  keywords: string
 }
 
 export interface MapConfig {

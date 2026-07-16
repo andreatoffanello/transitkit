@@ -23,11 +23,6 @@
     "accentColor": "#06845C",
     "textOnPrimary": "#FFFFFF"
   },
-  "store": {
-    "title": "Boone Bus — Community App",
-    "subtitle": "AppalCART schedules & live departures for Boone and App State",
-    "keywords": "appalachian transit,boone,bus,app state,appalachian state university,appalcart,nc"
-  },
   "map": {
     "centerLat": 36.2168,
     "centerLng": -81.6746,

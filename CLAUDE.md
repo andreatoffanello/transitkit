@@ -25,11 +25,22 @@ bash scripts/build-android.sh {operator_id}
 **Dove finiscono gli asset (già configurato, non toccare):**
 - iOS: `AppIcon.appiconset`, `OperatorLogo.imageset`, `SourceOperatorLogo.imageset`, `OperatorBackground.imageset`
 - Android: `mipmap-*/ic_launcher*.png`, `drawable/app_logo.png`, `drawable/operator_logo.png`, `drawable/operator_background.png`
+- Web: `web/public/brand/{op}/app-logo.png` (= `app-icon-foreground.png`) + `operator-logo.jpg`. **`deploy-brand.sh` NON li copia** — vanno messi a mano. Il CDN serve solo `app-icon.png`, quindi il web non può prenderli da lì.
 - `brandName` (nome UI dell'app, es. "AppalRider") → campo `brandName` in `shared/operators/{op}/config.json` e `ios/.../Resources/config.json`; su Android è `app/src/main/res/values/strings.xml` → `app_name`
 
 **GOTCHA naming — non fidarsi del nome dell'imageset iOS:**
 - `OperatorLogo.imageset` = **bus dell'APP** (`app-icon-foreground.png` trasparente), NON il logo dell'operatore. 1x/2x/3x. Usato in header (32pt) e loading splash (96pt).
 - `SourceOperatorLogo.imageset` = **logo reale dell'operatore** (`operator-logo`). Solo nella card "operatore di riferimento".
+
+**GOTCHA `config.logoUrl` — non è un logo:** punta ad `app-icon.png`, cioè l'icona
+launcher **col fondo**. Usarla in un header dà un'icona squadrata dove serve il bus
+(già successo sul web, lug 2026). Header/navbar = bus app + `brandName`; card
+"chi muove la città" = logo reale operatore + `name`. Sono due identità distinte.
+
+**Niente metadata in UI:** il blocco `store` (`title`/`subtitle`/`keywords`) è stato
+rimosso dai config (lug 2026) — nessun client lo leggeva e il web ne stampava il
+`title` ("Boone Bus — Community App", stringa mai esistita su nessuno store).
+La copy dello store vive in `docs/business/store/` e nelle console, non in `config.json`.
 
 **Regola anti-impersonazione (splash + loading):** la schermata di apertura/caricamento mostra SEMPRE brand dell'app (bus + `brandName` "AppalRider") — MAI logo o nome dell'operatore ("AppalCART"). L'app non è ufficiale dell'operatore: mostrare il loro brand qui può far pensare a un'impersonazione (rischio rejection App Store + confusione utente). iOS `TransitKitApp.loadingView`, Android `BrandedLoadingScreen`.
 

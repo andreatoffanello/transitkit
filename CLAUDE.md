@@ -258,6 +258,56 @@ xcrun simctl install $UDID $(find ~/Library/Developer/Xcode/DerivedData -name "T
 xcrun simctl launch $UDID com.transitkit.appalcart
 ```
 
+## STORE LISTING (descrizioni App Store / Play)
+
+Le descrizioni **non vivono nel repo**: stanno nelle due console. Fonte di verità
+del testo proposto/pubblicato: `docs/business/store/`.
+Per rileggere il live: ASC `GET /v1/appStoreVersions/{id}/appStoreVersionLocalizations`,
+Play `androidpublisher edits → listings/en-US` (SA key `~/.config/google-play/publisher-key.json`).
+
+**NEVER enumerare le rotte nella descrizione.** Il roster GTFS è stagionale
+(appalcart: 25 rotte ad aprile, 9 a luglio) → qualunque lista hardcoded è
+sbagliata per metà anno e serve un review cycle per correggerla. Usare
+formule come "every route <operator> is running today": l'app è già la fonte
+di verità. Stessa regola per servizi/festività: se non c'è logica in codice,
+non va promesso nel listing.
+
+**Ogni claim del listing va verificato contro il codice prima di pubblicarlo.**
+La descrizione iOS ha promesso per mesi calendario accademico ASU, "Night Owl"
+e "holiday schedules flagged" senza una riga di logica dietro. È la prima cosa
+che un operatore verifica aprendo l'app.
+
+**Cosa è editabile a caldo:**
+| Campo | iOS | Play |
+|---|---|---|
+| description / keywords / subtitle | ❌ a versione `READY_FOR_SALE` (*"cannot be edited at this time"*) → serve nuova versione + review 24-48h | ✅ subito |
+| `promotionalText` (170 char) | ✅ subito, **senza review** → è qui che va lo stagionale | — |
+| title / short description | — | ✅ subito |
+
+Su Play il listing è pubblico in poche ore; su iOS `WAITING_FOR_REVIEW` **non**
+è "pubblicato". Non dire "fatto" finché lo stato non è `READY_FOR_SALE`.
+
+## RELEASE iOS — come riporta davvero `upload-ios.sh`
+
+`ios/ExportOptions.plist` ha `destination: upload` → `xcodebuild -exportArchive`
+firma **e carica** in un colpo solo e **non lascia nessun .ipa su disco**. Non
+cercarlo: fino alla 1.2.6 lo script cercava l'IPA, non lo trovava e stampava
+`EXPORT FAILED` **a upload riuscito**, uscendo prima dello step `altool` (mai
+raggiunto, codice morto dalla v1.2.0). Le release 1.2.2→1.2.5 sono state
+spedite da un pipeline che riportava l'esito sbagliato.
+
+- **`cmd | grep ... || true` cancella l'exit code.** `grep` esce 1 quando un run
+  pulito non matcha nessun pattern (per questo c'era `|| true`), ma così ingoia
+  anche i fallimenti veri → il job sembra "morto in silenzio". Usare
+  `PIPESTATUS[0]` + `tee` su un log, mai `|| true` come gate.
+- **Dopo l'upload il build NON compare subito in `/v1/builds`.** Un build assente
+  1 minuto dopo significa "non ancora indicizzato", **non** "upload fallito".
+  Verificare prima di rilanciare: un retry inutile brucia un versionCode.
+  Il segnale che l'upload È avvenuto è l'errore `bundle version ... has already
+  been used`.
+- Se il path `upload` dà 500 lato Apple: `destination: export` + `altool
+  --upload-app` (vedi commento in `scripts/upload-ios.sh`).
+
 ## WORKFLOW E2E — Maestro
 
 ```bash

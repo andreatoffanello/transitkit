@@ -2,7 +2,7 @@ export default defineAppConfig({
   site: {
     name: 'TransitKit',
     domain: 'transitkit.app',
-    contactEmail: 'andrea@transitkit.app',
+    contactEmail: 'team@transitkit.app',
     consoleUrl: 'https://console.transitkit.app',
     onePagerUrl: '/one-pager.pdf',
     // AppalRider — first app on the TransitKit engine, live on the stores

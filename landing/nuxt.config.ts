@@ -25,6 +25,14 @@ export default defineNuxtConfig({
 
   nitro: { preset: 'vercel' },
 
+  // server-only (never shipped to the client). Override via env on Vercel:
+  //   NUXT_RESEND_API_KEY (or RESEND_API_KEY), NUXT_LEAD_TO, NUXT_LEAD_FROM
+  runtimeConfig: {
+    resendApiKey: '',
+    leadTo: 'team@transitkit.app',
+    leadFrom: 'TransitKit <leads@transitkit.app>',
+  },
+
   routeRules: {
     '/': { prerender: true },
     '/it': { prerender: true },

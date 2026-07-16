@@ -8,7 +8,20 @@ const el = ref<HTMLElement | null>(null)
 const tx = ref(0)
 const ty = ref(0)
 
-const isHash = computed(() => props.to.startsWith('#'))
+// "#book-demo" (optionally "#book-demo/Standard") opens the shared lead modal
+// instead of navigating — it is the single capture point for every demo CTA.
+const isLead = computed(() => props.to === '#book-demo' || props.to.startsWith('#book-demo/'))
+const leadPlan = computed(() => {
+  const slash = props.to.indexOf('/')
+  return slash === -1 ? '' : decodeURIComponent(props.to.slice(slash + 1))
+})
+const lead = useLeadStore()
+function onLeadClick(e: MouseEvent) {
+  e.preventDefault()
+  lead.show(leadPlan.value)
+}
+
+const isHash = computed(() => !isLead.value && props.to.startsWith('#'))
 const isExternal = computed(() => /^(https?:|mailto:|tel:)/.test(props.to))
 
 let reduced = false
@@ -51,8 +64,20 @@ const style = computed(() => ({ transform: `translate(${tx.value}px, ${ty.value}
 </script>
 
 <template>
+  <button
+    v-if="isLead"
+    ref="el"
+    type="button"
+    :class="cls"
+    :style="style"
+    @click="onLeadClick"
+    @pointermove="onMove"
+    @pointerleave="reset"
+  >
+    <span><slot /></span>
+  </button>
   <a
-    v-if="isExternal"
+    v-else-if="isExternal"
     ref="el"
     :href="to"
     :class="cls"
@@ -98,8 +123,15 @@ const style = computed(() => ({ transform: `translate(${tx.value}px, ${ty.value}
   border-radius: 0.625rem;
   font-weight: 600;
   font-size: 0.9375rem;
+  font-family: inherit;
   letter-spacing: -0.01em;
   white-space: nowrap;
+  /* button/anchor parity: variants below (same specificity, later) reset bg/border */
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
   transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.2, 1), background 0.2s, border-color 0.2s, opacity 0.2s;
   will-change: transform;
 }

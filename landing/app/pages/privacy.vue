@@ -9,7 +9,7 @@ const en = {
   "sections": [
     {
       "h": "Data controller and privacy contact",
-      "p": "TransitKit is the data controller for its website and for the account and billing relationship with operator customers. For all data-protection matters — including access, copies, correction, or deletion — our dedicated privacy contact is andrea@transitkit.app. A formal Data Protection Officer is not required for an operation of this scale; this contact serves as the point of reference for every privacy request."
+      "p": "TransitKit is the data controller for its website and for the account and billing relationship with operator customers. For all data-protection matters — including access, copies, correction, or deletion — our dedicated privacy contact is team@transitkit.app. A formal Data Protection Officer is not required for an operation of this scale; this contact serves as the point of reference for every privacy request."
     },
     {
       "h": "Website visitors",
@@ -49,7 +49,7 @@ const en = {
     },
     {
       "h": "Your rights",
-      "p": "Under the GDPR you have the right to access, copy, correct, and delete your personal data, to restrict or object to processing, to data portability, and to withdraw consent where processing is based on it. To exercise any of these rights, write to andrea@transitkit.app. We also honour equivalent rights for California residents under the CCPA, including the right to know and to request deletion. We do not sell personal data."
+      "p": "Under the GDPR you have the right to access, copy, correct, and delete your personal data, to restrict or object to processing, to data portability, and to withdraw consent where processing is based on it. To exercise any of these rights, write to team@transitkit.app. We also honour equivalent rights for California residents under the CCPA, including the right to know and to request deletion. We do not sell personal data."
     },
     {
       "h": "Complaints to a supervisory authority",
@@ -86,7 +86,7 @@ const it = {
   "sections": [
     {
       "h": "Titolare del trattamento e contatto privacy",
-      "p": "TransitKit è il titolare del trattamento per il proprio sito web e per il rapporto di account e fatturazione con gli operatori clienti. Per ogni questione relativa alla protezione dei dati — incluse le richieste di accesso, copia, rettifica o cancellazione — il contatto privacy dedicato è andrea@transitkit.app. La nomina di un Responsabile della protezione dei dati non è richiesta per un'attività di queste dimensioni; tale contatto costituisce il punto di riferimento per ogni richiesta in materia di privacy."
+      "p": "TransitKit è il titolare del trattamento per il proprio sito web e per il rapporto di account e fatturazione con gli operatori clienti. Per ogni questione relativa alla protezione dei dati — incluse le richieste di accesso, copia, rettifica o cancellazione — il contatto privacy dedicato è team@transitkit.app. La nomina di un Responsabile della protezione dei dati non è richiesta per un'attività di queste dimensioni; tale contatto costituisce il punto di riferimento per ogni richiesta in materia di privacy."
     },
     {
       "h": "Visitatori del sito web",
@@ -126,7 +126,7 @@ const it = {
     },
     {
       "h": "I diritti dell'interessato",
-      "p": "Ai sensi del GDPR, l'interessato ha il diritto di accedere ai propri dati personali, di ottenerne copia, di rettificarli e cancellarli, di limitare o opporsi al trattamento, alla portabilità dei dati e di revocare il consenso ove il trattamento su di esso si basi. Per esercitare tali diritti è possibile scrivere a andrea@transitkit.app. Riconosciamo inoltre diritti equivalenti ai residenti in California ai sensi del CCPA, incluso il diritto di conoscere i dati trattati e di richiederne la cancellazione. Non vendiamo dati personali."
+      "p": "Ai sensi del GDPR, l'interessato ha il diritto di accedere ai propri dati personali, di ottenerne copia, di rettificarli e cancellarli, di limitare o opporsi al trattamento, alla portabilità dei dati e di revocare il consenso ove il trattamento su di esso si basi. Per esercitare tali diritti è possibile scrivere a team@transitkit.app. Riconosciamo inoltre diritti equivalenti ai residenti in California ai sensi del CCPA, incluso il diritto di conoscere i dati trattati e di richiederne la cancellazione. Non vendiamo dati personali."
     },
     {
       "h": "Reclamo all'autorità di controllo",

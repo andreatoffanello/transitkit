@@ -144,7 +144,7 @@ pricing:
         - Ordinary maintenance & fixes
       cta:
         label: Book a demo
-        to: 'mailto:andrea@transitkit.app?subject=TransitKit%20—%20Standard'
+        to: '#book-demo/Standard'
     - name: Custom
       price: Custom
       period: ''
@@ -155,7 +155,7 @@ pricing:
         - Priced to your scope
       cta:
         label: Talk to us
-        to: 'mailto:andrea@transitkit.app?subject=TransitKit%20—%20Custom'
+        to: '#book-demo/Custom'
   always:
     - No upfront investment
     - Live in 3 weeks
@@ -169,4 +169,4 @@ finalCta:
     demo this week.
   cta:
     label: Book a demo
-    to: 'mailto:andrea@transitkit.app?subject=TransitKit%20demo'
+    to: '#book-demo'

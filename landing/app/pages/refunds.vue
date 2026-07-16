@@ -29,7 +29,7 @@ const en = {
     },
     {
       "h": "How to request a refund",
-      "p": "Email andrea@transitkit.app with your account details, the transaction or order reference, and the reason for the request. We aim to respond within a few business days. Because Paddle processed your payment, refunds are issued by Paddle to your original payment method, and requests can also be handled directly through Paddle. Once approved, a refund is typically issued within 5–10 business days, though the exact time for the money to post depends on your bank or card provider."
+      "p": "Email team@transitkit.app with your account details, the transaction or order reference, and the reason for the request. We aim to respond within a few business days. Because Paddle processed your payment, refunds are issued by Paddle to your original payment method, and requests can also be handled directly through Paddle. Once approved, a refund is typically issued within 5–10 business days, though the exact time for the money to post depends on your bank or card provider."
     },
     {
       "h": "Statutory rights and the Terms of Service",
@@ -66,7 +66,7 @@ const it = {
     },
     {
       "h": "Come richiedere un rimborso",
-      "p": "Scrivi a andrea@transitkit.app indicando i dati del tuo account, il riferimento della transazione o dell'ordine e il motivo della richiesta. Puntiamo a rispondere entro pochi giorni lavorativi. Poiché Paddle ha elaborato il pagamento, i rimborsi vengono emessi da Paddle sul metodo di pagamento originale e le richieste possono essere gestite anche direttamente tramite Paddle. Una volta approvato, il rimborso viene di norma emesso entro 5–10 giorni lavorativi, anche se i tempi effettivi di accredito dipendono dalla tua banca o dall'emittente della carta."
+      "p": "Scrivi a team@transitkit.app indicando i dati del tuo account, il riferimento della transazione o dell'ordine e il motivo della richiesta. Puntiamo a rispondere entro pochi giorni lavorativi. Poiché Paddle ha elaborato il pagamento, i rimborsi vengono emessi da Paddle sul metodo di pagamento originale e le richieste possono essere gestite anche direttamente tramite Paddle. Una volta approvato, il rimborso viene di norma emesso entro 5–10 giorni lavorativi, anche se i tempi effettivi di accredito dipendono dalla tua banca o dall'emittente della carta."
     },
     {
       "h": "Diritti di legge e Condizioni di servizio",

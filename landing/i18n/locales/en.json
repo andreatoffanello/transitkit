@@ -6,6 +6,26 @@
     "faq": "FAQ",
     "cta": "Book a demo"
   },
+  "lead": {
+    "title": "Book a demo",
+    "subtitle": "Send us your GTFS feed and your brand. We'll show you your own app, live, this week.",
+    "name": "Your name",
+    "namePh": "Jane Rivera",
+    "agency": "Agency / operator",
+    "agencyPh": "e.g. Boone Area Transit",
+    "email": "Work email",
+    "emailPh": "you{'@'}agency.gov",
+    "message": "Anything we should know? (optional)",
+    "messagePh": "Fleet size, timeline, feed URL…",
+    "submit": "Request demo",
+    "sending": "Sending…",
+    "fine": "We reply within one business day. No spam, ever.",
+    "successTitle": "Request sent.",
+    "successBody": "We'll get back to you within one business day.",
+    "close": "Close",
+    "errValidation": "Please add your name, agency and a valid work email.",
+    "errSend": "Couldn't send — please retry or email team{'@'}transitkit.app."
+  },
   "faq": { "heading": "Frequently asked questions" },
   "seo": { "title": "TransitKit — Branded transit apps for operators" },
   "a11y": {

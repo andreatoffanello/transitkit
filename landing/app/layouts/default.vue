@@ -6,6 +6,7 @@
       <slot />
     </main>
     <SiteFooter />
+    <LeadModal />
   </div>
 </template>
 

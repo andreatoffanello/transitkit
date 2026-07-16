@@ -6,6 +6,26 @@
     "faq": "FAQ",
     "cta": "Prenota una demo"
   },
+  "lead": {
+    "title": "Prenota una demo",
+    "subtitle": "Mandaci il tuo feed GTFS e il tuo marchio. Questa settimana ti mostriamo la tua app dal vivo.",
+    "name": "Il tuo nome",
+    "namePh": "Mario Rossi",
+    "agency": "Agenzia / operatore",
+    "agencyPh": "es. ATV Verona",
+    "email": "Email di lavoro",
+    "emailPh": "tu{'@'}agenzia.it",
+    "message": "Qualcosa che dovremmo sapere? (facoltativo)",
+    "messagePh": "Dimensione flotta, tempi, URL del feed…",
+    "submit": "Richiedi la demo",
+    "sending": "Invio…",
+    "fine": "Rispondiamo entro un giorno lavorativo. Niente spam, mai.",
+    "successTitle": "Richiesta inviata.",
+    "successBody": "Ti rispondiamo entro un giorno lavorativo.",
+    "close": "Chiudi",
+    "errValidation": "Inserisci nome, agenzia e un'email di lavoro valida.",
+    "errSend": "Invio non riuscito — riprova o scrivi a team{'@'}transitkit.app."
+  },
   "faq": { "heading": "Domande frequenti" },
   "seo": { "title": "TransitKit — App di trasporto brandizzate per operatori" },
   "a11y": {

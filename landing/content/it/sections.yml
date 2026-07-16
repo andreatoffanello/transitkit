@@ -144,7 +144,7 @@ pricing:
         - Manutenzione ordinaria e correzioni
       cta:
         label: Prenota una demo
-        to: 'mailto:andrea@transitkit.app?subject=TransitKit%20—%20Standard'
+        to: '#book-demo/Standard'
     - name: Su misura
       price: Su misura
       period: ''
@@ -155,7 +155,7 @@ pricing:
         - Prezzo sul tuo progetto
       cta:
         label: Parliamone
-        to: 'mailto:andrea@transitkit.app?subject=TransitKit%20—%20Su%20misura'
+        to: '#book-demo/Custom'
   always:
     - Niente investimento iniziale
     - Online in 3 settimane
@@ -169,4 +169,4 @@ finalCta:
     tua app dal vivo, in una demo.
   cta:
     label: Prenota una demo
-    to: 'mailto:andrea@transitkit.app?subject=TransitKit%20demo'
+    to: '#book-demo'

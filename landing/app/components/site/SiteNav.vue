@@ -101,7 +101,7 @@ function go(href: string, e: MouseEvent) {
 
       <div class="nav__right">
         <LocaleSwitch />
-        <CtaButton to="#pricing" variant="primary" class="nav__cta">{{ t('nav.cta') }}</CtaButton>
+        <CtaButton to="#book-demo" variant="primary" class="nav__cta">{{ t('nav.cta') }}</CtaButton>
       </div>
     </div>
   </header>

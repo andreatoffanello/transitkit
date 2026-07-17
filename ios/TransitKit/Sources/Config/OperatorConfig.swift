@@ -18,7 +18,6 @@ struct OperatorConfig: Codable {
     let timezone: String
     let locale: [String]
     let theme: ThemeConfig
-    let store: StoreConfig
     let map: MapConfig
     let features: FeaturesConfig
     let contact: ContactConfig?
@@ -41,12 +40,6 @@ struct OperatorConfig: Codable {
         let accentColor: String
         let textOnPrimary: String
         let secondaryColor: String?
-    }
-
-    struct StoreConfig: Codable {
-        let title: String
-        let subtitle: String
-        let keywords: String
     }
 
     struct MapConfig: Codable {

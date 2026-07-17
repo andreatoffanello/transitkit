@@ -1,0 +1,40 @@
+{
+  "id": "charlottesville",
+  "cdnUrl": "https://andreatoffanello.github.io/transitkit",
+  "routing_endpoint": "https://api.transitkit.app",
+  "name": "CAT",
+  "fullName": "Charlottesville Area Transit",
+  "url": "https://charlottesville.gov/470/Transit",
+  "region": "Charlottesville, Virginia",
+  "country": "US",
+  "timezone": "America/New_York",
+  "gtfs_rt": {
+    "vehicle_positions": "https://rt.transitkit.app/charlottesville/vehicle-positions.pb",
+    "trip_updates": "https://rt.transitkit.app/charlottesville/trip-updates.pb",
+    "alerts": "https://rt.transitkit.app/charlottesville/alerts.pb"
+  },
+  "locale": [
+    "en"
+  ],
+  "theme": {
+    "primaryColor": "#003366",
+    "accentColor": "#0066CC",
+    "textOnPrimary": "#FFFFFF"
+  },
+  "map": {
+    "centerLat": 38.0392,
+    "centerLng": -78.4853,
+    "defaultZoom": 13
+  },
+  "features": {
+    "enableMap": true,
+    "enableGeolocation": true,
+    "enableFavorites": true,
+    "enableNotifications": true,
+    "useRemoteEngine": true
+  },
+  "contact": {
+    "phone": "434-970-3649"
+  },
+  "privacyUrl": "https://charlottesville.transitkit.app/privacy"
+}

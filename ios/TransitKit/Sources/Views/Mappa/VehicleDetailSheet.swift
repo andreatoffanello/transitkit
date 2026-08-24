@@ -107,9 +107,9 @@ struct VehicleDetailSheet: View {
     /// Status-aware label for the stop row: "Prossima fermata" / "Fermo a" / "In arrivo a".
     private var stopRowLabel: String {
         switch vehicle.currentStatus {
-        case .inTransitTo: String(localized: "vehicle_next_stop")
-        case .stoppedAt:   String(localized: "vehicle_stopped_at")
-        case .incomingAt:  String(localized: "vehicle_incoming_at")
+        case .inTransitTo: L("vehicle_next_stop")
+        case .stoppedAt:   L("vehicle_stopped_at")
+        case .incomingAt:  L("vehicle_incoming_at")
         }
     }
 
@@ -119,10 +119,10 @@ struct VehicleDetailSheet: View {
         let age = Int(now.timeIntervalSince1970) - Int(vehicle.timestamp)
         guard age >= 0 else { return nil }
         if age < 60 {
-            return String(format: String(localized: "vehicle_updated_sec"), age)
+            return String(format: L("vehicle_updated_sec"), age)
         }
         let mins = age / 60
-        return String(format: String(localized: "vehicle_updated_min"), mins)
+        return String(format: L("vehicle_updated_min"), mins)
     }
 
     var body: some View {
@@ -187,7 +187,7 @@ struct VehicleDetailSheet: View {
                     .frame(width: 22, height: 22)
                     .background(AppTheme.accent.opacity(0.12))
                     .clipShape(Circle())
-                    .accessibilityLabel(String(localized: "vehicle_accessible"))
+                    .accessibilityLabel(L("vehicle_accessible"))
             }
 
             Button(action: onDismiss) {
@@ -347,13 +347,13 @@ struct VehicleDetailSheet: View {
                     )
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(String(localized: isFollowing ? "vehicle_unfollow" : "vehicle_follow"))
+            .accessibilityLabel(L(isFollowing ? "vehicle_unfollow" : "vehicle_follow"))
             .accessibilityIdentifier("vehicle_card_follow")
 
             if let onOpenLine {
                 actionButton(
                     icon: .map,
-                    title: String(localized: "vehicle_open_line"),
+                    title: L("vehicle_open_line"),
                     filled: false,
                     action: onOpenLine
                 )
@@ -362,7 +362,7 @@ struct VehicleDetailSheet: View {
             // Corsa = filled/primary — visually dominant CTA
             actionButton(
                 icon: .list,
-                title: String(localized: "vehicle_open_trip"),
+                title: L("vehicle_open_trip"),
                 filled: true,
                 action: onOpenTrip
             )
@@ -407,13 +407,13 @@ struct VehicleDetailSheet: View {
 
     private func occupancyLabel(_ status: OccupancyStatus) -> String? {
         switch status {
-        case .empty, .manySeatsAvailable: return String(localized: "occupancy_seats_available")
-        case .fewSeatsAvailable:          return String(localized: "occupancy_few_seats")
-        case .standingRoomOnly:           return String(localized: "occupancy_standing_only")
+        case .empty, .manySeatsAvailable: return L("occupancy_seats_available")
+        case .fewSeatsAvailable:          return L("occupancy_few_seats")
+        case .standingRoomOnly:           return L("occupancy_standing_only")
         case .crushedStandingRoomOnly,
-             .full:                       return String(localized: "occupancy_full")
+             .full:                       return L("occupancy_full")
         case .notAcceptingPassengers,
-             .notBoardable:               return String(localized: "occupancy_not_boarding")
+             .notBoardable:               return L("occupancy_not_boarding")
         case .noDataAvailable:            return nil
         }
     }

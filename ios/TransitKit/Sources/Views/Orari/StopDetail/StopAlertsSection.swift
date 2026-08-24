@@ -13,7 +13,7 @@ struct StopAlertsSection: View {
                 HStack(spacing: 8) {
                     LucideIcon.alertTriangle.sized(14)
                         .foregroundStyle(.orange)
-                    Text(String(localized: "stop_detail_alerts_section").uppercased())
+                    Text(L("stop_detail_alerts_section").uppercased())
                         .font(.caption.weight(.semibold))
                         .kerning(0.6)
                         .foregroundStyle(AppTheme.textTertiary)

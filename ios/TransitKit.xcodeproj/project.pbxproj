@@ -115,6 +115,7 @@
 		D8ED0445D2DBD9191891E1FF /* NearbyStopCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF5FCD75A1F947E7E5EFEC41 /* NearbyStopCard.swift */; };
 		D98E3B0FA7E7F3BE5632A750 /* SheetCloseButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85EEB55B599E2F2FAB3B9B91 /* SheetCloseButton.swift */; };
 		DC3D72EDB297D1729CA65084 /* AlertToastOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECFB7E48F2DE54F148E94DA8 /* AlertToastOverlay.swift */; };
+		DDBEA971C2F3656B15025548 /* LocalizationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 256D872672AD468F2F44CEB5 /* LocalizationManager.swift */; };
 		E0D813D49D272A48BC20356E /* AlertDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64FC603D174889581AD1AD62 /* AlertDetailView.swift */; };
 		E116BEC58F6BBEB1525D02F8 /* GtfsRtAlertHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5D343A8FB05F1DBD0C60466 /* GtfsRtAlertHelpers.swift */; };
 		E257278400C81A20F5D6A3E3 /* ClockTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 242DE862A43BE195ECD8416D /* ClockTime.swift */; };
@@ -123,6 +124,7 @@
 		EB792D0FA0D15A4CB61D3AA2 /* ColorUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8AB69082C727FD94B52155A /* ColorUtils.swift */; };
 		EDD673EC6CD887E9DDD47422 /* StopCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C69F73160D11EE306A2190B7 /* StopCard.swift */; };
 		EED9AB87BFDB6F855D372E3E /* ServiziTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6CD27F0FB12FDD6F35A59A0 /* ServiziTab.swift */; };
+		EF4DE47BB8F67BFF3A092C82 /* LanguagePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8BA28452463CC82B9E69A6B /* LanguagePickerView.swift */; };
 		F189794232ECAE4227840D68 /* LinesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 015B4E53773EEE32AC100D6F /* LinesListView.swift */; };
 		F4BF65978E9A7C3E9E3813A3 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = CBEC1A6267CB199440951134 /* InfoPlist.xcstrings */; };
 		F813D4C802D95DE8C17933C5 /* PressableButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 879CA176F8269F9A87F967B4 /* PressableButtonStyle.swift */; };
@@ -162,6 +164,7 @@
 		242DE862A43BE195ECD8416D /* ClockTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockTime.swift; sourceTree = "<group>"; };
 		24740CAB0ACE9045D18AE42A /* RemoteRoutingProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteRoutingProvider.swift; sourceTree = "<group>"; };
 		24A2F8550F9D65EFD7B990BA /* StopMapSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopMapSheet.swift; sourceTree = "<group>"; };
+		256D872672AD468F2F44CEB5 /* LocalizationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationManager.swift; sourceTree = "<group>"; };
 		265421698770DB34151D287D /* OrariTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OrariTab.swift; sourceTree = "<group>"; };
 		271B240F2B60AA029BA142F5 /* FullScheduleSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullScheduleSheet.swift; sourceTree = "<group>"; };
 		282C0DBEBC4A33831DC99EBA /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
@@ -220,6 +223,7 @@
 		A5D343A8FB05F1DBD0C60466 /* GtfsRtAlertHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GtfsRtAlertHelpers.swift; sourceTree = "<group>"; };
 		A7410BEEC0AEB17E6FFB2785 /* FilterChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterChip.swift; sourceTree = "<group>"; };
 		A8AB69082C727FD94B52155A /* ColorUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorUtils.swift; sourceTree = "<group>"; };
+		A8BA28452463CC82B9E69A6B /* LanguagePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguagePickerView.swift; sourceTree = "<group>"; };
 		AB215263A64BE0882D67B1F3 /* ShaderPlaygroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShaderPlaygroundView.swift; sourceTree = "<group>"; };
 		ADA621C317C78061A2EE1BCE /* StopDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopDetailView.swift; sourceTree = "<group>"; };
 		AF29A33249EEAAC16698F765 /* RouteOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteOverlay.swift; sourceTree = "<group>"; };
@@ -304,6 +308,7 @@
 				5A0984DC79DD4E6BF7505FF1 /* AppDelegate.swift */,
 				E40F32F4FBBD86EBC68D0EB3 /* AppUpdateChecker.swift */,
 				13342928283763D0B5D78699 /* GeocodingProvider.swift */,
+				256D872672AD468F2F44CEB5 /* LocalizationManager.swift */,
 				1D40E7CF6F504A0493455693 /* LocationManager.swift */,
 				24740CAB0ACE9045D18AE42A /* RemoteRoutingProvider.swift */,
 				F64B8B11F2D7D9CAE4F81E2B /* ScheduleLoader.swift */,
@@ -598,6 +603,7 @@
 			isa = PBXGroup;
 			children = (
 				4A20EEA199B52A3A2B66325A /* FavoritesListView.swift */,
+				A8BA28452463CC82B9E69A6B /* LanguagePickerView.swift */,
 				1860A6235DAC2FB85C1237E4 /* SettingsTab.swift */,
 			);
 			path = Settings;
@@ -764,6 +770,7 @@
 				D857E1BA67F87AB9B67C117C /* JourneyCard.swift in Sources */,
 				06FFD5B6A277A4D2FEA6EE9D /* JourneyDetailView.swift in Sources */,
 				28B441367397CD46A65670E2 /* JourneyMapView.swift in Sources */,
+				EF4DE47BB8F67BFF3A092C82 /* LanguagePickerView.swift in Sources */,
 				12DD8560C237FA40F6C9984E /* LineBadge.swift in Sources */,
 				84A2B8BDA416F613EFD73749 /* LineDetailView.swift in Sources */,
 				BF93091B594950B89BAE5B01 /* LineFilterChip.swift in Sources */,
@@ -773,6 +780,7 @@
 				F189794232ECAE4227840D68 /* LinesListView.swift in Sources */,
 				4325D83B1D615E6F3F94EA06 /* LiveBadge.swift in Sources */,
 				B26BF0A92702AB726C842EBE /* LiveVehiclesSection.swift in Sources */,
+				DDBEA971C2F3656B15025548 /* LocalizationManager.swift in Sources */,
 				A1EC9562509A5D7B1FD08BCA /* LocationManager.swift in Sources */,
 				97FD1942074FBC5A30261E46 /* LocationPickerMap.swift in Sources */,
 				403398E0C0270E51F50F67A8 /* LocationPickerView.swift in Sources */,
@@ -871,6 +879,7 @@
 			buildSettings = {
 				APS_ENVIRONMENT = production;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				BRAND_NAME = AppalRider;
 				CODE_SIGN_ENTITLEMENTS = TransitKit/Sources/App/TransitKit.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
@@ -884,6 +893,7 @@
 					"@executable_path/Frameworks",
 				);
 				OPERATOR_ID = appalcart;
+				OPERATOR_NAME = AppalCART;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.transitkit.${OPERATOR_ID}";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -915,6 +925,7 @@
 			buildSettings = {
 				APS_ENVIRONMENT = development;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				BRAND_NAME = AppalRider;
 				CODE_SIGN_ENTITLEMENTS = TransitKit/Sources/App/TransitKit.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
@@ -927,6 +938,7 @@
 					"@executable_path/Frameworks",
 				);
 				OPERATOR_ID = appalcart;
+				OPERATOR_NAME = AppalCART;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.transitkit.${OPERATOR_ID}";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = singlefile;

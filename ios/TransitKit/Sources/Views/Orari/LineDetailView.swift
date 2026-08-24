@@ -125,8 +125,8 @@ struct LineDetailView: View {
                                          : AppTheme.textSecondary)
                 }
                 .accessibilityLabel(favoritesManager.isFavoriteRoute(route.id)
-                    ? String(localized: "remove_line_from_favorites")
-                    : String(localized: "add_line_to_favorites"))
+                    ? L("remove_line_from_favorites")
+                    : L("add_line_to_favorites"))
                 .accessibilityIdentifier("btn_favorite_line")
             }
             ToolbarItem(placement: .topBarTrailing) {
@@ -137,7 +137,7 @@ struct LineDetailView: View {
                     LucideIcon.maximize2.sized(18)
                         .foregroundStyle(AppTheme.textPrimary)
                 }
-                .accessibilityLabel(Text(String(localized: "a11y_line_map")))
+                .accessibilityLabel(Text(L("a11y_line_map")))
                 .accessibilityIdentifier("btn_expand_line_map")
             }
         }
@@ -191,7 +191,7 @@ struct LineDetailView: View {
         HStack(spacing: 6) {
             LucideIcon.mapPin.sized(11)
                 .foregroundStyle(lineColor)
-            Text(String(localized: "stops_served"))
+            Text(L("stops_served"))
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(AppTheme.textSecondary)
             Spacer()

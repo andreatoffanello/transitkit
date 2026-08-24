@@ -102,8 +102,8 @@ struct LineRowContent: View {
         )
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(String(format: NSLocalizedString("line_badge_a11y", comment: ""), route.name))
-        .accessibilityHint(String(localized: "a11y_hint_show_line_stops"))
+        .accessibilityLabel(String(format: L("line_badge_a11y", comment: ""), route.name))
+        .accessibilityHint(L("a11y_hint_show_line_stops"))
         .accessibilityAddTraits(.isButton)
     }
 }

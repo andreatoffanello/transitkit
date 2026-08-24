@@ -14,6 +14,11 @@ struct SettingsTab: View {
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
     @State private var notificationsBusy = false
 
+    /// Letto nel body (riga "Lingua"): la dipendenza da `language` fa
+    /// ri-renderizzare Impostazioni non appena l'utente cambia lingua nella
+    /// picker, senza uscire dalla schermata.
+    private let localization = LocalizationManager.shared
+
     private var appVersion: String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
@@ -40,7 +45,7 @@ struct SettingsTab: View {
 
                         // MARK: Favorites
                         if config.features.enableFavorites {
-                            section(title: String(localized: "settings_section_favorites")) {
+                            section(title: L("settings_section_favorites")) {
                                 GlassCard(cornerRadius: 16) {
                                     NavigationLink {
                                         FavoritesListView()
@@ -48,10 +53,10 @@ struct SettingsTab: View {
                                         settingsRow(
                                             icon: .star,
                                             iconColor: .yellow,
-                                            title: String(localized: "settings_favorites"),
+                                            title: L("settings_favorites"),
                                             detail: favoritesManager.favoriteStopIds.isEmpty
-                                                ? String(localized: "settings_favorites_none")
-                                                : String(format: NSLocalizedString("settings_favorites_count", comment: ""), favoritesManager.favoriteStopIds.count),
+                                                ? L("settings_favorites_none")
+                                                : String(format: L("settings_favorites_count", comment: ""), favoritesManager.favoriteStopIds.count),
                                             tappable: true
                                         )
                                     }
@@ -62,7 +67,7 @@ struct SettingsTab: View {
 
                         // MARK: Notifications
                         if config.features.enableNotifications {
-                            section(title: String(localized: "settings_section_notifications")) {
+                            section(title: L("settings_section_notifications")) {
                                 GlassCard(cornerRadius: 16) {
                                     notificationsRow
                                 }
@@ -70,15 +75,34 @@ struct SettingsTab: View {
                             .id("notifications")
                         }
 
+                        // MARK: Language
+                        section(title: L("settings_section_language")) {
+                            GlassCard(cornerRadius: 16) {
+                                NavigationLink {
+                                    LanguagePickerView()
+                                } label: {
+                                    settingsRow(
+                                        icon: .globe,
+                                        iconColor: AppTheme.accent,
+                                        title: L("settings_section_language"),
+                                        detail: localization.language.endonym,
+                                        tappable: true
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityIdentifier("settings_language_row")
+                            }
+                        }
+
                         // MARK: Privacy (Location)
-                        section(title: String(localized: "settings_location_section")) {
+                        section(title: L("settings_location_section")) {
                             GlassCard(cornerRadius: 16) {
                                 locationRow
                             }
                         }
 
                         // MARK: About
-                        section(title: String(localized: "settings_section_about")) {
+                        section(title: L("settings_section_about")) {
                             GlassCard(cornerRadius: 16) {
                                 VStack(spacing: 0) {
                                     if let url = URL(string: config.url) {
@@ -86,7 +110,7 @@ struct SettingsTab: View {
                                             settingsRow(
                                                 icon: .globe,
                                                 iconColor: AppTheme.accent,
-                                                title: String(localized: "about_operator_website"),
+                                                title: L("about_operator_website"),
                                                 detail: config.name,
                                                 tappable: false,
                                                 trailing: {
@@ -108,7 +132,7 @@ struct SettingsTab: View {
                                             settingsRow(
                                                 icon: .shield,
                                                 iconColor: AppTheme.accent,
-                                                title: String(localized: "about_privacy_policy"),
+                                                title: L("about_privacy_policy"),
                                                 tappable: false,
                                                 trailing: {
                                                     AnyView(
@@ -126,7 +150,7 @@ struct SettingsTab: View {
                                     settingsRow(
                                         icon: .info,
                                         iconColor: AppTheme.textTertiary,
-                                        title: String(localized: "settings_version"),
+                                        title: L("settings_version"),
                                         tappable: false,
                                         trailing: {
                                             AnyView(
@@ -142,11 +166,11 @@ struct SettingsTab: View {
                         }
 
                         // MARK: Disclaimer
-                        section(title: String(localized: "settings_info_section")) {
+                        section(title: L("settings_info_section")) {
                             // Args: %1$@ = app name (AppalRider), %2$@ = operator name (AppalCART).
                             // Reso: "AppalRider is not developed or managed by AppalCART.
                             // Timetable data is officially provided by AppalCART."
-                            Text(String(format: String(localized: "settings_disclaimer_body"), appDisplayName, config.name))
+                            Text(String(format: L("settings_disclaimer_body"), appDisplayName, config.name))
                                 .font(.system(size: 13))
                                 .foregroundStyle(AppTheme.textSecondary)
                                 .lineSpacing(2)
@@ -175,7 +199,7 @@ struct SettingsTab: View {
                 }
             }
             .background(AppTheme.background.ignoresSafeArea())
-            .navigationTitle(String(localized: "tab_settings"))
+            .navigationTitle(L("tab_settings"))
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -218,11 +242,11 @@ struct SettingsTab: View {
     private var notificationsDetailText: String {
         switch pushManager.authorizationStatus {
         case .denied:
-            String(localized: "settings_notifications_denied")
+            L("settings_notifications_denied")
         case .authorized where notificationsEnabled:
-            String(localized: "settings_notifications_active")
+            L("settings_notifications_active")
         default:
-            String(localized: "settings_notifications_footer")
+            L("settings_notifications_footer")
         }
     }
 
@@ -298,7 +322,7 @@ struct SettingsTab: View {
                 .overlay(LucideIcon.bell.sized(16).foregroundStyle(AppTheme.accent))
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(String(localized: "settings_notifications"))
+                Text(L("settings_notifications"))
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(AppTheme.textPrimary)
                 Text(notificationsDetailText)
@@ -371,7 +395,7 @@ struct SettingsTab: View {
                 .overlay(LucideIcon.mapPin.sized(16).foregroundStyle(AppTheme.accent))
 
             VStack(alignment: .leading, spacing: 2) {
-                Text(String(localized: "settings_location_title"))
+                Text(L("settings_location_title"))
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(AppTheme.textPrimary)
                 Text(locationStatusDescription)
@@ -390,11 +414,11 @@ struct SettingsTab: View {
     private var locationStatusDescription: String {
         switch locationManager.authorizationStatus {
         case .authorizedWhenInUse, .authorizedAlways:
-            return String(localized: "settings_location_active_subtitle")
+            return L("settings_location_active_subtitle")
         case .denied, .restricted:
-            return String(localized: "nearby_denied_subtitle")
+            return L("nearby_denied_subtitle")
         case .notDetermined:
-            return String(localized: "nearby_enable_subtitle")
+            return L("nearby_enable_subtitle")
         @unknown default:
             return ""
         }
@@ -404,14 +428,14 @@ struct SettingsTab: View {
     private var locationActionButton: some View {
         switch locationManager.authorizationStatus {
         case .notDetermined:
-            Button(String(localized: "settings_location_enable")) {
+            Button(L("settings_location_enable")) {
                 locationManager.requestPermissionAndStart()
             }
             .buttonStyle(.borderedProminent)
             .tint(AppTheme.accent)
             .accessibilityIdentifier("settings_location_enable_button")
         case .denied, .restricted:
-            Button(String(localized: "settings_location_open")) {
+            Button(L("settings_location_open")) {
                 if let url = URL(string: UIApplication.openSettingsURLString) {
                     UIApplication.shared.open(url)
                 }

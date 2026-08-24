@@ -37,7 +37,7 @@ struct FavoritesListView: View {
                                 }
                             } label: {
                                 Label {
-                                    Text(String(localized: "action_remove"))
+                                    Text(L("action_remove"))
                                 } icon: {
                                     LucideIcon.starOff.image
                                 }
@@ -54,7 +54,7 @@ struct FavoritesListView: View {
             }
         }
         .background(AppTheme.background.ignoresSafeArea())
-        .navigationTitle(String(localized: "nav_title_favorites"))
+        .navigationTitle(L("nav_title_favorites"))
         .navigationBarTitleDisplayMode(.large)
     }
 
@@ -98,7 +98,7 @@ struct FavoritesListView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(stop.name)
-        .accessibilityHint(String(localized: "a11y_hint_show_stop"))
+        .accessibilityHint(L("a11y_hint_show_stop"))
         .accessibilityAddTraits(.isButton)
     }
 
@@ -107,8 +107,8 @@ struct FavoritesListView: View {
     private var emptyState: some View {
         EmptyStateView(
             icon: .star,
-            title: String(localized: "favorites_empty_title"),
-            subtitle: String(localized: "favorites_empty_subtitle")
+            title: L("favorites_empty_title"),
+            subtitle: L("favorites_empty_subtitle")
         )
     }
 }

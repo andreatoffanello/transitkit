@@ -41,6 +41,43 @@ mkdir -p "$RESOURCES_DIR"
 cp "$CONFIG_SRC" "$RESOURCES_DIR/config.json"
 echo "  ✓ Copied config.json"
 
+# ---------- Names the OS reads before our code runs ----------
+#
+# brandName = brand dell'APP (AppalRider), name = operatore di cui mostriamo
+# i dati (AppalCART). Springboard e prompt permessi li leggono prima che
+# OperatorConfig venga caricato, quindi vanno cotti nel bundle a build time
+# invece di arrivare dal config a runtime come tutto il resto.
+#
+#   • display name + fallback English → build settings passati a xcodebuild,
+#     espansi da $(BRAND_NAME)/$(OPERATOR_NAME) in Info.plist (vedi project.yml)
+#   • usage description localizzata → InfoPlist.xcstrings, generata qui dal
+#     template: le 3 traduzioni sono identiche a meno dei due nomi propri,
+#     quindi si scrivono una volta sola e non per operatore.
+
+# Una riga per nome: gli spazi sono legittimi ("Charlottesville Area Transit").
+{ read -r BRAND_NAME; read -r OPERATOR_NAME; } < <(
+    python3 -c '
+import json, sys
+c = json.load(open(sys.argv[1]))
+name = c["name"]
+print(c.get("brandName") or name)
+print(name)
+' "$CONFIG_SRC"
+)
+[[ -n "$BRAND_NAME" && -n "$OPERATOR_NAME" ]] || {
+    echo "ERROR: brandName/name mancanti in $CONFIG_SRC"; exit 1; }
+echo "  ✓ Brand: $BRAND_NAME (operatore: $OPERATOR_NAME)"
+
+python3 -c '
+import json, sys
+tpl, out, brand, operator = sys.argv[1:5]
+s = open(tpl).read().replace("{{BRAND}}", brand).replace("{{OPERATOR}}", operator)
+json.loads(s)  # fail fast se un nome contiene virgolette e rompe il JSON
+open(out, "w").write(s)
+' "$IOS_DIR/InfoPlist.template.xcstrings" "$RESOURCES_DIR/InfoPlist.xcstrings" \
+  "$BRAND_NAME" "$OPERATOR_NAME"
+echo "  ✓ Generated InfoPlist.xcstrings"
+
 # ---------- Drop any stale bundled schedules.json ----------
 #
 # ScheduleLoader reads memory → disk cache → CDN; it never falls back to the
@@ -98,6 +135,8 @@ xcodebuild \
     -destination "generic/platform=iOS Simulator" \
     -configuration "$CONFIGURATION" \
     OPERATOR_ID="$OPERATOR_ID" \
+    BRAND_NAME="$BRAND_NAME" \
+    OPERATOR_NAME="$OPERATOR_NAME" \
     CODE_SIGNING_ALLOWED=NO \
     build \
     2>&1 | tail -20

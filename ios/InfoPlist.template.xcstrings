@@ -19,19 +19,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "AppalRider uses your location to show AppalCART stops near you and the most relevant upcoming departures. Your location stays on your device — it's never sent to any server."
+            "value": "{{BRAND}} uses your location to show {{OPERATOR}} stops near you and the most relevant upcoming departures. Your location stays on your device — it's never sent to any server."
           }
         },
         "es-419": {
           "stringUnit": {
             "state": "translated",
-            "value": "AppalRider usa tu ubicación para mostrarte paradas AppalCART cercanas y las próximas salidas más relevantes. Tu ubicación se queda en tu dispositivo — nunca se envía a ningún servidor."
+            "value": "{{BRAND}} usa tu ubicación para mostrarte paradas {{OPERATOR}} cercanas y las próximas salidas más relevantes. Tu ubicación se queda en tu dispositivo — nunca se envía a ningún servidor."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "AppalRider usa la tua posizione per mostrarti le fermate AppalCART vicine e gli orari più rilevanti. La posizione resta sul tuo dispositivo — non viene mai mandata a nessun server."
+            "value": "{{BRAND}} usa la tua posizione per mostrarti le fermate {{OPERATOR}} vicine e gli orari più rilevanti. La posizione resta sul tuo dispositivo — non viene mai mandata a nessun server."
           }
         }
       }

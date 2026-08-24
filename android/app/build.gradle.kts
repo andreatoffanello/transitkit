@@ -22,17 +22,39 @@ if (localPropsFile.exists()) {
     localPropsFile.inputStream().use { stream -> localProps.load(stream) }
 }
 
+// White-label: applicationId e app_name derivano dallo STESSO config.json che
+// l'app carica a runtime — build-android.sh lo copia qui da
+// shared/operators/<op>/ prima di invocare Gradle. Leggerlo (invece di
+// ricevere un -POPERATOR_ID) rende impossibile per costruzione che il package
+// installato e il config bundlato divergano: sono la stessa fonte.
+// L'OS legge il nome sotto l'icona prima che il nostro codice giri, quindi
+// dev'essere cotto qui e non risolto a runtime come il resto delle stringhe.
+val operatorConfig: Map<*, *> = file("src/main/assets/config.json").let { f ->
+    require(f.exists()) { "config.json mancante in ${f.path} — esegui scripts/build-android.sh <operator_id>" }
+    @Suppress("UNCHECKED_CAST")
+    groovy.json.JsonSlurper().parse(f) as Map<*, *>
+}
+val operatorId = requireNotNull(operatorConfig["id"] as? String) { "campo 'id' mancante in config.json" }
+val operatorName = requireNotNull(operatorConfig["name"] as? String) { "campo 'name' mancante in config.json" }
+// brandName è opzionale: fallback su name, stessa regola di iOS e del client.
+val brandName = (operatorConfig["brandName"] as? String) ?: operatorName
+
 android {
     namespace = "com.transitkit.app"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.transitkit.appalcart"
+        applicationId = "com.transitkit.$operatorId"
         minSdk = 26
         targetSdk = 35
-        versionCode = 15
-        versionName = "1.2.5"
+        versionCode = 16
+        versionName = "1.2.7"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Etichetta sotto l'icona. Definita qui e NON in strings.xml: era
+        // duplicata in values/, values-it/ e values-es/ — un nome proprio non
+        // si localizza, e tre copie sono tre occasioni di divergere.
+        resValue("string", "app_name", brandName)
 
         buildConfigField(
             "String",

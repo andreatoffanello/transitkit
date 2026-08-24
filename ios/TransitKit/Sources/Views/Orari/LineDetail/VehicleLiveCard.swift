@@ -38,7 +38,7 @@ struct VehicleLiveCard: View {
                     } else {
                         // No upcoming stop known — we still want to communicate
                         // the vehicle is being tracked, not that we lost it.
-                        Text(String(localized: "vehicle_next_stop_unknown"))
+                        Text(L("vehicle_next_stop_unknown"))
                             .font(.system(size: 14, weight: .medium))
                             .foregroundStyle(AppTheme.textSecondary)
                             .lineLimit(1)
@@ -63,7 +63,7 @@ struct VehicleLiveCard: View {
 
     private var vehicleTitle: String {
         let label = vehicle.label.isEmpty ? vehicle.id : vehicle.label
-        return String(format: String(localized: "vehicle_label_format"), label)
+        return String(format: L("vehicle_label_format"), label)
     }
 
     /// The caption above the next stop name flips to "LIVE TRACKING" when no
@@ -71,8 +71,8 @@ struct VehicleLiveCard: View {
     /// as broken when the feed lacks `current_stop_id`.
     private var nextStopCaption: String {
         nextStopName != nil
-            ? String(localized: "vehicle_next_stop")
-            : String(localized: "vehicle_live_tracking")
+            ? L("vehicle_next_stop")
+            : L("vehicle_live_tracking")
     }
 }
 

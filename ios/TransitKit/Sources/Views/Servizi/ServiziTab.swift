@@ -31,7 +31,7 @@ struct ServiziTab: View {
                 .padding(.top, 8)
             }
             .background(AppTheme.background.ignoresSafeArea())
-            .navigationTitle(String(localized: "services_title"))
+            .navigationTitle(L("services_title"))
             .navigationBarTitleDisplayMode(.large)
             .navigationDestination(item: $deeplinkServiceId) { id in
                 if let svc = config.services?.first(where: { $0.id == id }) {
@@ -71,7 +71,7 @@ struct ServiziTab: View {
     @ViewBuilder
     private func servicesSection(config: OperatorConfig) -> some View {
         if let services = config.services, !services.isEmpty {
-            sectionHeader(String(localized: "services_section_title"))
+            sectionHeader(L("services_section_title"))
             VStack(spacing: 12) {
                 ForEach(services) { service in
                     NavigationLink {
@@ -91,13 +91,13 @@ struct ServiziTab: View {
     @ViewBuilder
     private func faresSection(config: OperatorConfig) -> some View {
         if let fares = config.fares {
-            sectionHeader(String(localized: "services_section_fares"))
+            sectionHeader(L("services_section_fares"))
             NavigationLink {
                 FareInfoView(fares: fares, operatorUrl: config.url)
             } label: {
                 summaryCard(
                     icon: .ticket,
-                    title: String(localized: "services_section_fares"),
+                    title: L("services_section_fares"),
                     subtitle: faresSummary(fares)
                 )
             }
@@ -112,7 +112,7 @@ struct ServiziTab: View {
             freeTokens.contains(t.price.trimmingCharacters(in: .whitespaces).lowercased())
         }
         if isFree {
-            return String(localized: "services_fare_free")
+            return L("services_fare_free")
         }
         // Find minimum numeric fare
         let numeric = fares.types.compactMap { t -> (String, Double)? in
@@ -121,7 +121,7 @@ struct ServiziTab: View {
             return Double(cleaned).map { (t.price, $0) }
         }
         if let min = numeric.min(by: { $0.1 < $1.1 }) {
-            return String(format: String(localized: "services_fare_from %@"), min.0)
+            return String(format: L("services_fare_from %@"), min.0)
         }
         return fares.types.first?.price ?? ""
     }
@@ -131,7 +131,7 @@ struct ServiziTab: View {
     @ViewBuilder
     private func accessibilitySection(config: OperatorConfig) -> some View {
         if let accessibility = config.accessibility {
-            sectionHeader(String(localized: "services_section_accessibility"))
+            sectionHeader(L("services_section_accessibility"))
             NavigationLink {
                 AccessibilityInfoView(info: accessibility)
             } label: {
@@ -155,7 +155,7 @@ struct ServiziTab: View {
     @ViewBuilder
     private func contactSection(config: OperatorConfig) -> some View {
         if let contact = config.contact {
-            sectionHeader(String(localized: "services_section_contact"))
+            sectionHeader(L("services_section_contact"))
             NavigationLink {
                 ContactInfoView(contact: contact)
             } label: {
@@ -177,7 +177,7 @@ struct ServiziTab: View {
                             .foregroundStyle(AppTheme.accent)
                     )
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(String(localized: "services_section_contact"))
+                    Text(L("services_section_contact"))
                         .font(.headline)
                         .foregroundStyle(AppTheme.textPrimary)
                         .lineLimit(1)
@@ -251,7 +251,7 @@ struct ServiziTab: View {
         if let region = extractRegion(from: config.contact?.address), !region.isEmpty {
             return region
         }
-        return String(localized: "services_tagline")
+        return L("services_tagline")
     }
 
     /// Grab a short, human-readable region hint from a full address (the

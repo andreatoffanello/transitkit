@@ -17,7 +17,7 @@ struct ContactInfoView: View {
                         if let phone = contact.phone {
                             row(
                                 icon: .phone,
-                                title: String(localized: "operator_phone"),
+                                title: L("operator_phone"),
                                 subtitle: phone,
                                 url: telURL(from: phone),
                                 isFirst: true
@@ -28,7 +28,7 @@ struct ContactInfoView: View {
                             divider
                             row(
                                 icon: .mail,
-                                title: String(localized: "operator_email"),
+                                title: L("operator_email"),
                                 subtitle: email,
                                 url: URL(string: "mailto:\(email)")
                             )
@@ -38,7 +38,7 @@ struct ContactInfoView: View {
                             divider
                             row(
                                 icon: .headphones,
-                                title: String(localized: "services_label_tdd"),
+                                title: L("services_label_tdd"),
                                 subtitle: tdd,
                                 url: telURL(from: tdd)
                             )
@@ -48,7 +48,7 @@ struct ContactInfoView: View {
                             divider
                             row(
                                 icon: .mapPin,
-                                title: String(localized: "services_section_contact"),
+                                title: L("services_section_contact"),
                                 subtitle: address,
                                 url: mapsURL(for: address),
                                 multiline: true
@@ -59,7 +59,7 @@ struct ContactInfoView: View {
                             divider
                             row(
                                 icon: .clock,
-                                title: String(localized: "services_label_office_hours"),
+                                title: L("services_label_office_hours"),
                                 subtitle: hours.resolved(),
                                 url: nil,
                                 multiline: true
@@ -74,7 +74,7 @@ struct ContactInfoView: View {
             .padding(.bottom, 32)
         }
         .background(AppTheme.background.ignoresSafeArea())
-        .navigationTitle(String(localized: "services_section_contact"))
+        .navigationTitle(L("services_section_contact"))
         .navigationBarTitleDisplayMode(.large)
         .toolbar(.hidden, for: .tabBar)
     }

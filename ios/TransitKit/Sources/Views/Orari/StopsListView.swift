@@ -103,7 +103,7 @@ struct StopsListView: View {
             Spacer()
             ProgressView()
                 .tint(AppTheme.accent)
-            Text(String(localized: "stops_loading"))
+            Text(L("stops_loading"))
                 .font(.subheadline)
                 .foregroundStyle(AppTheme.textTertiary)
             Spacer()
@@ -116,8 +116,8 @@ struct StopsListView: View {
     private var emptyState: some View {
         EmptyStateView(
             icon: .search,
-            title: String(localized: "stops_no_result"),
-            subtitle: String(localized: "stops_no_result_hint")
+            title: L("stops_no_result"),
+            subtitle: L("stops_no_result_hint")
         )
     }
 
@@ -143,7 +143,7 @@ struct StopsListView: View {
     private var recentSection: some View {
         if !recentStops.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                Text(String(localized: "recent_searches"))
+                Text(L("recent_searches"))
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(AppTheme.textTertiary)
                     .padding(.horizontal, 4)
@@ -189,7 +189,7 @@ struct StopsListView: View {
 
             // "Tutte le fermate" header — only when recents are visible and not searching
             if !recentStops.isEmpty && searchQuery.isEmpty {
-                Text(String(localized: "section_all_stops"))
+                Text(L("section_all_stops"))
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(AppTheme.textTertiary)
                     .padding(.horizontal, 4)
@@ -200,7 +200,7 @@ struct StopsListView: View {
 
             // Result count
             if !searchQuery.isEmpty {
-                Text(String(format: NSLocalizedString("stops_result_count", comment: ""), filteredStops.count))
+                Text(String(format: L("stops_result_count", comment: ""), filteredStops.count))
                     .font(.caption)
                     .foregroundStyle(AppTheme.textTertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)

@@ -52,7 +52,7 @@ struct StopMapSheet: View {
                     onShowAllDepartures(stop)
                 } label: {
                     HStack {
-                        Text(String(localized: "see_all_departures"))
+                        Text(L("see_all_departures"))
                             .font(.system(size: 14, weight: .semibold))
                         Spacer()
                         LucideIcon.chevronRight.sized(12)
@@ -107,7 +107,7 @@ struct StopMapSheet: View {
         HStack {
             LucideIcon.clock.image
                 .foregroundStyle(AppTheme.textTertiary)
-            Text(String(localized: "no_departures_today"))
+            Text(L("no_departures_today"))
                 .font(.system(size: 13))
                 .foregroundStyle(AppTheme.textSecondary)
         }

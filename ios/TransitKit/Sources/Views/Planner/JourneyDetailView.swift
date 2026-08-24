@@ -30,19 +30,19 @@ struct JourneyDetailView: View {
     }
 
     private var headerSubtitle: String {
-        let dur = "\(journey.durationMinutes) \(String(localized: "min_abbrev"))"
+        let dur = "\(journey.durationMinutes) \(L("min_abbrev"))"
         let changes: String = {
             switch journey.transfers {
-            case 0:  return String(localized: "planner_direct")
-            case 1:  return String(localized: "planner_change_one")
-            default: return String(format: NSLocalizedString("planner_change_count", comment: ""), journey.transfers)
+            case 0:  return L("planner_direct")
+            case 1:  return L("planner_change_one")
+            default: return String(format: L("planner_change_count", comment: ""), journey.transfers)
             }
         }()
         let transit: String = journey.totalTransitSeconds >= 60
-            ? " · " + String(format: NSLocalizedString("planner_transit_total", comment: ""), journey.totalTransitSeconds / 60)
+            ? " · " + String(format: L("planner_transit_total", comment: ""), journey.totalTransitSeconds / 60)
             : ""
         let walk: String = journey.totalWalkSeconds > 90
-            ? " · " + String(format: NSLocalizedString("planner_walking_total", comment: ""), journey.totalWalkSeconds / 60)
+            ? " · " + String(format: L("planner_walking_total", comment: ""), journey.totalWalkSeconds / 60)
             : ""
         return "\(dur) · \(changes)\(transit)\(walk)"
     }
@@ -100,7 +100,7 @@ struct JourneyDetailView: View {
             .padding(.horizontal, 16)
             .padding(.bottom, 32)
         }
-        .navigationTitle(String(localized: "planner_journey"))
+        .navigationTitle(L("planner_journey"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarRole(.editor)
         .toolbar(.hidden, for: .tabBar)
@@ -110,7 +110,7 @@ struct JourneyDetailView: View {
         .navigationDestination(isPresented: $showFullscreenMap) {
             JourneyMapView(journey: journey)
                 .ignoresSafeArea(edges: .bottom)
-                .navigationTitle(String(localized: "planner_route_map"))
+                .navigationTitle(L("planner_route_map"))
                 .navigationBarTitleDisplayMode(.inline)
         }
     }
@@ -231,8 +231,8 @@ private struct EndpointRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(role == .origin
-                     ? String(localized: "planner_endpoint_departure")
-                     : String(localized: "planner_endpoint_arrival"))
+                     ? L("planner_endpoint_departure")
+                     : L("planner_endpoint_arrival"))
                     .font(.system(size: 11, weight: .semibold))
                     .kerning(0.6)
                     .foregroundStyle(.tertiary)
@@ -337,7 +337,7 @@ private struct TransitLegView: View {
                         }
                     }
                     Spacer(minLength: 6)
-                    Text(String(format: NSLocalizedString("planner_leg_duration", comment: ""),
+                    Text(String(format: L("planner_leg_duration", comment: ""),
                                 max(1, Int(leg.alightTime.timeIntervalSince(leg.boardTime)) / 60)))
                         .font(.system(size: 13).monospacedDigit())
                         .foregroundStyle(.tertiary)
@@ -406,8 +406,8 @@ private struct TransitLegView: View {
     private var intermediateStopsLabel: String {
         let n = leg.intermediateStops.count
         return n == 1
-            ? String(localized: "planner_intermediate_one")
-            : String(format: NSLocalizedString("planner_intermediate_count", comment: ""), n)
+            ? L("planner_intermediate_one")
+            : String(format: L("planner_intermediate_count", comment: ""), n)
     }
 
     private var alightRow: some View {
@@ -460,7 +460,7 @@ private struct TransferConnectorRow: View {
             HStack(spacing: 5) {
                 LucideIcon.repeat2.sized(13)
                     .foregroundStyle(.secondary)
-                Text(String(localized: "planner_transfer_line"))
+                Text(L("planner_transfer_line"))
                     .font(.system(size: 13))
                     .foregroundStyle(.secondary)
             }
@@ -485,7 +485,7 @@ private struct WalkingLegView: View {
             HStack(spacing: 6) {
                 LucideIcon.footprints.sized(14)
                     .foregroundStyle(.secondary)
-                Text(String(format: NSLocalizedString("planner_walking_minutes", comment: ""),
+                Text(String(format: L("planner_walking_minutes", comment: ""),
                             max(1, leg.walkSeconds / 60)))
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.secondary)

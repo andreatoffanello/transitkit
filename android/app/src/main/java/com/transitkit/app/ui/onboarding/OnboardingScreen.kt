@@ -251,6 +251,7 @@ fun OnboardingScreen(
 @Composable
 private fun WelcomePage(onNext: () -> Unit) {
     val colors = TransitTheme.colors
+    val config = TransitTheme.config
     val context = LocalContext.current
     val logoRes = remember(context) {
         context.resources.getIdentifier("app_logo", "drawable", context.packageName)
@@ -287,8 +288,9 @@ private fun WelcomePage(onNext: () -> Unit) {
         }
         Spacer(modifier = Modifier.height(28.dp))
         PageText(
-            title = stringResource(R.string.onb_welcome_title),
-            body = stringResource(R.string.onb_welcome_body),
+            // title = brand dell'APP, body = operatore di cui mostriamo i dati.
+            title = stringResource(R.string.onb_welcome_title, config.brandName ?: config.name),
+            body = stringResource(R.string.onb_welcome_body, config.name),
         )
     }
 }

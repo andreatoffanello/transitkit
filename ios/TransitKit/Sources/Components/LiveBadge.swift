@@ -31,7 +31,7 @@ struct LiveBadge: View {
             Capsule(style: .continuous)
                 .stroke(AppTheme.realtimeGreen.opacity(0.25), lineWidth: 0.5)
         )
-        .accessibilityLabel(String(localized: "live_badge_a11y"))
+        .accessibilityLabel(L("live_badge_a11y"))
         .accessibilityHidden(false)
     }
 }

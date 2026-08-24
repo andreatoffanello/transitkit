@@ -91,11 +91,11 @@ struct LinePickerSheet: View {
                 }
             }
             .background(AppTheme.background)
-            .navigationTitle(Text(String(localized: "map_search_title")))
+            .navigationTitle(Text(L("map_search_title")))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(String(localized: "dismiss")) { dismiss() }
+                    Button(L("dismiss")) { dismiss() }
                 }
             }
         }
@@ -109,7 +109,7 @@ struct LinePickerSheet: View {
             LazyVStack(spacing: 8) {
                 // Lines — when searching alongside stops, label the section.
                 if isSearching && !lineResults.isEmpty && !stopResults.isEmpty {
-                    sectionHeader(String(localized: "lines_title"))
+                    sectionHeader(L("lines_title"))
                 }
                 ForEach(lineResults) { route in
                     Button {
@@ -129,7 +129,7 @@ struct LinePickerSheet: View {
 
                 // Stops — only present while typing.
                 if !stopResults.isEmpty {
-                    sectionHeader(String(localized: "stops"))
+                    sectionHeader(L("stops"))
                         .padding(.top, lineResults.isEmpty ? 0 : 8)
                     ForEach(stopResults) { stop in
                         Button {
@@ -166,7 +166,7 @@ struct LinePickerSheet: View {
         HStack(spacing: 10) {
             LucideIcon.search.sized(15)
                 .foregroundStyle(.secondary)
-            TextField(String(localized: "map_search_placeholder"), text: $searchText)
+            TextField(L("map_search_placeholder"), text: $searchText)
                 .font(.system(size: 15))
                 .focused($searchFocused)
                 .autocorrectionDisabled()
@@ -179,7 +179,7 @@ struct LinePickerSheet: View {
                     LucideIcon.circleX.sized(16)
                         .foregroundStyle(.tertiary)
                 }
-                .accessibilityLabel(Text(String(localized: "a11y_clear_search")))
+                .accessibilityLabel(Text(L("a11y_clear_search")))
             }
         }
         .padding(.horizontal, 14)
@@ -192,8 +192,8 @@ struct LinePickerSheet: View {
     private var emptyState: some View {
         EmptyStateView(
             icon: .search,
-            title: String(localized: "no_matching_line"),
-            subtitle: String(localized: "empty_no_results_subtitle")
+            title: L("no_matching_line"),
+            subtitle: L("empty_no_results_subtitle")
         )
     }
 }

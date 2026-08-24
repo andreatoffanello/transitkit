@@ -20,6 +20,12 @@ struct ContentView: View {
     @State private var showShaderPlayground = false
     #endif
     @State private var deeplinkAlert: GtfsRtAlert?
+    /// Impostazioni è presentata da qui e non da HomeTab perché il cover deve
+    /// stare *fuori* dal `.id(localization.language)` del TabView: cambiando
+    /// lingua i tab vengono ricreati sotto, ma la schermata Impostazioni resta
+    /// aperta dov'è l'utente.
+    @State private var showSettings = false
+    private let localization = LocalizationManager.shared
 
     /// Dimensione icone tab bar — gli asset Lucide sono 24pt intrinseci,
     /// leggermente ridotti per proporzione con le label.
@@ -30,133 +36,7 @@ struct ContentView: View {
     }
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            // MARK: Tab 0 — Home
-            HomeTab(selectedTab: $selectedTab)
-                .tabItem {
-                    Label {
-                        Text(String(localized: "tab_home"))
-                    } icon: {
-                        tabIcon(.home)
-                    }
-                }
-                .tag(0)
-                .accessibilityIdentifier("tab_home")
-
-            // MARK: Tab 1 — Orari (Stops)
-            OrariTab()
-                .tabItem {
-                    Label {
-                        Text(String(localized: "tab_schedules"))
-                    } icon: {
-                        tabIcon(.clock)
-                    }
-                }
-                .tag(1)
-                .accessibilityIdentifier("tab_schedules")
-
-            // MARK: Tab 2 — Linee
-            LineeTab()
-                .tabItem {
-                    Label {
-                        Text(String(localized: "tab_lines"))
-                    } icon: {
-                        tabIcon(.route)
-                    }
-                }
-                .tag(2)
-                .accessibilityIdentifier("tab_lines")
-
-            // MARK: Tab 3 — Mappa
-            // NavigationStack is REQUIRED here so MappaTab's
-            // `.navigationDestination(item: $navigationDestinationStop)` can
-            // actually push StopDetailView. Without the wrap the "Open stop"
-            // CTA on the preview card flipped the binding silently and SwiftUI
-            // had no stack to push onto — the preview just dismissed.
-            NavigationStack {
-                MappaTab(config: config)
-            }
-                .tabItem {
-                    Label {
-                        Text(String(localized: "tab_map"))
-                    } icon: {
-                        tabIcon(.map)
-                    }
-                }
-                .tag(3)
-                .accessibilityIdentifier("tab_map")
-
-            // MARK: Tab 4 — Avvisi
-            NavigationStack {
-                AlertListView()
-            }
-                .tabItem {
-                    Label {
-                        Text(String(localized: "tab_alerts"))
-                    } icon: {
-                        tabIcon(.bell)
-                    }
-                }
-                .badge(alertStore.activeAlerts.count)
-                .tag(4)
-                .accessibilityIdentifier("tab_alerts")
-        }
-        .onChange(of: router.pendingRoute) { _, route in
-            if route != nil { selectedTab = 2 }
-        }
-        .onChange(of: router.pendingStop) { _, stop in
-            if stop != nil { selectedTab = 1 }
-        }
-        .onChange(of: router.pendingTrip) { _, trip in
-            if trip != nil { selectedTab = 1 }
-        }
-        .onChange(of: router.pendingMapPreviewStop) { _, stop in
-            if stop != nil { selectedTab = 3 }
-        }
-        .onChange(of: router.pendingMapPreviewVehicleId) { _, vid in
-            if vid != nil { selectedTab = 3 }
-        }
-        .onChange(of: router.pendingMapPreviewRouteId) { _, rid in
-            if rid != nil { selectedTab = 3 }
-        }
-        .onChange(of: router.pendingMapOpen) { _, id in
-            // Only switch tabs here — MappaTab consumes `pendingMapOpen` and
-            // wipes its own selection state. If we wiped to nil here too, the
-            // `.onChange(of:)` inside MappaTab could miss the trigger because
-            // SwiftUI may collapse the UUID→nil transition into a single tick.
-            if id != nil { selectedTab = 3 }
-        }
-        .onChange(of: router.pendingTabSwitch) { _, switchReq in
-            guard let switchReq else { return }
-            selectedTab = switchReq.index
-            router.pendingTabSwitch = nil
-        }
-        .onChange(of: router.pendingAlertId) { _, alertId in
-            guard let alertId,
-                  let alert = alertStore.allAlerts.first(where: { $0.id == alertId })
-            else { return }
-            router.pendingAlertId = nil
-            deeplinkAlert = alert
-        }
-        .onAppear {
-            if router.pendingMapPreviewStop != nil { selectedTab = 3 }
-            if router.pendingMapPreviewVehicleId != nil { selectedTab = 3 }
-        }
-        .onChange(of: scenePhase) { _, phase in
-            // Pause GTFS-RT polling when the app is not active to avoid
-            // burning battery on background HTTPS requests every 15/60s.
-            // Restart immediately on .active so the user sees fresh data.
-            switch phase {
-            case .active:
-                vehicleStore.startPolling()
-                alertStore.startPolling()
-            case .inactive, .background:
-                vehicleStore.stopPolling()
-                alertStore.stopPolling()
-            @unknown default:
-                break
-            }
-        }
+        routedTabs
         .toolbarBackground(.ultraThinMaterial, for: .tabBar)
         .modifier(TabBarVisibilityModifier())
         .modifier(TabBarAppearanceModifier())
@@ -193,6 +73,12 @@ struct ContentView: View {
                 AlertDetailView(alert: alert)
             }
         }
+        .onChange(of: router.pendingSettingsOpen) { _, id in
+            guard id != nil else { return }
+            router.pendingSettingsOpen = nil
+            showSettings = true
+        }
+        .fullScreenCover(isPresented: $showSettings) { SettingsTab() }
         #if DEBUG
         .onChange(of: router.showShaderPlayground) { _, requested in
             if requested {
@@ -204,6 +90,153 @@ struct ContentView: View {
             ShaderPlaygroundView()
         }
         #endif
+    }
+
+    /// Tab + routing dei deep link. Separata dal `body` (che si occupa di
+    /// overlay e schermate presentate) per non far esplodere il type-checker.
+    private var routedTabs: some View {
+        tabs
+        // `L(_:)` restituisce una `String`, non una `LocalizedStringKey`:
+        // SwiftUI non ha modo di sapere che il testo è cambiato. Cambiare
+        // identità al TabView è ciò che forza il ridisegno dell'intera
+        // gerarchia nella lingua nuova.
+        .id(localization.language)
+        .onChange(of: router.pendingRoute) { _, route in
+            if route != nil { selectedTab = 2 }
+        }
+        .onChange(of: router.pendingStop) { _, stop in
+            if stop != nil { selectedTab = 1 }
+        }
+        .onChange(of: router.pendingTrip) { _, trip in
+            if trip != nil { selectedTab = 1 }
+        }
+        .onChange(of: router.pendingMapPreviewStop) { _, stop in
+            if stop != nil { selectedTab = 3 }
+        }
+        .onChange(of: router.pendingMapPreviewVehicleId) { _, vid in
+            if vid != nil { selectedTab = 3 }
+        }
+        .onChange(of: router.pendingMapPreviewRouteId) { _, rid in
+            if rid != nil { selectedTab = 3 }
+        }
+        .onChange(of: router.pendingMapOpen) { _, id in
+            // Only switch tabs here — MappaTab consumes `pendingMapOpen` and
+            // wipes its own selection state. If we wiped to nil here too, the
+            // `.onChange(of:)` inside MappaTab could miss the trigger because
+            // SwiftUI may collapse the UUID→nil transition into a single tick.
+            if id != nil {
+                selectedTab = 3
+                showSettings = false
+            }
+        }
+        .onChange(of: router.pendingTabSwitch) { _, switchReq in
+            guard let switchReq else { return }
+            selectedTab = switchReq.index
+            router.pendingTabSwitch = nil
+        }
+        .onChange(of: router.pendingAlertId) { _, alertId in
+            guard let alertId,
+                  let alert = alertStore.allAlerts.first(where: { $0.id == alertId })
+            else { return }
+            router.pendingAlertId = nil
+            deeplinkAlert = alert
+        }
+        .onAppear {
+            if router.pendingMapPreviewStop != nil { selectedTab = 3 }
+            if router.pendingMapPreviewVehicleId != nil { selectedTab = 3 }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // Pause GTFS-RT polling when the app is not active to avoid
+            // burning battery on background HTTPS requests every 15/60s.
+            // Restart immediately on .active so the user sees fresh data.
+            switch phase {
+            case .active:
+                vehicleStore.startPolling()
+                alertStore.startPolling()
+            case .inactive, .background:
+                vehicleStore.stopPolling()
+                alertStore.stopPolling()
+            @unknown default:
+                break
+            }
+        }
+    }
+
+    /// TabView estratta dal `body`: la catena di modifier del body è
+    /// lunga e il type-checker di Swift esplode se deve risolvere anche
+    /// i cinque tab nella stessa espressione.
+    private var tabs: some View {
+    TabView(selection: $selectedTab) {
+        // MARK: Tab 0 — Home
+        HomeTab(selectedTab: $selectedTab)
+            .tabItem {
+                Label {
+                    Text(L("tab_home"))
+                } icon: {
+                    tabIcon(.home)
+                }
+            }
+            .tag(0)
+            .accessibilityIdentifier("tab_home")
+
+        // MARK: Tab 1 — Orari (Stops)
+        OrariTab()
+            .tabItem {
+                Label {
+                    Text(L("tab_schedules"))
+                } icon: {
+                    tabIcon(.clock)
+                }
+            }
+            .tag(1)
+            .accessibilityIdentifier("tab_schedules")
+
+        // MARK: Tab 2 — Linee
+        LineeTab()
+            .tabItem {
+                Label {
+                    Text(L("tab_lines"))
+                } icon: {
+                    tabIcon(.route)
+                }
+            }
+            .tag(2)
+            .accessibilityIdentifier("tab_lines")
+
+        // MARK: Tab 3 — Mappa
+        // NavigationStack is REQUIRED here so MappaTab's
+        // `.navigationDestination(item: $navigationDestinationStop)` can
+        // actually push StopDetailView. Without the wrap the "Open stop"
+        // CTA on the preview card flipped the binding silently and SwiftUI
+        // had no stack to push onto — the preview just dismissed.
+        NavigationStack {
+            MappaTab(config: config)
+        }
+            .tabItem {
+                Label {
+                    Text(L("tab_map"))
+                } icon: {
+                    tabIcon(.map)
+                }
+            }
+            .tag(3)
+            .accessibilityIdentifier("tab_map")
+
+        // MARK: Tab 4 — Avvisi
+        NavigationStack {
+            AlertListView()
+        }
+            .tabItem {
+                Label {
+                    Text(L("tab_alerts"))
+                } icon: {
+                    tabIcon(.bell)
+                }
+            }
+            .badge(alertStore.activeAlerts.count)
+            .tag(4)
+            .accessibilityIdentifier("tab_alerts")
+    }
     }
 
     /// On every alert feed refresh, enqueue a toast for the first newly-active

@@ -1,4 +1,3 @@
-• Smoother, more reliable line and stop browsing
-• Cleaner departure boards and service alerts
+• Pick your app language in Settings — System, English, Spanish or Italian
 
-Plus performance improvements and bug fixes.
+Plus improvements and bug fixes.

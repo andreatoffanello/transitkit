@@ -110,17 +110,17 @@ struct TimeDisplay: View {
     private var accessibilityLabel: String {
         switch state {
         case .departing:
-            String(localized: "time_departing_a11y")
+            L("time_departing_a11y")
         case .minutes(let mins):
-            String(format: NSLocalizedString("time_minutes_a11y", comment: ""), mins)
+            String(format: L("time_minutes_a11y", comment: ""), mins)
         case .hoursMinutes(let h, let m):
             m > 0
                 ? "\(h) ore \(m) minuti"
                 : "\(h) ore"
         case .absolute(let time):
-            String(format: NSLocalizedString("time_at_a11y", comment: ""), time)
+            String(format: L("time_at_a11y", comment: ""), time)
         case .passed(let time):
-            String(format: NSLocalizedString("time_passed_a11y", comment: ""), time)
+            String(format: L("time_passed_a11y", comment: ""), time)
         }
     }
 }

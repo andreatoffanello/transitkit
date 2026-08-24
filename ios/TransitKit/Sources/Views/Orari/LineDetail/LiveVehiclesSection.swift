@@ -39,7 +39,7 @@ struct LiveVehiclesSection: View {
     private var header: some View {
         HStack(spacing: 8) {
             LivePulseDot(color: AppTheme.realtimeGreen)
-            Text(String(format: String(localized: "line_detail_in_service"), vehicles.count))
+            Text(String(format: L("line_detail_in_service"), vehicles.count))
                 .font(.system(size: 11, weight: .bold))
                 .kerning(0.8)
                 .foregroundStyle(AppTheme.textSecondary)
@@ -54,12 +54,12 @@ struct LiveVehiclesSection: View {
                 LucideIcon.busFront.sized(18)
                     .foregroundStyle(AppTheme.textTertiary)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(String(localized: "line_detail_no_buses_this_direction"))
+                    Text(L("line_detail_no_buses_this_direction"))
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(AppTheme.textSecondary)
                         .multilineTextAlignment(.leading)
                     if oppositeDirectionCount > 0 {
-                        Text(String(format: String(localized: "line_detail_n_in_opposite_direction"), oppositeDirectionCount))
+                        Text(String(format: L("line_detail_n_in_opposite_direction"), oppositeDirectionCount))
                             .font(.caption)
                             .foregroundStyle(AppTheme.textTertiary)
                     }

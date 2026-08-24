@@ -83,7 +83,7 @@ struct StopRowContent: View {
         )
         .contentShape(Rectangle())
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(String(format: NSLocalizedString("a11y_stop_lines_count", comment: "Accessibility label: stop name and line count"), stop.name, stop.lineNames.count))
+        .accessibilityLabel(String(format: L("a11y_stop_lines_count", comment: "Accessibility label: stop name and line count"), stop.name, stop.lineNames.count))
         .accessibilityAddTraits(.isButton)
     }
 }

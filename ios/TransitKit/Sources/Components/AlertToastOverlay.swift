@@ -68,7 +68,7 @@ struct AlertToastView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(String(localized: "alerts_toast_kicker"))
+                    Text(L("alerts_toast_kicker"))
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(AppTheme.textTertiary)
                         .kerning(0.4)
@@ -89,7 +89,7 @@ struct AlertToastView: View {
                         .padding(6)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(String(localized: "action_close"))
+                .accessibilityLabel(L("action_close"))
             }
             .padding(14)
             .background(

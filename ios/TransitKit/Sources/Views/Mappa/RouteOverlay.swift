@@ -127,7 +127,7 @@ struct RouteOverlayToggle: View {
             .clipShape(Capsule())
             .shadow(color: .black.opacity(0.1), radius: 2, y: 1)
         }
-        .accessibilityLabel(String(format: NSLocalizedString("toggle_route_overlay", comment: ""), routeName))
+        .accessibilityLabel(String(format: L("toggle_route_overlay", comment: ""), routeName))
         .accessibilityIdentifier("btn_route_overlay_\(routeName)")
     }
 }

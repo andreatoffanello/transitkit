@@ -22,7 +22,7 @@ struct ServiceDetailView: View {
                 if let audience = service.audience, !audience.resolved().isEmpty {
                     labeledCard(
                         icon: .users,
-                        label: String(localized: "services_label_audience"),
+                        label: L("services_label_audience"),
                         body: audience.resolved()
                     )
                 }
@@ -34,7 +34,7 @@ struct ServiceDetailView: View {
                 if let hours = service.hours, !hours.resolved().isEmpty {
                     labeledCard(
                         icon: .clock,
-                        label: String(localized: "services_label_hours"),
+                        label: L("services_label_hours"),
                         body: hours.resolved()
                     )
                 }
@@ -42,7 +42,7 @@ struct ServiceDetailView: View {
                 if let fare = service.fare, !fare.resolved().isEmpty {
                     labeledCard(
                         icon: .ticket,
-                        label: String(localized: "services_label_fare"),
+                        label: L("services_label_fare"),
                         body: fare.resolved()
                     )
                 }
@@ -50,7 +50,7 @@ struct ServiceDetailView: View {
                 if let area = service.serviceArea, !area.resolved().isEmpty {
                     labeledCard(
                         icon: .map,
-                        label: String(localized: "services_label_area"),
+                        label: L("services_label_area"),
                         body: area.resolved()
                     )
                 }
@@ -153,7 +153,7 @@ struct ServiceDetailView: View {
     private func stepsCard(steps: [LocalizedText]) -> some View {
         GlassCard(cornerRadius: 16) {
             VStack(alignment: .leading, spacing: 12) {
-                sectionLabel(icon: .listOrdered, text: String(localized: "services_label_how"))
+                sectionLabel(icon: .listOrdered, text: L("services_label_how"))
                 VStack(spacing: 0) {
                     ForEach(Array(steps.enumerated()), id: \.element) { idx, step in
                         HStack(alignment: .top, spacing: 12) {
@@ -192,7 +192,7 @@ struct ServiceDetailView: View {
     private func notesCard(notes: [LocalizedText]) -> some View {
         GlassCard(cornerRadius: 16) {
             VStack(alignment: .leading, spacing: 12) {
-                sectionLabel(icon: .info, text: String(localized: "services_label_notes"))
+                sectionLabel(icon: .info, text: L("services_label_notes"))
                 VStack(alignment: .leading, spacing: 10) {
                     ForEach(notes, id: \.self) { note in
                         HStack(alignment: .top, spacing: 10) {
@@ -229,7 +229,7 @@ struct ServiceDetailView: View {
                     LucideIcon.externalLink.image
                         .font(.subheadline)
                         .foregroundStyle(AppTheme.accent)
-                    Text(String(localized: "services_label_links").uppercased())
+                    Text(L("services_label_links").uppercased())
                         .font(.caption.weight(.semibold))
                         .kerning(0.6)
                         .foregroundStyle(AppTheme.textTertiary)
@@ -295,7 +295,7 @@ struct ServiceDetailView: View {
                 HStack(spacing: 8) {
                     LucideIcon.phone.sized(14)
                         .foregroundStyle(AppTheme.accent)
-                    Text(String(format: String(localized: "services_label_questions %@"), phone))
+                    Text(String(format: L("services_label_questions %@"), phone))
                         .font(.footnote.weight(.medium))
                         .foregroundStyle(AppTheme.accent)
                         .lineLimit(1)

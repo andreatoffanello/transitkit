@@ -68,12 +68,12 @@ struct LocationPickerView: View {
         switch mode {
         case .assign(let key):
             return key == .home
-                ? String(localized: "planner_picker_assign_home_title")
-                : String(localized: "planner_picker_assign_work_title")
+                ? L("planner_picker_assign_home_title")
+                : L("planner_picker_assign_work_title")
         case .select:
             return isOrigin
-                ? String(localized: "planner_search_from_title")
-                : String(localized: "planner_search_to_title")
+                ? L("planner_search_from_title")
+                : L("planner_search_to_title")
         }
     }
 
@@ -198,7 +198,7 @@ struct LocationPickerView: View {
             LucideIcon.search.sized(16)
                 .foregroundStyle(AppTheme.textTertiary)
 
-            TextField(String(localized: "search_stop_placeholder"), text: $query)
+            TextField(L("search_stop_placeholder"), text: $query)
                 .focused($fieldFocused)
                 .textInputAutocapitalization(.sentences)
                 .autocorrectionDisabled()
@@ -243,7 +243,7 @@ struct LocationPickerView: View {
                 mapPickRow
 
                 if !nearbyStops.isEmpty {
-                    sectionLabel(String(localized: "nearby_you"))
+                    sectionLabel(L("nearby_you"))
                         .padding(.top, 8)
                         .padding(.horizontal, 4)
                     stopList(nearbyStops)
@@ -261,10 +261,10 @@ struct LocationPickerView: View {
     private func savedPlaceRow(_ key: SavedPlaceKey) -> some View {
         let saved = savedPlacesStore.savedPlace(key)
         let title = key == .home
-            ? String(localized: "planner_picker_home")
-            : String(localized: "planner_picker_work")
+            ? L("planner_picker_home")
+            : L("planner_picker_work")
         let icon: LucideIcon = key == .home ? .house : .briefcase
-        let subtitle = saved?.name ?? String(localized: "planner_picker_set_address")
+        let subtitle = saved?.name ?? L("planner_picker_set_address")
 
         HStack(spacing: 0) {
             // Main tap area: use in trip (if set) or push assign screen (if empty)
@@ -302,12 +302,12 @@ struct LocationPickerView: View {
                     Button {
                         assignKey = key
                     } label: {
-                        Label(String(localized: "planner_picker_edit"), systemImage: "pencil")
+                        Label(L("planner_picker_edit"), systemImage: "pencil")
                     }
                     Button(role: .destructive) {
                         savedPlacesStore.removePlace(key)
                     } label: {
-                        Label(String(localized: "planner_picker_remove"), systemImage: "trash")
+                        Label(L("planner_picker_remove"), systemImage: "trash")
                     }
                 } label: {
                     Image(systemName: "ellipsis")
@@ -338,7 +338,7 @@ struct LocationPickerView: View {
             guard let loc = locationManager.location else { return }
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             commit(
-                name: String(localized: "planner_my_location"),
+                name: L("planner_my_location"),
                 coordinate: loc.coordinate,
                 stopGtfsId: nil,
                 kind: .userLocation
@@ -346,10 +346,10 @@ struct LocationPickerView: View {
         } label: {
             quickChoiceCell(
                 icon: LucideIcon.navigation.sized(18).foregroundStyle(AppTheme.accent).eraseToAnyView(),
-                title: String(localized: "planner_my_location"),
+                title: L("planner_my_location"),
                 subtitle: hasLocation
-                    ? String(localized: "planner_location_active")
-                    : String(localized: "planner_location_unavailable")
+                    ? L("planner_location_active")
+                    : L("planner_location_unavailable")
             )
         }
         .buttonStyle(PressableButtonStyle())
@@ -367,8 +367,8 @@ struct LocationPickerView: View {
         } label: {
             quickChoiceCell(
                 icon: LucideIcon.mapPin.sized(18).foregroundStyle(AppTheme.textSecondary).eraseToAnyView(),
-                title: String(localized: "planner_pick_on_map"),
-                subtitle: String(localized: "planner_pick_on_map_subtitle")
+                title: L("planner_pick_on_map"),
+                subtitle: L("planner_pick_on_map_subtitle")
             )
         }
         .buttonStyle(PressableButtonStyle())
@@ -403,7 +403,7 @@ struct LocationPickerView: View {
         if isSearching && addressResults.isEmpty && filteredStops.isEmpty {
             HStack(spacing: 8) {
                 ProgressView()
-                Text(String(localized: "planner_searching"))
+                Text(L("planner_searching"))
                     .font(.system(size: 13))
                     .foregroundStyle(AppTheme.textSecondary)
             }
@@ -413,7 +413,7 @@ struct LocationPickerView: View {
             VStack(spacing: 12) {
                 LucideIcon.search.sized(28)
                     .foregroundStyle(AppTheme.textTertiary)
-                Text(String(localized: "planner_no_results"))
+                Text(L("planner_no_results"))
                     .font(.system(size: 15))
                     .foregroundStyle(AppTheme.textSecondary)
             }
@@ -423,7 +423,7 @@ struct LocationPickerView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
                     if !filteredStops.isEmpty {
-                        sectionLabel(String(localized: "planner_section_stops"))
+                        sectionLabel(L("planner_section_stops"))
                             .padding(.horizontal, 16)
                             .padding(.top, 12)
                             .padding(.bottom, 8)
@@ -431,7 +431,7 @@ struct LocationPickerView: View {
                             .padding(.horizontal, 16)
                     }
                     if !addressResults.isEmpty {
-                        sectionLabel(String(localized: "planner_section_places"))
+                        sectionLabel(L("planner_section_places"))
                             .padding(.horizontal, 16)
                             .padding(.top, 16)
                             .padding(.bottom, 8)

@@ -16,6 +16,6 @@ struct SheetCloseButton: View {
                 .frame(width: 44, height: 44)
                 .contentShape(Circle())
         }
-        .accessibilityLabel(String(localized: "action_close"))
+        .accessibilityLabel(L("action_close"))
     }
 }

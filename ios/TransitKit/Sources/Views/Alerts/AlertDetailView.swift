@@ -90,7 +90,7 @@ struct AlertDetailView: View {
     private var descriptionCard: some View {
         let body = alert.descriptionText.resolved()
         return GlassCard(cornerRadius: 16) {
-            Text(body.isEmpty ? String(localized: "alert_no_description") : body)
+            Text(body.isEmpty ? L("alert_no_description") : body)
                 .font(.subheadline)
                 .foregroundStyle(AppTheme.textPrimary)
                 .lineSpacing(4)
@@ -103,7 +103,7 @@ struct AlertDetailView: View {
     private var routesCard: some View {
         GlassCard(cornerRadius: 16) {
             VStack(alignment: .leading, spacing: 12) {
-                sectionHeader(icon: .route, label: String(localized: "alerts_affected_routes"))
+                sectionHeader(icon: .route, label: L("alerts_affected_routes"))
                 FlowLayout(spacing: 8) {
                     ForEach(affectedRoutes, id: \.id) { route in
                         LineBadgePill(route: route)
@@ -117,7 +117,7 @@ struct AlertDetailView: View {
     private var stopsCard: some View {
         GlassCard(cornerRadius: 16) {
             VStack(alignment: .leading, spacing: 0) {
-                sectionHeader(icon: .mapPin, label: String(localized: "alerts_affected_stops"))
+                sectionHeader(icon: .mapPin, label: L("alerts_affected_stops"))
                     .padding(.bottom, 8)
                 ForEach(Array(affectedStops.enumerated()), id: \.element.id) { idx, stop in
                     HStack(spacing: 10) {
@@ -154,13 +154,13 @@ struct AlertDetailView: View {
         GlassCard(cornerRadius: 16) {
             VStack(alignment: .leading, spacing: 14) {
                 if let period = effectivePeriodText {
-                    metadataRow(icon: .clock, label: String(localized: "alert_meta_when"), value: period)
+                    metadataRow(icon: .clock, label: L("alert_meta_when"), value: period)
                 }
                 if let effect = effectText {
-                    metadataRow(icon: .alertTriangle, label: String(localized: "alert_meta_effect"), value: effect)
+                    metadataRow(icon: .alertTriangle, label: L("alert_meta_effect"), value: effect)
                 }
                 if let cause = causeText {
-                    metadataRow(icon: .info, label: String(localized: "alert_meta_cause"), value: cause)
+                    metadataRow(icon: .info, label: L("alert_meta_cause"), value: cause)
                 }
             }
             .padding(16)
@@ -191,7 +191,7 @@ struct AlertDetailView: View {
             HStack(spacing: 12) {
                 LucideIcon.bus.sized(18)
                     .foregroundStyle(severityColor)
-                Text(String(localized: "alert_affects_all_service"))
+                Text(L("alert_affects_all_service"))
                     .font(.subheadline)
                     .foregroundStyle(AppTheme.textPrimary)
                 Spacer(minLength: 0)
@@ -204,7 +204,7 @@ struct AlertDetailView: View {
         HStack(spacing: 12) {
             LucideIcon.externalLink.sized(18)
                 .foregroundStyle(AppTheme.accent)
-            Text(String(localized: "alerts_read_more"))
+            Text(L("alerts_read_more"))
                 .font(.headline)
                 .foregroundStyle(AppTheme.textPrimary)
             Spacer()
@@ -259,10 +259,10 @@ struct AlertDetailView: View {
 
     private var severityLabel: String {
         switch alert.severity {
-        case .severe:  return String(localized: "alert_severity_severe")
-        case .warning: return String(localized: "alert_severity_warning")
-        case .info:    return String(localized: "alert_severity_info")
-        case .unknown: return String(localized: "alert_severity_advisory")
+        case .severe:  return L("alert_severity_severe")
+        case .warning: return L("alert_severity_warning")
+        case .info:    return L("alert_severity_info")
+        case .unknown: return L("alert_severity_advisory")
         }
     }
 
@@ -285,22 +285,22 @@ struct AlertDetailView: View {
         let end = range.end.map { df.string(from: Date(timeIntervalSince1970: TimeInterval($0))) }
         switch (start, end) {
         case let (s?, e?): return "\(s) — \(e)"
-        case (let s?, nil): return String(format: String(localized: "alert_period_since"), s)
-        case (nil, let e?): return String(format: String(localized: "alert_period_until"), e)
+        case (let s?, nil): return String(format: L("alert_period_since"), s)
+        case (nil, let e?): return String(format: L("alert_period_until"), e)
         default: return nil
         }
     }
 
     private var effectText: String? {
         switch alert.effect {
-        case .noService:           return String(localized: "alert_effect_no_service")
-        case .reducedService:      return String(localized: "alert_effect_reduced_service")
-        case .significantDelays:   return String(localized: "alert_effect_delays")
-        case .detour:              return String(localized: "alert_effect_detour")
-        case .additionalService:   return String(localized: "alert_effect_additional_service")
-        case .modifiedService:     return String(localized: "alert_effect_modified_service")
-        case .stopMoved:           return String(localized: "alert_effect_stop_moved")
-        case .accessibilityIssue:  return String(localized: "alert_effect_accessibility")
+        case .noService:           return L("alert_effect_no_service")
+        case .reducedService:      return L("alert_effect_reduced_service")
+        case .significantDelays:   return L("alert_effect_delays")
+        case .detour:              return L("alert_effect_detour")
+        case .additionalService:   return L("alert_effect_additional_service")
+        case .modifiedService:     return L("alert_effect_modified_service")
+        case .stopMoved:           return L("alert_effect_stop_moved")
+        case .accessibilityIssue:  return L("alert_effect_accessibility")
         case .otherEffect, .noEffect, .unknownEffect:
             return nil  // not meaningful enough to surface
         }
@@ -308,16 +308,16 @@ struct AlertDetailView: View {
 
     private var causeText: String? {
         switch alert.cause {
-        case .technicalProblem:    return String(localized: "alert_cause_technical")
-        case .strike:              return String(localized: "alert_cause_strike")
-        case .demonstration:       return String(localized: "alert_cause_demonstration")
-        case .accident:            return String(localized: "alert_cause_accident")
-        case .holiday:             return String(localized: "alert_cause_holiday")
-        case .weather:             return String(localized: "alert_cause_weather")
-        case .maintenance:         return String(localized: "alert_cause_maintenance")
-        case .construction:        return String(localized: "alert_cause_construction")
-        case .policeActivity:      return String(localized: "alert_cause_police")
-        case .medicalEmergency:    return String(localized: "alert_cause_medical")
+        case .technicalProblem:    return L("alert_cause_technical")
+        case .strike:              return L("alert_cause_strike")
+        case .demonstration:       return L("alert_cause_demonstration")
+        case .accident:            return L("alert_cause_accident")
+        case .holiday:             return L("alert_cause_holiday")
+        case .weather:             return L("alert_cause_weather")
+        case .maintenance:         return L("alert_cause_maintenance")
+        case .construction:        return L("alert_cause_construction")
+        case .policeActivity:      return L("alert_cause_police")
+        case .medicalEmergency:    return L("alert_cause_medical")
         case .otherCause, .unknownCause:
             return nil
         }

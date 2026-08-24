@@ -22,6 +22,10 @@ struct TransitKitApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
+        // Prima di qualunque view: punta il bundle delle stringhe alla lingua
+        // scelta dall'utente.
+        LocalizationManager.shared.bootstrap()
+
         if CommandLine.arguments.contains("--reset-schedule-cache") {
             let cacheDir = FileManager.default.urls(
                 for: .applicationSupportDirectory, in: .userDomainMask
@@ -370,7 +374,7 @@ struct TransitKitApp: App {
             // Subtle loading indicator
             ProgressView()
                 .tint(AppTheme.accent)
-            Text(String(localized: "powered_by_transitkit"))
+            Text(L("powered_by_transitkit"))
                 .font(.system(.caption, weight: .medium))
                 .foregroundStyle(AppTheme.textTertiary)
         }
@@ -385,7 +389,7 @@ struct TransitKitApp: App {
             LucideIcon.alertTriangle.sized(40)
                 .foregroundStyle(AppTheme.realtimeRed)
 
-            Text(String(localized: "error_loading"))
+            Text(L("error_loading"))
                 .font(.system(.headline))
                 .foregroundStyle(AppTheme.textPrimary)
 
@@ -399,7 +403,7 @@ struct TransitKitApp: App {
                 configError = nil
                 Task { await bootstrap() }
             } label: {
-                Text(String(localized: "error_retry"))
+                Text(L("error_retry"))
                     .font(.system(.body, weight: .semibold))
                     .padding(.horizontal, 24)
                     .padding(.vertical, 12)

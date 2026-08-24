@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">AppalRider</string>
 
     <!-- Tab bar labels -->
     <string name="tab_home">Inicio</string>
@@ -206,7 +205,7 @@
     <string name="settings_notifiche_desc">Recibe avisos para tus paradas favoritas.</string>
 
     <!-- Settings — language -->
-    <string name="settings_lingua_desc">Cámbialo en Ajustes del sistema → Apps → %s.</string>
+    <string name="settings_language_system">Sistema</string>
 
     <!-- Settings — app info -->
     <string name="settings_info_su">Acerca de %s</string>
@@ -495,8 +494,8 @@
     <string name="notification_channel_default_description">Comunicaciones del operador: avisos de servicio, cambios y novedades en tus líneas.</string>
 
     <!-- Onboarding stories -->
-    <string name="onb_welcome_title">Bienvenido a AppalRider</string>
-    <string name="onb_welcome_body">Horarios, paradas, rutas y autobuses AppalCART en vivo — todo en una sola app.</string>
+    <string name="onb_welcome_title">Bienvenido a %1$s</string>
+    <string name="onb_welcome_body">Horarios, paradas, rutas y autobuses %1$s en vivo — todo en una sola app.</string>
     <string name="onb_welcome_cta">Empezamos</string>
     <string name="onb_location_title">Encuentra paradas cerca</string>
     <string name="onb_location_body">Mostramos las paradas cercanas y las salidas más relevantes. Tu ubicación se queda en tu teléfono — nunca la enviamos.</string>

@@ -29,7 +29,6 @@ struct HomeTab: View {
     /// Memoized routes-by-stop map for nearby cards. O(L·R) per stop computed
     /// once per memoization cycle instead of inside each card body.
     @State private var routesByStopId: [String: [APIRoute]] = [:]
-    @State private var showSettings = false
     @State private var showAlertList = false
     @State private var showServizi = false
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
@@ -50,9 +49,9 @@ struct HomeTab: View {
 
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
-        if hour < 12 { return String(localized: "home_greeting_morning") }
-        else if hour < 18 { return String(localized: "home_greeting_afternoon") }
-        else { return String(localized: "home_greeting_evening") }
+        if hour < 12 { return L("home_greeting_morning") }
+        else if hour < 18 { return L("home_greeting_afternoon") }
+        else { return L("home_greeting_evening") }
     }
 
     // Background shader brandizzato condiviso con l'Onboarding.
@@ -144,7 +143,6 @@ struct HomeTab: View {
                 homeTopBar
             }
             .task(id: nearbyKey) { recomputeNearby() }
-            .fullScreenCover(isPresented: $showSettings) { SettingsTab() }
             .fullScreenCover(isPresented: $showAlertList) {
                 NavigationStack { AlertListView() }
             }
@@ -168,11 +166,6 @@ struct HomeTab: View {
             .navigationDestination(item: $selectedMainStop) { stop in
                 StopDetailView(stop: stop)
             }
-            .onChange(of: router.pendingSettingsOpen) { _, id in
-                guard id != nil else { return }
-                router.pendingSettingsOpen = nil
-                showSettings = true
-            }
             .onChange(of: router.pendingServiziOpen) { _, id in
                 guard id != nil else { return }
                 router.pendingServiziOpen = nil
@@ -194,11 +187,11 @@ struct HomeTab: View {
             // on map" CTA) sets `pendingMapOpen`. The TabView root already
             // switches selectedTab; we just need to dismiss any HomeTab-owned
             // fullScreenCover sitting on top, otherwise the user lands on the
-            // map but the Servizi/Settings overlay is still glued in front.
+            // map but the Servizi overlay is still glued in front.
+            // (Impostazioni è presentata da ContentView e si chiude da lì.)
             .onChange(of: router.pendingMapOpen) { _, id in
                 guard id != nil else { return }
                 showServizi = false
-                showSettings = false
                 showAlertList = false
             }
             .onChange(of: router.pendingPlannerLaunch) { _, launch in
@@ -237,7 +230,8 @@ struct HomeTab: View {
             Spacer(minLength: 0)
             Button {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                showSettings = true
+                // Presentata da ContentView, fuori dal `.id` del TabView.
+                router.pendingSettingsOpen = UUID()
             } label: {
                 LucideIcon.settings.sized(20)
                     .foregroundStyle(AppTheme.textSecondary)
@@ -245,7 +239,7 @@ struct HomeTab: View {
                     .contentShape(Rectangle())
             }
             .accessibilityIdentifier("btn_settings")
-            .accessibilityLabel(String(localized: "tab_settings"))
+            .accessibilityLabel(L("tab_settings"))
         }
         .padding(.horizontal, 16)
         .frame(height: 44)
@@ -302,8 +296,8 @@ struct HomeTab: View {
     private var alertChipLabel: String {
         let count = alertStore.activeAlerts.count
         return count == 1
-            ? String(localized: "alerts_banner_one")
-            : String(format: String(localized: "alerts_banner_many"), count)
+            ? L("alerts_banner_one")
+            : String(format: L("alerts_banner_many"), count)
     }
 
     private func highestSeverity(_ alerts: [GtfsRtAlert]) -> AlertSeverity {
@@ -341,7 +335,7 @@ struct HomeTab: View {
     @ViewBuilder
     private var favoritesSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            sectionHeader(String(localized: "home_section_favorites"), icon: .star)
+            sectionHeader(L("home_section_favorites"), icon: .star)
 
             if favoriteStops.isEmpty {
                 onboardingCard
@@ -422,7 +416,7 @@ struct HomeTab: View {
             HStack(spacing: 8) {
                 LucideIcon.mapPin.sized(14)
                     .foregroundStyle(AppTheme.accent)
-                Text(String(localized: "home_enable_location_chip"))
+                Text(L("home_enable_location_chip"))
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(AppTheme.textPrimary)
                 Spacer(minLength: 0)
@@ -446,7 +440,7 @@ struct HomeTab: View {
             let nearby = nearbyComputed.filter { $0.distance <= 400 }
             if !nearby.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
-                    sectionHeader(String(localized: "home_section_nearby"), icon: .mapPin)
+                    sectionHeader(L("home_section_nearby"), icon: .mapPin)
                     // Horizontal scroll, edge-to-edge so the first card aligns with
                     // the section title and the last one peeks past the right edge.
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -498,7 +492,7 @@ struct HomeTab: View {
             }
 
             if departures.isEmpty {
-                Text(String(localized: "no_departures_today"))
+                Text(L("no_departures_today"))
                     .font(.caption)
                     .foregroundStyle(AppTheme.textTertiary)
             } else {
@@ -565,11 +559,11 @@ struct HomeTab: View {
             }
 
             VStack(spacing: 6) {
-                Text(String(localized: "home_empty_favorites_title"))
+                Text(L("home_empty_favorites_title"))
                     .font(.system(size: 17, weight: .bold))
                     .foregroundStyle(AppTheme.textPrimary)
                     .multilineTextAlignment(.center)
-                Text(String(localized: "home_empty_favorites_body"))
+                Text(L("home_empty_favorites_body"))
                     .font(.system(size: 14))
                     .foregroundStyle(AppTheme.textSecondary)
                     .multilineTextAlignment(.center)
@@ -578,7 +572,7 @@ struct HomeTab: View {
             Button {
                 selectedTab = 1   // tab Orari
             } label: {
-                Text(String(localized: "home_empty_favorites_cta"))
+                Text(L("home_empty_favorites_cta"))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
@@ -615,10 +609,10 @@ struct HomeTab: View {
                 // Section heading + attribution copy: positions the card below
                 // as "the people who actually move the city", not a disclaimer.
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(String(localized: "home_operators_section_title"))
+                    Text(L("home_operators_section_title"))
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(AppTheme.textPrimary)
-                    Text(String(format: String(localized: "home_operators_attribution"), config.name))
+                    Text(String(format: L("home_operators_attribution"), config.name))
                         .font(.system(size: 12))
                         .foregroundStyle(AppTheme.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -671,24 +665,24 @@ struct HomeTab: View {
                             Circle()
                                 .fill(AppTheme.realtimeGreen)
                                 .frame(width: 6, height: 6)
-                            Text(String(format: String(localized: "home_operators_live_count"), liveCount))
+                            Text(String(format: L("home_operators_live_count"), liveCount))
                                 .font(.system(size: 11, weight: .semibold))
                                 .foregroundStyle(AppTheme.realtimeGreen)
                             if routeCount > 0 {
                                 Text("·")
                                     .font(.system(size: 11))
                                     .foregroundStyle(AppTheme.textTertiary)
-                                Text(String(format: String(localized: "home_operator_routes"), routeCount))
+                                Text(String(format: L("home_operator_routes"), routeCount))
                                     .font(.system(size: 11))
                                     .foregroundStyle(AppTheme.textTertiary)
                             }
                         }
                     } else if routeCount > 0 {
-                        Text(String(format: String(localized: "home_operator_routes"), routeCount))
+                        Text(String(format: L("home_operator_routes"), routeCount))
                             .font(.system(size: 11))
                             .foregroundStyle(AppTheme.textTertiary)
                     } else {
-                        Text(String(localized: "home_operators_schedule_only"))
+                        Text(L("home_operators_schedule_only"))
                             .font(.system(size: 11))
                             .foregroundStyle(AppTheme.textTertiary)
                     }
@@ -731,10 +725,10 @@ struct HomeTab: View {
                 .frame(width: 40, height: 40)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(String(localized: "tab_services"))
+                    Text(L("tab_services"))
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(AppTheme.textPrimary)
-                    Text(String(localized: "home_servizi_subtitle"))
+                    Text(L("home_servizi_subtitle"))
                         .font(.system(size: 12))
                         .foregroundStyle(AppTheme.textSecondary)
                         .lineLimit(1)
@@ -762,7 +756,7 @@ struct HomeTab: View {
     @ViewBuilder
     private var footerDisclaimer: some View {
         if let config {
-            Text(String(format: String(localized: "home_footer_disclaimer"), config.name))
+            Text(String(format: L("home_footer_disclaimer"), config.name))
                 .font(.system(size: 11))
                 .foregroundStyle(AppTheme.textTertiary)
                 .multilineTextAlignment(.center)

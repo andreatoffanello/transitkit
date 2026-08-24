@@ -124,7 +124,7 @@ struct LinesListView: View {
             Spacer()
             ProgressView()
                 .tint(AppTheme.accent)
-            Text(String(localized: "lines_loading"))
+            Text(L("lines_loading"))
                 .font(.subheadline)
                 .foregroundStyle(AppTheme.textTertiary)
             Spacer()
@@ -137,8 +137,8 @@ struct LinesListView: View {
     private var emptyState: some View {
         EmptyStateView(
             icon: .train,
-            title: String(localized: "lines_no_result"),
-            subtitle: String(localized: "lines_no_result_hint")
+            title: L("lines_no_result"),
+            subtitle: L("lines_no_result_hint")
         )
     }
 
@@ -150,7 +150,7 @@ struct LinesListView: View {
     private var recentSection: some View {
         if !recentAPIRoutes.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                Text(String(localized: "recent_searches"))
+                Text(L("recent_searches"))
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(AppTheme.textTertiary)
                     .padding(.horizontal, 4)
@@ -182,7 +182,7 @@ struct LinesListView: View {
 
                 // Result count when searching
                 if !searchQuery.isEmpty {
-                    Text(String(format: NSLocalizedString("lines_result_count", comment: ""), filteredAPIRoutes.count))
+                    Text(String(format: L("lines_result_count", comment: ""), filteredAPIRoutes.count))
                         .font(.caption)
                         .foregroundStyle(AppTheme.textTertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -192,7 +192,7 @@ struct LinesListView: View {
                 // "All lines" header — distinguishes the full list from the
                 // Recent section above; without it the two read as duplicated lines.
                 if searchQuery.isEmpty && !recentAPIRoutes.isEmpty {
-                    Text(String(localized: "all_lines"))
+                    Text(L("all_lines"))
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(AppTheme.textTertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -316,7 +316,7 @@ struct LineeTab: View {
                 .frame(maxHeight: .infinity)
             }
             .background(AppTheme.background.ignoresSafeArea())
-            .navigationTitle(String(localized: "tab_lines"))
+            .navigationTitle(L("tab_lines"))
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: APIRoute.self) { route in
                 let _ = searchHistoryStore.recordLine(route.id)
@@ -357,7 +357,7 @@ struct LineeTab: View {
                 .foregroundStyle(AppTheme.textTertiary)
 
             TextField(
-                String(localized: "search_line_placeholder"),
+                L("search_line_placeholder"),
                 text: $searchQuery
             )
             .font(.system(.subheadline))
@@ -391,7 +391,7 @@ struct LineeTab: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 FilterChip(
-                    label: String(localized: "filter_all"),
+                    label: L("filter_all"),
                     isSelected: selectedTransitType == nil
                 ) {
                     withAnimation(.easeInOut(duration: 0.2)) {

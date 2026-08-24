@@ -15,7 +15,7 @@ struct MapSearchPill: View {
             HStack(spacing: 10) {
                 LucideIcon.search.sized(15)
                     .foregroundStyle(.secondary)
-                Text(String(localized: "map_search_placeholder"))
+                Text(L("map_search_placeholder"))
                     .font(.system(size: 15))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -31,6 +31,6 @@ struct MapSearchPill: View {
         .buttonStyle(.plain)
         .padding(.horizontal, 24)
         .accessibilityIdentifier("btn_map_search_pill")
-        .accessibilityLabel(Text(String(localized: "a11y_search_line_or_stop")))
+        .accessibilityLabel(Text(L("a11y_search_line_or_stop")))
     }
 }

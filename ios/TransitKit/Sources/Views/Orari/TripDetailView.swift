@@ -91,7 +91,7 @@ struct TripDetailView: View {
                     VStack(spacing: 8) {
                         LucideIcon.alertTriangle.sized(28)
                             .foregroundStyle(AppTheme.textTertiary)
-                        Text(String(localized: "trip_no_data"))
+                        Text(L("trip_no_data"))
                             .font(.system(size: 14))
                             .foregroundStyle(AppTheme.textSecondary)
                     }
@@ -103,7 +103,7 @@ struct TripDetailView: View {
             }
         }
         .background(AppTheme.background)
-        .navigationTitle(String(format: NSLocalizedString("trip_line_title", comment: ""), departure.lineName))
+        .navigationTitle(String(format: L("trip_line_title", comment: ""), departure.lineName))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarRole(.editor)
         .toolbar(.hidden, for: .tabBar)
@@ -160,18 +160,18 @@ struct TripDetailView: View {
                             Circle()
                                 .fill(statusTint)
                                 .frame(width: 7, height: 7)
-                            Text(String(localized: "trip_in_transit"))
+                            Text(L("trip_in_transit"))
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundStyle(.primary)
                             Text("·")
                                 .font(.system(size: 12))
                                 .foregroundStyle(.tertiary)
                             if isLate {
-                                Text(String(format: NSLocalizedString("trip_delay_minutes", comment: ""), delay))
+                                Text(String(format: L("trip_delay_minutes", comment: ""), delay))
                                     .font(.system(size: 13, weight: .semibold))
                                     .foregroundStyle(.orange)
                             } else {
-                                Text(String(localized: "trip_on_time"))
+                                Text(L("trip_on_time"))
                                     .font(.system(size: 13))
                                     .foregroundStyle(AppTheme.textSecondary)
                             }
@@ -183,7 +183,7 @@ struct TripDetailView: View {
                     // "Vedi su mappa" CTA
                     HStack(spacing: 3) {
                         LucideIcon.mapPin.sized(13)
-                        Text(String(localized: "trip_see_on_map"))
+                        Text(L("trip_see_on_map"))
                             .font(.system(size: 12, weight: .semibold))
                             .lineLimit(1)
                     }
@@ -222,7 +222,7 @@ struct TripDetailView: View {
 
                 HStack(spacing: 6) {
                     if let stops = tripStops {
-                        Text(String(format: NSLocalizedString("stops_count", comment: ""), stops.count))
+                        Text(String(format: L("stops_count", comment: ""), stops.count))
                             .font(.system(size: 12))
                             .foregroundStyle(AppTheme.textSecondary)
                     }
@@ -337,7 +337,7 @@ struct TripDetailView: View {
                         .lineLimit(1)
 
                     if isOrigin {
-                        Text(String(localized: "time_now"))
+                        Text(L("time_now"))
                             .font(.system(size: 10, weight: .bold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 5)

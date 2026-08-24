@@ -26,7 +26,7 @@ struct SoftUpdateBanner: View {
                 LucideIcon.refreshCw.sized(18)
                     .foregroundStyle(accentColor)
 
-                Text(String(localized: "update_available_title"))
+                Text(L("update_available_title"))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.primary)
 
@@ -43,7 +43,7 @@ struct SoftUpdateBanner: View {
                 Button {
                     AppUpdateChecker.shared.openStore(softUpdate.storeUrl)
                 } label: {
-                    Text(String(localized: "update_now_label"))
+                    Text(L("update_now_label"))
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 18)
@@ -56,7 +56,7 @@ struct SoftUpdateBanner: View {
                 Button {
                     AppUpdateChecker.shared.dismissSoftUpdate()
                 } label: {
-                    Text(String(localized: "update_later_label"))
+                    Text(L("update_later_label"))
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 12)

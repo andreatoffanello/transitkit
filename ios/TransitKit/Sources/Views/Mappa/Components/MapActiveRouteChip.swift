@@ -42,6 +42,6 @@ struct MapActiveRouteChip: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("btn_map_clear_route")
-        .accessibilityLabel(Text(String(localized: "a11y_remove_selected_line")))
+        .accessibilityLabel(Text(L("a11y_remove_selected_line")))
     }
 }

@@ -53,7 +53,7 @@ struct PlannerScreen: View {
 
             resultsList
         }
-        .navigationTitle(String(localized: "planner_title"))
+        .navigationTitle(L("planner_title"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbarRole(.editor)
         .navigationDestination(item: $selectedJourney) { journey in
@@ -79,7 +79,7 @@ struct PlannerScreen: View {
             locationManager.requestPermissionAndStart()
             if origin == nil, let loc = locationManager.location {
                 origin = .userLocation(
-                    name: String(localized: "planner_my_location"),
+                    name: L("planner_my_location"),
                     coordinate: loc.coordinate
                 )
             }
@@ -91,7 +91,7 @@ struct PlannerScreen: View {
         .onChange(of: locationManager.location) { _, loc in
             if origin == nil, let loc {
                 origin = .userLocation(
-                    name: String(localized: "planner_my_location"),
+                    name: L("planner_my_location"),
                     coordinate: loc.coordinate
                 )
             }
@@ -118,7 +118,7 @@ struct PlannerScreen: View {
                 // Input fields
                 VStack(spacing: 0) {
                     stopField(
-                        label: origin?.name ?? String(localized: "planner_from_placeholder"),
+                        label: origin?.name ?? L("planner_from_placeholder"),
                         isFilled: origin != nil,
                         clearAction: { origin = nil },
                         tapAction: {
@@ -131,7 +131,7 @@ struct PlannerScreen: View {
                     Divider()
 
                     stopField(
-                        label: destination?.name ?? String(localized: "planner_to_placeholder"),
+                        label: destination?.name ?? L("planner_to_placeholder"),
                         isFilled: destination != nil,
                         clearAction: { destination = nil },
                         tapAction: {
@@ -240,7 +240,7 @@ struct PlannerScreen: View {
     }
 
     private var emptyView: some View {
-        EmptyStateView(icon: .route, title: String(localized: "planner_no_trips"))
+        EmptyStateView(icon: .route, title: L("planner_no_trips"))
     }
 
     private func errorView(message: String) -> some View {
@@ -254,15 +254,15 @@ struct PlannerScreen: View {
         VStack(spacing: 20) {
             EmptyStateView(
                 icon: .alertTriangle,
-                title: String(localized: "planner_unreachable_title"),
-                subtitle: String(localized: "planner_unreachable_body"),
+                title: L("planner_unreachable_title"),
+                subtitle: L("planner_unreachable_body"),
                 tint: .orange
             )
             Button {
                 retryTick += 1
                 triggerSearch()
             } label: {
-                Text(String(localized: "planner_retry"))
+                Text(L("planner_retry"))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(AppTheme.accent)
                     .padding(.horizontal, 24)
@@ -364,7 +364,7 @@ struct PlannerScreen: View {
         guard o.id != d.id else {
             searchTask?.cancel(); searchTask = nil
             journeys = []; isUnreachable = false
-            searchError = String(localized: "planner_same_stop")
+            searchError = L("planner_same_stop")
             hasSearched = true
             return
         }
@@ -377,7 +377,7 @@ struct PlannerScreen: View {
         if isOutsideServiceArea(o) || isOutsideServiceArea(d) {
             searchTask?.cancel(); searchTask = nil
             journeys = []; isUnreachable = false
-            searchError = String(localized: "planner_out_of_service_area")
+            searchError = L("planner_out_of_service_area")
             hasSearched = true
             return
         }

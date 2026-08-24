@@ -26,7 +26,7 @@ bash scripts/build-android.sh {operator_id}
 - iOS: `AppIcon.appiconset`, `OperatorLogo.imageset`, `SourceOperatorLogo.imageset`, `OperatorBackground.imageset`
 - Android: `mipmap-*/ic_launcher*.png`, `drawable/app_logo.png`, `drawable/operator_logo.png`, `drawable/operator_background.png`
 - Web: `web/public/brand/{op}/app-logo.png` (= `app-icon-foreground.png`) + `operator-logo.jpg`. **`deploy-brand.sh` NON li copia** — vanno messi a mano. Il CDN serve solo `app-icon.png`, quindi il web non può prenderli da lì.
-- `brandName` (nome UI dell'app, es. "AppalRider") → campo `brandName` in `shared/operators/{op}/config.json` e `ios/.../Resources/config.json`; su Android è `app/src/main/res/values/strings.xml` → `app_name`
+- `brandName` (nome UI dell'app, es. "AppalRider") → si scrive **solo** in `shared/operators/{op}/config.json`. Tutto il resto ne discende: `ios/.../Resources/config.json` è una copia fatta da `build-ios.sh`, e Android lo legge da `assets/config.json`. Niente più da toccare a mano.
 
 **GOTCHA naming — non fidarsi del nome dell'imageset iOS:**
 - `OperatorLogo.imageset` = **bus dell'APP** (`app-icon-foreground.png` trasparente), NON il logo dell'operatore. 1x/2x/3x. Usato in header (32pt) e loading splash (96pt).
@@ -37,6 +37,26 @@ launcher **col fondo**. Usarla in un header dà un'icona squadrata dove serve il
 (già successo sul web, lug 2026). Header/navbar = bus app + `brandName`; card
 "chi muove la città" = logo reale operatore + `name`. Sono due identità distinte.
 
+**NOMI DELLE APP — `config.json` è l'unica fonte (lug 2026).** Prima erano
+hardcoded in 9 posti: display name iOS, `applicationId`, `app_name` in tre
+`strings.xml`, e le welcome/usage description con brand **e** operatore in
+prosa in 3 lingue. Un nuovo operatore spediva "AppalRider" sotto l'icona.
+La regola che li governa tutti: **se l'OS legge la stringa prima che il tuo
+codice giri, va cotta a build time dal config; se la rende il tuo codice, usa
+il config che già carichi.**
+
+| Cosa | Come |
+|---|---|
+| Display name iOS, usage description (fallback en) | `$(BRAND_NAME)`/`$(OPERATOR_NAME)` in `project.yml`, passati da `build-ios.sh` letti da `config.json` |
+| Usage description localizzata | `Resources/InfoPlist.xcstrings` **generata** da `ios/InfoPlist.template.xcstrings` (`{{BRAND}}`/`{{OPERATOR}}`) |
+| `applicationId` + `app_name` Android | `build.gradle.kts` legge `assets/config.json` (`id`, `brandName`) + `resValue` |
+| Welcome, header, splash | placeholder `%@`/`%1$s` + `config` a runtime |
+
+- **NON** rimettere `app_name` in `strings.xml` né `CFBundleDisplayName` in `InfoPlist.xcstrings`: un nome proprio non si localizza, e le copie divergono. Su Android collide col `resValue` (duplicate resource).
+- I default `BRAND_NAME`/`OPERATOR_NAME` in `project.yml` servono **solo** alle build da IDE (nessuna CLI che li passi) — stessa ragione di `OPERATOR_ID`. Non sono la fonte di verità.
+- `brandName` è opzionale ovunque: fallback su `name` (iOS, Android, Gradle).
+- Verifica reale = `aapt2 dump badging <apk>` e `PlistBuddy` sull'app **costruita**, non i sorgenti: l'espansione `$(VAR)` avviene in "Process Info.plist".
+
 **Niente metadata in UI:** il blocco `store` (`title`/`subtitle`/`keywords`) è stato
 rimosso dai config (lug 2026) — nessun client lo leggeva e il web ne stampava il
 `title` ("Boone Bus — Community App", stringa mai esistita su nessuno store).
@@ -45,6 +65,53 @@ La copy dello store vive in `docs/business/store/` e nelle console, non in `conf
 **Regola anti-impersonazione (splash + loading):** la schermata di apertura/caricamento mostra SEMPRE brand dell'app (bus + `brandName` "AppalRider") — MAI logo o nome dell'operatore ("AppalCART"). L'app non è ufficiale dell'operatore: mostrare il loro brand qui può far pensare a un'impersonazione (rischio rejection App Store + confusione utente). iOS `TransitKitApp.loadingView`, Android `BrandedLoadingScreen`.
 
 Documentazione tecnica completa con mapping iOS/Android: `scripts/deploy-brand.sh` (header del file).
+
+---
+
+## LINGUA DELL'APP — picker in Impostazioni (ago 2026)
+
+L'utente sceglie la lingua dell'interfaccia da Impostazioni → Lingua: **Sistema**
+(default), English, Español, Italiano. Non è una preferenza cosmetica: gli utenti
+di un operatore US sono in larga parte ispanofoni e il device è in inglese.
+
+**iOS — `L()` è l'UNICO modo di leggere una stringa. Mai `String(localized:)`.**
+
+| | |
+|---|---|
+| Lookup | `L("chiave")` — e `L("chiave", comment: "")` per i format/plurali |
+| Fonte di verità | `AppleLanguages` nel dominio persistente dell'app (la stessa chiave che scrive Impostazioni iOS → App → Lingua: le due strade restano allineate) |
+| Redraw | `.id(localization.language)` sul TabView in `ContentView` |
+
+`String(localized:)` e `NSLocalizedString` risolvono su `Bundle.main`, la cui
+localizzazione è **fissata al lancio**: né il re-classing di `Bundle.main` né
+`\.locale` nell'environment la spostano (provati entrambi, ago 2026 — la
+selezione si salvava e l'app restava in inglese). L'unica cosa che funziona è
+passare il bundle esplicitamente, ed è quello che fa `L()`
+(`Services/LocalizationManager.swift`). Una schermata nuova che usa
+`String(localized:)` non cambia lingua e non lo segnala nessuno: **grep
+`String(localized:` deve tornare zero** fuori da `LocalizationManager`.
+
+Due conseguenze non ovvie:
+- **Impostazioni è presentata da `ContentView`, non da `HomeTab`**: il
+  `fullScreenCover` deve stare *fuori* dal `.id()`, altrimenti cambiare lingua
+  chiude la schermata in cui l'utente sta scegliendo. Il bottone in Home passa
+  da `router.pendingSettingsOpen`.
+- **Anche "Sistema" risolve a un `.lproj` concreto** (non ricade su
+  `Bundle.main`): tornare a "Sistema" dopo aver scelto l'italiano lascerebbe
+  l'app in italiano fino al riavvio.
+
+**Android** — `config/AppLocaleManager.kt`. Da Android 13 la fonte di verità è
+`LocaleManager.applicationLocales` (stessa di Impostazioni di sistema → App →
+Lingua; l'activity la ricrea il sistema, il back stack è ripristinato e l'utente
+resta dov'è). Sotto la 13 quell'API non esiste: `SharedPreferences` +
+`attachBaseContext` in `MainActivity` + `recreate()`. `res/xml/locales_config.xml`
+elenca en/es/it. **Il ramo pre-13 non è coperto dagli emulatori pinnati** (34/35):
+se lo tocchi, verificalo a mano.
+
+Aggiungere una lingua = un caso in `AppLanguage` (iOS + Android) + la
+localizzazione (`Localizable.xcstrings` / `values-<tag>`) + una riga in
+`locales_config.xml`. Il nome della lingua nella lista è l'**endonimo**
+("Español", non "Spagnolo"): non si localizza.
 
 ---
 
@@ -299,6 +366,14 @@ Su Play il listing è pubblico in poche ore; su iOS `WAITING_FOR_REVIEW` **non**
 è "pubblicato". Non dire "fatto" finché lo stato non è `READY_FOR_SALE`.
 
 ## RELEASE iOS — come riporta davvero `upload-ios.sh`
+
+**La versione si bumpa in `ios/project.yml`, non in `Info.plist`.** Il plist è
+*generato* da xcodegen (blocco `targets.TransitKit.info.properties`), che
+`upload-ios.sh` rilancia prima di archiviare: una modifica fatta a mano al plist
+viene sovrascritta e l'archive parte con la versione vecchia. Il sintomo è
+l'errore in export, non in build — *"must contain a higher version than that of
+the previously approved version"* (visto ad ago 2026).
+
 
 `ios/ExportOptions.plist` ha `destination: upload` → `xcodebuild -exportArchive`
 firma **e carica** in un colpo solo e **non lascia nessun .ipa su disco**. Non

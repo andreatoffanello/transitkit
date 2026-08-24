@@ -52,7 +52,7 @@ struct AccessibilityInfoView: View {
                                 LucideIcon.externalLink.image
                                     .font(.body.weight(.semibold))
                                     .foregroundStyle(AppTheme.accent)
-                                Text(String(localized: "services_learn_more"))
+                                Text(L("services_learn_more"))
                                     .font(.subheadline.weight(.semibold))
                                     .foregroundStyle(AppTheme.accent)
                                 Spacer()

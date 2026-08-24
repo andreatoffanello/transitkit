@@ -249,12 +249,12 @@ struct DayGroup: Identifiable, Hashable {
     let days: [Weekday]
 
     var displayLabel: String {
-        if days.count == 7 { return String(localized: "every_day") }
+        if days.count == 7 { return L("every_day") }
         if days.count == 5 && days.allSatisfy({ $0.rawValue < 5 }) {
-            return String(localized: "weekdays")
+            return L("weekdays")
         }
         if days.count == 2 && Set(days) == Set([.sat, .sun]) {
-            return String(localized: "weekends")
+            return L("weekends")
         }
         if days.count == 1 { return days[0].shortName }
         // "Random" combos (Mon+Sun, Fri+Thu+Sat, etc) are typically game-day,
@@ -262,7 +262,7 @@ struct DayGroup: Identifiable, Hashable {
         // a semantic label instead of dumping the raw service_id day list —
         // those strings ("Monday, Sunday") are unreadable to riders. The
         // exact days remain visible via the schedule rows below.
-        return String(localized: "limited_service")
+        return L("limited_service")
     }
 
     static func parse(_ key: String) -> DayGroup {
@@ -290,13 +290,13 @@ enum Weekday: Int, CaseIterable, Hashable {
 
     var shortName: String {
         switch self {
-        case .mon: String(localized: "day_mon")
-        case .tue: String(localized: "day_tue")
-        case .wed: String(localized: "day_wed")
-        case .thu: String(localized: "day_thu")
-        case .fri: String(localized: "day_fri")
-        case .sat: String(localized: "day_sat")
-        case .sun: String(localized: "day_sun")
+        case .mon: L("day_mon")
+        case .tue: L("day_tue")
+        case .wed: L("day_wed")
+        case .thu: L("day_thu")
+        case .fri: L("day_fri")
+        case .sat: L("day_sat")
+        case .sun: L("day_sun")
         }
     }
 }

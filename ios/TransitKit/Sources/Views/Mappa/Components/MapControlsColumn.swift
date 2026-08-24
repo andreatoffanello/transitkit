@@ -19,26 +19,26 @@ struct MapControlsColumn: View {
         VStack(spacing: 0) {
             // Label reflects CURRENT state, not the action — see MapExpandedControls.
             textCell(label: is3D ? "3D" : "2D", action: onToggle3D)
-                .accessibilityLabel(String(localized: is3D ? "map_switch_to_2d" : "map_switch_to_3d"))
+                .accessibilityLabel(L(is3D ? "map_switch_to_2d" : "map_switch_to_3d"))
                 .accessibilityIdentifier("btn_map_toggle_3d")
 
             if showsRecenter {
                 divider
                 iconCell(icon: .navigation, action: onRecenter)
-                    .accessibilityLabel(String(localized: "center_on_location"))
+                    .accessibilityLabel(L("center_on_location"))
                     .accessibilityIdentifier("btn_map_recenter")
             }
 
             if showsResetBearing {
                 divider
                 iconCell(icon: .compass, action: onResetBearing)
-                    .accessibilityLabel(String(localized: "reset_map_view"))
+                    .accessibilityLabel(L("reset_map_view"))
                     .accessibilityIdentifier("btn_map_reset_bearing")
             }
 
             divider
             iconCell(icon: .maximize2, action: onExpand)
-                .accessibilityLabel(Text(String(localized: "a11y_expand_map")))
+                .accessibilityLabel(Text(L("a11y_expand_map")))
                 .accessibilityIdentifier("btn_map_expand")
         }
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))

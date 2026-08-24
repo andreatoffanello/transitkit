@@ -92,6 +92,10 @@ data class AccessibilityInfo(
 data class OperatorConfig(
     val id: String,
     val name: String,
+    /** Brand dell'APP (es. "AppalRider") — distinto da [name], che è
+     *  l'operatore di cui mostriamo i dati (es. "AppalCART"). Va mostrato
+     *  dove parla l'app (welcome, splash); mai al posto dell'operatore. */
+    @Json(name = "brandName") val brandName: String? = null,
     @Json(name = "fullName") val fullName: String,
     val url: String,
     @Json(name = "cdnUrl") val cdnUrl: String? = null,

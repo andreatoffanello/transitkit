@@ -167,7 +167,7 @@ struct LineBadge: View {
         // i nomi lunghi (es. "SFPLS" → "FPLS").
         .fixedSize(horizontal: true, vertical: false)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(String(format: NSLocalizedString("line_badge_a11y", comment: ""), name))
+        .accessibilityLabel(String(format: L("line_badge_a11y", comment: ""), name))
     }
 
     // MARK: - Color resolution

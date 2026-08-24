@@ -23,6 +23,9 @@ set -euo pipefail
 #
 #   operator-logo.jpg|png     Logo reale dell'operatore (es. appalCART apple).
 #                             Sfondo opaco OK — la card UI clippa con RoundedRect.
+#                             ≥200px sul lato lungo (il tile 44pt @2x = 200px).
+#                             Non quadrato OK: viene fittato e paddato su bianco,
+#                             mai stirato. Sfondo del logo bianco/chiaro assunto.
 #                             → iOS SourceOperatorLogo.imageset/ (card 44pt tile)
 #                             → Android drawable/operator_logo.png (card 40dp tile)
 #
@@ -85,6 +88,18 @@ XCASSETS="$ROOT_DIR/ios/TransitKit/Sources/Resources/Assets.xcassets"
 ANDROID_RES="$ROOT_DIR/android/app/src/main/res"
 WEB_PUBLIC="$ROOT_DIR/web/public"
 
+# Scala a un tile quadrato preservando le proporzioni.
+# `sips -z H W` forza le dimensioni esatte: su un logo non quadrato lo stira
+# (il logo CAT è 200×123 → verrebbe schiacciato a 200×200). Le card fanno già
+# Fit lato view, ma il pad tiene il tile quadrato così il corner radius si vede.
+fit_square() {
+    local src="$1" px="$2" out="$3"
+    sips -Z "$px" -s format png "$src" --out "$out" > /dev/null
+    # stderr zittito: --padColor stampa il CGColor risolto a ogni chiamata.
+    # Un sorgente illeggibile fallisce già sul -Z sopra, che lascia stderr visibile.
+    sips -p "$px" "$px" --padColor FFFFFF "$out" --out "$out" > /dev/null 2>&1
+}
+
 # ── Validate source files ──────────────────────────────────────────────────
 
 echo "→ Checking brand sources for operator: $OP"
@@ -128,10 +143,8 @@ sips -z 300 300 "$BRAND/app-icon-foreground.png" \
 echo "  ✓ OperatorLogo.imageset/ (100px 1x, 200px 2x, 300px 3x)"
 
 # SourceOperatorLogo — logo reale operatore, usato a 44pt con .clipShape(RoundedRect 12)
-sips -z 100 100 -s format png "$OPERATOR_LOGO" \
-    --out "$XCASSETS/SourceOperatorLogo.imageset/logo.png" > /dev/null
-sips -z 200 200 -s format png "$OPERATOR_LOGO" \
-    --out "$XCASSETS/SourceOperatorLogo.imageset/logo@2x.png" > /dev/null
+fit_square "$OPERATOR_LOGO" 100 "$XCASSETS/SourceOperatorLogo.imageset/logo.png"
+fit_square "$OPERATOR_LOGO" 200 "$XCASSETS/SourceOperatorLogo.imageset/logo@2x.png"
 echo "  ✓ SourceOperatorLogo.imageset/ (100px 1x, 200px 2x)"
 
 # OperatorBackground — texture fullscreen per shader e onboarding
@@ -170,8 +183,7 @@ sips -z 200 200 "$BRAND/app-icon-foreground.png" \
 echo "  ✓ drawable/app_logo.png"
 
 # drawable/operator_logo — logo reale operatore per OperatorReferenceCard (40dp tile)
-sips -z 200 200 -s format png "$OPERATOR_LOGO" \
-    --out "$ANDROID_RES/drawable/operator_logo.png" > /dev/null
+fit_square "$OPERATOR_LOGO" 200 "$ANDROID_RES/drawable/operator_logo.png"
 echo "  ✓ drawable/operator_logo.png"
 
 # drawable/operator_background — texture fullscreen (R.drawable.operator_background)

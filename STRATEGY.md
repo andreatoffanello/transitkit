@@ -10,7 +10,7 @@
 White-label transit SaaS: codebase unico, config per operatore → app iOS + Android brandizzata + web stop pages con QR.
 
 **Target:** piccoli operatori TPL con GTFS già pubblicato ma senza app propria.  
-**Prezzo:** $299/mese, nessun setup fee, nessun tier.
+**Prezzo:** nessun setup fee, nessun lock-in. Due mercati, ciascuno sotto la soglia di procurement locale (→ niente gara): **US $599/mese ($499 annuale)**, **IT €399/mese (€299 annuale, <€5k/anno = affidamento diretto)**. Founding-pilot AppalCART primo anno: $499/$399.
 
 ---
 
@@ -50,7 +50,7 @@ In ordine di forza reale:
 1. **Web stop pages + QR** — funziona senza download, immediato per turisti e occasionali
 2. **App branded** — presenza su store con nome/colori operatore
 3. **Push notifications** — service alerts diretti (non disponibili gratis su Transit App/Google Maps per piccoli)
-4. **Zero gestione tecnica** — tutto incluso nel $299
+4. **Zero gestione tecnica** — tutto incluso nel canone
 
 ### Cosa NON vendiamo
 - **GTFS creation** — è commodity (esistono tool gratuiti), non scala, non è un moat. Se l'operatore non ha GTFS, non è il target adesso.
@@ -66,17 +66,20 @@ In ordine di forza reale:
 ## Target market
 
 ### Criteri must-have
-- GTFS pubblicato pubblicamente
+- **GATE — feed GTFS-RT pubblico senza credenziali** (vehicle positions e/o trip updates). HARD pre-filtro: senza real-time accessibile la mappa live e i countdown non esistono → il playbook "demo prima del contratto" è impossibile. Verificare fetchando l'endpoint (HTTP 200 + `application/x-protobuf`), non fidarsi di transit.land. Aggiunto dopo il refresh 2026-07-17: 5 lead su 8 della v5 fallivano proprio qui e non erano stati controllati.
+- GTFS statico pubblicato pubblicamente
 - Nessuna app trip-planning propria (ticketing-only come myCicero non conta)
 - Bacino interessante: turismo, università, o >500k rider/anno
 
 ### Criteri di conversione (alzano priorità)
+- **Prezzo sotto la soglia di procurement del compratore** → il dirigente firma senza gara. IT: <€5k/anno = affidamento diretto. US: <~$10k = micro-purchase. È un argomento di vendita, non solo un fatto fiscale (vedi § Fiscal).
 - Già paga per tool digitali (Transit App, Token Transit, Masabi, ETA Spot) → sa che serve
 - Domanda dimostrata (app non ufficiale fatta da studenti, lamentele social)
 - Esperienza frammentata (2-3 tool diversi)
 - App abbandonata o con recensioni pessime
+- **Fare-free college town** (pattern AppalCART: alta ridership + attaccamento rider + budget IT basso + decisione veloce)
 - Operatore privato o semi-privato (decide in settimane, non mesi)
-- 10-30 linee (sweet spot: giustifica $299, no IT interno)
+- 10-30 linee (sweet spot: giustifica il canone — US $599/$499, IT €399/€299 — senza IT interno)
 
 ### Red flag
 - Ha appena firmato con Transit App / Pluservice / Moovit
@@ -84,7 +87,25 @@ In ordine di forza reale:
 - Troppo grande (>100 linee, metro di capitale)
 - Ente pubblico puro con procurement rigido
 
-### Pipeline USA — Tier 1A (verificati v5, 2026-05-25, evidenza puntuale per ognuno)
+### ⭐ Pipeline attiva (refresh v6, verificato dal vivo 2026-07-17 — supera la tabella v5 qui sotto)
+
+Riverifica live degli 8 top-lead v5 col **gate GTFS-RT** applicato. Solo 3 sopravvivono. La v5 era buon sourcing, cattiva qualificazione: 5/8 senza feed RT pubblico, + decisore inventato (Pullman "Brad Rader"), nome conflato (BRTA "Robert"→Kathleen Lambert), ridership gonfiate, linee sottocontate. **Non fidarsi di email/ridership/finestre v5 senza conferma primaria.**
+
+| # | Operatore | Score | Gate RT | Decisore (verificato) | Perché |
+|---|-----------|-------|---------|-----------------------|--------|
+| **1** | **Corvallis Transit (OR)** | 78 · 1A | ✅ PASS (Connexionz, no auth) | Rory Rowan, Transportation Div. Manager — `rory.rowan@corvallisoregon.gov` · 541-766-6916 (**sul sito loro**) | Gemello AppalCART: fare-free dal 2011, OSU ~25k, 9-10 linee, incumbent iOS **1.7★**, app community morta dal 2019 → corsia libera |
+| 2 | **Pullman Transit (WA)** | 70 · 1A | ✅ PASS (GMV, no auth; VP vuoto d'estate) | Wayne Thompson, Transit Manager — `wayne.thompson@pullmantransit.com` (⚠️ da directory WSDOT, non dal sito loro) | WSU 16k, incumbent **1.19★** — ma app studente **5.0★ viva** → **co-opt il dev**, non competere. Vendor GMV entrenchato |
+| 3 | **Lowell RTA (MA)** | 50 · 1B | ⚠️ UNVERIFIED (feed Equans esiste ma URL .pb non pubblico → 1 email) | David Bradley, Administrator (email non pubblicata; NON usare `d.bradley@lrta.com` inferita — chiamare 978-459-0164) | Fare-free, UMass Lowell, wedge "LRTA Bus Tracker" 1.86★ abbandonata 2018; ma già su Transit App + stack Equans nuovo |
+
+**Droppati dal refresh (gate GTFS-RT FAIL):** Mountain Line WV (RT in ShadowTracker proprietario), Manchester NH (no RT + statico scaduto ott-2023), BRTA MA (no RT RouteMatch; finestra 🔥 chiusa, Keolis ha preso la roadmap dal 01/07), Mendocino CA (Swiftly 401 + 139k rider < soglia), ATAP IT (solo statico; gara AMP chiusa). Mountain Line + BRTA → watchlist passiva se mai esporranno un feed pubblico.
+
+**Prossima azione:** costruire la demo per **Corvallis** e scrivere a Rory Rowan. Pre-check: confermare che il feed VP popoli con mezzi veri in orario di servizio OSU (fetch di test era a mezzanotte, 0 entità = normale) + terms-of-use del feed RT.
+
+Dettaglio completo: `scratchpad/prospect-refresh-2026-07-17.md` (sessione 2026-07-17).
+
+---
+
+### Pipeline USA — Tier 1A (verificati v5, 2026-05-25 — ⚠️ SUPERATA dal refresh v6 sopra, tenuta per storico)
 | # | Operatore | Città | Linee | Rider/anno | Urgenza | Segnale chiave |
 |---|-----------|-------|-------|------------|---------|----------------|
 | 1 | **ATAP** | Biella/Vercelli IT | ~30 | n/d | 🔥 **17 giu 2026** | Gara AMP Lotto 5 pubblicata 21/05 — app branded come argomento offerta tecnica |
@@ -168,7 +189,7 @@ Il cold outreach diventa inbound con prova di domanda esistente.
 - ✅ **AppalRider** (operatore AppalCART, Boone NC) → **live su App Store + Play Store**.
 - ⚠️ **Nessuna azione di distribuzione fatta**: zero seeding studenti App State, zero contenuti SEO/social, nessuna candidatura su subreddit r/AppState, nessun QR alle fermate. Download organici attesi = ~zero senza distribuzione attiva.
 - ⚠️ **Nessuna azione commerciale fatta verso AppalCART**: zero outreach all'exec director, zero contatto Office of Sustainability/Parking & Transportation, nessuna scheda commerciale, nessun materiale di pitch. L'app sullo store da sola non è una proposta — è uno store listing.
-- ⚠️ **Pricing & billing non implementato**: $299/mese è dichiarato in strategia ma manca tutta l'infrastruttura — Paddle vs LemonSqueezy vs Stripe non scelto, account merchant non aperto, subscription product non creato, contratto/MSA non redatto, fattura test mai emessa. Non possiamo prendere soldi anche se AppalCART firmasse domani.
+- ⚠️ **Pricing & billing non implementato**: il canone (US $599/$499, IT €399/€299) è dichiarato ma manca tutta l'infrastruttura — Paddle vs LemonSqueezy vs Stripe non scelto, account merchant non aperto, subscription product non creato, contratto/MSA non redatto, fattura test mai emessa. Non possiamo prendere soldi anche se AppalCART firmasse domani.
 - **Bloccanti reali in ordine di precedenza**:
   1. Decidere stack billing (Paddle/LemonSqueezy/Stripe) e aprire account merchant
   2. Definire forma legale del primo contratto (prestazione occasionale IT vs ditta US? scope of work? SLA?)
@@ -190,7 +211,7 @@ Il cold outreach diventa inbound con prova di domanda esistente.
 - POC Paddle Merchant of Record (preferito: gestisce tasse US sales tax + EU VAT, no apertura entità US)
 - vs Stripe + manual tax management (più controllo, più overhead)
 - vs LemonSqueezy (MoR alternativo, fee maggiore ma onboarding rapido)
-- Setup subscription product $299/mese, trial 30 giorni gratuito, billing annuale opzionale
+- Setup subscription product (US $599/$499, IT €399/€299), trial 30 giorni gratuito, billing annuale opzionale
 - Template MSA + Order Form (Cluely / Common Paper)
 
 ### Altri canali

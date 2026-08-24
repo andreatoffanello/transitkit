@@ -134,12 +134,12 @@ struct PlannerHomeBox: View {
 
     private var locationFields: some View {
         VStack(spacing: 0) {
-            row(role: .origin, value: origin, placeholder: String(localized: "planner_from_placeholder"))
+            row(role: .origin, value: origin, placeholder: L("planner_from_placeholder"))
             Rectangle()
                 .fill(AppTheme.separatorLine)
                 .frame(height: 0.5)
                 .padding(.leading, Self.dotColumnWidth)
-            row(role: .destination, value: destination, placeholder: String(localized: "planner_to_placeholder"))
+            row(role: .destination, value: destination, placeholder: L("planner_to_placeholder"))
         }
     }
 
@@ -232,7 +232,7 @@ struct PlannerHomeBox: View {
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(String(localized: "planner_swap_label"))
+        .accessibilityLabel(L("planner_swap_label"))
     }
 
     // MARK: - Search button
@@ -245,7 +245,7 @@ struct PlannerHomeBox: View {
         } label: {
             HStack(spacing: 6) {
                 LucideIcon.search.sized(14)
-                Text(String(localized: "planner_search_button"))
+                Text(L("planner_search_button"))
                     .font(.system(size: 14, weight: .semibold))
             }
             .frame(maxWidth: fullWidth ? .infinity : nil)
@@ -268,7 +268,7 @@ struct PlannerHomeBox: View {
     private func autoFillOrigin() {
         guard origin == nil, let loc = locationManager.location else { return }
         origin = .userLocation(
-            name: String(localized: "planner_my_location"),
+            name: L("planner_my_location"),
             coordinate: loc.coordinate
         )
     }

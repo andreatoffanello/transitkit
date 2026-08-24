@@ -43,7 +43,7 @@ struct LocationPickerMap: View {
                     .padding(.bottom, 16)
             }
         }
-        .navigationTitle(String(localized: "planner_pick_on_map"))
+        .navigationTitle(L("planner_pick_on_map"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
         .onAppear { initCamera() }
@@ -140,7 +140,7 @@ struct LocationPickerMap: View {
                 .shadow(color: MapChrome.shadowColor, radius: MapChrome.shadowRadius, y: MapChrome.shadowY)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(String(localized: "map_center_on_me"))
+        .accessibilityLabel(L("map_center_on_me"))
         .accessibilityIdentifier("map_picker_center_me")
     }
 
@@ -151,14 +151,14 @@ struct LocationPickerMap: View {
     private var confirmCard: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(String(localized: "planner_map_selected_location"))
+                Text(L("planner_map_selected_location"))
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(AppTheme.textTertiary)
                     .textCase(.uppercase)
                     .kerning(0.3)
 
                 if resolvedName.isEmpty {
-                    Text(String(localized: "planner_map_drag_hint"))
+                    Text(L("planner_map_drag_hint"))
                         .font(.system(size: 15))
                         .foregroundStyle(AppTheme.textSecondary)
                 } else {
@@ -180,7 +180,7 @@ struct LocationPickerMap: View {
                 onConfirm(.place(name: displayName, coordinate: currentCenter))
                 dismiss()
             } label: {
-                Text(String(localized: "planner_confirm_location"))
+                Text(L("planner_confirm_location"))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 18)

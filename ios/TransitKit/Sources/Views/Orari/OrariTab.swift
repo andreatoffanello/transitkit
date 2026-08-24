@@ -50,7 +50,7 @@ struct OrariTab: View {
                 .frame(maxHeight: .infinity)
             }
             .background(AppTheme.background.ignoresSafeArea())
-            .navigationTitle(String(localized: "tab_schedules"))
+            .navigationTitle(L("tab_schedules"))
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: ResolvedStop.self) { stop in
                 let _ = searchHistoryStore.recordStop(stop.id)
@@ -104,7 +104,7 @@ struct OrariTab: View {
                 .foregroundStyle(AppTheme.textTertiary)
 
             TextField(
-                String(localized: "search_stop_placeholder"),
+                L("search_stop_placeholder"),
                 text: $searchQuery
             )
             .font(.system(.subheadline))
@@ -140,7 +140,7 @@ struct OrariTab: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 FilterChip(
-                    label: String(localized: "filter_all"),
+                    label: L("filter_all"),
                     isSelected: selectedTransitType == nil
                 ) {
                     withAnimation(.easeInOut(duration: 0.2)) {

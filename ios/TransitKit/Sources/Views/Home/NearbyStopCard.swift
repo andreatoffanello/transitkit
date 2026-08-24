@@ -4,9 +4,9 @@ import SwiftUI
 /// the home favorites card (80 m/min average pace).
 func walkingTime(meters: Double) -> String {
     let minutes = Int((meters / 80.0).rounded(.up))
-    if minutes <= 1 { return String(localized: "walking_1_min") }
-    if minutes > 10 { return String(localized: "walking_10_plus_min") }
-    return String(format: String(localized: "walking_n_min"), minutes)
+    if minutes <= 1 { return L("walking_1_min") }
+    if minutes > 10 { return L("walking_10_plus_min") }
+    return String(format: L("walking_n_min"), minutes)
 }
 
 /// Horizontal-scroll card for a nearby stop. Shows pin icon + stop name + walking

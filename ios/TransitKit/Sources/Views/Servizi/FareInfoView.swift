@@ -17,11 +17,11 @@ struct FareInfoView: View {
                     VStack(alignment: .leading, spacing: 0) {
                         // Header row
                         HStack {
-                            Text(String(localized: "fare_column_type"))
+                            Text(L("fare_column_type"))
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(AppTheme.textTertiary)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                            Text(String(localized: "fare_column_price"))
+                            Text(L("fare_column_price"))
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(AppTheme.textTertiary)
                                 .frame(width: 80, alignment: .trailing)
@@ -95,7 +95,7 @@ struct FareInfoView: View {
                                 LucideIcon.ticket.image
                                     .font(.body.weight(.semibold))
                                     .foregroundStyle(AppTheme.accent)
-                                Text(String(localized: "fare_buy_online"))
+                                Text(L("fare_buy_online"))
                                     .font(.subheadline.weight(.semibold))
                                     .foregroundStyle(AppTheme.accent)
                                 Spacer()
@@ -113,7 +113,7 @@ struct FareInfoView: View {
                                 LucideIcon.globe.image
                                     .font(.body.weight(.semibold))
                                     .foregroundStyle(AppTheme.accent)
-                                Text(String(localized: "fare_visit_website"))
+                                Text(L("fare_visit_website"))
                                     .font(.subheadline.weight(.semibold))
                                     .foregroundStyle(AppTheme.accent)
                                 Spacer()
@@ -132,7 +132,7 @@ struct FareInfoView: View {
             .padding(.top, 8)
         }
         .background(AppTheme.background.ignoresSafeArea())
-        .navigationTitle(String(localized: "nav_title_fares"))
+        .navigationTitle(L("nav_title_fares"))
         .navigationBarTitleDisplayMode(.large)
         .toolbar(.hidden, for: .tabBar)
     }

@@ -148,11 +148,11 @@ struct DepartureRow: View {
 
     private var countdownAccessibilityLabel: String {
         switch timeState {
-        case .departing: String(localized: "time_departing_a11y")
-        case .minutes(let m): String(format: NSLocalizedString("time_minutes_a11y", comment: ""), m)
+        case .departing: L("time_departing_a11y")
+        case .minutes(let m): String(format: L("time_minutes_a11y", comment: ""), m)
         case .hoursMinutes(let h, let m): m > 0 ? "\(h) ore \(m) minuti" : "\(h) ore"
-        case .absolute(let t): String(format: NSLocalizedString("time_at_a11y", comment: ""), t)
-        case .passed(let t): String(format: NSLocalizedString("time_passed_a11y", comment: ""), t)
+        case .absolute(let t): String(format: L("time_at_a11y", comment: ""), t)
+        case .passed(let t): String(format: L("time_passed_a11y", comment: ""), t)
         }
     }
 }
@@ -177,7 +177,7 @@ struct DockBadge: View {
                             .strokeBorder(AppTheme.glassBorder, lineWidth: 1)
                     )
             )
-            .accessibilityLabel(String(format: NSLocalizedString("dock_a11y", comment: ""), letter))
+            .accessibilityLabel(String(format: L("dock_a11y", comment: ""), letter))
     }
 }
 

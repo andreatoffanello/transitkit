@@ -7,30 +7,30 @@ extension GtfsRtAlert {
     var causeName: String? {
         switch cause {
         case .unknownCause, .otherCause: return nil
-        case .technicalProblem:  return String(localized: "alert_cause_technical")
-        case .strike:            return String(localized: "alert_cause_strike")
-        case .demonstration:     return String(localized: "alert_cause_demonstration")
-        case .accident:          return String(localized: "alert_cause_accident")
-        case .holiday:           return String(localized: "alert_cause_holiday")
-        case .weather:           return String(localized: "alert_cause_weather")
-        case .maintenance:       return String(localized: "alert_cause_maintenance")
-        case .construction:      return String(localized: "alert_cause_construction")
-        case .policeActivity:    return String(localized: "alert_cause_police")
-        case .medicalEmergency:  return String(localized: "alert_cause_medical")
+        case .technicalProblem:  return L("alert_cause_technical")
+        case .strike:            return L("alert_cause_strike")
+        case .demonstration:     return L("alert_cause_demonstration")
+        case .accident:          return L("alert_cause_accident")
+        case .holiday:           return L("alert_cause_holiday")
+        case .weather:           return L("alert_cause_weather")
+        case .maintenance:       return L("alert_cause_maintenance")
+        case .construction:      return L("alert_cause_construction")
+        case .policeActivity:    return L("alert_cause_police")
+        case .medicalEmergency:  return L("alert_cause_medical")
         }
     }
 
     /// Localized human label for the GTFS-RT effect. `nil` for unknown/other/no-effect.
     var effectName: String? {
         switch effect {
-        case .noService:          return String(localized: "alert_effect_no_service")
-        case .reducedService:     return String(localized: "alert_effect_reduced_service")
-        case .significantDelays:  return String(localized: "alert_effect_delays")
-        case .detour:             return String(localized: "alert_effect_detour")
-        case .additionalService:  return String(localized: "alert_effect_additional")
-        case .modifiedService:    return String(localized: "alert_effect_modified")
-        case .stopMoved:          return String(localized: "alert_effect_stop_moved")
-        case .accessibilityIssue: return String(localized: "alert_effect_accessibility")
+        case .noService:          return L("alert_effect_no_service")
+        case .reducedService:     return L("alert_effect_reduced_service")
+        case .significantDelays:  return L("alert_effect_delays")
+        case .detour:             return L("alert_effect_detour")
+        case .additionalService:  return L("alert_effect_additional")
+        case .modifiedService:    return L("alert_effect_modified")
+        case .stopMoved:          return L("alert_effect_stop_moved")
+        case .accessibilityIssue: return L("alert_effect_accessibility")
         case .noEffect, .otherEffect, .unknownEffect: return nil
         }
     }
@@ -43,7 +43,7 @@ extension GtfsRtAlert {
         case let (c?, e?):  return "\(c) · \(e)"
         case let (c?, nil): return c
         case let (nil, e?): return e
-        case (nil, nil):    return String(localized: "alert_default_title")
+        case (nil, nil):    return L("alert_default_title")
         }
     }
 }

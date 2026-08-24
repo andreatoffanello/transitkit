@@ -201,12 +201,12 @@ struct StopDetailView: View {
                     .contentTransition(.symbolEffect(.replace))
                 }
                 .accessibilityLabel(favoritesManager.isFavorite(stop.id)
-                    ? String(localized: "remove_from_favorites")
-                    : String(localized: "add_to_favorites"))
+                    ? L("remove_from_favorites")
+                    : L("add_to_favorites"))
                 .accessibilityIdentifier("btn_favorite")
             }
         }
-        .confirmationDialog(Text(String(localized: "open_in_prompt")), isPresented: $showMapAppPicker) {
+        .confirmationDialog(Text(L("open_in_prompt")), isPresented: $showMapAppPicker) {
             Button("Apple Maps") { openInAppleMaps() }
             if UIApplication.shared.canOpenURL(URL(string: "comgooglemaps://")!) {
                 Button("Google Maps") { openInGoogleMaps() }
@@ -214,7 +214,7 @@ struct StopDetailView: View {
             if UIApplication.shared.canOpenURL(URL(string: "waze://")!) {
                 Button("Waze") { openInWaze() }
             }
-            Button(String(localized: "cancel"), role: .cancel) { }
+            Button(L("cancel"), role: .cancel) { }
         }
         .fullScreenCover(isPresented: $showFullSchedule) {
             FullScheduleSheet(stop: stop)
@@ -290,7 +290,7 @@ struct StopDetailView: View {
                 }
             }
             .padding(12)
-            .accessibilityLabel(Text(String(localized: "a11y_expand_map")))
+            .accessibilityLabel(Text(L("a11y_expand_map")))
             .accessibilityIdentifier("btn_expand_map")
         }
         .frame(height: UIScreen.main.bounds.height * 0.4)
@@ -335,7 +335,7 @@ struct StopDetailView: View {
                             Button {
                                 withAnimation(.smooth(duration: 0.2)) { filterLine = nil }
                             } label: {
-                                Text(String(localized: "filter_all"))
+                                Text(L("filter_all"))
                                     .font(.system(size: 13, weight: .bold))
                                     .foregroundStyle(filterLine == nil ? .white : AppTheme.textSecondary)
                                     .padding(.horizontal, 10)
@@ -394,7 +394,7 @@ struct StopDetailView: View {
                     } label: {
                         HStack(spacing: 4) {
                             LucideIcon.chevronDown.sized(11)
-                            Text(String(format: NSLocalizedString("show_more", comment: ""), extraCount))
+                            Text(String(format: L("show_more", comment: ""), extraCount))
                                 .font(.system(size: 13, weight: .semibold))
                         }
                         .foregroundStyle(AppTheme.accent)
@@ -408,7 +408,7 @@ struct StopDetailView: View {
                     .padding(.bottom, 4)
                 }
             } else if filterLine != nil && upcomingDepartures.isEmpty {
-                Text(String(format: NSLocalizedString("no_departures_for_line", comment: ""), filterLine ?? ""))
+                Text(String(format: L("no_departures_for_line", comment: ""), filterLine ?? ""))
                     .font(.subheadline)
                     .foregroundStyle(AppTheme.textSecondary)
                     .multilineTextAlignment(.center)
@@ -419,7 +419,7 @@ struct StopDetailView: View {
                 VStack(spacing: 8) {
                     LucideIcon.clock.sized(28)
                         .foregroundStyle(AppTheme.textTertiary)
-                    Text(String(localized: "no_departures"))
+                    Text(L("no_departures"))
                         .font(.system(size: 14))
                         .foregroundStyle(AppTheme.textSecondary)
                 }
@@ -434,7 +434,7 @@ struct StopDetailView: View {
                 } label: {
                     HStack(spacing: 6) {
                         LucideIcon.clock.sized(14)
-                        Text(String(localized: "full_schedule"))
+                        Text(L("full_schedule"))
                             .font(.system(size: 14, weight: .semibold))
                     }
                     .foregroundStyle(AppTheme.accent)
@@ -478,18 +478,18 @@ struct StopDetailView: View {
                 Button {
                     plannerEntry = .origin(stop)
                 } label: {
-                    Label { Text(String(localized: "planner_depart_from_here")) } icon: { LucideIcon.navigation.sized(16) }
+                    Label { Text(L("planner_depart_from_here")) } icon: { LucideIcon.navigation.sized(16) }
                 }
                 Button {
                     plannerEntry = .destination(stop)
                 } label: {
-                    Label { Text(String(localized: "planner_arrive_here")) } icon: { LucideIcon.mapPin.sized(16) }
+                    Label { Text(L("planner_arrive_here")) } icon: { LucideIcon.mapPin.sized(16) }
                 }
                 Divider()
                 Button {
                     openInMaps()
                 } label: {
-                    Label { Text(String(localized: "a11y_navigate_to_stop")) } icon: { LucideIcon.map.sized(16) }
+                    Label { Text(L("a11y_navigate_to_stop")) } icon: { LucideIcon.map.sized(16) }
                 }
             } label: {
                 LucideIcon.navigation.sized(18)
@@ -498,7 +498,7 @@ struct StopDetailView: View {
                     .background(AppTheme.accent.opacity(0.1))
                     .clipShape(Circle())
             }
-            .accessibilityLabel(String(localized: "a11y_navigate_to_stop"))
+            .accessibilityLabel(L("a11y_navigate_to_stop"))
             .accessibilityIdentifier("btn_navigate_sheet")
         }
         .padding(.horizontal, 20)
@@ -511,7 +511,7 @@ struct StopDetailView: View {
     private func nextDeparturesSection(_ departures: [Departure]) -> some View {
         VStack(spacing: 0) {
             // Section label
-            Text(String(localized: "today_label"))
+            Text(L("today_label"))
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(AppTheme.textTertiary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -615,8 +615,8 @@ struct StopDetailView: View {
                     .foregroundStyle(.orange)
                 Text(
                     count == 1
-                        ? String(localized: "stop_alerts_chip_one")
-                        : String(format: NSLocalizedString("stop_alerts_chip_other", comment: ""), count)
+                        ? L("stop_alerts_chip_one")
+                        : String(format: L("stop_alerts_chip_other", comment: ""), count)
                 )
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(AppTheme.textPrimary)

@@ -45,19 +45,19 @@ struct WhenChipsRow: View {
     private var modeChip: some View {
         Menu {
             Button { selection = .now } label: {
-                Label(String(localized: "planner_now"),
+                Label(L("planner_now"),
                       systemImage: mode == .now ? "checkmark" : "")
             }
             Button {
                 selection = .departAt(seedDate())
             } label: {
-                Label(String(localized: "planner_depart_at"),
+                Label(L("planner_depart_at"),
                       systemImage: mode == .depart ? "checkmark" : "")
             }
             Button {
                 selection = .arriveBy(seedDate())
             } label: {
-                Label(String(localized: "planner_arrive_by"),
+                Label(L("planner_arrive_by"),
                       systemImage: mode == .arrive ? "checkmark" : "")
             }
         } label: {
@@ -68,9 +68,9 @@ struct WhenChipsRow: View {
 
     private var modeLabel: String {
         switch mode {
-        case .now:    return String(localized: "planner_now")
-        case .depart: return String(localized: "planner_depart_at")
-        case .arrive: return String(localized: "planner_arrive_by")
+        case .now:    return L("planner_now")
+        case .depart: return L("planner_depart_at")
+        case .arrive: return L("planner_arrive_by")
         }
     }
 
@@ -145,10 +145,10 @@ struct WhenChipsRow: View {
         cal.timeZone = operatorTimeZone
         // Se il giorno coincide con oggi, mostra "Oggi"; altrimenti formato breve.
         if cal.isDateInToday(currentDate) {
-            return String(localized: "today_short")
+            return L("today_short")
         }
         if cal.isDateInTomorrow(currentDate) {
-            return String(localized: "tomorrow_short")
+            return L("tomorrow_short")
         }
         let f = DateFormatter()
         f.timeZone = operatorTimeZone

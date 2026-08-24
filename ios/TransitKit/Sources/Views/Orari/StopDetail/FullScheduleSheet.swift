@@ -143,7 +143,7 @@ struct FullScheduleSheet: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     FilterChip(
-                        label: String(localized: "filter_all_lines"),
+                        label: L("filter_all_lines"),
                         isSelected: filterLine == nil,
                         action: {
                             withAnimation(.smooth(duration: 0.2)) { filterLine = nil }
@@ -187,7 +187,7 @@ struct FullScheduleSheet: View {
                 VStack(spacing: 8) {
                     LucideIcon.clock.sized(28)
                         .foregroundStyle(AppTheme.textTertiary)
-                    Text(String(localized: "no_departures"))
+                    Text(L("no_departures"))
                         .font(.system(size: 14))
                         .foregroundStyle(AppTheme.textSecondary)
                 }

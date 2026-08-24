@@ -13,6 +13,6 @@ struct DockBadgeView: View {
             .foregroundStyle(.black)
             .frame(width: 18, height: 18)
             .background(Color(red: 1.0, green: 0.82, blue: 0.0), in: Circle())
-            .accessibilityLabel(String(format: NSLocalizedString("dock_label", comment: ""), letter))
+            .accessibilityLabel(String(format: L("dock_label", comment: ""), letter))
     }
 }

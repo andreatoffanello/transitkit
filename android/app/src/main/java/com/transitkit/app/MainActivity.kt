@@ -79,6 +79,7 @@ import com.transitkit.app.ui.planner.LocationPickerMapScreen
 import com.transitkit.app.ui.planner.LocationPickerScreen
 import com.transitkit.app.ui.planner.PlannerScreen
 import com.transitkit.app.ui.planner.PlannerViewModel
+import com.transitkit.app.ui.settings.LanguageScreen
 import com.transitkit.app.ui.settings.SettingsScreen
 import dagger.hilt.android.AndroidEntryPoint
 import java.net.URLDecoder
@@ -101,11 +102,19 @@ sealed class Screen(val route: String) {
 
 private const val ROUTE_LINEE_ROOT = "linee"
 private const val ROUTE_SETTINGS_FROM_HOME = "settings_from_home"
+private const val ROUTE_LANGUAGE = "language"
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     @Inject lateinit var operatorConfig: OperatorConfig
+
+    // Sotto Android 13 la lingua scelta dall'utente va applicata qui: le
+    // risorse sono risolte dal Context dell'activity prima che esista
+    // qualunque composable. Da Android 13 in su ci pensa il sistema.
+    override fun attachBaseContext(newBase: android.content.Context) {
+        super.attachBaseContext(com.transitkit.app.config.AppLocaleManager.wrap(newBase))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -419,6 +428,7 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
             ) {
                 SettingsScreen(
                     onBack = { navController.popBackStack() },
+                    onNavigateToLanguage = { navController.navigate(ROUTE_LANGUAGE) },
                     onNavigateToOrari = {
                         navController.popBackStack()
                         navController.navigate(Screen.Orari.route) {
@@ -427,6 +437,11 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                         }
                     },
                 )
+            }
+
+            // ── Lingua (pushata da Impostazioni) ────────────────────────────────
+            composable(ROUTE_LANGUAGE) {
+                LanguageScreen(onBack = { navController.popBackStack() })
             }
 
             // ── Orari (fermate only) ─────────────────────────────────────────────

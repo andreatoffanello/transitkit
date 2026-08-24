@@ -107,7 +107,7 @@ final class AppUpdateChecker {
                                            en: block.messageEn,
                                            it: block.messageIt,
                                            es: block.messageEs)
-                ?? String(localized: "update_force_fallback_message")
+                ?? L("update_force_fallback_message")
             requirement = .forced(message: message, storeUrl: storeUrl)
             softUpdate = nil
         } else {
@@ -143,7 +143,7 @@ final class AppUpdateChecker {
         let message = block.flatMap { b in
             localizedMessage(block: b, language: language,
                              en: b.whatsNewEn, it: b.whatsNewIt, es: b.whatsNewEs)
-        } ?? String(localized: "update_soft_fallback_message")
+        } ?? L("update_soft_fallback_message")
 
         softUpdate = SoftUpdate(message: message, storeUrl: storeUrl, version: storeVersion)
     }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Lingue in cui l'app è tradotta. Serve ad Android 13+ per mostrare la voce
+     "Lingua dell'app" nelle impostazioni di sistema: la stessa selezione che
+     il picker in-app scrive via LocaleManager. -->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="es" />
+    <locale android:name="it" />
+</locale-config>

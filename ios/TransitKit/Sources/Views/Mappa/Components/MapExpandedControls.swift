@@ -34,7 +34,7 @@ struct MapExpandedControls: View {
                         .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(Text(String(localized: "a11y_close_map")))
+                .accessibilityLabel(Text(L("a11y_close_map")))
                 .accessibilityIdentifier("btn_map_collapse")
                 .padding(.bottom, 44)
             }
@@ -47,20 +47,20 @@ struct MapExpandedControls: View {
             // pill to know which mode they're in; the action (toggle) is the
             // tap itself.
             textCell(label: is3D ? "3D" : "2D", action: onToggle3D)
-                .accessibilityLabel(String(localized: is3D ? "map_switch_to_2d" : "map_switch_to_3d"))
+                .accessibilityLabel(L(is3D ? "map_switch_to_2d" : "map_switch_to_3d"))
                 .accessibilityIdentifier("btn_map_toggle_3d")
 
             if showsRecenter {
                 divider
                 iconCell(icon: .navigation, action: onRecenter)
-                    .accessibilityLabel(String(localized: "center_on_location"))
+                    .accessibilityLabel(L("center_on_location"))
                     .accessibilityIdentifier("btn_map_recenter")
             }
 
             if showsResetBearing {
                 divider
                 iconCell(icon: .compass, action: onResetBearing)
-                    .accessibilityLabel(String(localized: "reset_map_view"))
+                    .accessibilityLabel(L("reset_map_view"))
                     .accessibilityIdentifier("btn_map_reset_bearing")
             }
         }

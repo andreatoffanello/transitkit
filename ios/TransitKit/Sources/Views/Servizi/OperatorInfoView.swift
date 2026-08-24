@@ -64,7 +64,7 @@ struct OperatorInfoView: View {
                             Link(destination: url) {
                                 linkRow(
                                     icon: .globe,
-                                    title: String(localized: "operator_website"),
+                                    title: L("operator_website"),
                                     subtitle: config.url
                                         .replacingOccurrences(of: "https://", with: "")
                                         .replacingOccurrences(of: "http://", with: "")
@@ -82,7 +82,7 @@ struct OperatorInfoView: View {
                                 Link(destination: phoneURL) {
                                     linkRow(
                                         icon: .phone,
-                                        title: String(localized: "operator_phone"),
+                                        title: L("operator_phone"),
                                         subtitle: phone
                                     )
                                 }
@@ -99,7 +99,7 @@ struct OperatorInfoView: View {
                                 Link(destination: mailURL) {
                                     linkRow(
                                         icon: .mail,
-                                        title: String(localized: "operator_email"),
+                                        title: L("operator_email"),
                                         subtitle: email
                                     )
                                 }
@@ -116,7 +116,7 @@ struct OperatorInfoView: View {
                             Link(destination: url) {
                                 linkRow(
                                     icon: .shield,
-                                    title: String(localized: "operator_privacy_policy"),
+                                    title: L("operator_privacy_policy"),
                                     subtitle: nil
                                 )
                             }
@@ -131,12 +131,12 @@ struct OperatorInfoView: View {
                             LucideIcon.table.image
                                 .font(.subheadline)
                                 .foregroundStyle(AppTheme.accent)
-                            Text(String(localized: "operator_data_attribution"))
+                            Text(L("operator_data_attribution"))
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(AppTheme.textPrimary)
                         }
 
-                        Text(String(localized: "operator_gtfs_description"))
+                        Text(L("operator_gtfs_description"))
                             .font(.caption)
                             .foregroundStyle(AppTheme.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -151,7 +151,7 @@ struct OperatorInfoView: View {
             .padding(.top, 8)
         }
         .background(AppTheme.background.ignoresSafeArea())
-        .navigationTitle(String(localized: "nav_title_operator"))
+        .navigationTitle(L("nav_title_operator"))
         .navigationBarTitleDisplayMode(.large)
         .toolbar(.hidden, for: .tabBar)
     }

@@ -48,7 +48,7 @@ struct ForceUpdateView: View {
                     iconWithGlow
                         .padding(.bottom, 32)
 
-                    Text(String(localized: "update_force_title"))
+                    Text(L("update_force_title"))
                         .font(.system(size: 30, weight: .bold, design: .rounded))
                         .foregroundStyle(isDark ? Color(hex: "#F0F4FF") : Color(hex: "#0D1220"))
                         .multilineTextAlignment(.center)
@@ -156,7 +156,7 @@ struct ForceUpdateView: View {
             AppUpdateChecker.shared.openStore(storeUrl)
         } label: {
             HStack(spacing: 10) {
-                Text(String(localized: "update_force_cta"))
+                Text(L("update_force_cta"))
                     .font(.system(size: 17, weight: .semibold))
                 LucideIcon.externalLink.sized(18)
                     .frame(width: 18, height: 18)

@@ -72,7 +72,25 @@ In `ui/components/`: `LineBadge` (pill colorato linea), `StopIcon`, `TimeDisplay
 
 ## Config operator e white-label
 
-Attualmente **non** ci sono `productFlavors` Gradle. `applicationId = "com.transitkit.appalcart"` è hardcoded in `app/build.gradle.kts`. Il config operator è un singolo `app/src/main/assets/config.json` caricato runtime da `config/ConfigLoader.kt`. Per un nuovo operatore: swap `assets/config.json` + cambio `applicationId` + risorse brand (colori `config/AppTheme.kt`, icone mipmap). Quando si introdurranno veri flavors, aggiornare questa sezione.
+Non ci sono `productFlavors` Gradle e non servono: il config operator è un singolo `app/src/main/assets/config.json` (copiato da `build-android.sh` da `shared/operators/<op>/`, caricato runtime da `config/ConfigLoader.kt`), e **`build.gradle.kts` legge quello stesso file** a configure time per derivarne `applicationId` (`com.transitkit.$id`) e `app_name` (via `resValue`, da `brandName` con fallback su `name`). Leggere il config invece di ricevere un `-POPERATOR_ID` rende impossibile per costruzione che package installato e config bundlato divergano.
+
+Per un nuovo operatore: `bash scripts/build-android.sh <op>` + `bash scripts/deploy-brand.sh <op>` per gli asset. Nient'altro da toccare a mano.
+
+- **NON** rimettere `<string name="app_name">` in `strings.xml`: collide col `resValue` (duplicate resource). Era duplicato in `values/`, `values-it/`, `values-es/` — un nome proprio non si localizza.
+- `OperatorConfig.brandName` (nullable, fallback su `name`) = brand dell'APP; `name` = operatore di cui mostriamo i dati. Non confonderli: vedi la regola anti-impersonazione nel CLAUDE.md root.
+- `TransitTheme.config` espone `OperatorConfig` ovunque nell'albero Compose (via `LocalOperatorConfig`, provider in `TransitKitTheme`) — usalo per le stringhe brandizzate invece di infilare parametri.
+- Verifica reale: `aapt2 dump badging <apk>` → `package:` e `application-label:`. Non fidarti dei sorgenti.
+
+## Lingua dell'app
+
+Picker in Impostazioni → Lingua (Sistema / English / Español / Italiano), gestito
+da `config/AppLocaleManager.kt`. Da Android 13 la fonte di verità è
+`LocaleManager.applicationLocales` — la stessa che scrive Impostazioni di sistema
+→ App → Lingua, quindi le due strade non divergono; sotto la 13
+`SharedPreferences` + `attachBaseContext` in `MainActivity` + `recreate()`.
+`res/xml/locales_config.xml` elenca en/es/it e va tenuto allineato ai `values-*`.
+Il ramo pre-13 non è coperto dagli emulatori pinnati (API 34/35): se lo tocchi,
+verificalo a mano. Dettagli e parità iOS nel CLAUDE.md root.
 
 ## Realtime
 

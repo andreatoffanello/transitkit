@@ -12,12 +12,18 @@ import CoreLocation
 struct OnboardingStoriesView: View {
     @Environment(LocationManager.self) private var locationManager
     @Environment(PushNotificationManager.self) private var pushManager
+    @Environment(\.operatorConfig) private var config
     @Environment(\.dismiss) private var dismiss
 
     @State private var page: Int = 0
     @State private var permissionInFlight: Bool = false
 
     private let pageCount = 4
+
+    /// Brand dell'APP (AppalRider) — la welcome saluta l'app, non l'operatore.
+    private var brandName: String { config?.brandName ?? config?.name ?? "" }
+    /// Nome dell'operatore di cui mostriamo i dati (AppalCART).
+    private var operatorName: String { config?.name ?? "" }
 
     var body: some View {
         ZStack {
@@ -92,7 +98,7 @@ struct OnboardingStoriesView: View {
             }
             .padding(.leading, 8)
             .accessibilityIdentifier("onboarding_close")
-            .accessibilityLabel(String(localized: "action_close"))
+            .accessibilityLabel(L("action_close"))
         }
     }
 
@@ -189,12 +195,12 @@ struct OnboardingStoriesView: View {
             .frame(width: 120, height: 120)
 
             VStack(spacing: 14) {
-                Text(String(localized: "onb_welcome_title"))
+                Text(String(format: L("onb_welcome_title"), brandName))
                     .font(.system(size: 30, weight: .bold))
                     .foregroundStyle(AppTheme.textPrimary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
-                Text(String(localized: "onb_welcome_body"))
+                Text(String(format: L("onb_welcome_body"), operatorName))
                     .font(.system(size: 16))
                     .foregroundStyle(AppTheme.textSecondary)
                     .multilineTextAlignment(.center)
@@ -209,7 +215,7 @@ struct OnboardingStoriesView: View {
                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 advance()
             } label: {
-                Text(String(localized: "onb_welcome_cta"))
+                Text(L("onb_welcome_cta"))
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
@@ -226,9 +232,9 @@ struct OnboardingStoriesView: View {
         storyPage(
             accent: AppTheme.accent,
             icon: .mapPin,
-            title: String(localized: "onb_location_title"),
-            body: String(localized: "onb_location_body"),
-            primaryCta: String(localized: "onb_location_cta"),
+            title: L("onb_location_title"),
+            body: L("onb_location_body"),
+            primaryCta: L("onb_location_cta"),
             primaryAction: {
                 permissionInFlight = true
                 locationManager.requestPermissionAndStart()
@@ -249,9 +255,9 @@ struct OnboardingStoriesView: View {
         storyPage(
             accent: AppTheme.accent,
             icon: .bell,
-            title: String(localized: "onb_notif_title"),
-            body: String(localized: "onb_notif_body"),
-            primaryCta: String(localized: "onb_notif_cta"),
+            title: L("onb_notif_title"),
+            body: L("onb_notif_body"),
+            primaryCta: L("onb_notif_cta"),
             primaryAction: {
                 permissionInFlight = true
                 Task {
@@ -262,7 +268,7 @@ struct OnboardingStoriesView: View {
                     }
                 }
             },
-            secondaryCta: String(localized: "onb_notif_skip"),
+            secondaryCta: L("onb_notif_skip"),
             secondaryAction: { advance() }
         )
         .accessibilityIdentifier("onb_notif_page")
@@ -272,9 +278,9 @@ struct OnboardingStoriesView: View {
         storyPage(
             accent: AppTheme.accent,
             icon: .busFront,
-            title: String(localized: "onb_done_title"),
-            body: String(localized: "onb_done_body"),
-            primaryCta: String(localized: "onb_done_cta"),
+            title: L("onb_done_title"),
+            body: L("onb_done_body"),
+            primaryCta: L("onb_done_cta"),
             primaryAction: { dismiss() }
         )
         .accessibilityIdentifier("onb_done_page")

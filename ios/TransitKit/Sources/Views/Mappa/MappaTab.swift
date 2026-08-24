@@ -408,7 +408,7 @@ struct MappaTab: View {
                     .navigationBarBackButtonHidden(true)
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing) {
-                            Button(String(localized: "action_chiudi")) {
+                            Button(L("action_chiudi")) {
                                 tripSheetTarget = nil
                             }
                         }
@@ -421,7 +421,7 @@ struct MappaTab: View {
                     .navigationBarBackButtonHidden(true)
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing) {
-                            Button(String(localized: "action_chiudi")) {
+                            Button(L("action_chiudi")) {
                                 lineSheetTarget = nil
                             }
                         }

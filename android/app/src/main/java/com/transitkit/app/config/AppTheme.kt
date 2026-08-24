@@ -78,6 +78,10 @@ val LocalTransitColors = staticCompositionLocalOf<TransitColors> {
     error("No TransitColors provided — wrap your app with TransitKitTheme")
 }
 
+val LocalOperatorConfig = staticCompositionLocalOf<OperatorConfig> {
+    error("No OperatorConfig provided — wrap your app with TransitKitTheme")
+}
+
 // ---------------------------------------------------------------------------
 // Factories
 // ---------------------------------------------------------------------------
@@ -246,7 +250,10 @@ fun TransitKitTheme(
         }
     }
 
-    CompositionLocalProvider(LocalTransitColors provides transitColors) {
+    CompositionLocalProvider(
+        LocalTransitColors provides transitColors,
+        LocalOperatorConfig provides config,
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             typography = transitTypography,
@@ -275,4 +282,7 @@ fun TransitKitTheme(
 object TransitTheme {
     val colors: TransitColors
         @Composable get() = LocalTransitColors.current
+
+    val config: OperatorConfig
+        @Composable get() = LocalOperatorConfig.current
 }

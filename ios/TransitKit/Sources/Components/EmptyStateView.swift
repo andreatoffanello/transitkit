@@ -68,32 +68,32 @@ struct EmptyStateView: View {
 extension EmptyStateView {
     /// Empty state for no departures found.
     static func noDepartures(
-        title: String = String(localized: "empty_no_departures_title"),
-        subtitle: String = String(localized: "empty_no_departures_subtitle")
+        title: String = L("empty_no_departures_title"),
+        subtitle: String = L("empty_no_departures_subtitle")
     ) -> EmptyStateView {
         EmptyStateView(icon: .clock, title: title, subtitle: subtitle)
     }
 
     /// Empty state for no stops found (search or nearby).
     static func noStops(
-        title: String = String(localized: "empty_no_stops_title"),
-        subtitle: String = String(localized: "empty_no_stops_subtitle")
+        title: String = L("empty_no_stops_title"),
+        subtitle: String = L("empty_no_stops_subtitle")
     ) -> EmptyStateView {
         EmptyStateView(icon: .mapPinOff, title: title, subtitle: subtitle)
     }
 
     /// Empty state for no lines found.
     static func noLines(
-        title: String = String(localized: "empty_no_lines_title"),
-        subtitle: String = String(localized: "empty_no_lines_subtitle")
+        title: String = L("empty_no_lines_title"),
+        subtitle: String = L("empty_no_lines_subtitle")
     ) -> EmptyStateView {
         EmptyStateView(icon: .list, title: title, subtitle: subtitle)
     }
 
     /// Empty state for search with no results.
     static func noResults(
-        title: String = String(localized: "empty_no_results_title"),
-        subtitle: String = String(localized: "empty_no_results_subtitle")
+        title: String = L("empty_no_results_title"),
+        subtitle: String = L("empty_no_results_subtitle")
     ) -> EmptyStateView {
         EmptyStateView(icon: .search, title: title, subtitle: subtitle)
     }

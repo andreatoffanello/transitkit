@@ -42,6 +42,16 @@ targets:
         # bundle id baked into GoogleService-Info.plist → Firebase refuses
         # to configure and FCM never issues a token.
         OPERATOR_ID: appalcart
+        # BRAND_NAME (brand dell'APP) e OPERATOR_NAME (operatore di cui
+        # mostriamo i dati) sono i due nomi che l'OS legge prima che il
+        # codice giri — springboard e prompt permessi — quindi non possono
+        # arrivare da config.json a runtime come tutto il resto.
+        # build-ios.sh li legge da shared/operators/<op>/config.json
+        # (brandName / name) e li passa a xcodebuild. I default qui servono
+        # solo alle build da IDE, dove non c'è CLI che li passi — stessa
+        # ragione di OPERATOR_ID sopra. Fonte di verità = config.json.
+        BRAND_NAME: AppalRider
+        OPERATOR_NAME: AppalCART
         PRODUCT_BUNDLE_IDENTIFIER: com.transitkit.${OPERATOR_ID}
         DEVELOPMENT_TEAM: "R56VCP5L45"
         TARGETED_DEVICE_FAMILY: "1"
@@ -69,19 +79,22 @@ targets:
       path: TransitKit/Sources/App/Info.plist
       properties:
         # White-label: il display name nello springboard e nei prompt di
-        # sistema è il brand dell'APP (AppalRider), NON dell'operatore
-        # (AppalCART) di cui mostriamo i dati. La localizzazione del brand
-        # name e della usage description in 3 lingue vive in
-        # InfoPlist.xcstrings (en/it/es-419). I valori qui sono i fallback
-        # English usati se la xcstrings non risolve.
-        CFBundleDisplayName: "AppalRider"
-        CFBundleShortVersionString: "1.2.6"
-        CFBundleVersion: "16"
+        # sistema è il brand dell'APP (BRAND_NAME), NON dell'operatore
+        # (OPERATOR_NAME) di cui mostriamo i dati.
+        # Il display name NON è localizzato: è un nome proprio, identico in
+        # tutte le lingue — per questo non sta in InfoPlist.xcstrings.
+        # La usage description invece è localizzata (en/it/es-419) in
+        # InfoPlist.xcstrings, che build-ios.sh genera da
+        # ios/InfoPlist.template.xcstrings. Il valore qui è il fallback
+        # English usato se la xcstrings non risolve.
+        CFBundleDisplayName: "$(BRAND_NAME)"
+        CFBundleShortVersionString: "1.2.7"
+        CFBundleVersion: "17"
         # Apple HIG: la usage description deve spiegare il beneficio per
         # l'utente in modo specifico, distinguere chiaramente chi accede
-        # alla posizione (AppalRider, l'app) da chi fornisce i dati
-        # (AppalCART, l'operatore), e dare reassurance sulla privacy.
-        NSLocationWhenInUseUsageDescription: "AppalRider uses your location to show AppalCART stops near you and the most relevant upcoming departures. Your location stays on your device — it's never sent to any server."
+        # alla posizione (l'app) da chi fornisce i dati (l'operatore), e
+        # dare reassurance sulla privacy.
+        NSLocationWhenInUseUsageDescription: "$(BRAND_NAME) uses your location to show $(OPERATOR_NAME) stops near you and the most relevant upcoming departures. Your location stays on your device — it's never sent to any server."
         UILaunchScreen:
           UIColorName: SystemBackground
         UISupportedInterfaceOrientations:

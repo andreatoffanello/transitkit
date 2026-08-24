@@ -59,12 +59,12 @@ struct AlertListView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(AppTheme.background.ignoresSafeArea())
-        .navigationTitle(String(localized: "alerts_title"))
+        .navigationTitle(L("alerts_title"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if isPresented {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(String(localized: "action_close")) { dismiss() }
+                    Button(L("action_close")) { dismiss() }
                         .foregroundStyle(AppTheme.textPrimary)
                 }
             }
@@ -81,7 +81,7 @@ struct AlertListView: View {
         HStack(spacing: 8) {
             if !myLineIds.isEmpty {
                 filterPill(
-                    title: String(localized: "alerts_filter_mine"),
+                    title: L("alerts_filter_mine"),
                     count: myAlerts.count,
                     isActive: filter == .mine
                 ) {
@@ -90,7 +90,7 @@ struct AlertListView: View {
                 .accessibilityIdentifier("filter_mine")
             }
             filterPill(
-                title: String(localized: "alerts_filter_all"),
+                title: L("alerts_filter_all"),
                 count: activeAlerts.count,
                 isActive: filter == .all
             ) {
@@ -156,8 +156,8 @@ struct AlertListView: View {
         if filter == .mine && myLineIds.isEmpty {
             EmptyStateView(
                 icon: .star,
-                title: String(localized: "alerts_empty_no_favorites_title"),
-                subtitle: String(localized: "alerts_empty_no_favorites_subtitle")
+                title: L("alerts_empty_no_favorites_title"),
+                subtitle: L("alerts_empty_no_favorites_subtitle")
             )
         } else if visibleAlerts.isEmpty {
             emptyState
@@ -169,7 +169,7 @@ struct AlertListView: View {
                             if filter == .all
                                 && !myLineIds.isEmpty
                                 && alert.isRelevant(forRoutes: myLineIds) {
-                                Text(String(localized: "alerts_your_line_badge"))
+                                Text(L("alerts_your_line_badge"))
                                     .font(.caption2.weight(.bold))
                                     .kerning(0.5)
                                     .foregroundStyle(.orange)

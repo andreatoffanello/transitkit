@@ -14,6 +14,7 @@ object LucideIcons {
     @DrawableRes val Box = R.drawable.ic_lucide_box
     @DrawableRes val Briefcase = R.drawable.ic_lucide_briefcase
     @DrawableRes val BusFront = R.drawable.ic_lucide_bus_front
+    @DrawableRes val Check = R.drawable.ic_lucide_check
     @DrawableRes val ChevronDown = R.drawable.ic_lucide_chevron_down
     @DrawableRes val ChevronLeft = R.drawable.ic_lucide_chevron_left
     @DrawableRes val ChevronRight = R.drawable.ic_lucide_chevron_right

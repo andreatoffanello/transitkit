@@ -204,7 +204,7 @@ struct StopPreviewCard: View {
                         .frame(width: 44, height: 44)
                         .contentShape(Circle())
                 }
-                .accessibilityLabel(Text(String(localized: "a11y_close_stop_preview")))
+                .accessibilityLabel(Text(L("a11y_close_stop_preview")))
                 .accessibilityIdentifier("btn_stop_preview_dismiss")
             }
             .padding(.horizontal, 14)
@@ -249,7 +249,7 @@ struct StopPreviewCard: View {
 
             // CTA
             Button(action: onOpenStop) {
-                Text(String(localized: "map_open_stop"))
+                Text(L("map_open_stop"))
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(AppTheme.accent)
                     .frame(maxWidth: .infinity)

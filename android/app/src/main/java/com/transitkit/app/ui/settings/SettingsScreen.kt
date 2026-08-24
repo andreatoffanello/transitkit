@@ -246,7 +246,7 @@ private fun FavoriteStopRow(stop: ResolvedStop, onRemove: () -> Unit) {
 // ---------------------------------------------------------------------------
 
 @Composable
-private fun CardContainer(content: @Composable () -> Unit) {
+internal fun CardContainer(content: @Composable () -> Unit) {
     val colors = TransitTheme.colors
     Column(
         modifier = Modifier
@@ -268,13 +268,13 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
     onBack: () -> Unit = {},
     onNavigateToOrari: () -> Unit = {},
+    onNavigateToLanguage: () -> Unit = {},
 ) {
     val favoriteStops by viewModel.favoriteStops.collectAsStateWithLifecycle()
     val notificationsBusy by viewModel.notificationsBusy.collectAsStateWithLifecycle()
     val config = viewModel.operatorConfig
     val colors = TransitTheme.colors
     val favoriteList = favoriteStops
-    val currentLanguage = java.util.Locale.getDefault().displayLanguage.replaceFirstChar { it.uppercaseChar() }
 
     // ── POST_NOTIFICATIONS runtime permission (Android 13+) ─────────────────
     // The Switch's `checked` reads the *authoritative* OS permission status,
@@ -471,15 +471,10 @@ fun SettingsScreen(
                 SettingsRow(
                     icon = LucideIcons.Globe,
                     title = stringResource(R.string.settings_section_lingua),
-                    subtitle = currentLanguage,
+                    subtitle = com.transitkit.app.config.AppLocaleManager.current(context).label(context),
+                    onClick = onNavigateToLanguage,
                 )
             }
-            Text(
-                text = stringResource(R.string.settings_lingua_desc, stringResource(R.string.app_name)),
-                style = MaterialTheme.typography.bodySmall,
-                color = colors.textSecondary,
-                modifier = Modifier.padding(horizontal = 32.dp, vertical = 6.dp),
-            )
             Spacer(modifier = Modifier.height(16.dp))
         }
 

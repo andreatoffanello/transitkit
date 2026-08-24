@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">AppalRider</string>
 
     <!-- Tab bar labels -->
     <string name="tab_home">Home</string>
@@ -207,7 +206,7 @@
     <string name="settings_notifiche_desc">Receive alerts for your favorite stops.</string>
 
     <!-- Settings — language -->
-    <string name="settings_lingua_desc">Change it in System Settings → Apps → %s.</string>
+    <string name="settings_language_system">System</string>
 
     <!-- Settings — app info -->
     <string name="settings_info_su">About %s</string>
@@ -558,8 +557,8 @@
     <!-- Onboarding stories (first launch) — English defaults for the
          US-targeted app. Italian (values-it) and Spanish (values-es) live in
          their dedicated locale folders. -->
-    <string name="onb_welcome_title">Welcome to AppalRider</string>
-    <string name="onb_welcome_body">Live AppalCART schedules, stops, routes and buses — all in one app.</string>
+    <string name="onb_welcome_title">Welcome to %1$s</string>
+    <string name="onb_welcome_body">Live %1$s schedules, stops, routes and buses — all in one app.</string>
     <string name="onb_welcome_cta">Let\'s go</string>
     <string name="onb_location_title">Find stops near you</string>
     <string name="onb_location_body">We\'ll show stops close to you and the most relevant departures. Your location stays on your device — it\'s never sent anywhere.</string>

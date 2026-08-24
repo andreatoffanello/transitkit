@@ -50,7 +50,7 @@ struct JourneyCard: View {
 
                 let mins = journey.minutesUntilDeparture
                 if mins <= 60 {
-                    let depLabel = String(format: NSLocalizedString("planner_departs_in_min", comment: ""), mins)
+                    let depLabel = String(format: L("planner_departs_in_min", comment: ""), mins)
                     if mins <= 2 {
                         Text(depLabel)
                             .font(.system(size: 13, weight: .semibold))
@@ -65,8 +65,8 @@ struct JourneyCard: View {
 
                 if journey.transfers > 0 {
                     let changeLabel = journey.transfers == 1
-                        ? String(localized: "planner_change_one")
-                        : String(format: NSLocalizedString("planner_change_count", comment: ""), journey.transfers)
+                        ? L("planner_change_one")
+                        : String(format: L("planner_change_count", comment: ""), journey.transfers)
                     Text(changeLabel)
                         .font(.system(size: 13))
                         .foregroundStyle(.secondary)

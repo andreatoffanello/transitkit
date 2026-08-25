@@ -23,7 +23,7 @@ struct UserLocationDot: View {
             .frame(width: 16, height: 16)
             .overlay(Circle().stroke(.white, lineWidth: 3))
             .shadow(color: .black.opacity(0.18), radius: 2, y: 1)
-            .accessibilityLabel("La tua posizione")
+            .accessibilityLabel(L("a11y_my_location"))
     }
 }
 

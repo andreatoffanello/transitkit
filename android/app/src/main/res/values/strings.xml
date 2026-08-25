@@ -580,4 +580,12 @@
     <string name="update_force_cta">Update the app</string>
     <string name="update_force_fallback_message">Please update the app to continue using it.</string>
     <string name="update_soft_fallback_message">New features and improvements are available.</string>
+
+    <!-- Errori e accessibilità che erano hardcodati nel codice (2026-08-25) -->
+    <string name="schedule_load_error">Couldn\'t load schedules. Check your connection.</string>
+    <string name="cd_swap">Swap origin and destination</string>
+    <string name="cd_search_stops_places">Search stops and places</string>
+    <string name="cd_journey_format">Journey from %1$s to %2$s</string>
+    <string name="cd_live">Live data</string>
+    <string name="cd_my_location">Your location</string>
 </resources>

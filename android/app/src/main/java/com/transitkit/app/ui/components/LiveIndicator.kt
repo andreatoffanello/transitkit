@@ -21,6 +21,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.transitkit.app.R
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.semantics.contentDescription
@@ -95,6 +97,8 @@ fun LiveBadge(
     modifier: Modifier = Modifier,
 ) {
     val color = TransitTheme.colors.realtimeGreen
+    // `semantics {}` non è @Composable: la stringa va risolta prima.
+    val cdLive = stringResource(R.string.cd_live)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(3.dp),
@@ -108,7 +112,7 @@ fun LiveBadge(
                 shape = RoundedCornerShape(50),
             )
             .padding(horizontal = 6.dp, vertical = 1.dp)
-            .semantics { contentDescription = "Live" },
+            .semantics { contentDescription = cdLive },
     ) {
         Box(
             modifier = Modifier

@@ -58,12 +58,14 @@ fun JourneyCard(
     val colors = TransitTheme.colors
     val depFmt = formatEpochTime(journey.departureTime)
     val arrFmt = formatEpochTime(journey.arrivalTime)
+    // `semantics {}` non è @Composable: la stringa va risolta prima.
+    val cdJourney = stringResource(R.string.cd_journey_format, depFmt, arrFmt)
 
     Card(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .semantics { contentDescription = "Journey $depFmt to $arrFmt" },
+            .semantics { contentDescription = cdJourney },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),

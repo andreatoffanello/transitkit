@@ -517,4 +517,60 @@
     <string name="update_force_cta">Actualizar la app</string>
     <string name="update_force_fallback_message">Por favor actualiza la aplicación para continuar usándola.</string>
     <string name="update_soft_fallback_message">Nuevas funciones y mejoras disponibles.</string>
+
+    <!-- Planner picker, vehículos y ocupación — completati 2026-08-25 -->
+    <string name="occupancy_few_seats">Pocos asientos</string>
+    <string name="occupancy_full">Lleno</string>
+    <string name="occupancy_not_boarding">No sube pasajeros</string>
+    <string name="occupancy_seats_available">Asientos disponibles</string>
+    <string name="occupancy_standing_only">Solo de pie</string>
+    <string name="open_in_map">Ver en el mapa</string>
+    <string name="planner_picker_assign_home">Definir dirección de Casa</string>
+    <string name="planner_picker_assign_work">Definir dirección del Trabajo</string>
+    <string name="planner_picker_confirm">Confirmar</string>
+    <string name="planner_picker_destination_title">Hasta</string>
+    <string name="planner_picker_edit">Editar</string>
+    <string name="planner_picker_home">Casa</string>
+    <string name="planner_picker_loading_stops">Cargando paradas…</string>
+    <string name="planner_picker_location_active">Usando la ubicación GPS</string>
+    <string name="planner_picker_location_inactive">Ubicación no disponible</string>
+    <string name="planner_picker_map_hint">Toca una parada para seleccionarla</string>
+    <string name="planner_picker_map_resolving">Ubicando…</string>
+    <string name="planner_picker_my_location">Ubicación actual</string>
+    <string name="planner_picker_no_results">Sin resultados</string>
+    <string name="planner_picker_no_stop_nearby">Ninguna parada cerca: centra el mapa en una parada</string>
+    <string name="planner_picker_origin_title">Desde</string>
+    <string name="planner_picker_pick_on_map">Elegir en el mapa</string>
+    <string name="planner_picker_pick_on_map_sub">Mueve el mapa para centrarlo en una parada</string>
+    <string name="planner_picker_remove">Quitar</string>
+    <string name="planner_picker_result_place">Lugar</string>
+    <string name="planner_picker_search_placeholder">Busca paradas y lugares…</string>
+    <string name="planner_picker_section_nearby">Cerca de ti</string>
+    <string name="planner_picker_section_places">Lugares</string>
+    <string name="planner_picker_section_recent">Recientes</string>
+    <string name="planner_picker_section_stops">Paradas</string>
+    <string name="planner_picker_selected_position">Ubicación seleccionada</string>
+    <string name="planner_picker_selected_stop">Parada seleccionada</string>
+    <string name="planner_picker_set_address">Definir dirección</string>
+    <string name="planner_picker_walking_distance">A %1$d m</string>
+    <string name="planner_picker_work">Trabajo</string>
+    <string name="tab_planner">Planifica</string>
+    <string name="vehicle_accessible">Accesible en silla de ruedas</string>
+    <string name="vehicle_follow">Seguir vehículo</string>
+    <string name="vehicle_incoming_at">Llegando a:</string>
+    <string name="vehicle_label_format">Vehículo %s</string>
+    <string name="vehicle_next_stop">Próxima parada:</string>
+    <string name="vehicle_open_trip">Abrir viaje</string>
+    <string name="vehicle_stopped_at">Detenido en:</string>
+    <string name="vehicle_unfollow">Dejar de seguir</string>
+    <string name="vehicle_updated_min">Actualizado hace %1$d min</string>
+    <string name="vehicle_updated_sec">Actualizado hace %1$d seg</string>
+
+    <!-- Errori e accessibilità che erano hardcodati nel codice (2026-08-25) -->
+    <string name="schedule_load_error">No se pudieron cargar los horarios. Revisa tu conexión.</string>
+    <string name="cd_swap">Intercambiar origen y destino</string>
+    <string name="cd_search_stops_places">Busca paradas y lugares</string>
+    <string name="cd_journey_format">Viaje de %1$s a %2$s</string>
+    <string name="cd_live">Datos en vivo</string>
+    <string name="cd_my_location">Tu ubicación</string>
 </resources>

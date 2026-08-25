@@ -187,6 +187,9 @@ fun LocationPickerScreen(
                 else stringResource(R.string.planner_picker_destination_title)
     }
 
+    // `semantics {}` non è @Composable: la stringa va risolta prima.
+    val cdSearch = stringResource(R.string.cd_search_stops_places)
+
     val nearby = remember(currentLocation, allStops) {
         if (currentLocation == null || allStops.isEmpty()) emptyList()
         else plannerViewModel.nearbyStops(limit = 5)
@@ -206,7 +209,7 @@ fun LocationPickerScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             painterResource(LucideIcons.ArrowLeft),
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.cd_indietro),
                             modifier = Modifier.size(20.dp),
                         )
                     }
@@ -261,7 +264,7 @@ fun LocationPickerScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 12.dp)
                     .focusRequester(focusRequester)
-                    .semantics { contentDescription = "Search stops and places" },
+                    .semantics { contentDescription = cdSearch },
             )
 
             if (query.isEmpty()) {

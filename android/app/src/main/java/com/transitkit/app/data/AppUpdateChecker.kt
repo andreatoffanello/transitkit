@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import com.transitkit.app.BuildConfig
+import com.transitkit.app.R
 import com.transitkit.app.config.OperatorConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -74,8 +75,7 @@ object AppUpdateChecker {
         // 1. Gate forzato: versionCode < min + force=true.
         if (android.force && currentVc < android.minVersionCode) {
             val message = appUpdate.localizedMessage(language)
-                ?: if (language == "it") "Aggiorna l'app per continuare a usarla."
-                else "Update the app to keep using it."
+                ?: context.getString(R.string.update_force_fallback_message)
             _state.value = Requirement.Forced(message = message, storeUrl = storeUrl)
             _softState.value = null
             return
@@ -88,8 +88,7 @@ object AppUpdateChecker {
             val dismissed = dismissedSoftUpdateVersionCode(context)
             if (dismissed < latestVc) {
                 val message = appUpdate.localizedWhatsNew(language)
-                    ?: if (language == "it") "È disponibile una nuova versione dell'app."
-                    else "A new version of the app is available."
+                    ?: context.getString(R.string.update_soft_fallback_message)
                 _softState.value = SoftUpdate(
                     message = message,
                     storeUrl = storeUrl,

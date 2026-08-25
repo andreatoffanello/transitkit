@@ -225,7 +225,7 @@ fun LocationPickerMapScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             painterResource(LucideIcons.ArrowLeft),
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.cd_indietro),
                             modifier = Modifier.size(20.dp),
                         )
                     }

@@ -177,7 +177,7 @@ internal fun PlannerHomeBox(
                     ) {
                         Icon(
                             painter = painterResource(LucideIcons.ArrowUpDown),
-                            contentDescription = "Swap",
+                            contentDescription = stringResource(R.string.cd_swap),
                             tint = colors.accent,
                             modifier = Modifier.size(18.dp),
                         )

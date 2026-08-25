@@ -574,4 +574,12 @@
     <string name="update_force_cta">Aggiorna l\'app</string>
     <string name="update_force_fallback_message">Aggiorna l\'app per continuare a usarla.</string>
     <string name="update_soft_fallback_message">Nuove funzionalità e miglioramenti disponibili.</string>
+
+    <!-- Errori e accessibilità che erano hardcodati nel codice (2026-08-25) -->
+    <string name="schedule_load_error">Impossibile caricare gli orari. Controlla la connessione.</string>
+    <string name="cd_swap">Inverti partenza e destinazione</string>
+    <string name="cd_search_stops_places">Cerca fermate e luoghi</string>
+    <string name="cd_journey_format">Viaggio dalle %1$s alle %2$s</string>
+    <string name="cd_live">Dati in tempo reale</string>
+    <string name="cd_my_location">La tua posizione</string>
 </resources>

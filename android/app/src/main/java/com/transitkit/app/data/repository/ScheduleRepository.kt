@@ -2,6 +2,7 @@ package com.transitkit.app.data.repository
 
 import android.content.Context
 import com.squareup.moshi.Moshi
+import com.transitkit.app.R
 import com.transitkit.app.config.OperatorConfig
 import com.transitkit.app.data.model.ResolvedDeparture
 import com.transitkit.app.data.model.ResolvedStop
@@ -184,7 +185,7 @@ class ScheduleRepository @Inject constructor(
                     // Cold start — must wait for network
                     val result = fetchFromCdn()
                     if (result == null) {
-                        _loadError.value = "Impossibile caricare gli orari. Controlla la connessione."
+                        _loadError.value = context.getString(R.string.schedule_load_error)
                         return
                     }
                     val (freshJson, _) = result
@@ -193,7 +194,7 @@ class ScheduleRepository @Inject constructor(
                     lastFetchedFromNetworkAt = System.currentTimeMillis()
                 }
             } catch (_: Exception) {
-                _loadError.value = "Impossibile caricare gli orari. Controlla la connessione."
+                _loadError.value = context.getString(R.string.schedule_load_error)
             } finally {
                 _isLoading.value = false
             }

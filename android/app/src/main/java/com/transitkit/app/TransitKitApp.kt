@@ -9,6 +9,16 @@ import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
 class TransitKitApp : Application() {
+
+    // Sotto Android 13 la lingua scelta va applicata anche al Context
+    // dell'application, non solo a quello dell'activity: le stringhe che
+    // nascono fuori dalla UI (errori del repository, canali di notifica) le
+    // risolvono da qui e altrimenti uscirebbero nella lingua di sistema
+    // mentre il resto dell'app è in quella scelta.
+    override fun attachBaseContext(base: Context) {
+        super.attachBaseContext(com.transitkit.app.config.AppLocaleManager.wrap(base))
+    }
+
     override fun onCreate() {
         super.onCreate()
 

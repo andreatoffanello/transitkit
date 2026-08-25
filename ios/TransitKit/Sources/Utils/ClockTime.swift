@@ -13,15 +13,19 @@ import SwiftUI
 /// device tz) — countdowns and clocks stay consistent wherever the rider is.
 @MainActor
 enum ClockTime {
-    /// Cached formatters keyed by "tzIdentifier|template" — `setLocalizedDate…`
+    /// Cached formatters keyed by "locale|tzIdentifier|template" — `setLocalizedDate…`
     /// is non-trivial and a schedule board reformats dozens of rows on scroll.
+    /// Il locale fa parte della chiave: cambiando lingua i simboli AM/PM
+    /// cambiano (in spagnolo sono "a. m."/"p. m.") e un formatter in cache
+    /// continuerebbe a produrre quelli vecchi.
     private static var cache: [String: DateFormatter] = [:]
 
     private static func formatter(template: String, timeZone: TimeZone) -> DateFormatter {
-        let key = "\(timeZone.identifier)|\(template)"
+        let locale = LocalizationManager.formattingLocale
+        let key = "\(locale.identifier)|\(timeZone.identifier)|\(template)"
         if let cached = cache[key] { return cached }
         let f = DateFormatter()
-        f.locale = .autoupdatingCurrent
+        f.locale = locale
         f.timeZone = timeZone
         f.setLocalizedDateFormatFromTemplate(template)
         cache[key] = f
@@ -73,11 +77,18 @@ enum ClockTime {
             + Text("\u{2009}\(meridiem)").font(meridiemFont).foregroundStyle(color.opacity(0.55))
     }
 
-    private static let amPmSymbols: [String] = {
+    /// Non può essere una `let`: i simboli dipendono dalla lingua scelta, che
+    /// cambia a runtime. Cache per identificatore di locale.
+    private static var amPmCache: [String: [String]] = [:]
+    private static var amPmSymbols: [String] {
+        let locale = LocalizationManager.formattingLocale
+        if let cached = amPmCache[locale.identifier] { return cached }
         let f = DateFormatter()
-        f.locale = .autoupdatingCurrent
-        return [f.amSymbol, f.pmSymbol].compactMap { $0 }.filter { !$0.isEmpty }
-    }()
+        f.locale = locale
+        let symbols = [f.amSymbol, f.pmSymbol].compactMap { $0 }.filter { !$0.isEmpty }
+        amPmCache[locale.identifier] = symbols
+        return symbols
+    }
 
     /// Splits a formatted time into (numerals, meridiem) when it ends with the
     /// locale's AM/PM symbol; nil on 24h strings or unrecognized formats.

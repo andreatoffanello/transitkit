@@ -88,8 +88,8 @@ targets:
         # ios/InfoPlist.template.xcstrings. Il valore qui è il fallback
         # English usato se la xcstrings non risolve.
         CFBundleDisplayName: "$(BRAND_NAME)"
-        CFBundleShortVersionString: "1.2.7"
-        CFBundleVersion: "17"
+        CFBundleShortVersionString: "1.2.8"
+        CFBundleVersion: "18"
         # Apple HIG: la usage description deve spiegare il beneficio per
         # l'utente in modo specifico, distinguere chiaramente chi accede
         # alla posizione (l'app) da chi fornisce i dati (l'operatore), e

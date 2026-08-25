@@ -88,13 +88,43 @@ localizzazione è **fissata al lancio**: né il re-classing di `Bundle.main` né
 selezione si salvava e l'app restava in inglese). L'unica cosa che funziona è
 passare il bundle esplicitamente, ed è quello che fa `L()`
 (`Services/LocalizationManager.swift`). Una schermata nuova che usa
-`String(localized:)` non cambia lingua e non lo segnala nessuno: **grep
-`String(localized:` deve tornare zero** fuori da `LocalizationManager`.
+`String(localized:)` non cambia lingua e non lo segnala nessuno.
+
+Il controllo va fatto **tollerando gli a capo**, non con un grep riga per riga:
+
+```bash
+python3 -c "import re,pathlib;print([str(p) for p in pathlib.Path('ios/TransitKit/Sources').rglob('*.swift') if re.search(r'String\(\s*localized:|NSLocalizedString\s*\(', p.read_text()) and 'LocalizationManager' not in p.name])"
+```
+
+Un `grep "String(localized:"` secco dà **falsi negativi**: due chiamate scritte
+come `String(` a fine riga e `localized:` sulla successiva sono sfuggite alla
+conversione e la schermata Avvisi è uscita in italiano su app in spagnolo,
+mentre il grep di verifica diceva zero (ago 2026).
+
+**I `DateFormatter` sono un secondo canale di lingua, indipendente da `L()`.**
+`LocalizationManager.formattingLocale` = **regione del dispositivo + lingua
+scelta**, e ogni formatter deve usarlo (`ClockTime`, `AlertDetailView`,
+`WhenChipsRow`). Le due metà vengono da impostazioni diverse e vanno tenute
+separate: ciclo 12/24h, ordine dei campi e primo giorno della settimana sono
+**regione**; nomi di giorni/mesi e simboli AM/PM sono **lingua**. Con
+`Locale.current` la data di validità di un avviso usciva in italiano su app in
+inglese; sostituendo l'intero `languageComponents` invece della sola
+`languageCode` il locale collassa su `it` puro e un iPhone americano in italiano
+mostra 16:45 invece di 4:45 PM. Entrambi visti e corretti ad ago 2026.
+La cache dei formatter va chiavata **anche sul locale** — in spagnolo i simboli
+sono `a. m.`/`p. m.` e un formatter in cache continuerebbe a dare i vecchi.
+(Su Android il problema non esiste: `DateFormat.is24HourFormat(context)` prende
+il ciclo orario dall'impostazione di sistema, non dal locale.)
 
 Due conseguenze non ovvie:
 - **Impostazioni è presentata da `ContentView`, non da `HomeTab`**: il
   `fullScreenCover` deve stare *fuori* dal `.id()`, altrimenti cambiare lingua
-  chiude la schermata in cui l'utente sta scegliendo. Il bottone in Home passa
+  chiude la schermata in cui l'utente sta scegliendo. In cambio, tutto ciò che
+  vive dentro quel cover ha bisogno del **proprio** `.id(localization.language)`
+  (`SettingsTab`, `LanguagePickerView`): senza, SwiftUI ridisegna solo i rami
+  che leggono `localization.language` — si vedeva la riga "Lingua/Italiano"
+  tradotta e i titoli di sezione ancora in inglese finché non si usciva e
+  rientrava. Il bottone in Home passa
   da `router.pendingSettingsOpen`.
 - **Anche "Sistema" risolve a un `.lproj` concreto** (non ricade su
   `Bundle.main`): tornare a "Sistema" dopo aver scelto l'italiano lascerebbe

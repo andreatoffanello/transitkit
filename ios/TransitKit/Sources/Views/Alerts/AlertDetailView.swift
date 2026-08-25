@@ -278,7 +278,7 @@ struct AlertDetailView: View {
         guard let range = alert.activePeriods.first(where: { $0.start != nil || $0.end != nil })
         else { return nil }
         let df = DateFormatter()
-        df.locale = Locale.current
+        df.locale = LocalizationManager.formattingLocale
         df.timeZone = store.operatorTimezone
         df.setLocalizedDateFormatFromTemplate("EEE MMM d, yyyy")
         let start = range.start.map { df.string(from: Date(timeIntervalSince1970: TimeInterval($0))) }

@@ -151,6 +151,7 @@ struct WhenChipsRow: View {
             return L("tomorrow_short")
         }
         let f = DateFormatter()
+        f.locale = LocalizationManager.formattingLocale
         f.timeZone = operatorTimeZone
         f.dateFormat = "d MMM"
         return f.string(from: currentDate)

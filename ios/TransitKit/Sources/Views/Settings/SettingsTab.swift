@@ -199,6 +199,13 @@ struct SettingsTab: View {
                 }
             }
             .background(AppTheme.background.ignoresSafeArea())
+            // Stessa ragione del TabView in ContentView: `L()` produce String,
+            // SwiftUI non sa che il testo è cambiato e ridisegna solo i rami
+            // che leggono `localization.language` (la riga Lingua sì, i titoli
+            // di sezione no). L'id sta sulla ScrollView e non sul
+            // NavigationStack: il contenuto si ricostruisce, la picker pushata
+            // resta dov'è.
+            .id(localization.language)
             .navigationTitle(L("tab_settings"))
             .navigationBarTitleDisplayMode(.large)
             .toolbar {

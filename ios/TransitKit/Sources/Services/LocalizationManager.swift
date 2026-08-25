@@ -88,6 +88,18 @@ final class LocalizationManager {
     /// che gira sul main actor.
     nonisolated(unsafe) private(set) static var stringsBundle: Bundle = .main
 
+    /// Locale per i `DateFormatter`: **regione del dispositivo + lingua scelta
+    /// dall'utente**. Le due cose vengono da impostazioni diverse e vanno
+    /// tenute separate: il ciclo 12/24h, l'ordine dei campi e il primo giorno
+    /// della settimana sono preferenze di regione (un americano che sceglie
+    /// l'italiano vuole ancora le 4:45 PM, non le 16:45), mentre i nomi di
+    /// giorni e mesi e i simboli AM/PM sono lingua.
+    ///
+    /// Senza questo i formatter userebbero `Locale.current`, che segue la
+    /// lingua di *sistema*: la data del periodo di validità di un avviso
+    /// usciva in italiano su un'app messa in inglese.
+    nonisolated(unsafe) private(set) static var formattingLocale: Locale = .autoupdatingCurrent
+
     private(set) var language: AppLanguage
 
     private init() {
@@ -109,8 +121,13 @@ final class LocalizationManager {
     // MARK: - Private
 
     private func apply(_ newLanguage: AppLanguage) {
+        guard let code = resolvedCode(for: newLanguage) else {
+            Self.stringsBundle = .main
+            Self.formattingLocale = .autoupdatingCurrent
+            return
+        }
+        Self.formattingLocale = Self.locale(forLanguage: code)
         guard
-            let code = resolvedCode(for: newLanguage),
             let path = Self.lprojPath(for: code),
             let bundle = Bundle(path: path)
         else {
@@ -118,6 +135,21 @@ final class LocalizationManager {
             return
         }
         Self.stringsBundle = bundle
+    }
+
+    /// Regione corrente + lingua `code`. `Locale.Components` è l'unico modo di
+    /// cambiare solo la lingua senza portarsi dietro anche le convenzioni
+    /// numeriche e orarie del paese di quella lingua.
+    private static func locale(forLanguage code: String) -> Locale {
+        var components = Locale.Components(locale: .autoupdatingCurrent)
+        // SOLO il language code. Sostituire l'intero `languageComponents`
+        // azzererebbe anche la region della lingua e il locale collasserebbe
+        // su "it" puro: su un iPhone americano messo in italiano gli orari
+        // diventavano 16:45 invece di 4:45 PM. Il ciclo 12/24h lo decide la
+        // regione, che qui resta quella del dispositivo.
+        let base = code.split(separator: "-").first.map(String.init) ?? code
+        components.languageComponents.languageCode = Locale.LanguageCode(base)
+        return Locale(components: components)
     }
 
     /// Anche "sistema" viene risolto a un `.lproj` concreto invece di ricadere

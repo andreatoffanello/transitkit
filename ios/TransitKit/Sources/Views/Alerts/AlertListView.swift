@@ -194,13 +194,13 @@ struct AlertListView: View {
     private var emptyState: some View {
         EmptyStateView(
             icon: .check,
-            title: String(
-                localized: filter == .mine
+            title: L(
+                filter == .mine
                     ? "alerts_empty_favorites_title"
                     : "alerts_empty_title"
             ),
-            subtitle: String(
-                localized: filter == .mine
+            subtitle: L(
+                filter == .mine
                     ? "alerts_empty_favorites_subtitle"
                     : "alerts_empty_subtitle"
             )

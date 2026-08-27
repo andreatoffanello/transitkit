@@ -426,11 +426,35 @@ spedite da un pipeline che riportava l'esito sbagliato.
 
 ## WORKFLOW E2E — Maestro
 
+**`--udid` NON è opzionale.** Con più device collegati `maestro` sceglie da sé, e
+non lo dice se non leggi la prima riga (`Running on ...`). Un flow `ios_*` è
+girato sull'emulatore Android **passando**, perché asseriva su nomi di tab che
+esistono su entrambe le piattaforme (ago 2026). È lo stesso buco che le regole
+sopra chiudono per `simctl booted` e `adb` nudo: qui il tool è diverso, il modo
+di sbagliare è identico.
+
 ```bash
-maestro test flows/smoke_test.yaml
-maestro test flows/
-maestro test --watch flows/nome_flow.yaml
+export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"  # maestro non trova Java da solo
+maestro --udid=4302AFD9-496E-4586-A5D0-D6BAC735FFFD test flows/ios_smoke.yaml   # iOS 18
+maestro --udid=1E7E7611-FB05-4BFD-8F50-8E7F0963E0A6 test flows/ios_smoke.yaml   # iOS 26
+maestro --udid=emulator-5600 test flows/android_smoke.yaml                      # Android
 ```
+
+- **`waitForAnimationToEnd` senza `timeout:` su una schermata con mappa live non
+  termina mai**: veicoli e tile continuano a muoversi, e il flow resta appeso a
+  oltranza (non fallisce, si pianta). Metti sempre un `timeout:` esplicito nei
+  flow che passano da una mappa.
+- **Su Android aspetta che l'app abbia DAVVERO disegnato prima di lanciare il
+  flow**, o asserzioni banali come "Home è visibile" falliscono a caso. Portare
+  la finestra in primo piano + un `input keyevent KEYCODE_WAKEUP` sblocca il
+  render loop. Tre flow su sette risultavano rossi solo per questo.
+- **La suite sporca file tracciati**: i flow scrivono in `flows/screenshots/`, e
+  dopo un run sei PNG risultano modificati. `git checkout -- flows/screenshots/`
+  prima di committare altro.
+- **Un flow rosso non è per forza una regressione.** Prima di dare la colpa a una
+  modifica, ricostruisci l'app al commit precedente e rilancia gli stessi flow:
+  ad ago 2026 gli 11 flow iOS rossi fallivano *identici* anche prima, erano
+  stantii da giugno (asserzioni su `btn_line_map`, identifier che non esiste più).
 
 ## IMPORTANTE
 

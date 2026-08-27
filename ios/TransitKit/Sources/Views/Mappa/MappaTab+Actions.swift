@@ -341,7 +341,6 @@ extension MappaTab {
         }
         let region = visibleRegion
         let latDelta = region?.span.latitudeDelta ?? mapRegion.span.latitudeDelta
-        let tier = MapZoomTier(latitudeDelta: latDelta)
         let maxAnnot = maxIndividualAnnotations
         let hasRoute = selectedRoute != nil
 

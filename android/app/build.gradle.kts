@@ -47,8 +47,8 @@ android {
         applicationId = "com.transitkit.$operatorId"
         minSdk = 26
         targetSdk = 35
-        versionCode = 17
-        versionName = "1.2.8"
+        versionCode = 18
+        versionName = "1.2.9"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // Etichetta sotto l'icona. Definita qui e NON in strings.xml: era

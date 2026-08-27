@@ -97,6 +97,7 @@ struct FullScheduleSheet: View {
                     ForEach(sortedDayGroups) { group in
                         let isSelected = selectedDayGroup == group
                         Button {
+                            Haptics.selection()
                             withAnimation(.smooth(duration: 0.2)) {
                                 selectedDayGroup = group
                             }
@@ -149,8 +150,10 @@ struct FullScheduleSheet: View {
                             withAnimation(.smooth(duration: 0.2)) { filterLine = nil }
                         }
                     )
-                    .opacity(filterLine != nil ? 0.35 : 1.0)
-                    .animation(.smooth(duration: 0.2), value: filterLine)
+                    // Nessun `.opacity()` qui: il fill di `FilterChip` deselezionata
+                    // è già ad alpha (glassFill) e un dimming esterno ci si
+                    // moltiplica sopra — la chip scendeva a ~1.5:1. Lo stato
+                    // deselezionato lo dicono già fill e peso del testo.
                     .accessibilityIdentifier("btn_filter_all_lines_schedule")
 
                     ForEach(availableLines, id: \.self) { line in

@@ -10,7 +10,10 @@ struct VehicleLiveCard: View {
     let onTap: () -> Void
 
     var body: some View {
-        Button(action: onTap) {
+        Button {
+            Haptics.navigate()
+            onTap()
+        } label: {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
                     LucideIcon.bus.sized(14)

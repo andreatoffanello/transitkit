@@ -17,13 +17,17 @@ struct DirectionPills: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .sensoryFeedback(.selection, trigger: selectedDirectionId)
     }
 
     @ViewBuilder
     private func pill(for direction: APIRouteDirection) -> some View {
         let isActive = direction.directionId == selectedDirectionId
+        // L'aptico sta sul tap, non su `.sensoryFeedback(trigger: selectedDirectionId)`:
+        // la direzione la cambiano anche il deeplink e la card "nessun mezzo in
+        // questa direzione", e un trigger sul valore vibrava anche lì — su un
+        // evento che l'utente non ha chiesto.
         Button {
+            Haptics.selection()
             withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
                 selectedDirectionId = direction.directionId
             }

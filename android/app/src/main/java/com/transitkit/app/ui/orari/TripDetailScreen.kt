@@ -46,9 +46,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -68,6 +66,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.transitkit.app.R
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.data.model.StopTime
+import com.transitkit.app.ui.components.rememberHaptics
 import com.transitkit.app.ui.mappa.iconForTransitType
 import kotlinx.coroutines.delay
 
@@ -299,7 +298,7 @@ private fun LiveVehicleBox(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     val late = delayMinutes > 0
     val orange = Color(0xFFFF9500)
     val green = Color(0xFF34C759)
@@ -311,7 +310,7 @@ private fun LiveVehicleBox(
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
             .clickable {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                haptics.navigate()
                 onClick()
             }
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f))
@@ -410,7 +409,7 @@ private fun TripStopRow(
     delayMinutes: Int = 0,
     onClick: () -> Unit,
 ) {
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     val context = LocalContext.current
     // `isCurrent` drives the highlight ring + accent text color for the
     // active row in the timeline. The "Now" pill — which actively claims a
@@ -455,7 +454,7 @@ private fun TripStopRow(
                 } else Modifier
             )
             .clickable {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                haptics.navigate()
                 onClick()
             }
             .semantics { contentDescription = "trip_stop_row_${stop.stopId}" }

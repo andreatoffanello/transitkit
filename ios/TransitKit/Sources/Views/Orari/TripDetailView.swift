@@ -140,7 +140,7 @@ struct TripDetailView: View {
             let statusTint: Color = isLate ? .orange : .green
 
             Button {
-                UISelectionFeedbackGenerator().selectionChanged()
+                Haptics.navigate()
                 router.pendingMapPreviewVehicleId = vehicle.id
                 router.pendingTabSwitch = TabSwitch(index: 3)
             } label: {
@@ -151,7 +151,7 @@ struct TripDetailView: View {
                             .fill(AppTheme.accent.opacity(0.14))
                             .frame(width: 42, height: 42)
                         departure.transitType.icon.sized(21)
-                            .foregroundStyle(AppTheme.accent)
+                            .foregroundStyle(AppTheme.accentReadable)
                     }
 
                     VStack(alignment: .leading, spacing: 3) {
@@ -187,14 +187,14 @@ struct TripDetailView: View {
                             .font(.system(size: 12, weight: .semibold))
                             .lineLimit(1)
                     }
-                    .foregroundStyle(AppTheme.accent)
+                    .foregroundStyle(AppTheme.secondaryFg)
                 }
                 .padding(12)
                 .background(Color(.secondarySystemGroupedBackground),
                             in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(AppTheme.accent.opacity(0.22), lineWidth: 1)
+                        .stroke(AppTheme.secondaryBorder, lineWidth: 1)
                 )
             }
             .buttonStyle(.plain)
@@ -352,7 +352,7 @@ struct TripDetailView: View {
                         LucideIcon.refreshCw.image
                             .resizable()
                             .frame(width: 10, height: 10)
-                            .foregroundStyle(AppTheme.accent)
+                            .foregroundStyle(AppTheme.accentReadable)
                         ForEach(otherLines.prefix(4), id: \.self) { name in
                             let r = store.routes.first { $0.name == name }
                             LineBadge(
@@ -421,6 +421,7 @@ struct TripDetailView: View {
             rowContent
         }
         .buttonStyle(.plain)
+        .hapticNavigationLink()
         .accessibilityIdentifier("trip_stop_\(stop.id)")
     }
 

@@ -49,7 +49,10 @@ struct LiveVehiclesSection: View {
     }
 
     private var emptyState: some View {
-        Button(action: onSwitchDirection) {
+        Button {
+            Haptics.selection()
+            onSwitchDirection()
+        } label: {
             HStack(spacing: 12) {
                 LucideIcon.busFront.sized(18)
                     .foregroundStyle(AppTheme.textTertiary)

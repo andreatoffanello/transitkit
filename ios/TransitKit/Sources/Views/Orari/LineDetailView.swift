@@ -118,10 +118,11 @@ struct LineDetailView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     favoritesManager.toggleRoute(route.id)
+                    if favoritesManager.isFavoriteRoute(route.id) { Haptics.toggleOn() } else { Haptics.toggleOff() }
                 } label: {
                     LucideIcon.star.sized(18)
                         .foregroundStyle(favoritesManager.isFavoriteRoute(route.id)
-                                         ? Color.accentColor
+                                         ? AppTheme.accentReadable
                                          : AppTheme.textSecondary)
                 }
                 .accessibilityLabel(favoritesManager.isFavoriteRoute(route.id)
@@ -131,6 +132,7 @@ struct LineDetailView: View {
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
+                    Haptics.navigate()
                     router.pendingMapPreviewRouteId = route.id
                     router.pendingMapPreviewDirectionId = selectedDirectionId
                 } label: {
@@ -177,6 +179,7 @@ struct LineDetailView: View {
                         AlertCard(alert: alert)
                     }
                     .buttonStyle(.plain)
+                    .hapticNavigationLink()
                 }
             }
             .padding(.horizontal, 16)
@@ -267,6 +270,7 @@ struct LineDetailView: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .hapticNavigationLink()
                 .accessibilityIdentifier("line_stop_\(stop.id)")
             }
         }

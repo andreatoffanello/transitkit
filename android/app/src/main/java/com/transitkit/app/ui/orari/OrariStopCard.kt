@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.data.model.ResolvedStop
+import com.transitkit.app.ui.components.rememberHaptics
 import kotlinx.coroutines.delay
 
 private val StopEntranceEasing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f)
@@ -52,6 +53,7 @@ internal fun StaggeredStopCard(
     onClick: () -> Unit,
 ) {
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     val shouldAnimate = animate && index <= 15
     var appeared by rememberSaveable { mutableStateOf(!shouldAnimate) }
 
@@ -86,7 +88,10 @@ internal fun StaggeredStopCard(
             .clip(RoundedCornerShape(12.dp))
             .background(colors.glassFill)
             .border(1.dp, colors.glassBorder, RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
+            .clickable {
+                haptics.navigate()
+                onClick()
+            }
             .padding(horizontal = 14.dp, vertical = 14.dp)
             .semantics { contentDescription = "stop_row_${stop.id}" },
     ) {

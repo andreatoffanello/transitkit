@@ -247,6 +247,7 @@ struct StopsListView: View {
             StopRowContent(stop: stop, store: store)
         }
         .buttonStyle(.plain)
+        .hapticNavigationLink()
         .opacity(appeared ? 1 : 0)
         .offset(y: appeared ? 0 : 10)
         .animation(

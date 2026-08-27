@@ -64,6 +64,7 @@ import com.transitkit.app.config.TransitColors
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.data.model.ScheduleRoute
 import com.transitkit.app.ui.components.TransitSearchBar
+import com.transitkit.app.ui.components.rememberHaptics
 import com.transitkit.app.ui.orari.OrariTab
 import com.transitkit.app.ui.orari.OrariViewModel
 import androidx.compose.foundation.lazy.LazyRow
@@ -76,6 +77,7 @@ fun LineeScreen(
     viewModel: OrariViewModel = hiltViewModel(),
 ) {
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val routes by viewModel.routes.collectAsStateWithLifecycle()
     val stopNamesByRouteId by viewModel.stopNamesByRouteId.collectAsStateWithLifecycle()
@@ -149,6 +151,7 @@ fun LineeScreen(
             favoriteRouteIds = favoriteRouteIds,
             liveCountByRouteId = liveCountByRouteId,
             onRouteClick = { routeId ->
+                haptics.navigate()
                 viewModel.recordRouteVisit(routeId)
                 onNavigateToLine(routeId)
             },
@@ -172,6 +175,7 @@ private fun LineeContent(
     liveCountByRouteId: Map<String, Int> = emptyMap(),
     onRouteClick: (routeId: String) -> Unit = {},
 ) {
+    val haptics = rememberHaptics()
     val keyboardController = LocalSoftwareKeyboardController.current
     val scrollConnection = remember {
         object : NestedScrollConnection {
@@ -307,7 +311,10 @@ private fun LineeContent(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { collapsedTypes = if (isCollapsed) collapsedTypes - type else collapsedTypes + type }
+                            .clickable {
+                                haptics.selection()
+                                collapsedTypes = if (isCollapsed) collapsedTypes - type else collapsedTypes + type
+                            }
                             .padding(horizontal = 4.dp)
                             .height(44.dp),
                         verticalAlignment = Alignment.CenterVertically,

@@ -29,12 +29,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -48,6 +46,7 @@ import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.data.model.ResolvedStop
+import com.transitkit.app.ui.components.rememberHaptics
 
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
@@ -62,7 +61,7 @@ internal fun StopsTab(
     onStopClick: (ResolvedStop) -> Unit,
 ) {
     val colors = TransitTheme.colors
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     val keyboardController = LocalSoftwareKeyboardController.current
     val context = LocalContext.current
     val scrollConnection = remember {
@@ -88,15 +87,15 @@ internal fun StopsTab(
                     FilterChip(
                         selected = selectedTransitType == null,
                         onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            haptics.selection()
                             onTransitTypeSelected(null)
                         },
                         label = { Text(stringResource(R.string.filter_all), style = MaterialTheme.typography.labelMedium) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = colors.accent,
                             selectedLabelColor = Color.White,
-                            containerColor = colors.accent.copy(alpha = 0.18f),
-                            labelColor = colors.accent,
+                            containerColor = colors.secondaryFill,
+                            labelColor = colors.secondaryFg,
                         ),
                         border = null,
                         modifier = Modifier.semantics { contentDescription = "filter_type_all" },
@@ -114,7 +113,7 @@ internal fun StopsTab(
                     FilterChip(
                         selected = selectedTransitType == type,
                         onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            haptics.selection()
                             onTransitTypeSelected(type)
                         },
                         label = { Text(label, style = MaterialTheme.typography.labelMedium) },
@@ -129,9 +128,9 @@ internal fun StopsTab(
                             selectedContainerColor = colors.accent,
                             selectedLabelColor = Color.White,
                             selectedLeadingIconColor = Color.White,
-                            containerColor = colors.accent.copy(alpha = 0.18f),
-                            labelColor = colors.accent,
-                            iconColor = colors.accent,
+                            containerColor = colors.secondaryFill,
+                            labelColor = colors.secondaryFg,
+                            iconColor = colors.secondaryFg,
                         ),
                         border = null,
                         modifier = Modifier.semantics { contentDescription = "filter_type_$type" },
@@ -241,7 +240,7 @@ internal fun StopsTab(
                         Icon(
                             painter = painterResource(transitTypeIcon(listOf(transitType))),
                             contentDescription = null,
-                            tint = colors.accent,
+                            tint = colors.accentReadable,
                             modifier = Modifier.size(16.dp),
                         )
                         Text(

@@ -1,5 +1,6 @@
 package com.transitkit.app.ui.orari
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -31,19 +32,20 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.launch
@@ -58,6 +60,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.rememberHaptics
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,7 +91,26 @@ fun StopDetailScreen(
     val isRefreshing = departuresState is DeparturesState.Loading
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
+
+    // Pull-to-refresh: il tick alla soglia è l'unico segnale che dice "adesso
+    // puoi lasciare" — il gesto è continuo e non ha un bordo visivo. Il commit
+    // chiude il ciclo quando i dati sono arrivati.
+    val pullState = rememberPullToRefreshState()
+    LaunchedEffect(pullState) {
+        snapshotFlow { pullState.distanceFraction >= 1f }
+            .distinctUntilChanged()
+            .collect { pastThreshold -> if (pastThreshold) haptics.tick() }
+    }
+    // Gate sul pull dell'utente: il primo caricamento della schermata finisce
+    // allo stesso modo ma nessuno l'ha chiesto, e un aptico lì è rumore.
+    var pullRequested by remember { mutableStateOf(false) }
+    LaunchedEffect(isRefreshing) {
+        if (pullRequested && !isRefreshing) {
+            pullRequested = false
+            haptics.commit()
+        }
+    }
 
     Scaffold(
         containerColor = colors.background,
@@ -133,14 +156,17 @@ fun StopDetailScreen(
                         label = "favScale",
                     )
                     IconButton(
-                        onClick = viewModel::toggleFavorite,
+                        onClick = {
+                            if (isFavorite) haptics.toggleOff() else haptics.toggleOn()
+                            viewModel.toggleFavorite()
+                        },
                         modifier = Modifier.semantics { contentDescription = "btn_favorite" },
                     ) {
                         if (isFavorite) {
                             Icon(
                                 painter = painterResource(LucideIcons.StarFilled),
                                 contentDescription = stringResource(R.string.cd_rimuovi_preferiti),
-                                tint = colors.accent,
+                                tint = colors.accentReadable,
                                 modifier = Modifier.size(18.dp).scale(favScale),
                             )
                         } else {
@@ -163,7 +189,11 @@ fun StopDetailScreen(
     ) { innerPadding ->
         PullToRefreshBox(
             isRefreshing = isRefreshing,
-            onRefresh = viewModel::loadDepartures,
+            onRefresh = {
+                pullRequested = true
+                viewModel.loadDepartures()
+            },
+            state = pullState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
@@ -195,7 +225,7 @@ fun StopDetailScreen(
                     StopAlertsChip(
                         count = stopAlerts.size,
                         onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            haptics.navigate()
                             scope.launch {
                                 scrollState.animateScrollTo(scrollState.maxValue)
                             }
@@ -278,6 +308,12 @@ fun StopDetailScreen(
     }
 
     if (showFullSchedule) {
+        // `FullScheduleSheet` è una Surface a schermo pieno, non un Dialog:
+        // senza questo il Back di sistema esce dal dettaglio fermata invece di
+        // chiudere l'orario completo, e l'utente perde la schermata sotto.
+        // `StopDetailExpandedMap` non ne ha bisogno — è un Dialog e il
+        // dismissOnBackPress lo gestisce da sé.
+        BackHandler { showFullSchedule = false }
         FullScheduleSheet(
             stopName = stopName,
             departuresByGroup = departuresByGroup,

@@ -20,20 +20,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.transitkit.app.R
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.data.model.ResolvedDeparture
+import com.transitkit.app.ui.components.rememberHaptics
 
 /**
  * Riga linee → **filtri** (iOS parity): UNA sola riga horizontal-scrollable
  * con pill "Tutti" + un `LineBadge` per ciascuna rotta che serve la
  * fermata. Ogni badge È il filtro: tap → filtra le partenze a quella linea.
- * Selezionato = opacity piena; deselezionato = `alpha 0.35`.
+ *
+ * Deselezionato si esprime in due modi diversi perché i due elementi lo sono:
+ * i `LineBadge` sono tinte GTFS opache e sopravvivono a un `alpha` di layer,
+ * la pill "Tutti" è già tonale (fill traslucido) e l'alpha si moltiplicherebbe
+ * fino a farla sparire — lì la deselezione la porta il fill.
  *
  * Scroll orizzontale invece di FlowRow wrap: iOS pattern, niente wrap su
  * più righe né "+N" expander (rumore visivo).
@@ -47,7 +50,7 @@ internal fun LineBadgeRow(
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val colors = TransitTheme.colors
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     val uniqueRoutes = remember(routes) { routes.distinctBy { it.routeId } }
     if (uniqueRoutes.isEmpty()) return
 
@@ -58,21 +61,15 @@ internal fun LineBadgeRow(
     ) {
         item(key = "filter_all") {
             val tuttiSelected = selectedRouteId == null
-            val tuttiAlpha by animateFloatAsState(
-                targetValue = if (tuttiSelected) 1f else 0.35f,
-                animationSpec = tween(200),
-                label = "tuttiAlpha",
-            )
             Box(
                 modifier = Modifier
-                    .alpha(tuttiAlpha)
                     .clip(RoundedCornerShape(10.dp))
                     .background(
-                        if (tuttiSelected) colors.accent else colors.accent.copy(alpha = 0.18f),
+                        if (tuttiSelected) colors.accent else colors.secondaryFill,
                         RoundedCornerShape(10.dp),
                     )
                     .clickable {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        haptics.selection()
                         onRouteSelected(null)
                     }
                     .padding(horizontal = 10.dp, vertical = 6.dp),
@@ -81,8 +78,8 @@ internal fun LineBadgeRow(
                 Text(
                     text = stringResource(R.string.filter_all),
                     style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = if (tuttiSelected) androidx.compose.ui.graphics.Color.White else colors.accent,
+                    fontWeight = if (tuttiSelected) FontWeight.Bold else FontWeight.Medium,
+                    color = if (tuttiSelected) androidx.compose.ui.graphics.Color.White else colors.secondaryFg,
                 )
             }
         }
@@ -108,7 +105,7 @@ internal fun LineBadgeRow(
                     .alpha(badgeAlpha)
                     .clip(RoundedCornerShape(10.dp))
                     .clickable {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        haptics.selection()
                         onRouteSelected(if (isSelected) null else route.routeId)
                     },
             )

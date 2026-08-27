@@ -47,8 +47,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -62,6 +60,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.rememberHaptics
 
 /**
  * LineDetailScreen — redesign Movete parity (no hero map).
@@ -98,6 +97,7 @@ fun LineDetailScreen(
     val isFavorite by viewModel.isFavorite.collectAsStateWithLifecycle()
     val routeNotFound by viewModel.routeNotFound.collectAsStateWithLifecycle()
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
 
     val lineColor = remember(route?.color) {
         com.transitkit.app.ui.components.parseHexColor(route?.color, fallback = colors.accent)
@@ -178,7 +178,10 @@ fun LineDetailScreen(
                         label = "favScale",
                     )
                     IconButton(
-                        onClick = viewModel::toggleFavorite,
+                        onClick = {
+                            if (isFavorite) haptics.toggleOff() else haptics.toggleOn()
+                            viewModel.toggleFavorite()
+                        },
                         modifier = Modifier.semantics { contentDescription = "btn_favorite_line" },
                     ) {
                         AnimatedContent(
@@ -193,17 +196,16 @@ fun LineDetailScreen(
                                 contentDescription = stringResource(
                                     if (fav) R.string.cd_rimuovi_preferiti else R.string.cd_aggiungi_preferiti
                                 ),
-                                tint = if (fav) colors.accent else colors.textSecondary,
+                                tint = if (fav) colors.accentReadable else colors.textSecondary,
                                 modifier = Modifier.size(18.dp).scale(favScale),
                             )
                         }
                     }
                     // Expand → apri linea sulla mappa principale.
-                    val haptic = LocalHapticFeedback.current
                     IconButton(
                         onClick = {
                             route?.let { r ->
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                haptics.navigate()
                                 onNavigateToMap(r.id)
                             }
                         },
@@ -307,7 +309,10 @@ fun LineDetailScreen(
                             LiveVehicleCardView(
                                 card = card,
                                 lineColor = lineColor,
-                                onClick = { onShowVehicleOnMap(card.vehicleId) },
+                                onClick = {
+                                    haptics.navigate()
+                                    onShowVehicleOnMap(card.vehicleId)
+                                },
                             )
                         }
                     }
@@ -323,7 +328,10 @@ fun LineDetailScreen(
                         selectedIndex = selectedDirectionIndex,
                         lineColor = lineColor,
                         lineTextColor = lineTextColor,
-                        onSelect = viewModel::selectDirection,
+                        onSelect = { index ->
+                            haptics.selection()
+                            viewModel.selectDirection(index)
+                        },
                     )
                     HorizontalDivider(color = colors.separator, thickness = 0.5.dp)
                 }
@@ -337,10 +345,9 @@ fun LineDetailScreen(
                 )
             }
             itemsIndexed(stops, key = { _, stop -> stop.id }) { index, stop ->
-                val haptic = LocalHapticFeedback.current
-                val onClick = remember(stop.id, haptic) {
+                val onClick = remember(stop.id, haptics) {
                     {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        haptics.navigate()
                         onNavigateToStop(stop.id, stop.name)
                     }
                 }
@@ -432,16 +439,12 @@ private fun LiveVehicleCardView(
     modifier: Modifier = Modifier,
 ) {
     val colors = TransitTheme.colors
-    val haptic = LocalHapticFeedback.current
     Surface(
         modifier = modifier
             .width(220.dp)
             // vehicleId is always present, so the card is always tappable → opens
             // the vehicle on the map (no longer gated on tripId/firstStopId).
-            .clickable {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                onClick()
-            }
+            .clickable(onClick = onClick)
             .semantics { contentDescription = "vehicle_card_${card.vehicleId}" },
         shape = RoundedCornerShape(14.dp),
         color = colors.bgSecondary,
@@ -533,7 +536,6 @@ private fun DirectionPicker(
     onSelect: (Int) -> Unit,
 ) {
     val colors = TransitTheme.colors
-    val haptic = LocalHapticFeedback.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -552,10 +554,7 @@ private fun DirectionPicker(
                     .padding(3.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(bg)
-                    .clickable {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onSelect(index)
-                    }
+                    .clickable { onSelect(index) }
                     .semantics { contentDescription = "direction_chip_$index" }
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 contentAlignment = Alignment.Center,

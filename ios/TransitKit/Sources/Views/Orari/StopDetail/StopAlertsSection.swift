@@ -29,6 +29,7 @@ struct StopAlertsSection: View {
                             AlertCard(alert: alert)
                         }
                         .buttonStyle(.plain)
+                        .hapticNavigationLink()
                     }
                 }
                 .padding(.horizontal, 16)

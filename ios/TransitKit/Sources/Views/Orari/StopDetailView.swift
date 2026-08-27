@@ -54,17 +54,19 @@ struct StopDetailView: View {
             centerCoordinate: CLLocationCoordinate2D(latitude: offsetLat, longitude: stop.lng),
             distance: 600,
             heading: 0,
-            pitch: 60
+            pitch: MapZoomLevels.pitch3DHero
         ))
     }
 
     // Initial camera — starts zoomed out for the fly-in animation on appear.
+    // Piatta: il tilt deve essere parte del volo (0 → pitch3DHero), non lo stato
+    // di partenza — da 1200m inclinati si vede solo terreno spalmato. Parità Android.
     private var flyInStartCamera: MapCameraPosition {
         .camera(MapCamera(
             centerCoordinate: stopCoordinate,
             distance: 1200,
             heading: 0,
-            pitch: 40
+            pitch: 0
         ))
     }
 
@@ -187,12 +189,13 @@ struct StopDetailView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     favoritesManager.toggle(stop.id)
+                    if favoritesManager.isFavorite(stop.id) { Haptics.toggleOn() } else { Haptics.toggleOff() }
                 } label: {
                     let isFav = favoritesManager.isFavorite(stop.id)
                     Group {
                         if isFav {
                             LucideIcon.starFilled.sized(18)
-                                .foregroundStyle(AppTheme.accent)
+                                .foregroundStyle(AppTheme.accentReadable)
                         } else {
                             LucideIcon.star.sized(18)
                                 .foregroundStyle(.secondary)
@@ -281,7 +284,7 @@ struct StopDetailView: View {
                     }
                 }
             }
-            .mapStyle(.standard(pointsOfInterest: .excludingAll))
+            .mapStyle(.standard(elevation: .realistic, pointsOfInterest: .excludingAll))
             .allowsHitTesting(false)
 
             MapCircleButton(icon: .maximize2) {
@@ -333,6 +336,7 @@ struct StopDetailView: View {
                     HStack(spacing: 8) {
                         if availableLines.count > 1 {
                             Button {
+                                Haptics.selection()
                                 withAnimation(.smooth(duration: 0.2)) { filterLine = nil }
                             } label: {
                                 Text(L("filter_all"))
@@ -353,6 +357,7 @@ struct StopDetailView: View {
                             let route = store.routes.first { $0.name == line }
                             let isSelected = filterLine == line
                             Button {
+                                Haptics.selection()
                                 withAnimation(.smooth(duration: 0.2)) {
                                     filterLine = (filterLine == line) ? nil : line
                                 }
@@ -388,6 +393,7 @@ struct StopDetailView: View {
 
                 if !showMoreDepartures && extraCount > 0 {
                     Button {
+                        Haptics.navigate()
                         withAnimation(.spring(duration: 0.3)) {
                             showMoreDepartures = true
                         }
@@ -397,11 +403,8 @@ struct StopDetailView: View {
                             Text(String(format: L("show_more", comment: ""), extraCount))
                                 .font(.system(size: 13, weight: .semibold))
                         }
-                        .foregroundStyle(AppTheme.accent)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(AppTheme.accent.opacity(0.06))
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .secondaryButtonSurface(cornerRadius: 10, horizontalPadding: 0, verticalPadding: 10)
                     }
                     .buttonStyle(.plain)
                     .padding(.horizontal, 16)
@@ -430,6 +433,7 @@ struct StopDetailView: View {
             // Full schedule button
             if !allDayGroups.isEmpty {
                 Button {
+                    Haptics.navigate()
                     showFullSchedule = true
                 } label: {
                     HStack(spacing: 6) {
@@ -437,11 +441,8 @@ struct StopDetailView: View {
                         Text(L("full_schedule"))
                             .font(.system(size: 14, weight: .semibold))
                     }
-                    .foregroundStyle(AppTheme.accent)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(AppTheme.accent.opacity(0.08))
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .secondaryButtonSurface(horizontalPadding: 0, verticalPadding: 12)
                 }
                 .accessibilityIdentifier("btn_full_schedule")
                 .padding(.horizontal, 20)
@@ -476,27 +477,27 @@ struct StopDetailView: View {
 
             Menu {
                 Button {
+                    Haptics.navigate()
                     plannerEntry = .origin(stop)
                 } label: {
                     Label { Text(L("planner_depart_from_here")) } icon: { LucideIcon.navigation.sized(16) }
                 }
                 Button {
+                    Haptics.navigate()
                     plannerEntry = .destination(stop)
                 } label: {
                     Label { Text(L("planner_arrive_here")) } icon: { LucideIcon.mapPin.sized(16) }
                 }
                 Divider()
                 Button {
+                    Haptics.navigate()
                     openInMaps()
                 } label: {
                     Label { Text(L("a11y_navigate_to_stop")) } icon: { LucideIcon.map.sized(16) }
                 }
             } label: {
                 LucideIcon.navigation.sized(18)
-                    .foregroundStyle(AppTheme.accent)
-                    .frame(width: 44, height: 44)
-                    .background(AppTheme.accent.opacity(0.1))
-                    .clipShape(Circle())
+                    .secondaryIconCircle(diameter: 44)
             }
             .accessibilityLabel(L("a11y_navigate_to_stop"))
             .accessibilityIdentifier("btn_navigate_sheet")
@@ -530,6 +531,7 @@ struct StopDetailView: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .hapticNavigationLink()
                     .accessibilityIdentifier("departure_row_\(dep.id)")
                 }
             }
@@ -567,6 +569,7 @@ struct StopDetailView: View {
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .hapticNavigationLink()
                     .accessibilityIdentifier("departure_row_\(dep.id)")
                 }
             }
@@ -583,6 +586,7 @@ struct StopDetailView: View {
     }
 
     private func openInAppleMaps() {
+        Haptics.commit()
         let mapItem = MKMapItem(placemark: MKPlacemark(coordinate: stopCoordinate))
         mapItem.name = stop.name
         mapItem.openInMaps(launchOptions: [
@@ -591,11 +595,13 @@ struct StopDetailView: View {
     }
 
     private func openInGoogleMaps() {
+        Haptics.commit()
         let url = URL(string: "comgooglemaps://?q=\(stopCoordinate.latitude),\(stopCoordinate.longitude)&zoom=17")!
         UIApplication.shared.open(url)
     }
 
     private func openInWaze() {
+        Haptics.commit()
         let url = URL(string: "waze://?ll=\(stopCoordinate.latitude),\(stopCoordinate.longitude)&navigate=false")!
         UIApplication.shared.open(url)
     }
@@ -606,6 +612,7 @@ struct StopDetailView: View {
     private func alertsChip(scrollProxy: ScrollViewProxy) -> some View {
         let count = relevantAlertsCache.count
         Button {
+            Haptics.navigate()
             withAnimation(.smooth(duration: 0.5)) {
                 scrollProxy.scrollTo(alertsAnchorId, anchor: .top)
             }
@@ -637,7 +644,6 @@ struct StopDetailView: View {
             )
         }
         .buttonStyle(.plain)
-        .sensoryFeedback(.selection, trigger: count)
         .accessibilityIdentifier("stop_alerts_chip")
     }
 }

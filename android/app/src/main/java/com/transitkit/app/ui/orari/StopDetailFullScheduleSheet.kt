@@ -39,7 +39,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -55,6 +54,7 @@ import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.config.toColor
 import com.transitkit.app.data.model.ResolvedDeparture
+import com.transitkit.app.ui.components.rememberHaptics
 
 @Composable
 internal fun FullScheduleSheet(
@@ -64,6 +64,7 @@ internal fun FullScheduleSheet(
 ) {
     val colors = TransitTheme.colors
     val context = LocalContext.current
+    val haptics = rememberHaptics()
     val sortedGroups = remember(departuresByGroup) { departuresByGroup.keys.toList() }
 
     var selectedGroup by remember(sortedGroups) { mutableStateOf(sortedGroups.firstOrNull()) }
@@ -128,7 +129,10 @@ internal fun FullScheduleSheet(
                     val isSelected = groupKey == selectedGroup
                     FilterChip(
                         selected = isSelected,
-                        onClick = { selectedGroup = groupKey },
+                        onClick = {
+                            haptics.selection()
+                            selectedGroup = groupKey
+                        },
                         label = {
                             Text(
                                 dayGroupLabel(groupKey),
@@ -164,14 +168,16 @@ internal fun FullScheduleSheet(
                 item {
                     FilterChip(
                         selected = filterRouteId == null,
-                        onClick = { filterRouteId = null },
-                        modifier = Modifier.alpha(if (filterRouteId != null) 0.35f else 1f),
+                        onClick = {
+                            haptics.selection()
+                            filterRouteId = null
+                        },
                         label = { Text(stringResource(R.string.filter_all), fontWeight = FontWeight.SemiBold, fontSize = 12.sp) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = colors.accent,
                             selectedLabelColor = Color.White,
-                            containerColor = colors.accent.copy(alpha = 0.18f),
-                            labelColor = colors.accent,
+                            containerColor = colors.secondaryFill,
+                            labelColor = colors.secondaryFg,
                         ),
                         border = null,
                         shape = RoundedCornerShape(20.dp),
@@ -190,14 +196,16 @@ internal fun FullScheduleSheet(
                     val isThis = filterRouteId == route.routeId
                     FilterChip(
                         selected = isThis,
-                        onClick = { filterRouteId = if (isThis) null else route.routeId },
-                        modifier = Modifier.alpha(if (filterRouteId != null && !isThis) 0.35f else 1f),
+                        onClick = {
+                            haptics.selection()
+                            filterRouteId = if (isThis) null else route.routeId
+                        },
                         label = { Text(route.routeName, fontWeight = FontWeight.SemiBold, fontSize = 12.sp) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = chipColor,
                             selectedLabelColor = routeTextColor,
-                            containerColor = colors.accent.copy(alpha = 0.18f),
-                            labelColor = colors.accent,
+                            containerColor = colors.secondaryFill,
+                            labelColor = colors.secondaryFg,
                         ),
                         border = null,
                         shape = RoundedCornerShape(20.dp),

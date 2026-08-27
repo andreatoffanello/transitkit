@@ -166,6 +166,7 @@ struct LinesListView: View {
                             )
                         }
                         .buttonStyle(.plain)
+                        .hapticNavigationLink()
                         .accessibilityIdentifier("recent_line_row_\(route.id)")
                     }
                 }
@@ -204,6 +205,7 @@ struct LinesListView: View {
                         // Category header — only shown when multiple transit types are present
                         if hasMultipleTransitTypes {
                             Button {
+                                Haptics.selection()
                                 withAnimation(.easeInOut(duration: 0.25)) {
                                     if collapsedTypes.contains(group.type) {
                                         collapsedTypes.remove(group.type)
@@ -250,6 +252,7 @@ struct LinesListView: View {
                             )
                                     }
                                     .buttonStyle(.plain)
+                                    .hapticNavigationLink()
                                     .accessibilityIdentifier("line_row_\(route.id)")
                                 }
                             }

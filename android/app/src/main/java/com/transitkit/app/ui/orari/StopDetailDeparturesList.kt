@@ -40,8 +40,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -53,6 +51,7 @@ import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.config.toColor
 import com.transitkit.app.data.model.Departure
 import com.transitkit.app.data.model.ResolvedDeparture
+import com.transitkit.app.ui.components.rememberHaptics
 
 @Composable
 internal fun DeparturesList(
@@ -63,7 +62,7 @@ internal fun DeparturesList(
     onNavigateToTrip: (Departure) -> Unit = {},
 ) {
     val colors = TransitTheme.colors
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     var showMore by remember { mutableStateOf(false) }
     val firstDepartures = departures.take(5)
     val extraDepartures = if (departures.size > 5) departures.drop(5) else emptyList()
@@ -135,7 +134,7 @@ internal fun DeparturesList(
                             // group header above — don't reprint it in every row.
                             showHeadsign = false,
                             onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                haptics.navigate()
                                 onNavigateToTrip(departure)
                             },
                         )
@@ -165,7 +164,7 @@ internal fun DeparturesList(
                         operatorTimezone = operatorTimezone,
                         stopSequence = stopSequenceByRouteId[departure.routeId],
                         onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            haptics.navigate()
                             onNavigateToTrip(departure)
                         },
                     )
@@ -191,7 +190,7 @@ internal fun DeparturesList(
                                     operatorTimezone = operatorTimezone,
                                     stopSequence = stopSequenceByRouteId[departure.routeId],
                                     onClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        haptics.navigate()
                                         onNavigateToTrip(departure)
                                     },
                                 )
@@ -207,13 +206,16 @@ internal fun DeparturesList(
                     }
                     if (!showMore) {
                         TextButton(
-                            onClick = { showMore = true },
+                            onClick = {
+                                haptics.selection()
+                                showMore = true
+                            },
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Text(
                                 stringResource(R.string.mostra_altri_partenze, extraDepartures.size),
                                 style = MaterialTheme.typography.labelMedium,
-                                color = colors.accent,
+                                color = colors.secondaryFg,
                             )
                         }
                     }
@@ -227,20 +229,23 @@ internal fun DeparturesList(
             contentAlignment = Alignment.Center,
         ) {
             OutlinedButton(
-                onClick = onOpenFullSchedule,
+                onClick = {
+                    haptics.navigate()
+                    onOpenFullSchedule()
+                },
                 shape = RoundedCornerShape(20.dp),
-                border = BorderStroke(1.dp, colors.accent.copy(alpha = 0.6f)),
+                border = BorderStroke(1.dp, colors.secondaryBorder),
             ) {
                 Icon(
                     painterResource(LucideIcons.Clock),
                     contentDescription = null,
-                    tint = colors.accent,
+                    tint = colors.secondaryFg,
                     modifier = Modifier.size(16.dp),
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
                     stringResource(R.string.orario_completo),
-                    color = colors.accent,
+                    color = colors.secondaryFg,
                     fontWeight = FontWeight.SemiBold,
                 )
             }
@@ -256,10 +261,17 @@ internal fun transitTypeIcon(type: Int): Int = when (type) {
     else -> LucideIcons.BusFront
 }
 
+/**
+ * Nome del tipo di trasporto GTFS. In inglese, come `TransitType.displayName`
+ * su iOS: "Treno" stampava italiano su un'app in inglese o spagnolo.
+ *
+ * Nessuna delle due piattaforme localizza questi nomi oggi — farlo è un lavoro
+ * a sé (10 tipi × 3 lingue, iOS incluso) e va deciso insieme, non di sponda qui.
+ */
 internal fun transitTypeName(type: Int): String = when (type) {
     0 -> "Tram"
     1 -> "Metro"
-    2 -> "Treno"
+    2 -> "Rail"
     4 -> "Ferry"
     else -> "Bus"
 }
@@ -278,7 +290,7 @@ internal fun StopFilterHeader(
 ) {
     if (availableRoutes.isEmpty()) return
     val colors = TransitTheme.colors
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     Column(modifier = Modifier.padding(top = 12.dp)) {
         val transitTypes = availableRoutes.map { it.transitType }.distinct().sorted()
         Row(
@@ -311,7 +323,7 @@ internal fun StopFilterHeader(
                 routes = availableRoutes,
                 selectedRouteId = selectedRoute,
                 onRouteSelected = { id ->
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    haptics.selection()
                     onRouteSelected(id)
                 },
                 contentPadding = PaddingValues(start = 16.dp, end = 40.dp),

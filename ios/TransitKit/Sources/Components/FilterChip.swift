@@ -17,7 +17,10 @@ struct FilterChip: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
+        Button {
+            Haptics.selection()
+            action()
+        } label: {
             HStack(spacing: 5) {
                 if let icon {
                     icon.image

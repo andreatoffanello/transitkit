@@ -272,10 +272,29 @@ enum AppTheme {
                clean.allSatisfy({ "0123456789abcdefABCDEF".contains($0) })
     }
 
+    /// Accent lightened until it clears `readableOnDark`'s soglia sul fondo scuro
+    /// (5.2:1, con margine per le card che stanno sopra). Computed once
+    /// in `configure(from:)` — see `accentReadable`.
+    nonisolated(unsafe) static var accentReadableHex = "#0066CC"
+
+    /// Specchio chiaro di `accentReadableHex`. Il ramo light ha lo stesso
+    /// problema del dark, solo rovesciato: un accent chiaro (rfta `#4CAF50`)
+    /// come label sul proprio fill tonale sta a 2.5:1 e di giorno sparisce.
+    nonisolated(unsafe) static var accentReadableLightHex = "#0066CC"
+
     static func configure(from config: OperatorConfig) {
         if isValidHex(config.theme.accentColor) { accentHex = config.theme.accentColor }
         if isValidHex(config.theme.primaryColor) { primaryHex = config.theme.primaryColor }
         secondaryHex = config.theme.secondaryColor.flatMap { isValidHex($0) ? $0 : nil }
+        accentReadableHex = readableOnDark(accentHex)
+        // Misurato contro il fill tonale, non contro il background della
+        // schermata: per un foreground scuro quello è il fondo PIÙ scuro su cui
+        // finisce, quindi è lì che il contrasto è minimo. Parità con Android
+        // `transitColorsLight`.
+        accentReadableLightHex = readableOnLight(
+            accentHex,
+            against: composite(accentHex, alpha: 0.10, over: "#F5F7FA")
+        )
     }
 
     // MARK: Backgrounds
@@ -307,6 +326,53 @@ enum AppTheme {
     static var accent: Color { Color(hex: accentHex) }
     static var primary: Color { Color(hex: primaryHex) }
     static var secondary: Color { secondaryHex.map { Color(hex: $0) } ?? accent.opacity(0.8) }
+
+    /// Accent safe to use as a FOREGROUND in dark mode. Identical to `accent` in
+    /// light. Use for anything that must stay branded (icon tints, live badges,
+    /// selected glyphs); `accent` itself stays correct for fills and strokes with
+    /// white on top.
+    static var accentReadable: Color {
+        Color(uiColor: UIColor { tc in
+            UIColor(hex: tc.userInterfaceStyle == .dark ? accentReadableHex : accentReadableLightHex)
+        })
+    }
+
+    // MARK: Secondary / ghost buttons
+    //
+    // In dark il brand NON regge come foreground: su `background` #080C18 gli
+    // accent della flotta stanno fra 3.5:1 e 4.2:1, e su una card mappa scendono
+    // sotto 3:1. La regola è quindi la stessa già usata per le icone — bianco —
+    // e l'identità resta al fill pieno dei bottoni primari. In light l'accent
+    // funziona e resta.
+    //
+    // Un ghost/secondary/outline button legge SEMPRE questi due token, mai
+    // `accent` diretto.
+
+    /// Label + icona di un bottone secondario/ghost/outline.
+    static var secondaryFg: Color {
+        Color(uiColor: UIColor { tc in
+            tc.userInterfaceStyle == .dark ? UIColor(hex: "#F0F0F0") : UIColor(hex: accentReadableLightHex)
+        })
+    }
+
+    /// Fill tonale sotto un bottone secondario. Suggerisce l'area tappabile,
+    /// non porta contrasto: quello lo fa `secondaryFg`.
+    static var secondaryFill: Color {
+        Color(uiColor: UIColor { tc in
+            tc.userInterfaceStyle == .dark
+                ? UIColor(white: 1, alpha: 0.10)
+                : UIColor(hex: accentHex).withAlphaComponent(0.10)
+        })
+    }
+
+    /// Bordo di un bottone outline. Mai `accent.opacity(...)` in dark.
+    static var secondaryBorder: Color {
+        Color(uiColor: UIColor { tc in
+            tc.userInterfaceStyle == .dark
+                ? UIColor(white: 1, alpha: 0.18)
+                : UIColor(hex: accentHex).withAlphaComponent(0.30)
+        })
+    }
 
     // MARK: Text
     static let textPrimary = Color(uiColor: UIColor { tc in

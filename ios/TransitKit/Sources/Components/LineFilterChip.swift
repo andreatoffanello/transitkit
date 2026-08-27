@@ -1,7 +1,11 @@
 import SwiftUI
 
 /// Filter chip that always shows a solid GTFS-color background for readability.
-/// Dimming when inactive is applied externally by the caller via `.opacity()`.
+///
+/// Il fill è un colore GTFS OPACO, quindi il dimming esterno via `.opacity()`
+/// che applicano i call site è sicuro qui: il contrasto label/fill non cambia.
+/// Non farlo mai su una chip tonale (fill ad alpha) — lì l'alpha si moltiplica
+/// su una coppia già debole e il testo sparisce.
 struct LineFilterChip: View {
     let lineName: String
     let routeColor: String   // GTFS hex
@@ -13,7 +17,10 @@ struct LineFilterChip: View {
     }
 
     var body: some View {
-        Button(action: action) {
+        Button {
+            Haptics.selection()
+            action()
+        } label: {
             Text(lineName)
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(textColor)

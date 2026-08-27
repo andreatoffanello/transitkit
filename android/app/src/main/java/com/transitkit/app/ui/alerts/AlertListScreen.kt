@@ -50,6 +50,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.rememberHaptics
 import com.transitkit.app.data.model.AlertSeverity
 import com.transitkit.app.data.model.ServiceAlert
 
@@ -207,11 +208,12 @@ private fun AlertFilterPill(
     testTagId: String,
 ) {
     val colors = TransitTheme.colors
-    val pillBg = if (isSelected) colors.accent.copy(alpha = 0.18f) else colors.bgSecondary.copy(alpha = 0.5f)
+    val haptics = rememberHaptics()
+    val pillBg = if (isSelected) colors.accent.copy(alpha = 0.18f) else colors.bgSecondary
     val pillBorder = if (isSelected) colors.accent.copy(alpha = 0.5f) else colors.glassBorder
     Surface(
         modifier = Modifier
-            .clickable(onClick = onClick)
+            .clickable { haptics.selection(); onClick() }
             .semantics { testTag = testTagId },
         shape = CircleShape,
         color = pillBg,
@@ -262,7 +264,7 @@ private fun AlertEmptyState(modifier: Modifier = Modifier) {
             Icon(
                 painter = painterResource(LucideIcons.Bell),
                 contentDescription = null,
-                tint = colors.accent,
+                tint = colors.accentReadable,
                 modifier = Modifier.size(32.dp),
             )
         }
@@ -303,7 +305,9 @@ internal fun severityColor(severity: AlertSeverity): Color {
     return when (severity) {
         AlertSeverity.SEVERE  -> Color(0xFFDC2626)
         AlertSeverity.WARNING -> Color(0xFFD97706)
-        AlertSeverity.INFO    -> colors.accent
+        // `accentReadable` e non `accent`: questo colore finisce come tint di
+        // icona e testo su card scure, mai come fill con del bianco sopra.
+        AlertSeverity.INFO    -> colors.accentReadable
         AlertSeverity.UNKNOWN -> colors.textTertiary
     }
 }

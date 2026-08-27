@@ -80,6 +80,7 @@ struct ServiziTab: View {
                         ServiceRowCard(service: service)
                     }
                     .buttonStyle(PressableCardStyle())
+                    .hapticNavigationLink()
                     .accessibilityIdentifier("service_row_\(service.id)")
                 }
             }
@@ -102,6 +103,7 @@ struct ServiziTab: View {
                 )
             }
             .buttonStyle(PressableCardStyle())
+            .hapticNavigationLink()
             .accessibilityIdentifier("service_row_fares")
         }
     }
@@ -142,6 +144,7 @@ struct ServiziTab: View {
                 )
             }
             .buttonStyle(PressableCardStyle())
+            .hapticNavigationLink()
             .accessibilityIdentifier("service_row_accessibility")
         }
     }
@@ -162,6 +165,7 @@ struct ServiziTab: View {
                 contactSummaryRow(contact: contact)
             }
             .buttonStyle(PressableCardStyle())
+            .hapticNavigationLink()
             .accessibilityIdentifier("service_row_contact")
         }
     }
@@ -174,7 +178,7 @@ struct ServiziTab: View {
                     .frame(width: 40, height: 40)
                     .overlay(
                         LucideIcon.phone.sized(20)
-                            .foregroundStyle(AppTheme.accent)
+                            .foregroundStyle(AppTheme.accentReadable)
                     )
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L("services_section_contact"))
@@ -220,7 +224,7 @@ struct ServiziTab: View {
                         .frame(width: 48, height: 48)
                         .overlay(
                             LucideIcon.busFront.sized(22)
-                                .foregroundStyle(AppTheme.accent)
+                                .foregroundStyle(AppTheme.accentReadable)
                         )
                     VStack(alignment: .leading, spacing: 2) {
                         Text(config.fullName)
@@ -242,6 +246,7 @@ struct ServiziTab: View {
             }
         }
         .buttonStyle(PressableCardStyle())
+        .hapticNavigationLink()
         .accessibilityIdentifier("service_row_operator")
     }
 
@@ -290,7 +295,7 @@ struct ServiziTab: View {
                     .frame(width: 48, height: 48)
                     .overlay(
                         icon.sized(22)
-                            .foregroundStyle(AppTheme.accent)
+                            .foregroundStyle(AppTheme.accentReadable)
                     )
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
@@ -330,7 +335,7 @@ private struct ServiceRowCard: View {
                     .overlay(
                         ServiceIcon(key: service.icon)
                             .sized(22)
-                            .foregroundStyle(AppTheme.accent)
+                            .foregroundStyle(AppTheme.accentReadable)
                     )
                 VStack(alignment: .leading, spacing: 3) {
                     Text(service.title.resolved())

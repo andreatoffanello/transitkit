@@ -39,6 +39,7 @@ import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.OperatorConfig
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.rememberHaptics
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -144,6 +145,7 @@ fun OperatorInfoScreen(
                             links.forEachIndexed { i, (icon, label, url) ->
                                 if (i > 0) HorizontalDivider(modifier = Modifier.padding(start = 52.dp), color = TransitTheme.colors.glassBorder)
                                 val context = LocalContext.current
+                                val haptics = rememberHaptics()
                                 val displayValue = when {
                                     url.startsWith("tel:") -> url.removePrefix("tel:")
                                     url.startsWith("mailto:") -> url.removePrefix("mailto:")
@@ -153,6 +155,7 @@ fun OperatorInfoScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
+                                            haptics.commit()
                                             val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
                                             context.startActivity(intent)
                                         }
@@ -160,7 +163,7 @@ fun OperatorInfoScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                                 ) {
-                                    Icon(painterResource(icon), null, tint = TransitTheme.colors.accent, modifier = Modifier.size(20.dp))
+                                    Icon(painterResource(icon), null, tint = TransitTheme.colors.accentReadable, modifier = Modifier.size(20.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(label, style = MaterialTheme.typography.bodyMedium, color = TransitTheme.colors.textPrimary)
                                         Text(displayValue, style = MaterialTheme.typography.bodySmall, color = TransitTheme.colors.textSecondary)
@@ -237,7 +240,7 @@ private fun TransitKitAttributionCard(modifier: Modifier = Modifier) {
                 Icon(
                     painter = painterResource(LucideIcons.BusFront),
                     contentDescription = null,
-                    tint = colors.accent,
+                    tint = colors.accentReadable,
                     modifier = Modifier.size(22.dp),
                 )
             }

@@ -56,6 +56,7 @@ fun TransitSearchBar(
     capitalization: KeyboardCapitalization = KeyboardCapitalization.None,
 ) {
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     val focusManager = LocalFocusManager.current
     val isDark = isSystemInDarkTheme()
     val searchBg = if (isDark) Color.White.copy(alpha = 0.08f) else Color.Black.copy(alpha = 0.05f)
@@ -73,7 +74,7 @@ fun TransitSearchBar(
         Icon(
             painter = painterResource(LucideIcons.Search),
             contentDescription = null,
-            tint = colors.accent,
+            tint = colors.accentReadable,
             modifier = Modifier.size(18.dp),
         )
         Spacer(Modifier.width(8.dp))
@@ -103,7 +104,7 @@ fun TransitSearchBar(
         if (query.isNotEmpty()) {
             Spacer(Modifier.width(4.dp))
             IconButton(
-                onClick = { onQueryChange("") },
+                onClick = { haptics.navigate(); onQueryChange("") },
                 modifier = Modifier
                     .size(20.dp)
                     .semantics { contentDescription = "btn_clear_search" },

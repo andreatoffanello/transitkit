@@ -15,8 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -29,6 +27,7 @@ import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.config.surfaceOverMap
 import com.transitkit.app.data.model.AlertSeverity
 import com.transitkit.app.data.model.ServiceAlert
+import com.transitkit.app.ui.components.rememberHaptics
 
 @Composable
 internal fun HomeAlertChip(
@@ -37,12 +36,12 @@ internal fun HomeAlertChip(
     modifier: Modifier = Modifier,
 ) {
     val colors = TransitTheme.colors
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     val highestSeverity = alerts.maxByOrNull { it.severity.raw }?.severity ?: AlertSeverity.UNKNOWN
     val chipColor = when (highestSeverity) {
         AlertSeverity.SEVERE -> colors.realtimeRed
         AlertSeverity.WARNING -> colors.realtimeOrange
-        else -> colors.accent
+        else -> colors.accentReadable
     }
     val label = if (alerts.size == 1)
         stringResource(R.string.alerts_banner_one)
@@ -56,7 +55,7 @@ internal fun HomeAlertChip(
             .clip(RoundedCornerShape(10.dp))
             .background(colors.surfaceOverMap)
             .clickable {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                haptics.navigate()
                 onClick()
             }
             .semantics { contentDescription = label }

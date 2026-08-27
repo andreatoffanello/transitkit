@@ -30,7 +30,6 @@ final class AlertToastPresenter {
 
     private func present(_ alert: GtfsRtAlert) {
         pendingAlert = alert
-        UINotificationFeedbackGenerator().notificationOccurred(.warning)
         dismissTask?.cancel()
         dismissTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(4))
@@ -57,15 +56,13 @@ struct AlertToastView: View {
     let onDismiss: () -> Void
 
     var body: some View {
-        Button(action: onTap) {
+        Button {
+            Haptics.navigate()
+            onTap()
+        } label: {
             HStack(alignment: .top, spacing: 12) {
-                ZStack {
-                    Circle()
-                        .fill(severityColor.opacity(0.18))
-                        .frame(width: 32, height: 32)
-                    LucideIcon.alertTriangle.sized(16)
-                        .foregroundStyle(severityColor)
-                }
+                LucideIcon.alertTriangle.sized(20)
+                    .foregroundStyle(severityColor)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(L("alerts_toast_kicker"))
@@ -82,6 +79,7 @@ struct AlertToastView: View {
                 Spacer(minLength: 0)
 
                 Button {
+                    Haptics.selection()
                     onDismiss()
                 } label: {
                     LucideIcon.x.sized(14)
@@ -113,7 +111,7 @@ struct AlertToastView: View {
         switch alert.severity {
         case .severe:  return .red
         case .warning: return .orange
-        case .info:    return AppTheme.accent
+        case .info:    return AppTheme.accentReadable
         case .unknown: return AppTheme.textSecondary
         }
     }

@@ -42,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.rememberHaptics
 import com.transitkit.app.config.surfaceOverMap
 import com.transitkit.app.data.model.AlertSeverity
 import kotlinx.coroutines.delay
@@ -59,6 +60,7 @@ fun AlertToastHost(
 ) {
     val pending by viewModel.pendingAlert.collectAsStateWithLifecycle()
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
 
     // Auto-dismiss after display duration.
     LaunchedEffect(pending?.id) {
@@ -92,6 +94,7 @@ fun AlertToastHost(
                         .background(colors.surfaceOverMap)
                         .border(1.dp, colors.glassBorder, RoundedCornerShape(16.dp))
                         .clickable {
+                            haptics.navigate()
                             onNavigateToAlert(alert.id)
                             viewModel.dismiss()
                         }
@@ -133,7 +136,7 @@ fun AlertToastHost(
                         )
                     }
                     IconButton(
-                        onClick = { viewModel.dismiss() },
+                        onClick = { haptics.navigate(); viewModel.dismiss() },
                         modifier = Modifier.size(28.dp),
                     ) {
                         Icon(

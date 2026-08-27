@@ -43,6 +43,7 @@ fun BrandPickerDialog(
     content: @Composable () -> Unit,
 ) {
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
@@ -87,7 +88,7 @@ fun BrandPickerDialog(
                         color = colors.textSecondary,
                         modifier = Modifier
                             .clip(RoundedCornerShape(50))
-                            .clickable(onClick = onDismiss)
+                            .clickable { haptics.navigate(); onDismiss() }
                             .padding(horizontal = 14.dp, vertical = 9.dp),
                     )
                     Text(
@@ -98,7 +99,7 @@ fun BrandPickerDialog(
                         modifier = Modifier
                             .clip(RoundedCornerShape(50))
                             .background(colors.accent)
-                            .clickable(onClick = onConfirm)
+                            .clickable { haptics.commit(); onConfirm() }
                             .padding(horizontal = 18.dp, vertical = 9.dp),
                     )
                 }

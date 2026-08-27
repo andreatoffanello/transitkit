@@ -28,7 +28,6 @@ struct PlannerScreen: View {
     /// (same-stop / fuori area, dove il retry è inutile) e da `journeys` vuoti
     /// con `hasSearched` (genuino "nessun viaggio"). Specchio Movete `SearchFailure.unreachable`.
     @State private var isUnreachable = false
-    @State private var retryTick = 0
     @State private var hasSearched = false
     @State private var searchTask: Task<Void, Never>? = nil
     init(initialOrigin: PlannerLocation? = nil, initialDestination: PlannerLocation? = nil, initialWhen: WhenSelection = .now) {
@@ -106,12 +105,12 @@ struct PlannerScreen: View {
                 // Origin/destination icon column (Movete-style: locate-fixed + map-pin)
                 VStack(spacing: 0) {
                     LucideIcon.locateFixed.sized(18)
-                        .foregroundStyle(AppTheme.accent)
+                        .foregroundStyle(AppTheme.accentReadable)
                     Rectangle()
                         .fill(Color(.tertiaryLabel))
                         .frame(width: 1.5, height: 18)
                     LucideIcon.mapPin.sized(18)
-                        .foregroundStyle(AppTheme.accent)
+                        .foregroundStyle(AppTheme.accentReadable)
                 }
                 .frame(width: 20)
 
@@ -145,14 +144,10 @@ struct PlannerScreen: View {
                 // Swap button
                 Button { swapStops() } label: {
                     LucideIcon.arrowUpDown.sized(16)
-                        .foregroundStyle(AppTheme.accent)
                         .rotationEffect(.degrees(swapRotation))
-                        .frame(width: 36, height: 36)
-                        .background(Color(.tertiarySystemFill))
-                        .clipShape(Circle())
+                        .secondaryIconCircle()
                 }
                 .accessibilityIdentifier("planner_swap_btn")
-                .sensoryFeedback(.impact(weight: .light), trigger: swapRotation)
             }
             .padding(14)
             .background(Color(.secondarySystemGroupedBackground))
@@ -223,7 +218,10 @@ struct PlannerScreen: View {
                             .max() ?? 1
 
                         ForEach(Array(journeys.enumerated()), id: \.element.id) { idx, journey in
-                            Button { selectedJourney = journey } label: {
+                            Button {
+                                Haptics.navigate()
+                                selectedJourney = journey
+                            } label: {
                                 JourneyCard(journey: journey, maxJourneyDurationSeconds: maxDur)
                             }
                             .buttonStyle(PlannerCardPressStyle())
@@ -259,19 +257,17 @@ struct PlannerScreen: View {
                 tint: .orange
             )
             Button {
-                retryTick += 1
+                Haptics.commit()
                 triggerSearch()
             } label: {
                 Text(L("planner_retry"))
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(AppTheme.accent)
+                    .foregroundStyle(.white)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 11)
-                    .background(Capsule().fill(AppTheme.accent.opacity(0.22)))
-                    .overlay(Capsule().strokeBorder(AppTheme.accent.opacity(0.45), lineWidth: 1))
+                    .background(Capsule().fill(AppTheme.accent))
             }
             .buttonStyle(PlannerCardPressStyle())
-            .sensoryFeedback(.impact(weight: .light), trigger: retryTick)
             .accessibilityIdentifier("planner_retry")
         }
         .frame(maxWidth: .infinity)
@@ -298,6 +294,7 @@ struct PlannerScreen: View {
     // MARK: - Actions
 
     private func swapStops() {
+        Haptics.selection()
         withAnimation(.spring(response: 0.42, dampingFraction: 0.72)) {
             let tmp = origin; origin = destination; destination = tmp
             swapRotation += 180

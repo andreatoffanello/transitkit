@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.transitkit.app.R
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.rememberHaptics
 
 /**
  * Banner soft (non bloccante) per aggiornamento opzionale dell'app.
@@ -51,6 +52,7 @@ fun SoftUpdateBanner(
     onLater: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val haptics = rememberHaptics()
     val accent = TransitTheme.colors.accent
     val isDark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
     val bgAlpha = if (isDark) 0.18f else 0.10f
@@ -102,7 +104,9 @@ fun SoftUpdateBanner(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Button(
-                    onClick = onUpdate,
+                    // L'haptic parte prima dell'Intent verso il Play Store:
+                    // dopo, l'app è già in background e il feedback si perde.
+                    onClick = { haptics.commit(); onUpdate() },
                     modifier = Modifier.semantics { testTag = "btn_soft_update" },
                     shape = CircleShape,
                     colors = ButtonDefaults.buttonColors(
@@ -120,7 +124,7 @@ fun SoftUpdateBanner(
                 Spacer(Modifier.width(8.dp))
 
                 TextButton(
-                    onClick = onLater,
+                    onClick = { haptics.selection(); onLater() },
                     modifier = Modifier.semantics { testTag = "btn_soft_update_later" },
                 ) {
                     Text(

@@ -51,6 +51,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.rememberHaptics
 import com.transitkit.app.config.toColor
 import com.transitkit.app.data.model.AlertCause
 import com.transitkit.app.data.model.AlertEffect
@@ -74,6 +75,7 @@ fun AlertDetailScreen(
     val stopsById by viewModel.stopsById.collectAsStateWithLifecycle()
     val alert = alerts.firstOrNull { it.id == alertId }
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     val context = LocalContext.current
 
     Scaffold(
@@ -139,7 +141,7 @@ fun AlertDetailScreen(
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     )
                     Button(
-                        onClick = onBack,
+                        onClick = { haptics.navigate(); onBack() },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = colors.accent,
                             contentColor = androidx.compose.ui.graphics.Color.White,
@@ -237,6 +239,7 @@ fun AlertDetailScreen(
                             .background(colors.bgSecondary)
                             .border(1.dp, colors.glassBorder, RoundedCornerShape(14.dp))
                             .clickable {
+                                haptics.commit()
                                 context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
                             }
                             .padding(16.dp),
@@ -246,7 +249,7 @@ fun AlertDetailScreen(
                         Icon(
                             painter = painterResource(LucideIcons.ExternalLink),
                             contentDescription = null,
-                            tint = colors.accent,
+                            tint = colors.accentReadable,
                             modifier = Modifier.size(18.dp),
                         )
                         Text(
@@ -343,7 +346,7 @@ private fun MetadataRow(icon: Int, label: String, value: String?) {
         Icon(
             painter = painterResource(icon),
             contentDescription = null,
-            tint = colors.accent,
+            tint = colors.accentReadable,
             modifier = Modifier.size(16.dp),
         )
         Column(modifier = Modifier.weight(1f)) {
@@ -464,7 +467,7 @@ private fun LabelledAlertCard(
                 Icon(
                     painter = painterResource(icon),
                     contentDescription = null,
-                    tint = colors.accent,
+                    tint = colors.accentReadable,
                     modifier = Modifier.size(14.dp),
                 )
                 Text(

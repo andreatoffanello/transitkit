@@ -99,6 +99,7 @@ struct ContactInfoView: View {
     ) -> some View {
         if let url {
             Button {
+                Haptics.commit()
                 UIApplication.shared.open(url)
             } label: {
                 rowContent(icon: icon, title: title, subtitle: subtitle, multiline: multiline, tappable: true)
@@ -119,7 +120,7 @@ struct ContactInfoView: View {
         HStack(alignment: .top, spacing: 14) {
             icon.image
                 .font(.body)
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(AppTheme.accentReadable)
                 .frame(width: 24)
                 .padding(.top, 2)
             VStack(alignment: .leading, spacing: 2) {

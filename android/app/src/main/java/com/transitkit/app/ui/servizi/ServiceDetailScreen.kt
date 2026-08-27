@@ -49,6 +49,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.rememberHaptics
 import com.transitkit.app.config.resolved
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,6 +63,7 @@ fun ServiceDetailScreen(
     val config = viewModel.operatorConfig
     val service = config.services?.firstOrNull { it.id == serviceId }
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     val context = LocalContext.current
     val contactPhone = config.contact?.phone?.takeIf { it.isNotBlank() }
 
@@ -99,6 +101,7 @@ fun ServiceDetailScreen(
                     HorizontalDivider(color = colors.separator)
                     Button(
                         onClick = {
+                            haptics.commit()
                             val handledInternally = cta.type == "internal" &&
                                 handleInternalCtaUri(cta.value, onNavigateToMappa)
                             if (handledInternally) return@Button
@@ -182,7 +185,7 @@ fun ServiceDetailScreen(
                         textAlign = TextAlign.Center,
                     )
                     Button(
-                        onClick = onBack,
+                        onClick = { haptics.navigate(); onBack() },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = colors.accent,
                             contentColor = androidx.compose.ui.graphics.Color.White,
@@ -220,7 +223,7 @@ fun ServiceDetailScreen(
                         Icon(
                             painter = painterResource(iconDrawableFor(service.icon)),
                             contentDescription = null,
-                            tint = colors.accent,
+                            tint = colors.accentReadable,
                             modifier = Modifier.size(34.dp),
                         )
                     }
@@ -367,6 +370,7 @@ fun ServiceDetailScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
+                                            haptics.commit()
                                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link.url))
                                             context.startActivity(intent)
                                         }
@@ -403,10 +407,11 @@ fun ServiceDetailScreen(
                             .padding(horizontal = 16.dp)
                             .height(40.dp)
                             .background(
-                                colors.accent.copy(alpha = 0.10f),
+                                colors.secondaryFill,
                                 RoundedCornerShape(20.dp),
                             )
                             .clickable {
+                                haptics.commit()
                                 val intent = Intent(
                                     Intent.ACTION_DIAL,
                                     Uri.parse("tel:${contactPhone.phoneDigits()}"),
@@ -421,14 +426,14 @@ fun ServiceDetailScreen(
                         Icon(
                             painter = painterResource(LucideIcons.Phone),
                             contentDescription = null,
-                            tint = colors.accent,
+                            tint = colors.secondaryFg,
                             modifier = Modifier.size(14.dp),
                         )
                         Text(
                             stringResource(R.string.services_label_questions, contactPhone),
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Medium,
-                            color = colors.accent,
+                            color = colors.secondaryFg,
                             textAlign = TextAlign.Start,
                         )
                     }
@@ -461,7 +466,7 @@ internal fun LabelledCard(
             Icon(
                 painter = painterResource(icon),
                 contentDescription = null,
-                tint = colors.accent,
+                tint = colors.accentReadable,
                 modifier = Modifier.size(14.dp),
             )
             Text(
@@ -521,7 +526,7 @@ private fun StepRow(number: Int, text: String) {
                 number.toString(),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = colors.accent,
+                color = colors.accentReadable,
             )
         }
         Text(

@@ -35,6 +35,7 @@ import com.transitkit.app.R
 import com.transitkit.app.config.FareInfo
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.rememberHaptics
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -131,7 +132,7 @@ fun FareInfoScreen(
                                     fare.price,
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = TransitTheme.colors.accent,
+                                    color = TransitTheme.colors.accentReadable,
                                 )
                             }
                         }
@@ -155,7 +156,7 @@ fun FareInfoScreen(
                             Icon(
                                 painterResource(LucideIcons.Info),
                                 null,
-                                tint = TransitTheme.colors.accent,
+                                tint = TransitTheme.colors.accentReadable,
                                 modifier = Modifier
                                     .size(16.dp)
                                     .padding(top = 2.dp),
@@ -174,6 +175,7 @@ fun FareInfoScreen(
             purchaseUrl?.takeIf { it.isNotBlank() }?.let { url ->
                 item {
                     val context = LocalContext.current
+                    val haptics = rememberHaptics()
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -185,6 +187,7 @@ fun FareInfoScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
+                                    haptics.commit()
                                     val intent = android.content.Intent(
                                         android.content.Intent.ACTION_VIEW,
                                         android.net.Uri.parse(url),
@@ -198,7 +201,7 @@ fun FareInfoScreen(
                             Icon(
                                 painterResource(LucideIcons.Ticket),
                                 null,
-                                tint = TransitTheme.colors.accent,
+                                tint = TransitTheme.colors.accentReadable,
                                 modifier = Modifier.size(20.dp),
                             )
                             Text(

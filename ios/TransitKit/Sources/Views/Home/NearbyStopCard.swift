@@ -20,10 +20,16 @@ struct NearbyStopCard: View {
     let onTap: () -> Void
 
     /// Max number of badges shown before the "+N" overflow chip.
-    private static let maxVisibleBadges = 4
+    /// 3 e non 4: la card è larga 240pt fissi e l'orario ha la priorità di
+    /// layout, quindi con quattro badge larghi l'ultimo verrebbe compresso.
+    /// Parità con Android (`MAX_VISIBLE_BADGES`).
+    private static let maxVisibleBadges = 3
 
     var body: some View {
-        Button(action: onTap) {
+        Button {
+            Haptics.navigate()
+            onTap()
+        } label: {
             VStack(alignment: .leading, spacing: 10) {
                 header
                 badges
@@ -72,18 +78,30 @@ struct NearbyStopCard: View {
                     overflowChip(overflow)
                 }
                 Spacer(minLength: 0)
+                // `lineLimit(1)` da solo non protegge: in un HStack stretto
+                // SwiftUI comprime anche il Text e l'orario esce come "1…".
+                // È il motivo per cui la card esiste, quindi si prende la
+                // priorità di layout e sono i badge a cedere — a questo serve
+                // il chip "+N". Parità con Android (`NearbyStopCard.kt`).
                 Text(walkingTime(meters: distanceMeters))
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(AppTheme.textTertiary)
                     .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+                    .layoutPriority(1)
             }
         }
     }
 
     private func overflowChip(_ n: Int) -> some View {
+        // `fixedSize` obbligatorio: ora che l'orario ha la priorità di layout è
+        // la riga dei badge ad assorbire la compressione, e senza questo il
+        // chip si spezza su due righe ("+" sopra, "3" sotto).
         Text("+\(n)")
             .font(.system(size: 11, weight: .semibold))
             .foregroundStyle(AppTheme.textSecondary)
+            .lineLimit(1)
+            .fixedSize()
             .padding(.horizontal, 6)
             .padding(.vertical, 3)
             .background(

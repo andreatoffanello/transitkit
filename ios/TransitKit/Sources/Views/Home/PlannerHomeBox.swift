@@ -145,7 +145,7 @@ struct PlannerHomeBox: View {
 
     private func row(role: LocationRole, value: PlannerLocation?, placeholder: String) -> some View {
         Button {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            Haptics.navigate()
             boxNav = .picker(
                 isOrigin: role == .origin,
                 excludedId: role == .origin ? destination?.stopId : origin?.stopId
@@ -190,7 +190,7 @@ struct PlannerHomeBox: View {
     private func locationKindIcon(_ kind: PlannerLocation.Kind) -> some View {
         switch kind {
         case .userLocation:
-            LucideIcon.navigation.sized(12).foregroundStyle(AppTheme.accent)
+            LucideIcon.navigation.sized(12).foregroundStyle(AppTheme.accentReadable)
         case .place:
             LucideIcon.mapPin.sized(12).foregroundStyle(AppTheme.textSecondary)
         case .stop:
@@ -213,13 +213,13 @@ struct PlannerHomeBox: View {
                     LucideIcon.mapPin.sized(Self.dotSize)
                 }
             }
-            .foregroundStyle(AppTheme.accent)
+            .foregroundStyle(AppTheme.accentReadable)
         }
     }
 
     private var swapButton: some View {
         Button {
-            UISelectionFeedbackGenerator().selectionChanged()
+            Haptics.selection()
             let tmp = origin
             origin = destination
             destination = tmp
@@ -228,7 +228,7 @@ struct PlannerHomeBox: View {
             LucideIcon.arrowUpDown.sized(15)
                 .foregroundStyle(AppTheme.textSecondary)
                 .frame(width: 32, height: 32)
-                .background(Color(.tertiarySystemFill), in: Circle())
+                .adaptiveGlass(in: Circle())
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
@@ -240,7 +240,7 @@ struct PlannerHomeBox: View {
     private func searchButton(fullWidth: Bool) -> some View {
         Button {
             guard let o = origin, let d = destination else { return }
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            Haptics.commit()
             onLaunch(o, d, whenSelection)
         } label: {
             HStack(spacing: 6) {

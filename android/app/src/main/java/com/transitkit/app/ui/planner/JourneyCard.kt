@@ -41,6 +41,7 @@ import com.transitkit.app.data.model.transfers
 import com.transitkit.app.ui.components.LineBadge
 import com.transitkit.app.ui.components.LineBadgeSize
 import com.transitkit.app.ui.components.parseHexColor
+import com.transitkit.app.ui.components.rememberHaptics
 
 /**
  * Journey summary card — large times, duration pill, proportional strip with
@@ -56,13 +57,14 @@ fun JourneyCard(
     maxJourneyDurationSeconds: Long = 0,
 ) {
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     val depFmt = formatEpochTime(journey.departureTime)
     val arrFmt = formatEpochTime(journey.arrivalTime)
     // `semantics {}` non è @Composable: la stringa va risolta prima.
     val cdJourney = stringResource(R.string.cd_journey_format, depFmt, arrFmt)
 
     Card(
-        onClick = onClick,
+        onClick = { haptics.navigate(); onClick() },
         modifier = Modifier
             .fillMaxWidth()
             .semantics { contentDescription = cdJourney },

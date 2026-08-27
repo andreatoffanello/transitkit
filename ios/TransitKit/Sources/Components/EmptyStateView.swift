@@ -17,7 +17,7 @@ struct EmptyStateView: View {
     let icon: LucideIcon
     let title: String
     var subtitle: String = ""
-    var tint: Color = AppTheme.accent
+    var tint: Color = AppTheme.accentReadable
 
     var body: some View {
         VStack(spacing: 16) {

@@ -34,6 +34,7 @@ import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.OperatorConfig
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.rememberHaptics
 import com.transitkit.app.config.surfaceOverMap
 import com.transitkit.app.ui.components.LiveIndicator
 
@@ -89,6 +90,7 @@ internal fun OperatorReferenceCard(
     modifier: Modifier = Modifier,
 ) {
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     val context = LocalContext.current
     // iOS parity (item #15): logo reale operatore invece di initials gradient.
     // Asset `operator_logo` viene caricato runtime via resources getIdentifier
@@ -115,7 +117,7 @@ internal fun OperatorReferenceCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(colors.surfaceOverMap)
-            .clickable(onClick = onClick)
+            .clickable { haptics.navigate(); onClick() }
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -228,12 +230,13 @@ internal fun HomeServiziLink(
     modifier: Modifier = Modifier,
 ) {
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(colors.surfaceOverMap)
-            .clickable(onClick = onClick)
+            .clickable { haptics.navigate(); onClick() }
             .padding(horizontal = 14.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -248,7 +251,7 @@ internal fun HomeServiziLink(
             Icon(
                 painter = painterResource(LucideIcons.Grid2x2Plus),
                 contentDescription = null,
-                tint = colors.accent,
+                tint = colors.accentReadable,
                 modifier = Modifier.size(20.dp),
             )
         }

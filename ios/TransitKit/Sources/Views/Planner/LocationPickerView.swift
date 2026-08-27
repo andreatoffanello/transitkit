@@ -269,10 +269,11 @@ struct LocationPickerView: View {
         HStack(spacing: 0) {
             // Main tap area: use in trip (if set) or push assign screen (if empty)
             Button {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 if let saved {
+                    Haptics.commit()
                     commit(name: saved.name, coordinate: saved.coordinate, stopGtfsId: nil, kind: .place)
                 } else {
+                    Haptics.navigate()
                     assignKey = key
                 }
             } label: {
@@ -300,11 +301,13 @@ struct LocationPickerView: View {
             if saved != nil {
                 Menu {
                     Button {
+                        Haptics.navigate()
                         assignKey = key
                     } label: {
                         Label(L("planner_picker_edit"), systemImage: "pencil")
                     }
                     Button(role: .destructive) {
+                        Haptics.destructive()
                         savedPlacesStore.removePlace(key)
                     } label: {
                         Label(L("planner_picker_remove"), systemImage: "trash")
@@ -336,7 +339,7 @@ struct LocationPickerView: View {
         let hasLocation = locationManager.location != nil
         return Button {
             guard let loc = locationManager.location else { return }
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            Haptics.commit()
             commit(
                 name: L("planner_my_location"),
                 coordinate: loc.coordinate,
@@ -345,7 +348,7 @@ struct LocationPickerView: View {
             )
         } label: {
             quickChoiceCell(
-                icon: LucideIcon.navigation.sized(18).foregroundStyle(AppTheme.accent).eraseToAnyView(),
+                icon: LucideIcon.navigation.sized(18).foregroundStyle(AppTheme.accentReadable).eraseToAnyView(),
                 title: L("planner_my_location"),
                 subtitle: hasLocation
                     ? L("planner_location_active")
@@ -362,7 +365,7 @@ struct LocationPickerView: View {
 
     private var mapPickRow: some View {
         Button {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            Haptics.navigate()
             showMapPicker = true
         } label: {
             quickChoiceCell(
@@ -452,7 +455,7 @@ struct LocationPickerView: View {
         VStack(spacing: 0) {
             ForEach(Array(stops.enumerated()), id: \.element.id) { index, stop in
                 Button {
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    Haptics.commit()
                     commit(
                         name: stop.name,
                         coordinate: CLLocationCoordinate2D(latitude: stop.lat, longitude: stop.lng),
@@ -477,7 +480,7 @@ struct LocationPickerView: View {
     private func stopRow(_ stop: ResolvedStop) -> some View {
         HStack(spacing: 12) {
             LucideIcon.signpost.sized(16)
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(AppTheme.accentReadable)
                 .frame(width: 28, alignment: .center)
 
             VStack(alignment: .leading, spacing: 3) {
@@ -506,7 +509,7 @@ struct LocationPickerView: View {
         VStack(spacing: 0) {
             ForEach(Array(places.enumerated()), id: \.element.id) { index, place in
                 Button {
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    Haptics.commit()
                     commit(name: place.name, coordinate: place.coordinate, stopGtfsId: nil, kind: .place)
                 } label: {
                     placeRow(place)

@@ -130,7 +130,7 @@ struct OperatorInfoView: View {
                         HStack(spacing: 8) {
                             LucideIcon.table.image
                                 .font(.subheadline)
-                                .foregroundStyle(AppTheme.accent)
+                                .foregroundStyle(AppTheme.accentReadable)
                             Text(L("operator_data_attribution"))
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(AppTheme.textPrimary)
@@ -162,7 +162,7 @@ struct OperatorInfoView: View {
         HStack(spacing: 12) {
             icon.image
                 .font(.body)
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(AppTheme.accentReadable)
                 .frame(width: 24)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
@@ -182,5 +182,8 @@ struct OperatorInfoView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
+        // La riga è sempre la label di un `Link`, che esce dall'app: il tick
+        // deve partire prima dell'app-switch e `Link` non espone un action.
+        .simultaneousGesture(TapGesture().onEnded { Haptics.commit() })
     }
 }

@@ -81,6 +81,7 @@ struct JourneyDetailView: View {
                             isBeforeTransfer: nextTransit?.boardStop.id == t.alightStop.id && nextTransit != nil,
                             isExpanded: expandedLegs.contains(t.id),
                             onToggleExpand: {
+                                Haptics.selection()
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                                     if expandedLegs.contains(t.id) { expandedLegs.remove(t.id) }
                                     else { expandedLegs.insert(t.id) }
@@ -135,7 +136,7 @@ struct JourneyDetailView: View {
         }
         .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .onTapGesture {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            Haptics.navigate()
             showFullscreenMap = true
         }
         .accessibilityIdentifier("journey_map_preview")

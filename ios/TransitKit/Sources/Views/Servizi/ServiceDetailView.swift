@@ -99,7 +99,7 @@ struct ServiceDetailView: View {
                 .frame(width: 72, height: 72)
                 .overlay(
                     ServiceIcon(key: service.icon).sized(34)
-                        .foregroundStyle(AppTheme.accent)
+                        .foregroundStyle(AppTheme.accentReadable)
                 )
                 .padding(.bottom, 16)
             Text(service.title.resolved())
@@ -228,7 +228,7 @@ struct ServiceDetailView: View {
                 HStack(spacing: 8) {
                     LucideIcon.externalLink.image
                         .font(.subheadline)
-                        .foregroundStyle(AppTheme.accent)
+                        .foregroundStyle(AppTheme.accentReadable)
                     Text(L("services_label_links").uppercased())
                         .font(.caption.weight(.semibold))
                         .kerning(0.6)
@@ -248,13 +248,13 @@ struct ServiceDetailView: View {
     private func linkRow(link: ServiceLink) -> some View {
         Button {
             if let url = URL(string: link.url) {
+                Haptics.commit()
                 UIApplication.shared.open(url)
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
             }
         } label: {
             HStack(spacing: 14) {
                 LucideIcon.externalLink.sized(20)
-                    .foregroundStyle(AppTheme.accent)
+                    .foregroundStyle(AppTheme.accentReadable)
                 Text(link.label.resolved())
                     .font(.headline)
                     .foregroundStyle(AppTheme.textPrimary)
@@ -288,23 +288,23 @@ struct ServiceDetailView: View {
             Spacer(minLength: 0)
             Button {
                 if let url = telURL(from: phone) {
+                    Haptics.commit()
                     UIApplication.shared.open(url)
-                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
                 }
             } label: {
                 HStack(spacing: 8) {
                     LucideIcon.phone.sized(14)
-                        .foregroundStyle(AppTheme.accent)
+                        .foregroundStyle(AppTheme.accentReadable)
                     Text(String(format: L("services_label_questions %@"), phone))
                         .font(.footnote.weight(.medium))
-                        .foregroundStyle(AppTheme.accent)
+                        .foregroundStyle(AppTheme.secondaryFg)
                         .lineLimit(1)
                 }
                 .padding(.horizontal, 16)
                 .frame(height: 40)
                 .background(
                     Capsule(style: .continuous)
-                        .fill(AppTheme.accent.opacity(0.10))
+                        .fill(AppTheme.secondaryFill)
                 )
                 .contentShape(Capsule(style: .continuous))
             }
@@ -320,7 +320,7 @@ struct ServiceDetailView: View {
     /// reuse the button without the wrapping bar chrome if needed.
     private func ctaButton(cta: ServiceCTA) -> some View {
         Button {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            Haptics.commit()
             if handleInternalCTA(cta) { return }
             guard let url = resolveCTA(cta) else { return }
             UIApplication.shared.open(url)
@@ -405,7 +405,7 @@ struct ServiceDetailView: View {
         HStack(spacing: 8) {
             icon.image
                 .font(.subheadline)
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(AppTheme.accentReadable)
             Text(text.uppercased())
                 .font(.caption.weight(.semibold))
                 .kerning(0.6)

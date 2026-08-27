@@ -64,7 +64,10 @@ struct AlertListView: View {
         .toolbar {
             if isPresented {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(L("action_close")) { dismiss() }
+                    Button(L("action_close")) {
+                        Haptics.navigate()
+                        dismiss()
+                    }
                         .foregroundStyle(AppTheme.textPrimary)
                 }
             }
@@ -85,6 +88,7 @@ struct AlertListView: View {
                     count: myAlerts.count,
                     isActive: filter == .mine
                 ) {
+                    Haptics.selection()
                     filter = .mine
                 }
                 .accessibilityIdentifier("filter_mine")
@@ -94,6 +98,7 @@ struct AlertListView: View {
                 count: activeAlerts.count,
                 isActive: filter == .all
             ) {
+                Haptics.selection()
                 filter = .all
             }
             .accessibilityIdentifier("filter_all")
@@ -107,7 +112,6 @@ struct AlertListView: View {
                 .fill(AppTheme.separatorLine)
                 .frame(height: 0.5)
         }
-        .sensoryFeedback(.selection, trigger: filter)
     }
 
     private func filterPill(
@@ -181,6 +185,7 @@ struct AlertListView: View {
                                 AlertCard(alert: alert)
                             }
                             .buttonStyle(.plain)
+                            .hapticNavigationLink()
                         }
                     }
                 }

@@ -20,8 +20,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -35,6 +33,7 @@ import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.config.surfaceOverMap
 import com.transitkit.app.data.model.ResolvedStop
 import com.transitkit.app.data.model.ScheduleRoute
+import com.transitkit.app.ui.components.rememberHaptics
 
 @Composable
 internal fun NearbySection(
@@ -92,13 +91,13 @@ internal fun NearbyStopRow(
     onClick: () -> Unit,
 ) {
     val colors = TransitTheme.colors
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     val distanceLabel = walkingTimeLabel(distanceMeters)
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                haptics.navigate()
                 onClick()
             }
             .padding(horizontal = 16.dp, vertical = 12.dp),
@@ -108,7 +107,7 @@ internal fun NearbyStopRow(
         Icon(
             painter = painterResource(LucideIcons.BusFront),
             contentDescription = null,
-            tint = colors.accent,
+            tint = colors.accentReadable,
             modifier = Modifier.size(14.dp),
         )
         Text(
@@ -137,7 +136,7 @@ internal fun NearbyStopRow(
 @Composable
 internal fun EnableLocationChip(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = TransitTheme.colors
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     val cd = stringResource(R.string.home_enable_location_chip)
     Row(
         modifier = modifier
@@ -145,7 +144,7 @@ internal fun EnableLocationChip(onClick: () -> Unit, modifier: Modifier = Modifi
             .clip(RoundedCornerShape(10.dp))
             .background(colors.surfaceOverMap)
             .clickable {
-                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                haptics.navigate()
                 onClick()
             }
             .semantics { contentDescription = cd }
@@ -156,7 +155,7 @@ internal fun EnableLocationChip(onClick: () -> Unit, modifier: Modifier = Modifi
         Icon(
             painter = painterResource(LucideIcons.MapPin),
             contentDescription = null,
-            tint = colors.accent,
+            tint = colors.accentReadable,
             modifier = Modifier.size(14.dp),
         )
         Text(

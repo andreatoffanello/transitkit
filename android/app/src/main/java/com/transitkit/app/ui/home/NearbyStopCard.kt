@@ -20,8 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -34,6 +32,7 @@ import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.config.surfaceOverMap
 import com.transitkit.app.data.model.ResolvedStop
 import com.transitkit.app.data.model.ScheduleRoute
+import com.transitkit.app.ui.components.rememberHaptics
 
 /**
  * Horizontal-scroll card for a nearby stop on the Home tab. Mirrors the iOS
@@ -51,14 +50,14 @@ internal fun NearbyStopCard(
     modifier: Modifier = Modifier,
 ) {
     val colors = TransitTheme.colors
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     val walking = walkingTimeLabel(distanceMeters)
 
     Surface(
         modifier = modifier
             .width(240.dp)
             .clickable {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                haptics.navigate()
                 onClick()
             }
             .semantics { contentDescription = "home_nearby_stop_${stop.id}" },
@@ -100,30 +99,41 @@ internal fun NearbyStopCard(
                     color = colors.textTertiary,
                 )
             } else {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    val visible = routes.take(MAX_VISIBLE_BADGES)
-                    val overflow = routes.size - visible.size
-                    visible.forEach { route ->
-                        com.transitkit.app.ui.components.LineBadge(
-                            route = route,
-                            size = com.transitkit.app.ui.components.LineBadgeSize.Small,
-                        )
+                // L'orario è il motivo per cui questa card esiste, quindi va
+                // misurato per PRIMO (nessun weight): in una Row Compose misura
+                // i figli senza peso alla loro dimensione intrinseca e lascia il
+                // resto a quelli con peso. Sono i badge a cedere spazio, ed è a
+                // questo che serve il chip "+N".
+                //
+                // Il porting da iOS aveva tradotto `Spacer(minLength: 0)` in uno
+                // `Spacer(width(0.dp))`, che su Compose non fa nulla: i badge si
+                // prendevano tutta la riga e "1 min" usciva ellissizzato a "1…".
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        val visible = routes.take(MAX_VISIBLE_BADGES)
+                        val overflow = routes.size - visible.size
+                        visible.forEach { route ->
+                            com.transitkit.app.ui.components.LineBadge(
+                                route = route,
+                                size = com.transitkit.app.ui.components.LineBadgeSize.Small,
+                            )
+                        }
+                        if (overflow > 0) {
+                            OverflowChip(count = overflow)
+                        }
                     }
-                    if (overflow > 0) {
-                        OverflowChip(count = overflow)
-                    }
-                    Spacer(modifier = Modifier.width(0.dp))
-                    Box(modifier = Modifier.padding(start = 4.dp)) {
-                        Text(
-                            text = walking,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = colors.textTertiary,
-                            maxLines = 1,
-                        )
-                    }
+                    Text(
+                        text = walking,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = colors.textTertiary,
+                        maxLines = 1,
+                        softWrap = false,
+                        modifier = Modifier.padding(start = 8.dp),
+                    )
                 }
             }
         }
@@ -142,13 +152,21 @@ private fun OverflowChip(count: Int) {
             .padding(horizontal = 6.dp, vertical = 3.dp),
         contentAlignment = Alignment.Center,
     ) {
+        // `softWrap = false`: ora che l'orario ha la precedenza in misurazione è
+        // la riga dei badge ad assorbire la compressione, e senza questo il chip
+        // si spezza su due righe ("+" sopra, "3" sotto).
         Text(
             text = "+$count",
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
             color = colors.textSecondary,
+            maxLines = 1,
+            softWrap = false,
         )
     }
 }
 
-private const val MAX_VISIBLE_BADGES = 4
+// 3 e non 4: la card è larga 240dp fissi e l'orario ora ha la precedenza in
+// misurazione, quindi con quattro badge larghi l'ultimo verrebbe tagliato a
+// metà glifo. Il chip "+N" porta comunque il resto delle linee.
+private const val MAX_VISIBLE_BADGES = 3

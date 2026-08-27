@@ -43,6 +43,7 @@ import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.OperatorConfig
 import com.transitkit.app.config.ServiceInfo
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.rememberHaptics
 import com.transitkit.app.config.resolved
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -206,10 +207,11 @@ private fun ServicesCard(
 @Composable
 private fun ServiceRow(service: ServiceInfo, onClick: () -> Unit) {
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable { haptics.navigate(); onClick() }
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
@@ -223,7 +225,7 @@ private fun ServiceRow(service: ServiceInfo, onClick: () -> Unit) {
             Icon(
                 painter = painterResource(iconDrawableFor(service.icon)),
                 contentDescription = null,
-                tint = colors.accent,
+                tint = colors.accentReadable,
                 modifier = Modifier.size(22.dp),
             )
         }
@@ -277,6 +279,7 @@ private fun String.isFareFree(): Boolean {
 @Composable
 private fun FaresSummaryCard(fares: FareInfo, onClick: () -> Unit) {
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     val summary = if (fares.isFareFree()) {
         stringResource(R.string.services_fare_free)
     } else {
@@ -287,7 +290,7 @@ private fun FaresSummaryCard(fares: FareInfo, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable { haptics.navigate(); onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = colors.bgSecondary),
         elevation = CardDefaults.cardElevation(1.dp),
@@ -308,7 +311,7 @@ private fun FaresSummaryCard(fares: FareInfo, onClick: () -> Unit) {
                 Icon(
                     painter = painterResource(LucideIcons.Ticket),
                     contentDescription = null,
-                    tint = colors.accent,
+                    tint = colors.accentReadable,
                     modifier = Modifier.size(22.dp),
                 )
             }
@@ -353,10 +356,11 @@ private fun AccessibilitySummaryCard(
     onClick: () -> Unit,
 ) {
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable { haptics.navigate(); onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = colors.bgSecondary),
         elevation = CardDefaults.cardElevation(1.dp),
@@ -377,7 +381,7 @@ private fun AccessibilitySummaryCard(
                 Icon(
                     painter = painterResource(LucideIcons.Accessibility),
                     contentDescription = null,
-                    tint = colors.accent,
+                    tint = colors.accentReadable,
                     modifier = Modifier.size(22.dp),
                 )
             }
@@ -415,10 +419,11 @@ private fun AccessibilitySummaryCard(
 @Composable
 private fun ContactSummaryCard(contact: ContactConfig, onClick: () -> Unit) {
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable { haptics.navigate(); onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = colors.bgSecondary),
         elevation = CardDefaults.cardElevation(1.dp),
@@ -446,7 +451,7 @@ private fun ContactSummaryCard(contact: ContactConfig, onClick: () -> Unit) {
                     Icon(
                         painter = painterResource(icon),
                         contentDescription = null,
-                        tint = colors.accent,
+                        tint = colors.accentReadable,
                         modifier = Modifier.size(18.dp),
                     )
                     Text(
@@ -478,10 +483,11 @@ private fun ContactSummaryCard(contact: ContactConfig, onClick: () -> Unit) {
 @Composable
 private fun AboutOperatorCard(config: OperatorConfig, onClick: () -> Unit) {
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable { haptics.navigate(); onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = colors.bgSecondary),
         elevation = CardDefaults.cardElevation(1.dp),
@@ -502,7 +508,7 @@ private fun AboutOperatorCard(config: OperatorConfig, onClick: () -> Unit) {
                 Icon(
                     painter = painterResource(LucideIcons.Info),
                     contentDescription = null,
-                    tint = colors.accent,
+                    tint = colors.accentReadable,
                     modifier = Modifier.size(22.dp),
                 )
             }

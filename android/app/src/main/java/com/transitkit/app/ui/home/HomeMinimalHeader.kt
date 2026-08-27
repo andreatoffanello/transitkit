@@ -20,9 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -35,6 +33,7 @@ import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.OperatorConfig
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.rememberHaptics
 
 @Composable
 internal fun HomeMinimalHeader(
@@ -43,7 +42,7 @@ internal fun HomeMinimalHeader(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     val colors = TransitTheme.colors
     val logoId = remember {
         runCatching {
@@ -94,7 +93,7 @@ internal fun HomeMinimalHeader(
                 .size(36.dp)
                 .clip(CircleShape)
                 .clickable {
-                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    haptics.navigate()
                     onSettingsClick()
                 }
                 .semantics { contentDescription = cdSettings },

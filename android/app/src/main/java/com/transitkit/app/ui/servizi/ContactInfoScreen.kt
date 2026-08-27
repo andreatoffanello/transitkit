@@ -37,6 +37,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.rememberHaptics
 import com.transitkit.app.config.resolved
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,7 +66,7 @@ fun ContactInfoScreen(
                         Icon(
                             painterResource(LucideIcons.ChevronLeft),
                             contentDescription = stringResource(R.string.cd_indietro),
-                            tint = colors.accent,
+                            tint = colors.secondaryFg,
                         )
                     }
                 },
@@ -197,8 +198,11 @@ private data class ContactRowSpec(
 @Composable
 private fun ContactRow(spec: ContactRowSpec) {
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     val base = Modifier.fillMaxWidth()
-    val clickable = if (spec.onClick != null) base.clickable(onClick = spec.onClick) else base
+    // L'aptico parte PRIMA dell'intent: telefono/mail/mappe portano fuori
+    // dall'app e il feedback arriverebbe a schermata già cambiata.
+    val clickable = spec.onClick?.let { act -> base.clickable { haptics.commit(); act() } } ?: base
     Row(
         modifier = clickable.padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -207,7 +211,7 @@ private fun ContactRow(spec: ContactRowSpec) {
         Icon(
             painter = painterResource(spec.icon),
             contentDescription = null,
-            tint = colors.accent,
+            tint = colors.accentReadable,
             modifier = Modifier.size(20.dp),
         )
         Column(modifier = Modifier.weight(1f)) {

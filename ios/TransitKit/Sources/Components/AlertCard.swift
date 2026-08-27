@@ -73,7 +73,9 @@ struct AlertCard: View {
         switch alert.severity {
         case .severe:  return .red
         case .warning: return .orange
-        case .info:    return AppTheme.accent
+        // `accentReadable` come i due switch gemelli (AlertToastOverlay,
+        // AlertDetailView): questo colore è un foreground su card scura.
+        case .info:    return AppTheme.accentReadable
         case .unknown: return .orange
         }
     }

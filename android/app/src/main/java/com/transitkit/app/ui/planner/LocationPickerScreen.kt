@@ -41,8 +41,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -64,6 +62,7 @@ import com.transitkit.app.data.store.SavedPlace
 import com.transitkit.app.data.store.SavedPlaceKeys
 import com.transitkit.app.ui.components.LineBadge
 import com.transitkit.app.ui.components.LineBadgeSize
+import com.transitkit.app.ui.components.rememberHaptics
 import com.transitkit.app.ui.components.stopIcon
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -94,7 +93,7 @@ fun LocationPickerScreen(
     onNavigateToAssign: ((key: String) -> Unit)? = null,
 ) {
     val colors = TransitTheme.colors
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     val scope = rememberCoroutineScope()
     val isAssigning = assignKey != null
 
@@ -153,7 +152,7 @@ fun LocationPickerScreen(
     // Commit in assign mode → persist scorciatoia e torna indietro.
     // Commit in select mode → aggiorna origine/destinazione del planner.
     fun commit(name: String, lat: Double, lon: Double, gtfsId: String?, kind: PlannerLocation.Kind) {
-        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        haptics.commit()
         if (assignKey != null) {
             if (kind == PlannerLocation.Kind.CurrentLocation) {
                 // Resolve readable name before saving
@@ -216,7 +215,7 @@ fun LocationPickerScreen(
                 },
                 actions = {
                     TextButton(onClick = onBack) {
-                        Text(stringResource(R.string.cancel), color = colors.accent)
+                        Text(stringResource(R.string.cancel), color = colors.secondaryFg)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.background),
@@ -285,7 +284,7 @@ fun LocationPickerScreen(
                         }
                     },
                     onPickOnMap = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        haptics.navigate()
                         onNavigateToMapPicker()
                     },
                     nearby = nearby,
@@ -443,7 +442,7 @@ private fun QuickChoicesSection(
         // My location
         QuickChoiceRow(
             iconRes = LucideIcons.Crosshair,
-            iconTint = if (locationAvailable) colors.accent else colors.textTertiary,
+            iconTint = if (locationAvailable) colors.accentReadable else colors.textTertiary,
             iconBackground = if (locationAvailable) colors.accent.copy(alpha = 0.12f) else colors.glassFill,
             title = stringResource(R.string.planner_picker_my_location),
             subtitle = if (locationAvailable)
@@ -500,7 +499,7 @@ private fun SavedPlaceRow(
             Icon(
                 painterResource(iconRes),
                 contentDescription = null,
-                tint = colors.accent,
+                tint = colors.accentReadable,
                 modifier = Modifier.size(18.dp),
             )
         }
@@ -663,7 +662,7 @@ private fun MixedResultsList(
             ) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(22.dp),
-                    color = colors.accent,
+                    color = colors.accentReadable,
                     strokeWidth = 2.dp,
                 )
             }
@@ -742,7 +741,7 @@ private fun StopResultRow(
             Icon(
                 painterResource(id = leadingIconRes ?: stopIcon(stop.transitTypes)),
                 contentDescription = null,
-                tint = if (leadingIconRes != null) colors.textSecondary else colors.accent,
+                tint = if (leadingIconRes != null) colors.textSecondary else colors.accentReadable,
                 modifier = Modifier.size(16.dp),
             )
         }

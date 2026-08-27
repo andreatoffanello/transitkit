@@ -24,9 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -52,7 +50,7 @@ fun WheelPicker(
     itemHeight: Dp = 40.dp,
 ) {
     val colors = TransitTheme.colors
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     val density = LocalDensity.current
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = selectedIndex.coerceIn(0, (items.size - 1).coerceAtLeast(0)))
     val fling = rememberSnapFlingBehavior(lazyListState = listState)
@@ -70,7 +68,7 @@ fun WheelPicker(
 
     LaunchedEffect(centerIndex) {
         if (centerIndex in items.indices && centerIndex != selectedIndex) {
-            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            haptics.tick()
             onSelectedIndexChange(centerIndex)
         }
     }

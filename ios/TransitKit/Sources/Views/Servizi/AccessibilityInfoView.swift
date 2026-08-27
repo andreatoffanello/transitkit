@@ -45,16 +45,17 @@ struct AccessibilityInfoView: View {
 
                 if let moreUrl = info.moreUrl, let url = URL(string: moreUrl) {
                     Button {
+                        Haptics.commit()
                         UIApplication.shared.open(url)
                     } label: {
                         GlassCard(cornerRadius: 16) {
                             HStack(spacing: 12) {
                                 LucideIcon.externalLink.image
                                     .font(.body.weight(.semibold))
-                                    .foregroundStyle(AppTheme.accent)
+                                    .foregroundStyle(AppTheme.accentReadable)
                                 Text(L("services_learn_more"))
                                     .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(AppTheme.accent)
+                                    .foregroundStyle(AppTheme.secondaryFg)
                                 Spacer()
                                 LucideIcon.chevronRight.sized(18)
                                     .foregroundStyle(AppTheme.textTertiary)
@@ -89,7 +90,7 @@ struct AccessibilityInfoView: View {
                 .frame(width: 72, height: 72)
                 .overlay(
                     LucideIcon.accessibility.sized(34)
-                        .foregroundStyle(AppTheme.accent)
+                        .foregroundStyle(AppTheme.accentReadable)
                 )
                 .padding(.bottom, 16)
             Text(info.title.resolved())

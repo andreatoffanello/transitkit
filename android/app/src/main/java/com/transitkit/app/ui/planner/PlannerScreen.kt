@@ -10,7 +10,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -73,6 +72,7 @@ import com.transitkit.app.data.store.ConnectionsStore
 import com.transitkit.app.ui.components.LineBadge
 import com.transitkit.app.ui.components.LineBadgeSize
 import com.transitkit.app.ui.components.parseHexColor
+import com.transitkit.app.ui.components.rememberHaptics
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -157,7 +157,7 @@ fun PlannerScreen(
                     Icon(
                         painter = painterResource(LucideIcons.LocateFixed),
                         contentDescription = null,
-                        tint = colors.accent,
+                        tint = colors.accentReadable,
                         modifier = Modifier.size(20.dp),
                     )
                     Box(
@@ -170,7 +170,7 @@ fun PlannerScreen(
                     Icon(
                         painter = painterResource(LucideIcons.MapPin),
                         contentDescription = null,
-                        tint = colors.accent,
+                        tint = colors.accentReadable,
                         modifier = Modifier.size(20.dp),
                     )
                 }
@@ -217,7 +217,7 @@ fun PlannerScreen(
                     CenteredMessage {
                         CircularProgressIndicator(
                             modifier = Modifier.size(28.dp),
-                            color = colors.accent,
+                            color = colors.accentReadable,
                             strokeWidth = 2.5.dp,
                         )
                         Spacer(Modifier.height(12.dp))
@@ -253,7 +253,7 @@ fun PlannerScreen(
                     CenteredMessage {
                         CircularProgressIndicator(
                             modifier = Modifier.size(28.dp),
-                            color = colors.accent,
+                            color = colors.accentReadable,
                             strokeWidth = 2.5.dp,
                         )
                         Spacer(Modifier.height(12.dp))
@@ -356,11 +356,12 @@ private fun StopInputRow(
     onClear: () -> Unit,
 ) {
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
+            .clickable { haptics.navigate(); onClick() }
             .padding(horizontal = 4.dp, vertical = 14.dp)
             .semantics { contentDescription = label },
         verticalAlignment = Alignment.CenterVertically,
@@ -381,7 +382,7 @@ private fun StopInputRow(
         val cdClear = stringResource(R.string.cd_clear_location)
         if (location != null) {
             IconButton(
-                onClick = onClear,
+                onClick = { haptics.navigate(); onClear() },
                 modifier = Modifier.size(28.dp).semantics { contentDescription = cdClear },
             ) {
                 Icon(
@@ -400,6 +401,7 @@ private fun StopInputRow(
 @Composable
 private fun SwapButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     val cdSwap = stringResource(R.string.cd_swap_stops)
     var rotated by remember { mutableStateOf(false) }
     val rotation by animateFloatAsState(
@@ -412,18 +414,18 @@ private fun SwapButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     )
     IconButton(
         onClick = {
+            haptics.selection()
             rotated = !rotated
             onClick()
         },
         modifier = modifier
             .size(32.dp)
-            .background(MaterialTheme.colorScheme.surface, CircleShape)
             .semantics { contentDescription = cdSwap },
     ) {
         Icon(
             painterResource(LucideIcons.ArrowUpDown),
             contentDescription = null,
-            tint = colors.accent,
+            tint = colors.secondaryFg,
             modifier = Modifier
                 .size(16.dp)
                 .rotate(rotation),
@@ -439,6 +441,7 @@ private fun SwapButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
 @Composable
 private fun PlannerUnreachableState(onRetry: () -> Unit) {
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -470,9 +473,8 @@ private fun PlannerUnreachableState(onRetry: () -> Unit) {
         Box(
             modifier = Modifier
                 .clip(CircleShape)
-                .background(colors.accent.copy(alpha = 0.22f))
-                .border(1.dp, colors.accent.copy(alpha = 0.45f), CircleShape)
-                .clickable { onRetry() }
+                .background(colors.accent)
+                .clickable { haptics.commit(); onRetry() }
                 .semantics { testTag = "planner-retry" }
                 .padding(horizontal = 24.dp, vertical = 10.dp),
             contentAlignment = Alignment.Center,
@@ -480,7 +482,7 @@ private fun PlannerUnreachableState(onRetry: () -> Unit) {
             Text(
                 stringResource(R.string.planner_retry),
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = colors.accent,
+                color = Color.White,
             )
         }
     }

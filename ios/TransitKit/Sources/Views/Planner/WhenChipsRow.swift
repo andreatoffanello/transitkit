@@ -44,17 +44,22 @@ struct WhenChipsRow: View {
 
     private var modeChip: some View {
         Menu {
-            Button { selection = .now } label: {
+            Button {
+                Haptics.selection()
+                selection = .now
+            } label: {
                 Label(L("planner_now"),
                       systemImage: mode == .now ? "checkmark" : "")
             }
             Button {
+                Haptics.selection()
                 selection = .departAt(seedDate())
             } label: {
                 Label(L("planner_depart_at"),
                       systemImage: mode == .depart ? "checkmark" : "")
             }
             Button {
+                Haptics.selection()
                 selection = .arriveBy(seedDate())
             } label: {
                 Label(L("planner_arrive_by"),
@@ -87,7 +92,7 @@ struct WhenChipsRow: View {
 
     private var timeChip: some View {
         Button {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            Haptics.navigate()
             showTimePicker = true
         } label: {
             chipLabel(text: timeLabel, showChevron: false)
@@ -117,7 +122,7 @@ struct WhenChipsRow: View {
 
     private var dateChip: some View {
         Button {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            Haptics.navigate()
             showDatePicker = true
         } label: {
             chipLabel(text: dateLabel, showChevron: false)

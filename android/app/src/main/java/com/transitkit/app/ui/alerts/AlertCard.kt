@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.rememberHaptics
 import com.transitkit.app.data.model.AlertSeverity
 import com.transitkit.app.data.model.ScheduleRoute
 import com.transitkit.app.data.model.ServiceAlert
@@ -54,6 +55,7 @@ fun AlertCard(
     onClick: (() -> Unit)? = null,
 ) {
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     val severity = severityAccent(alert.severity)
     val baseModifier = modifier
         .fillMaxWidth()
@@ -65,7 +67,7 @@ fun AlertCard(
         baseModifier.clickable(
             interactionSource = remember { MutableInteractionSource() },
             indication = ripple(),
-            onClick = onClick,
+            onClick = { haptics.navigate(); onClick() },
         )
     } else baseModifier
 

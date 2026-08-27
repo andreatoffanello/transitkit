@@ -52,7 +52,7 @@ struct FareInfoView: View {
 
                                     Text(fare.price)
                                         .font(.subheadline.weight(.bold))
-                                        .foregroundStyle(AppTheme.accent)
+                                        .foregroundStyle(AppTheme.accentReadable)
                                         .frame(width: 80, alignment: .trailing)
                                 }
                             }
@@ -76,7 +76,7 @@ struct FareInfoView: View {
                         HStack(alignment: .top, spacing: 12) {
                             LucideIcon.info.image
                                 .font(.body)
-                                .foregroundStyle(AppTheme.accent)
+                                .foregroundStyle(AppTheme.accentReadable)
                             Text(notes)
                                 .font(.subheadline)
                                 .foregroundStyle(AppTheme.textSecondary)
@@ -94,10 +94,10 @@ struct FareInfoView: View {
                             HStack(spacing: 12) {
                                 LucideIcon.ticket.image
                                     .font(.body.weight(.semibold))
-                                    .foregroundStyle(AppTheme.accent)
+                                    .foregroundStyle(AppTheme.accentReadable)
                                 Text(L("fare_buy_online"))
                                     .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(AppTheme.accent)
+                                    .foregroundStyle(AppTheme.secondaryFg)
                                 Spacer()
                                 LucideIcon.externalLink.image
                                     .font(.caption.weight(.semibold))
@@ -106,16 +106,17 @@ struct FareInfoView: View {
                             .padding(16)
                         }
                     }
+                    .simultaneousGesture(TapGesture().onEnded { Haptics.commit() })
                 } else if let url = URL(string: operatorUrl) {
                     Link(destination: url) {
                         GlassCard(cornerRadius: 16) {
                             HStack(spacing: 12) {
                                 LucideIcon.globe.image
                                     .font(.body.weight(.semibold))
-                                    .foregroundStyle(AppTheme.accent)
+                                    .foregroundStyle(AppTheme.accentReadable)
                                 Text(L("fare_visit_website"))
                                     .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(AppTheme.accent)
+                                    .foregroundStyle(AppTheme.secondaryFg)
                                 Spacer()
                                 LucideIcon.externalLink.image
                                     .font(.caption.weight(.semibold))
@@ -124,6 +125,7 @@ struct FareInfoView: View {
                             .padding(16)
                         }
                     }
+                    .simultaneousGesture(TapGesture().onEnded { Haptics.commit() })
                 }
 
                 Spacer(minLength: 32)

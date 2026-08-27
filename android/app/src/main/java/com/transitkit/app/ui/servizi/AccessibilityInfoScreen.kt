@@ -41,6 +41,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.rememberHaptics
 import com.transitkit.app.config.resolved
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,6 +54,7 @@ fun AccessibilityInfoScreen(
     val access = config.accessibility
     val colors = TransitTheme.colors
     val context = LocalContext.current
+    val haptics = rememberHaptics()
 
     Scaffold(
         topBar = {
@@ -69,7 +71,7 @@ fun AccessibilityInfoScreen(
                         Icon(
                             painterResource(LucideIcons.ChevronLeft),
                             contentDescription = stringResource(R.string.cd_indietro),
-                            tint = colors.accent,
+                            tint = colors.secondaryFg,
                         )
                     }
                 },
@@ -118,7 +120,7 @@ fun AccessibilityInfoScreen(
                         Icon(
                             painter = painterResource(LucideIcons.Accessibility),
                             contentDescription = null,
-                            tint = colors.accent,
+                            tint = colors.accentReadable,
                             modifier = Modifier.size(34.dp),
                         )
                     }
@@ -199,6 +201,7 @@ fun AccessibilityInfoScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp)
                             .clickable {
+                                haptics.commit()
                                 context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
                             },
                         shape = RoundedCornerShape(16.dp),
@@ -216,7 +219,7 @@ fun AccessibilityInfoScreen(
                             Icon(
                                 painter = painterResource(LucideIcons.ExternalLink),
                                 contentDescription = null,
-                                tint = colors.accent,
+                                tint = colors.accentReadable,
                                 modifier = Modifier.size(18.dp),
                             )
                             Text(

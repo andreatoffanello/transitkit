@@ -38,7 +38,9 @@ import com.transitkit.app.R
 import androidx.compose.ui.unit.dp
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.config.surfaceOverMap
 import com.transitkit.app.ui.components.BrandPickerDialog
+import com.transitkit.app.ui.components.rememberHaptics
 import com.transitkit.app.ui.components.WheelTimePicker
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -58,6 +60,7 @@ fun WhenChipRow(
     onSelectionChange: (PlannerViewModel.WhenSelection) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val haptics = rememberHaptics()
     var modeMenuOpen by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
@@ -113,6 +116,7 @@ fun WhenChipRow(
                                 )
                             },
                             onClick = {
+                                haptics.selection()
                                 val newDate = if (selection.mode == 0 && mode != 0) Date() else selection.date
                                 onSelectionChange(selection.copy(mode = mode, date = newDate))
                                 modeMenuOpen = false
@@ -227,13 +231,16 @@ private fun WhenChip(
     onClick: () -> Unit,
 ) {
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     Surface(
         shape = RoundedCornerShape(20.dp),
-        color = colors.bgSecondary,
+        // Sulla home il chip sta sopra lo shader: bgSecondary è glass e sparisce.
+        // Stessa superficie opaca delle card — un solo materiale.
+        color = colors.surfaceOverMap,
         border = BorderStroke(0.5.dp, colors.glassBorder),
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
-            .clickable(onClick = onClick),
+            .clickable { haptics.navigate(); onClick() },
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
@@ -244,14 +251,14 @@ private fun WhenChip(
                 Icon(
                     painter = painterResource(leadingIcon),
                     contentDescription = null,
-                    tint = if (accent) colors.accent else colors.textSecondary,
+                    tint = if (accent) colors.accentReadable else colors.textSecondary,
                     modifier = Modifier.size(16.dp),
                 )
             }
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = if (accent) colors.textPrimary else colors.textSecondary,
+                color = colors.textPrimary,
             )
             if (trailingChevron) {
                 Icon(

@@ -38,6 +38,7 @@ struct AlertDetailView: View {
                     Link(destination: parsed) {
                         readMoreRow
                     }
+                    .simultaneousGesture(TapGesture().onEnded { Haptics.commit() })
                 }
 
                 Spacer(minLength: 32)
@@ -203,7 +204,7 @@ struct AlertDetailView: View {
     private var readMoreRow: some View {
         HStack(spacing: 12) {
             LucideIcon.externalLink.sized(18)
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(AppTheme.accentReadable)
             Text(L("alerts_read_more"))
                 .font(.headline)
                 .foregroundStyle(AppTheme.textPrimary)
@@ -228,7 +229,7 @@ struct AlertDetailView: View {
         HStack(spacing: 8) {
             icon.image
                 .font(.subheadline)
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(AppTheme.accentReadable)
             Text(label.uppercased())
                 .font(.caption.weight(.semibold))
                 .kerning(0.6)
@@ -252,7 +253,7 @@ struct AlertDetailView: View {
         switch alert.severity {
         case .severe:  return .red
         case .warning: return .orange
-        case .info:    return AppTheme.accent
+        case .info:    return AppTheme.accentReadable
         case .unknown: return AppTheme.textSecondary
         }
     }

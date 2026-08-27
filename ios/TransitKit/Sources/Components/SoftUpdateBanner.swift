@@ -24,7 +24,7 @@ struct SoftUpdateBanner: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top, spacing: 10) {
                 LucideIcon.refreshCw.sized(18)
-                    .foregroundStyle(accentColor)
+                    .foregroundStyle(AppTheme.accentReadable)
 
                 Text(L("update_available_title"))
                     .font(.system(size: 15, weight: .semibold))
@@ -41,6 +41,7 @@ struct SoftUpdateBanner: View {
 
             HStack(spacing: 12) {
                 Button {
+                    Haptics.commit()
                     AppUpdateChecker.shared.openStore(softUpdate.storeUrl)
                 } label: {
                     Text(L("update_now_label"))
@@ -54,6 +55,7 @@ struct SoftUpdateBanner: View {
                 .accessibilityIdentifier("btn_soft_update")
 
                 Button {
+                    Haptics.selection()
                     AppUpdateChecker.shared.dismissSoftUpdate()
                 } label: {
                     Text(L("update_later_label"))

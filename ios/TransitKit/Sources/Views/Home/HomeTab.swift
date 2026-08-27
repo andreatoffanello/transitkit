@@ -229,7 +229,7 @@ struct HomeTab: View {
             }
             Spacer(minLength: 0)
             Button {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                Haptics.navigate()
                 // Presentata da ContentView, fuori dal `.id` del TabView.
                 router.pendingSettingsOpen = UUID()
             } label: {
@@ -258,7 +258,7 @@ struct HomeTab: View {
 
     private var alertChip: some View {
         Button {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            Haptics.navigate()
             showAlertList = true
         } label: {
             HStack(spacing: 8) {
@@ -289,7 +289,7 @@ struct HomeTab: View {
         switch highestSeverity(alertStore.activeAlerts) {
         case .severe:  return .red
         case .warning: return .orange
-        default:       return AppTheme.accent
+        default:       return AppTheme.accentReadable
         }
     }
 
@@ -343,6 +343,7 @@ struct HomeTab: View {
                 VStack(spacing: 8) {
                     ForEach(favoriteStops) { stop in
                         Button {
+                            Haptics.navigate()
                             selectedMainStop = stop
                         } label: {
                             stopCard(stop, showLiveBadge: false)
@@ -400,22 +401,22 @@ struct HomeTab: View {
         // Routes-by-stop map only for the 8 cards we'll render.
         var map: [String: [APIRoute]] = [:]
         for (stop, _) in ranked {
-            map[stop.id] = stop.lineNames.compactMap { lineName in
-                store.routes.first { $0.name == lineName }
-            }
-            .uniqued(by: \.id)
+            var seenRouteIds = Set<String>()
+            map[stop.id] = stop.lineNames
+                .compactMap { lineName in store.routes.first { $0.name == lineName } }
+                .filter { seenRouteIds.insert($0.id).inserted }
         }
         routesByStopId = map
     }
 
     private var enableLocationChip: some View {
         Button {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            Haptics.commit()
             locationManager.requestPermissionAndStart()
         } label: {
             HStack(spacing: 8) {
                 LucideIcon.mapPin.sized(14)
-                    .foregroundStyle(AppTheme.accent)
+                    .foregroundStyle(AppTheme.accentReadable)
                 Text(L("home_enable_location_chip"))
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(AppTheme.textPrimary)
@@ -471,7 +472,6 @@ struct HomeTab: View {
             tripId.flatMap { vehicleStore.reliableDelayMinutes(forTripId: $0) }
         }
         let transitTypeIcon: Image = stopPinIcon(transitTypes: stop.transitTypes).image
-        let isImminent = departures.first.map { isWithinFiveMinutes($0) } ?? false
 
         return VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 6) {
@@ -524,26 +524,6 @@ struct HomeTab: View {
         }
         .padding(14)
         .adaptiveGlass(in: RoundedRectangle(cornerRadius: 14), withShadow: true)
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(
-                    isImminent ? AppTheme.accent.opacity(0.6) : Color.clear,
-                    lineWidth: isImminent ? 1.5 : 0
-                )
-        )
-    }
-
-    /// True se la partenza è entro 5 minuti — usato per evidenziare la card.
-    private func isWithinFiveMinutes(_ dep: Departure) -> Bool {
-        let now = Date()
-        let cal = Calendar.current
-        let comps = dep.time.split(separator: ":").compactMap { Int($0) }
-        guard comps.count == 2 else { return false }
-        guard let depDate = cal.date(bySettingHour: comps[0], minute: comps[1], second: 0, of: now) else {
-            return false
-        }
-        let delta = depDate.timeIntervalSince(now)
-        return delta >= 0 && delta <= 300
     }
 
     // MARK: - Onboarding Card
@@ -555,7 +535,7 @@ struct HomeTab: View {
                     .fill(AppTheme.accent.opacity(0.12))
                     .frame(width: 56, height: 56)
                 LucideIcon.star.sized(24)
-                    .foregroundStyle(AppTheme.accent)
+                    .foregroundStyle(AppTheme.accentReadable)
             }
 
             VStack(spacing: 6) {
@@ -570,6 +550,8 @@ struct HomeTab: View {
             }
 
             Button {
+                // Nessun tick qui: `ContentView.onChange(of: selectedTab)` possiede
+                // già l'aptico del cambio tab — chiamarlo anche qui dà due buzz.
                 selectedTab = 1   // tab Orari
             } label: {
                 Text(L("home_empty_favorites_cta"))
@@ -629,7 +611,7 @@ struct HomeTab: View {
         let routeCount = store.routes.count
 
         return Button {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            Haptics.navigate()
             showServizi = true
         } label: {
             HStack(spacing: 14) {
@@ -712,7 +694,7 @@ struct HomeTab: View {
     @ViewBuilder
     private var serviziLinkSection: some View {
         Button {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            Haptics.navigate()
             showServizi = true
         } label: {
             HStack(spacing: 12) {
@@ -720,7 +702,7 @@ struct HomeTab: View {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(AppTheme.accent.opacity(0.12))
                     LucideIcon.grid2x2Plus.sized(20)
-                        .foregroundStyle(AppTheme.accent)
+                        .foregroundStyle(AppTheme.accentReadable)
                 }
                 .frame(width: 40, height: 40)
 

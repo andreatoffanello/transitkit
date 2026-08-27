@@ -22,9 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -43,6 +41,7 @@ import com.transitkit.app.ui.components.LineBadgeSize
 import com.transitkit.app.ui.components.TimeDisplay
 import com.transitkit.app.ui.components.departureTimeState
 import com.transitkit.app.ui.components.stopIcon
+import com.transitkit.app.ui.components.rememberHaptics
 
 // ---------------------------------------------------------------------------
 // SectionHeader — shared by FavoritesSection and NearbySection
@@ -139,7 +138,7 @@ internal fun EmptyFavoritesCard(
                 Icon(
                     painter = painterResource(LucideIcons.Star),
                     contentDescription = null,
-                    tint = colors.accent,
+                    tint = colors.accentReadable,
                     modifier = Modifier.size(24.dp),
                 )
             }
@@ -182,14 +181,14 @@ internal fun StopCard(
     modifier: Modifier = Modifier,
 ) {
     val colors = TransitTheme.colors
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     val isImminent = departures.firstOrNull()?.let {
         isWithinFiveMinutes(it, operatorTimezone)
     } ?: false
 
     Surface(
         onClick = {
-            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            haptics.navigate()
             onClick()
         },
         modifier = modifier.fillMaxWidth(),

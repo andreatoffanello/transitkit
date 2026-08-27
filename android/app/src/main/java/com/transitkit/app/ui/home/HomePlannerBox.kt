@@ -24,8 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -40,6 +38,7 @@ import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.config.surfaceOverMap
 import com.transitkit.app.data.model.PlannerLocation
+import com.transitkit.app.ui.components.rememberHaptics
 import com.transitkit.app.ui.planner.PlannerViewModel
 import com.transitkit.app.ui.planner.WhenChipRow
 
@@ -56,7 +55,7 @@ internal fun PlannerHomeBox(
     modifier: Modifier = Modifier,
 ) {
     val colors = TransitTheme.colors
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     val shape = RoundedCornerShape(14.dp)
 
     val homeOrigin by plannerViewModel.homeOrigin.collectAsStateWithLifecycle()
@@ -115,7 +114,7 @@ internal fun PlannerHomeBox(
                     .fillMaxWidth()
                     .height(56.dp)
                     .clickable {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        haptics.navigate()
                         onNavigateToLocationPicker("origin")
                     }
                     .padding(horizontal = 16.dp),
@@ -124,7 +123,7 @@ internal fun PlannerHomeBox(
             ) {
                 OrigDestIconColumn(
                     role = OrigDestRole.Origin,
-                    accent = colors.accent,
+                    accent = colors.accentReadable,
                     modifier = Modifier.size(width = 28.dp, height = 56.dp),
                 )
                 Text(
@@ -146,7 +145,7 @@ internal fun PlannerHomeBox(
                     .fillMaxWidth()
                     .height(56.dp)
                     .clickable {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        haptics.navigate()
                         onNavigateToLocationPicker("destination")
                     }
                     .padding(horizontal = 16.dp),
@@ -155,7 +154,7 @@ internal fun PlannerHomeBox(
             ) {
                 OrigDestIconColumn(
                     role = OrigDestRole.Destination,
-                    accent = colors.accent,
+                    accent = colors.accentReadable,
                     modifier = Modifier.size(width = 28.dp, height = 56.dp),
                 )
                 Text(
@@ -170,7 +169,7 @@ internal fun PlannerHomeBox(
                 if (bothFilled) {
                     IconButton(
                         onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            haptics.selection()
                             plannerViewModel.swapHomeStops()
                         },
                         modifier = Modifier.size(36.dp),
@@ -178,7 +177,7 @@ internal fun PlannerHomeBox(
                         Icon(
                             painter = painterResource(LucideIcons.ArrowUpDown),
                             contentDescription = stringResource(R.string.cd_swap),
-                            tint = colors.accent,
+                            tint = colors.secondaryFg,
                             modifier = Modifier.size(18.dp),
                         )
                     }
@@ -200,7 +199,7 @@ internal fun PlannerHomeBox(
             SearchButton(
                 enabled = bothFilled,
                 onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    haptics.commit()
                     launchPlanner()
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -221,7 +220,7 @@ internal fun PlannerHomeBox(
                 SearchButton(
                     enabled = bothFilled,
                     onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        haptics.commit()
                         launchPlanner()
                     },
                 )
@@ -242,7 +241,7 @@ private fun SearchButton(
     // surfaceOverMap: il bottone sta sopra lo shader — bgSecondary glass
     // in dark sarebbe trasparente (stessa classe della card su mappa).
     val bg = if (enabled) colors.accent else colors.surfaceOverMap
-    val fg = if (enabled) Color.White else colors.textTertiary
+    val fg = if (enabled) Color.White else colors.textSecondary
     Row(
         modifier = modifier
             .background(bg, RoundedCornerShape(percent = 50))

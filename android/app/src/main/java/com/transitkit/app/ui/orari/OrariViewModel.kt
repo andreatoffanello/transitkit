@@ -14,9 +14,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -59,7 +61,14 @@ class OrariViewModel @Inject constructor(
     ) { stops, tab ->
         if (tab != OrariTab.STOPS) return@combine emptyList()
         stops.flatMap { it.transitTypes }.distinct().sorted()
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    }
+        // `stateIn(viewModelScope)` colleziona su Dispatchers.Main, e il blocco di
+        // `combine` gira nel contesto del collettore: senza questo lo scoring fuzzy
+        // e i sort su TUTTE le fermate stavano sul main thread. Misurato: digitare
+        // nella ricerca fermate bloccava l'input oltre 5s e il sistema uccideva
+        // l'app con un ANR ("Input dispatching timed out").
+        .flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     @OptIn(FlowPreview::class)
     val stops: StateFlow<List<ResolvedStop>> = combine(
@@ -79,7 +88,14 @@ class OrariViewModel @Inject constructor(
                 .sortedByDescending { (_, score) -> score }
                 .map { (stop, _) -> stop }
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    }
+        // `stateIn(viewModelScope)` colleziona su Dispatchers.Main, e il blocco di
+        // `combine` gira nel contesto del collettore: senza questo lo scoring fuzzy
+        // e i sort su TUTTE le fermate stavano sul main thread. Misurato: digitare
+        // nella ricerca fermate bloccava l'input oltre 5s e il sistema uccideva
+        // l'app con un ANR ("Input dispatching timed out").
+        .flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val groupedStops: StateFlow<Map<Int, List<ResolvedStop>>> = combine(
         repository.stops,
@@ -90,18 +106,29 @@ class OrariViewModel @Inject constructor(
         allStops
             .groupBy { stop -> stop.transitTypes.firstOrNull() ?: 3 }
             .toSortedMap()
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+    }
+        // `stateIn(viewModelScope)` colleziona su Dispatchers.Main, e il blocco di
+        // `combine` gira nel contesto del collettore: senza questo lo scoring fuzzy
+        // e i sort su TUTTE le fermate stavano sul main thread. Misurato: digitare
+        // nella ricerca fermate bloccava l'input oltre 5s e il sistema uccideva
+        // l'app con un ANR ("Input dispatching timed out").
+        .flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     val stopNamesByRouteId: StateFlow<Map<String, String>> = repository.scheduleResponse
         .map { schedule ->
-            schedule?.routes?.associate { route ->
-                val stopNamesById = schedule.stops.associateBy({ it.id }, { it.name })
+            if (schedule == null) return@map emptyMap()
+            // L'indice va costruito UNA volta: era dentro `associate`, quindi
+            // veniva ricostruito su tutte le fermate per ogni singola route.
+            val stopNamesById = schedule.stops.associateBy({ it.id }, { it.name })
+            schedule.routes.associate { route ->
                 val names = route.directions.firstOrNull()?.stopIds
                     ?.mapNotNull { stopNamesById[it] }
                     ?: emptyList()
                 route.id to names.joinToString(" · ")
-            } ?: emptyMap()
+            }
         }
+        .flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     @OptIn(FlowPreview::class)
@@ -114,9 +141,15 @@ class OrariViewModel @Inject constructor(
             r.name.contains(query, ignoreCase = true) || r.longName.contains(query, ignoreCase = true)
         }
         else list
-            .filter { r -> maxOf(fuzzyScore(r.longName.ifBlank { r.name }, query), fuzzyScore(r.name, query)) > 0 }
-            .sortedByDescending { r -> maxOf(fuzzyScore(r.longName.ifBlank { r.name }, query), fuzzyScore(r.name, query)) }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+            // Punteggio calcolato una volta per elemento: prima era due volte nel
+            // filtro e altre due a ogni confronto del sort.
+            .map { r -> r to maxOf(fuzzyScore(r.longName.ifBlank { r.name }, query), fuzzyScore(r.name, query)) }
+            .filter { (_, score) -> score > 0 }
+            .sortedByDescending { (_, score) -> score }
+            .map { (r, _) -> r }
+    }
+        .flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /** True ONLY when the schedule has finished loading AND the operator genuinely
      *  has zero routes. Derived atomically from repository.isLoading + repository.routes

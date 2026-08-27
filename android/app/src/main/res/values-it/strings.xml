@@ -197,8 +197,6 @@
     <string name="settings_section_info">Info</string>
 
     <!-- Settings — favorites -->
-    <string name="settings_fermate_salvate_one">1 fermata salvata</string>
-    <string name="settings_fermate_salvate_other">%d fermate salvate</string>
     <string name="settings_nessuno_salvato">Nessuno salvato</string>
 
     <!-- Settings — notifications -->

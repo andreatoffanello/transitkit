@@ -10,6 +10,7 @@ import com.transitkit.app.data.model.ScheduleResponse
 import com.transitkit.app.data.model.ScheduleRoute
 import com.transitkit.app.data.model.ScheduleStop
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -63,6 +64,12 @@ class ScheduleRepository @Inject constructor(
 
     // Skip background CDN check when data was just fetched from network (parity iOS)
     @Volatile private var lastFetchedFromNetworkAt: Long = 0L
+
+    // Incrementata da ogni forceReload riuscito. Il refresh in background di
+    // load() la rilegge prima di applicare il proprio JSON: senza, una fetch
+    // partita prima del force reload atterra dopo e ripristina la pubblicazione
+    // vecchia che l'utente stava cercando di scavalcare.
+    @Volatile private var scheduleGeneration: Int = 0
     private val CDN_FRESH_THRESHOLD_MS = 5 * 60 * 1000L // 5 min
 
     // Singleton-scoped scope for background work that outlives any ViewModel
@@ -116,13 +123,16 @@ class ScheduleRepository @Inject constructor(
         return result.schedule
     }
 
-    private suspend fun fetchFromCdn(): Pair<String, ScheduleResponse>? {
+    /** [bypassEtag] serve al force reload: con `If-None-Match` il CDN
+     *  risponderebbe 304 e ci rimanderebbe alla stessa cache che l'utente sta
+     *  chiedendo di scavalcare. */
+    private suspend fun fetchFromCdn(bypassEtag: Boolean = false): Pair<String, ScheduleResponse>? {
         val cdnBase = config.cdnUrl ?: return null
         val url = "$cdnBase/${config.id}/schedules.json"
         return withContext(Dispatchers.IO) {
             try {
                 val requestBuilder = Request.Builder().url(url)
-                loadEtag()?.let { requestBuilder.addHeader("If-None-Match", it) }
+                if (!bypassEtag) loadEtag()?.let { requestBuilder.addHeader("If-None-Match", it) }
                 val response = okHttpClient.newCall(requestBuilder.build()).execute()
 
                 if (response.code == 304) {
@@ -145,9 +155,9 @@ class ScheduleRepository @Inject constructor(
     }
 
     suspend fun load() {
-        // Fast path: schedule already in memory (iOS parity). `_scheduleResponse`
-        // is only ever set, never reset, so once populated every caller returns
-        // here without touching the lock or `isLoading`.
+        // Fast path: schedule already in memory (iOS parity). Once populated
+        // every caller returns here without touching the lock or `isLoading`
+        // — solo [forceReload] lo riazzera, e lo fa dentro lo stesso mutex.
         if (_scheduleResponse.value != null) return
 
         // The whole fetch-once must be atomic. The previous guard —
@@ -172,12 +182,19 @@ class ScheduleRepository @Inject constructor(
                     // Skip background CDN check if data was just fetched from network (parity iOS)
                     val isDataFresh = System.currentTimeMillis() - lastFetchedFromNetworkAt < CDN_FRESH_THRESHOLD_MS
                     if (!isDataFresh) {
+                        val generation = scheduleGeneration
                         repositoryScope.launch {
                             val (freshJson, freshSchedule) = fetchFromCdn() ?: return@launch
                             if (freshSchedule.lastUpdated != cachedSchedule?.lastUpdated) {
-                                saveToCache(freshJson)
-                                parseAndApply(freshJson)
-                                lastFetchedFromNetworkAt = System.currentTimeMillis()
+                                // Stesso lock di forceReload, più il controllo di
+                                // generazione: il lock serializza le scritture,
+                                // la generazione scarta quelle ormai superate.
+                                loadMutex.withLock {
+                                    if (generation != scheduleGeneration) return@withLock
+                                    saveToCache(freshJson)
+                                    parseAndApply(freshJson)
+                                    lastFetchedFromNetworkAt = System.currentTimeMillis()
+                                }
                             }
                         }
                     }
@@ -198,6 +215,48 @@ class ScheduleRepository @Inject constructor(
             } finally {
                 _isLoading.value = false
             }
+        }
+    }
+
+    /**
+     * Riscarica gli orari dal CDN ignorando cache ed ETag. Ritorna `true` se la
+     * pubblicazione fresca è stata applicata.
+     *
+     * Serve solo alla modalità sviluppatore: [load] ha per contratto un fast
+     * path che ritorna appena `_scheduleResponse` è popolato, quindi non esiste
+     * altro modo di rivedere una pubblicazione appena uscita senza disinstallare
+     * l'app. Passa dallo stesso [loadMutex] di [load] e del refresh in
+     * background, che è l'unico altro scrittore degli indici.
+     *
+     * Scarica PRIMA e sostituisce POI: cancellare cache e indici in apertura
+     * lasciava, a rete assente, gli screen che leggono `stops`/`routes` con i
+     * dati vecchi, `_scheduleResponse` a null e il file di cache buttato — cioè
+     * un'app che al successivo avvio offline non aveva più niente da mostrare.
+     */
+    suspend fun forceReload(): Boolean = loadMutex.withLock {
+        _isLoading.value = true
+        _loadError.value = null
+        try {
+            val result = fetchFromCdn(bypassEtag = true)
+            if (result == null) {
+                _loadError.value = context.getString(R.string.schedule_load_error)
+                return@withLock false
+            }
+            val (freshJson, _) = result
+            withContext(Dispatchers.IO) { saveToCache(freshJson) }
+            parseAndApply(freshJson)
+            lastFetchedFromNetworkAt = System.currentTimeMillis()
+            scheduleGeneration++
+            true
+        } catch (e: CancellationException) {
+            // Uscire dalla schermata a metà fetch cancella il viewModelScope del
+            // chiamante: non è un fallimento di rete e non va segnalato come tale.
+            throw e
+        } catch (_: Exception) {
+            _loadError.value = context.getString(R.string.schedule_load_error)
+            false
+        } finally {
+            _isLoading.value = false
         }
     }
 

@@ -27,6 +27,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -38,16 +39,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import com.transitkit.app.R
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.transitkit.app.BuildConfig
+import com.transitkit.app.config.DeveloperMode
 import com.transitkit.app.config.OperatorConfig
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.data.model.ResolvedStop
+import com.transitkit.app.ui.components.rememberHaptics
 
 // ---------------------------------------------------------------------------
 // SettingsRow — flat custom row, iOS-parity: 40dp icon box, 14dp vertical
@@ -55,6 +60,7 @@ import com.transitkit.app.data.model.ResolvedStop
 
 @Composable
 fun SettingsRow(
+    modifier: Modifier = Modifier,
     icon: Int,
     iconTint: Color? = null,
     title: String,
@@ -63,9 +69,9 @@ fun SettingsRow(
     trailing: (@Composable () -> Unit)? = null,
 ) {
     val colors = TransitTheme.colors
-    val accent = iconTint ?: colors.accent
+    val accent = iconTint ?: colors.accentReadable
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .semantics {
@@ -192,21 +198,29 @@ private fun OperatorCard(config: OperatorConfig) {
 // ---------------------------------------------------------------------------
 
 @Composable
-private fun FavoriteStopRow(stop: ResolvedStop, onRemove: () -> Unit) {
+private fun FavoriteStopRow(stop: ResolvedStop, onClick: () -> Unit, onRemove: () -> Unit) {
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     val cdFermata = stringResource(R.string.cd_fermata_salvata, stop.name)
     val cdRimuovi = stringResource(R.string.cd_rimuovi_fermata, stop.name)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .semantics { contentDescription = cdFermata }
+            .clickable {
+                haptics.navigate()
+                onClick()
+            }
+            .semantics {
+                contentDescription = cdFermata
+                testTag = "favorite_stop_row"
+            }
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             painter = painterResource(LucideIcons.BusFront),
             contentDescription = null,
-            tint = colors.accent,
+            tint = colors.accentReadable,
             modifier = Modifier.size(18.dp),
         )
         Spacer(Modifier.width(12.dp))
@@ -216,18 +230,28 @@ private fun FavoriteStopRow(stop: ResolvedStop, onRemove: () -> Unit) {
                 style = MaterialTheme.typography.bodyMedium,
                 color = colors.textPrimary,
             )
-            Text(
-                text = stop.id,
-                style = MaterialTheme.typography.bodySmall,
-                color = colors.textTertiary,
-            )
+            // Le linee servite, non `stop.id`: l'id è uno slug interno
+            // (`appalcart_howard_st_hardin_st`) e non dice niente a nessuno.
+            // Parità con iOS `FavoritesListView.favoriteRow`.
+            if (stop.routeNames.isNotEmpty()) {
+                Text(
+                    text = stop.routeNames.take(5).joinToString(" · "),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textTertiary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
         Spacer(Modifier.width(8.dp))
         Box(
             modifier = Modifier
                 .size(32.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .clickable(onClick = onRemove)
+                .clickable {
+                    haptics.destructive()
+                    onRemove()
+                }
                 .semantics { contentDescription = cdRimuovi },
             contentAlignment = Alignment.Center,
         ) {
@@ -268,12 +292,15 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
     onBack: () -> Unit = {},
     onNavigateToOrari: () -> Unit = {},
+    onNavigateToStop: (stopId: String, stopName: String) -> Unit = { _, _ -> },
     onNavigateToLanguage: () -> Unit = {},
+    onNavigateToDeveloper: () -> Unit = {},
 ) {
     val favoriteStops by viewModel.favoriteStops.collectAsStateWithLifecycle()
     val notificationsBusy by viewModel.notificationsBusy.collectAsStateWithLifecycle()
     val config = viewModel.operatorConfig
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     val favoriteList = favoriteStops
 
     // ── POST_NOTIFICATIONS runtime permission (Android 13+) ─────────────────
@@ -304,6 +331,51 @@ fun SettingsScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
     val notificationsEnabled = remember(permissionTick) { notifPermissionGranted() }
+
+    // ── Sblocco modalità sviluppatore (7 tap sulla riga versione) ───────────
+    // Il conteggio vive qui e non in DeveloperMode: è stato di una gesture in
+    // corso, non una preferenza. La finestra rolling evita che tap sparsi nel
+    // tempo sommino fino a sbloccare per sbaglio.
+    // Ri-letta a ogni ON_RESUME della destinazione (stesso tick del permesso):
+    // tornando da Developer dopo averla spenta, la sezione deve sparire.
+    var developerEnabled by remember(permissionTick) { mutableStateOf(DeveloperMode.isEnabled(context)) }
+    var tapCount by remember { mutableStateOf(0) }
+    var lastTapAt by remember { mutableStateOf(0L) }
+    val onVersionTap: () -> Unit = {
+        if (developerEnabled) {
+            // Ri-tappare quando è già attiva non deve spegnerla di nascosto:
+            // si disattiva solo dalla riga esplicita in Developer.
+            android.widget.Toast.makeText(
+                context, context.getString(R.string.dev_already_enabled),
+                android.widget.Toast.LENGTH_SHORT,
+            ).show()
+        } else {
+            val now = android.os.SystemClock.elapsedRealtime()
+            tapCount = if (now - lastTapAt > DeveloperMode.TAP_WINDOW_MS) 1 else tapCount + 1
+            lastTapAt = now
+            val remaining = DeveloperMode.UNLOCK_TAPS - tapCount
+            when {
+                remaining <= 0 -> {
+                    haptics.commit()
+                    DeveloperMode.setEnabled(context, true)
+                    developerEnabled = true
+                    tapCount = 0
+                    viewModel.onDeveloperModeChanged()
+                    android.widget.Toast.makeText(
+                        context, context.getString(R.string.dev_unlock_done),
+                        android.widget.Toast.LENGTH_SHORT,
+                    ).show()
+                }
+                remaining <= 3 -> {
+                    haptics.tick()
+                    android.widget.Toast.makeText(
+                        context, context.resources.getQuantityString(R.plurals.dev_unlock_countdown, remaining, remaining),
+                        android.widget.Toast.LENGTH_SHORT,
+                    ).show()
+                }
+            }
+        }
+    }
     val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
     ) { granted ->
@@ -349,22 +421,7 @@ fun SettingsScreen(
         // ── Preferiti ────────────────────────────────────────────────────────
         if (config.features.enableFavorites) {
             item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    SectionLabel(text = stringResource(R.string.settings_section_preferiti))
-                    if (favoriteList.isNotEmpty()) {
-                        Spacer(modifier = Modifier.weight(1f))
-                        Text(
-                            text = if (favoriteList.size == 1) stringResource(R.string.settings_fermate_salvate_one)
-                                   else stringResource(R.string.settings_fermate_salvate_other, favoriteList.size),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = colors.textSecondary,
-                            modifier = Modifier.padding(end = 16.dp),
-                        )
-                    }
-                }
+                SectionLabel(text = stringResource(R.string.settings_section_preferiti))
             }
 
             item {
@@ -380,6 +437,7 @@ fun SettingsScreen(
                         favoriteList.forEachIndexed { index, stop ->
                             FavoriteStopRow(
                                 stop = stop,
+                                onClick = { onNavigateToStop(stop.id, stop.name) },
                                 onRemove = { viewModel.removeFavorite(stop.id) },
                             )
                             if (index < favoriteList.lastIndex) {
@@ -412,6 +470,7 @@ fun SettingsScreen(
                                 checked = notificationsEnabled,
                                 enabled = !notificationsBusy,
                                 onCheckedChange = { wantOn ->
+                                    if (wantOn) haptics.toggleOn() else haptics.toggleOff()
                                     if (wantOn) {
                                         if (notifPermissionGranted()) {
                                             viewModel.onNotificationsPermissionGranted()
@@ -472,7 +531,10 @@ fun SettingsScreen(
                     icon = LucideIcons.Globe,
                     title = stringResource(R.string.settings_section_lingua),
                     subtitle = com.transitkit.app.config.AppLocaleManager.current(context).label(context),
-                    onClick = onNavigateToLanguage,
+                    onClick = {
+                        haptics.navigate()
+                        onNavigateToLanguage()
+                    },
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -501,6 +563,7 @@ fun SettingsScreen(
                         title = stringResource(R.string.about_sito_web),
                         subtitle = config.name,
                         onClick = {
+                            haptics.commit()
                             context.startActivity(
                                 Intent(Intent.ACTION_VIEW, Uri.parse(rawUrl))
                             )
@@ -525,6 +588,7 @@ fun SettingsScreen(
                         icon = LucideIcons.Shield,
                         title = stringResource(R.string.about_privacy_policy),
                         onClick = {
+                            haptics.commit()
                             context.startActivity(
                                 Intent(Intent.ACTION_VIEW, Uri.parse(rawUrl))
                             )
@@ -545,6 +609,12 @@ fun SettingsScreen(
                     )
                 }
                 SettingsRow(
+                    // Bersaglio dello sblocco sviluppatore: passa dal modifier e
+                    // non da `onClick` perché quest'ultimo aggiungerebbe il
+                    // chevron, promettendo una destinazione che non c'è.
+                    modifier = Modifier
+                        .clickable(onClick = onVersionTap)
+                        .semantics { testTag = "settings_version_row" },
                     icon = LucideIcons.Info,
                     iconTint = colors.textTertiary,
                     title = stringResource(R.string.settings_versione),
@@ -566,6 +636,27 @@ fun SettingsScreen(
             )
             Spacer(modifier = Modifier.height(32.dp))
         }
+
+        // ── Developer (solo dopo lo sblocco) ─────────────────────────────────
+        if (developerEnabled) {
+            item {
+                SectionLabel(text = stringResource(R.string.dev_title))
+                CardContainer {
+                    SettingsRow(
+                        modifier = Modifier.semantics { testTag = "settings_developer_row" },
+                        icon = LucideIcons.Settings,
+                        iconTint = colors.textTertiary,
+                        title = stringResource(R.string.dev_title),
+                        subtitle = "${config.id} · v${BuildConfig.VERSION_NAME}",
+                        onClick = {
+                            haptics.navigate()
+                            onNavigateToDeveloper()
+                        },
+                    )
+                }
+                Spacer(modifier = Modifier.height(32.dp))
+            }
+        }
     }
 }
 
@@ -576,6 +667,7 @@ fun SettingsScreen(
 @Composable
 private fun PrivacyLocationCard() {
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
     val context = androidx.compose.ui.platform.LocalContext.current
     val granted = androidx.core.content.ContextCompat.checkSelfPermission(
         context, android.Manifest.permission.ACCESS_FINE_LOCATION
@@ -591,13 +683,13 @@ private fun PrivacyLocationCard() {
             Box(
                 modifier = Modifier
                     .size(32.dp)
-                    .background(colors.accent.copy(alpha = 0.12f), RoundedCornerShape(8.dp)),
+                    .background(colors.accentReadable.copy(alpha = 0.12f), RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     painter = painterResource(LucideIcons.MapPin),
                     contentDescription = null,
-                    tint = colors.accent,
+                    tint = colors.accentReadable,
                     modifier = Modifier.size(16.dp),
                 )
             }
@@ -620,10 +712,12 @@ private fun PrivacyLocationCard() {
                     text = stringResource(R.string.settings_location_open),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = colors.accent,
+                    color = colors.secondaryFg,
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
+                        .background(colors.secondaryFill)
                         .clickable {
+                            haptics.commit()
                             context.startActivity(
                                 android.content.Intent(
                                     android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,

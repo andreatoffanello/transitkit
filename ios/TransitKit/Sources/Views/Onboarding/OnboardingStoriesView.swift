@@ -87,16 +87,23 @@ struct OnboardingStoriesView: View {
                     .frame(height: 3)
                     .animation(.easeInOut(duration: 0.25), value: page)
             }
+            // Stesso trattamento di `SheetCloseButton` (18pt su disco 32 con
+            // target 44), ma il disco qui resta su ogni versione di iOS: non è
+            // una toolbar, quindi non c'è nessuna capsula di sistema sotto e
+            // senza disco la X resterebbe nuda sullo shader.
             Button {
-                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                Haptics.navigate()
                 dismiss()
             } label: {
-                LucideIcon.x.sized(16)
-                    .foregroundStyle(AppTheme.textSecondary)
-                    .frame(width: 28, height: 28)
+                LucideIcon.x.sized(18)
+                    .foregroundStyle(AppTheme.textPrimary)
+                    .frame(width: 32, height: 32)
                     .background(Circle().fill(AppTheme.bgSecondary))
+                    .frame(width: 44, height: 44)
+                    .contentShape(Circle())
             }
-            .padding(.leading, 8)
+            .buttonStyle(.plain)
+            .padding(.leading, 2)
             .accessibilityIdentifier("onboarding_close")
             .accessibilityLabel(L("action_close"))
         }
@@ -146,7 +153,7 @@ struct OnboardingStoriesView: View {
 
             VStack(spacing: 10) {
                 Button {
-                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                    Haptics.commit()
                     primaryAction()
                 } label: {
                     Text(primaryCta)
@@ -160,6 +167,7 @@ struct OnboardingStoriesView: View {
 
                 if let secondaryCta, let secondaryAction {
                     Button {
+                        Haptics.navigate()
                         secondaryAction()
                     } label: {
                         Text(secondaryCta)
@@ -212,7 +220,7 @@ struct OnboardingStoriesView: View {
             Spacer()
 
             Button {
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                Haptics.commit()
                 advance()
             } label: {
                 Text(L("onb_welcome_cta"))

@@ -30,8 +30,6 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
 import com.transitkit.app.R
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.compose.animation.fadeIn
@@ -48,6 +46,7 @@ import com.transitkit.app.config.OperatorConfig
 import com.transitkit.app.config.TransitKitTheme
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.ui.components.LocalHideBottomBarRequests
+import com.transitkit.app.ui.components.rememberHaptics
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
 import androidx.navigation.NavType
@@ -79,6 +78,7 @@ import com.transitkit.app.ui.planner.LocationPickerMapScreen
 import com.transitkit.app.ui.planner.LocationPickerScreen
 import com.transitkit.app.ui.planner.PlannerScreen
 import com.transitkit.app.ui.planner.PlannerViewModel
+import com.transitkit.app.ui.settings.DeveloperScreen
 import com.transitkit.app.ui.settings.LanguageScreen
 import com.transitkit.app.ui.settings.SettingsScreen
 import dagger.hilt.android.AndroidEntryPoint
@@ -103,6 +103,7 @@ sealed class Screen(val route: String) {
 private const val ROUTE_LINEE_ROOT = "linee"
 private const val ROUTE_SETTINGS_FROM_HOME = "settings_from_home"
 private const val ROUTE_LANGUAGE = "language"
+private const val ROUTE_DEVELOPER = "developer"
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -192,7 +193,16 @@ class MainActivity : ComponentActivity() {
         val lat = data.getQueryParameter("lat")?.toDoubleOrNull() ?: return
         val lng = data.getQueryParameter("lng")?.toDoubleOrNull() ?: return
         val zoom = data.getQueryParameter("zoom")?.toDoubleOrNull() ?: 16.0
-        val pitch = data.getQueryParameter("pitch")?.toDoubleOrNull()
+        // Il 3D è una funzione dello zoom, non un parametro libero: `pitch=55`
+        // a zoom cittadino darebbe una vista d'insieme inclinata e illeggibile.
+        // Il link esprime l'intento, MapZoomLevels decide se è concedibile.
+        val pitch = data.getQueryParameter("pitch")?.toDoubleOrNull()?.let { requested ->
+            com.transitkit.app.ui.mappa.MapZoomLevels.pitchFor(
+                zoom = zoom,
+                intent3D = requested > 0.0,
+                angle = requested,
+            )
+        }
         com.transitkit.app.ui.mappa.PendingMapCameraStore.set(
             com.transitkit.app.ui.mappa.PendingMapCamera(lat, lng, zoom, pitch)
         )
@@ -203,7 +213,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun TransitKitNavigation(operatorConfig: OperatorConfig) {
     val navController = rememberNavController()
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     val colors = TransitTheme.colors
     // Scoped to the activity — shared between Planner tab and JourneyDetail push.
     val plannerViewModel: PlannerViewModel = hiltViewModel()
@@ -313,17 +323,23 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                             alwaysShowLabel = true,
                             selected = isSelected,
                             onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                haptics.selection()
                                 navController.navigate(screen.route) {
                                     popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                     launchSingleTop = true
                                     restoreState = true
                                 }
                             },
+                            // Accent su un fondo di accent non regge: con
+                            // #0066CC in dark la label selezionata sta a 2.6:1,
+                            // la peggiore della schermata. La coppia
+                            // secondaryFg/secondaryFill è quella che il tema
+                            // garantisce leggibile in entrambi i modi (iOS fa
+                            // lo stesso con .tint(.primary) sulla tab bar).
                             colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = colors.accent,
-                                selectedTextColor = colors.accent,
-                                indicatorColor = colors.accent.copy(alpha = 0.22f),
+                                selectedIconColor = colors.secondaryFg,
+                                selectedTextColor = colors.secondaryFg,
+                                indicatorColor = colors.secondaryFill,
                                 unselectedIconColor = colors.tabInactive,
                                 unselectedTextColor = colors.tabInactive,
                             ),
@@ -428,7 +444,13 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
             ) {
                 SettingsScreen(
                     onBack = { navController.popBackStack() },
+                    onNavigateToStop = { stopId, stopName ->
+                        val encodedId = URLEncoder.encode(stopId, StandardCharsets.UTF_8.name())
+                        val encodedName = URLEncoder.encode(stopName, StandardCharsets.UTF_8.name())
+                        navController.navigate("stop/$encodedId?name=$encodedName")
+                    },
                     onNavigateToLanguage = { navController.navigate(ROUTE_LANGUAGE) },
+                    onNavigateToDeveloper = { navController.navigate(ROUTE_DEVELOPER) },
                     onNavigateToOrari = {
                         navController.popBackStack()
                         navController.navigate(Screen.Orari.route) {
@@ -442,6 +464,14 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
             // ── Lingua (pushata da Impostazioni) ────────────────────────────────
             composable(ROUTE_LANGUAGE) {
                 LanguageScreen(onBack = { navController.popBackStack() })
+            }
+
+            // ── Developer (pushata da Impostazioni, solo a modalità sbloccata) ──
+            composable(ROUTE_DEVELOPER) {
+                DeveloperScreen(
+                    onBack = { navController.popBackStack() },
+                    onReplayOnboarding = { navController.navigate("onboarding") },
+                )
             }
 
             // ── Orari (fermate only) ─────────────────────────────────────────────

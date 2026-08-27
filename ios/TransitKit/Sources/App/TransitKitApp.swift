@@ -27,10 +27,7 @@ struct TransitKitApp: App {
         LocalizationManager.shared.bootstrap()
 
         if CommandLine.arguments.contains("--reset-schedule-cache") {
-            let cacheDir = FileManager.default.urls(
-                for: .applicationSupportDirectory, in: .userDomainMask
-            )[0].appendingPathComponent("TransitKit", isDirectory: true)
-            try? FileManager.default.removeItem(at: cacheDir)
+            DeveloperMode.clearScheduleCache()
         }
     }
 
@@ -264,10 +261,11 @@ struct TransitKitApp: App {
 
         // MARK: Dev
 
-        #if DEBUG
+        // Gate a runtime e non `#if DEBUG`: chi fa QA su TestFlight ha bisogno
+        // del playground proprio lì, dove la build è Release.
         case "shader":
+            guard DeveloperMode.isEnabled else { return }
             router.showShaderPlayground = true
-        #endif
 
         default:
             break

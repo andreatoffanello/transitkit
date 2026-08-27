@@ -197,8 +197,6 @@
     <string name="settings_section_info">Info</string>
 
     <!-- Settings — favorites -->
-    <string name="settings_fermate_salvate_one">1 parada guardada</string>
-    <string name="settings_fermate_salvate_other">%d paradas guardadas</string>
     <string name="settings_nessuno_salvato">Ninguna guardada</string>
 
     <!-- Settings — notifications -->

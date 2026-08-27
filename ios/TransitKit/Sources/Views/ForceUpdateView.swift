@@ -152,7 +152,7 @@ struct ForceUpdateView: View {
     @ViewBuilder
     private var updateButton: some View {
         Button {
-            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            Haptics.commit()
             AppUpdateChecker.shared.openStore(storeUrl)
         } label: {
             HStack(spacing: 10) {

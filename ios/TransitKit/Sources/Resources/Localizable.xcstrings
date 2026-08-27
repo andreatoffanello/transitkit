@@ -4184,19 +4184,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open stop"
+            "value": "View schedules"
           }
         },
         "es-419": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abrir parada"
+            "value": "Ver horarios"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apri fermata"
+            "value": "Vedi orari"
           }
         }
       }
@@ -8028,29 +8028,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nessuno salvato"
-          }
-        }
-      }
-    },
-    "settings_info_section": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "About"
-          }
-        },
-        "es-419": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Información"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Informazioni"
           }
         }
       }

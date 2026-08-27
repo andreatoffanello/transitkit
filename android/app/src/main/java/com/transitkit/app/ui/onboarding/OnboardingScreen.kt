@@ -41,10 +41,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -60,6 +58,7 @@ import com.transitkit.app.R
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.ui.components.LocalHideBottomBarRequests
+import com.transitkit.app.ui.components.rememberHaptics
 import kotlinx.coroutines.launch
 
 /**
@@ -80,7 +79,7 @@ fun OnboardingScreen(
 ) {
     val colors = TransitTheme.colors
     val context = LocalContext.current
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState(pageCount = { 4 })
     val closeLabel = stringResource(R.string.action_close)
@@ -109,7 +108,7 @@ fun OnboardingScreen(
     }
 
     fun goNext() {
-        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        haptics.navigate()
         scope.launch {
             if (pagerState.currentPage < 3) {
                 pagerState.animateScrollToPage(pagerState.currentPage + 1)
@@ -181,7 +180,7 @@ fun OnboardingScreen(
                         .clip(CircleShape)
                         .background(colors.bgSecondary)
                         .clickable {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            haptics.navigate()
                             finish()
                         }
                         .semantics { contentDescription = closeLabel },
@@ -205,7 +204,7 @@ fun OnboardingScreen(
                     0 -> WelcomePage(onNext = ::goNext)
                     1 -> LocationPage(
                         onEnable = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            haptics.commit()
                             val alreadyGranted = ContextCompat.checkSelfPermission(
                                 context, Manifest.permission.ACCESS_FINE_LOCATION
                             ) == PackageManager.PERMISSION_GRANTED
@@ -220,7 +219,7 @@ fun OnboardingScreen(
                     )
                     2 -> NotificationsPage(
                         onEnable = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            haptics.commit()
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                 val granted = ContextCompat.checkSelfPermission(
                                     context, Manifest.permission.POST_NOTIFICATIONS

@@ -2,8 +2,10 @@ package com.transitkit.app.data.push
 
 import android.content.Context
 import android.util.Log
+import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessaging
 import com.transitkit.app.BuildConfig
+import com.transitkit.app.config.DeveloperMode
 import com.transitkit.app.config.OperatorConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
@@ -53,9 +55,33 @@ class PushNotificationManager @Inject constructor(
 
     private val operatorId: String = topicSafe(config.id)
 
+    /** Stato reale dell'iscrizione a `_preview` sul device. Persistito perché
+     *  un'unsubscribe fallita (rete che cade proprio mentre si spegne la
+     *  modalità sviluppatore) resterebbe altrimenti permanente: nessuno
+     *  richiama [syncPreviewSubscription] finché non si rifà il giro completo
+     *  on/off delle notifiche. */
+    private var previewSubscribed: Boolean
+        get() = prefs().getBoolean(KEY_PREVIEW_SUBSCRIBED, false)
+        set(value) { prefs().edit().putBoolean(KEY_PREVIEW_SUBSCRIBED, value).apply() }
+
+    private fun prefs() =
+        context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+
     private val allTopic: String get() = "${operatorId}_all"
     private val previewTopic: String get() = "${operatorId}_preview"
     private fun lineTopic(routeId: String) = "${operatorId}_line_${topicSafe(routeId)}"
+
+    init {
+        scope.launch {
+            // Parità iOS (`PushNotificationManager.init`): senza una
+            // registrazione all'avvio il token resta nullo su ogni lancio,
+            // anche su un device che le push le riceve già, e la riga che lo
+            // copia in Developer è morta.
+            if (NotificationManagerCompat.from(context).areNotificationsEnabled()) ensureToken()
+            val wantsPreview = BuildConfig.DEBUG || DeveloperMode.isEnabled(context)
+            if (previewSubscribed != wantsPreview) syncPreviewSubscription()
+        }
+    }
 
     /** Probe Firebase availability. Returns false if google-services.json
      *  wasn't applied (FirebaseApp not initialized). */
@@ -109,14 +135,18 @@ class PushNotificationManager @Inject constructor(
         } catch (_: Exception) { /* best-effort */ }
     }
 
-    /** Debug builds subscribe to a private `_preview` topic so the CMS can
-     *  send previews to dev devices without touching the broadcast topic.
-     *  Release builds never subscribe → real users never receive previews. */
-    private suspend fun subscribePreviewIfDebug() {
-        if (!BuildConfig.DEBUG || !isFirebaseConfigured) return
+    /** Il topic privato `_preview` fa arrivare le anteprime del CMS ai soli
+     *  device di sviluppo, senza toccare il topic di broadcast. Oltre alle
+     *  build debug lo apriamo a chi ha sbloccato la modalità sviluppatore:
+     *  senza, un'anteprima non è verificabile su una build di release, che è
+     *  esattamente dove serve provarla. Un utente reale non ci arriva mai.*/
+    private suspend fun subscribePreviewIfDeveloper() {
+        if (!BuildConfig.DEBUG && !DeveloperMode.isEnabled(context)) return
+        if (!isFirebaseConfigured) return
         try {
             FirebaseMessaging.getInstance().subscribeToTopic(previewTopic).await()
-            Log.i(TAG, "Subscribed to $previewTopic (debug build)")
+            previewSubscribed = true
+            Log.i(TAG, "Subscribed to $previewTopic")
         } catch (e: Exception) {
             _lastError.value = "Subscribe $previewTopic failed: ${e.message}"
         }
@@ -126,7 +156,8 @@ class PushNotificationManager @Inject constructor(
         if (!isFirebaseConfigured) return
         try {
             FirebaseMessaging.getInstance().unsubscribeFromTopic(previewTopic).await()
-        } catch (_: Exception) { /* best-effort */ }
+            previewSubscribed = false
+        } catch (_: Exception) { /* ritentata al prossimo avvio via previewSubscribed */ }
     }
 
     suspend fun subscribeRoute(routeId: String) {
@@ -153,7 +184,24 @@ class PushNotificationManager @Inject constructor(
         if (!isFirebaseConfigured) return
         ensureToken()
         subscribeToOperatorAll()
-        subscribePreviewIfDebug()
+        syncPreviewSubscription()
+    }
+
+    /** Chiamata quando la modalità sviluppatore viene accesa o spenta: senza,
+     *  chi la spegne resterebbe iscritto al topic preview fino al prossimo
+     *  giro completo di on/off delle notifiche. */
+    /** Variante fire-and-forget sullo scope del singleton. La chiama chi spegne
+     *  la modalità sviluppatore e subito dopo fa `pop` della schermata: sul
+     *  `viewModelScope` la coroutine verrebbe cancellata prima ancora di
+     *  partire, lasciando il device iscritto a `_preview` per sempre. */
+    fun syncPreviewSubscriptionAsync() {
+        scope.launch { syncPreviewSubscription() }
+    }
+
+    suspend fun syncPreviewSubscription() {
+        if (!isFirebaseConfigured) return
+        if (BuildConfig.DEBUG || DeveloperMode.isEnabled(context)) subscribePreviewIfDeveloper()
+        else unsubscribeFromPreview()
     }
 
     /** Called from the Settings toggle when the user disables push. */
@@ -170,6 +218,10 @@ class PushNotificationManager @Inject constructor(
 
     companion object {
         private const val TAG = "PushManager"
+
+        /** Stesso file di preferenze di [DeveloperMode] e onboarding. */
+        private const val PREFS = "transitkit_prefs"
+        private const val KEY_PREVIEW_SUBSCRIBED = "push_preview_subscribed"
 
         /** Sanitize the operator/route id for FCM (allowed: a-z, A-Z, 0-9, -_.~%). */
         fun topicSafe(s: String): String = buildString {

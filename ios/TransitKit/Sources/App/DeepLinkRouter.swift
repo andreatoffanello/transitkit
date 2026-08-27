@@ -25,7 +25,7 @@ import SwiftUI
 ///   transitkit://map/vehicle/<vehicleId>           → Map tab + vehicle preview card
 ///   transitkit://map/route/<routeId>[/<directionId>] → Map tab + focus polyline
 ///   transitkit://alert/<alertId>                   → Alerts tab + push AlertDetailView
-///   transitkit://shader                            → ShaderPlaygroundView (dev only)
+///   transitkit://shader                            → ShaderPlaygroundView (only when developer mode is on)
 @Observable
 final class DeepLinkRouter {
     // MARK: Navigation (existing)
@@ -53,7 +53,8 @@ final class DeepLinkRouter {
     /// Direction id to apply when focusing a route on the Mappa tab.
     var pendingMapPreviewDirectionId: Int? = nil
     /// Shader playground (dev tool). Set true to present the fullscreen shader view
-    /// for visual iteration. Trigger via `transitkit://shader`.
+    /// for visual iteration. Trigger via `transitkit://shader` — honoured only
+    /// when developer mode is enabled (`DeveloperMode.isEnabled`).
     var showShaderPlayground = false
 
     // MARK: Tab switching

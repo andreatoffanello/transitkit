@@ -18,7 +18,7 @@ struct LanguagePickerView: View {
                         ForEach(Array(AppLanguage.allCases.enumerated()), id: \.element.id) { index, language in
                             Button {
                                 guard language != localization.language else { return }
-                                UISelectionFeedbackGenerator().selectionChanged()
+                                Haptics.selection()
                                 withAnimation(.snappy(duration: 0.25)) {
                                     localization.select(language)
                                 }
@@ -62,7 +62,7 @@ struct LanguagePickerView: View {
             Spacer(minLength: 0)
 
             LucideIcon.check.sized(17)
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(AppTheme.accentReadable)
                 .opacity(isSelected ? 1 : 0)
                 .scaleEffect(isSelected ? 1 : 0.6)
         }

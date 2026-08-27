@@ -8,7 +8,10 @@ struct FavoritesListView: View {
     @Environment(ScheduleStore.self) private var store
     @Environment(FavoritesManager.self) private var favoritesManager
 
-    @State private var selectedStopId: String?
+    /// Il dettaglio fermata vive nello stack di Orari, non qui: la riga
+    /// delega al presentatore (Impostazioni), che chiude il cover e passa
+    /// la fermata al router.
+    let onSelectStop: (ResolvedStop) -> Void
 
     /// Resolved favorite stops from the schedule store.
     private var favoriteStops: [ResolvedStop] {
@@ -25,13 +28,16 @@ struct FavoritesListView: View {
                 List {
                     ForEach(favoriteStops) { stop in
                         Button {
-                            selectedStopId = stop.id
+                            Haptics.navigate()
+                            onSelectStop(stop)
                         } label: {
                             favoriteRow(stop)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityIdentifier("favorite_stop_row_\(stop.id)")
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
+                                Haptics.destructive()
                                 withAnimation {
                                     favoritesManager.remove(stop.id)
                                 }
@@ -66,10 +72,10 @@ struct FavoritesListView: View {
                 // Stop leading icon — signpost (or mode icon for rail/ferry stops).
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(AppTheme.accent.opacity(0.12))
+                        .fill(AppTheme.accentReadable.opacity(0.12))
                     stopPinIcon(transitTypes: stop.transitTypes).image
                         .font(.body.weight(.semibold))
-                        .foregroundStyle(AppTheme.accent)
+                        .foregroundStyle(AppTheme.accentReadable)
                 }
                 .frame(width: 40, height: 40)
 

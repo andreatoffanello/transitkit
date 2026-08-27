@@ -82,4 +82,38 @@ class SettingsViewModel @Inject constructor(
     fun removeFavorite(stopId: String) {
         viewModelScope.launch { favoritesStore.removeFavorite(stopId) }
     }
+
+    // ── Modalità sviluppatore ───────────────────────────────────────────────
+
+    /** Token FCM del device, per la riga copiabile in Developer. */
+    val fcmToken: StateFlow<String?> = pushManager.fcmToken
+
+    /** Accendere o spegnere la modalità sviluppatore cambia l'iscrizione al
+     *  topic `_preview`: senza questo, chi la spegne continua a ricevere le
+     *  anteprime del CMS finché non rifà il giro on/off delle notifiche.
+     *
+     *  Fuori dal `viewModelScope` di proposito: chi spegne la modalità fa
+     *  subito `pop` della schermata Developer, che porta via con sé lo
+     *  ViewModelStore di quella entry — la coroutine verrebbe cancellata
+     *  prima ancora di partire e l'unsubscribe non avverrebbe mai. */
+    fun onDeveloperModeChanged() {
+        pushManager.syncPreviewSubscriptionAsync()
+    }
+
+    private val _reloadingSchedule = MutableStateFlow(false)
+    val reloadingSchedule: StateFlow<Boolean> = _reloadingSchedule.asStateFlow()
+
+    /** Riscarica gli orari dal CDN ignorando cache ed ETag. `onDone` riceve
+     *  l'esito così la schermata può dire cosa è successo invece di lasciare
+     *  l'utente a indovinare da una lista che non è cambiata. */
+    fun forceReloadSchedule(onDone: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            _reloadingSchedule.value = true
+            try {
+                onDone(scheduleRepository.forceReload())
+            } finally {
+                _reloadingSchedule.value = false
+            }
+        }
+    }
 }

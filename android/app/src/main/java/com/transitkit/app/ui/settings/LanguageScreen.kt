@@ -35,6 +35,7 @@ import com.transitkit.app.config.AppLanguage
 import com.transitkit.app.config.AppLocaleManager
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.rememberHaptics
 
 /**
  * Selettore della lingua dell'interfaccia, pushato da Impostazioni.
@@ -49,6 +50,7 @@ import com.transitkit.app.config.TransitTheme
 fun LanguageScreen(onBack: () -> Unit = {}) {
     val colors = TransitTheme.colors
     val context = LocalContext.current
+    val haptics = rememberHaptics()
     val activity = remember(context) { context as? android.app.Activity }
     var selected by remember { mutableStateOf(AppLocaleManager.current(context)) }
     val languages = AppLanguage.entries
@@ -91,6 +93,7 @@ fun LanguageScreen(onBack: () -> Unit = {}) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable(enabled = !isSelected) {
+                                haptics.selection()
                                 selected = language
                                 activity?.let { AppLocaleManager.select(it, language) }
                             }
@@ -110,7 +113,7 @@ fun LanguageScreen(onBack: () -> Unit = {}) {
                                 Icon(
                                     painter = painterResource(LucideIcons.Check),
                                     contentDescription = null,
-                                    tint = colors.accent,
+                                    tint = colors.accentReadable,
                                     modifier = Modifier.size(17.dp),
                                 )
                             }

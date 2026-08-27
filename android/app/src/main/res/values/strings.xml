@@ -198,8 +198,6 @@
     <string name="settings_section_info">Info</string>
 
     <!-- Settings — favorites -->
-    <string name="settings_fermate_salvate_one">1 stop saved</string>
-    <string name="settings_fermate_salvate_other">%d stops saved</string>
     <string name="settings_nessuno_salvato">None saved</string>
 
     <!-- Settings — notifications -->
@@ -588,4 +586,41 @@
     <string name="cd_journey_format">Journey from %1$s to %2$s</string>
     <string name="cd_live">Live data</string>
     <string name="cd_my_location">Your location</string>
+
+    <!-- Modalità sviluppatore: diagnostica interna, MAI tradotta.
+         translatable="false" tiene fuori queste chiavi dal set di traduzione
+         (e zittisce il lint MissingTranslation) senza sbilanciare values-es/it. -->
+    <!-- Plurals e non una string: a un tap dalla fine "1 more taps" si legge rotto. -->
+    <plurals name="dev_unlock_countdown" translatable="false">
+        <item quantity="one">%1$d more tap…</item>
+        <item quantity="other">%1$d more taps…</item>
+    </plurals>
+    <string name="dev_unlock_done" translatable="false">Developer mode enabled</string>
+    <string name="dev_already_enabled" translatable="false">Developer mode is already on</string>
+    <string name="dev_title" translatable="false">Developer</string>
+    <string name="dev_section_build" translatable="false">Build</string>
+    <string name="dev_section_flags" translatable="false">Feature flags</string>
+    <string name="dev_section_push" translatable="false">Push</string>
+    <string name="dev_section_actions" translatable="false">Actions</string>
+    <string name="dev_version" translatable="false">Version</string>
+    <string name="dev_application_id" translatable="false">Application ID</string>
+    <string name="dev_operator" translatable="false">Operator</string>
+    <string name="dev_brand" translatable="false">Brand</string>
+    <string name="dev_cdn" translatable="false">CDN</string>
+    <string name="dev_routing" translatable="false">Routing endpoint</string>
+    <string name="dev_console" translatable="false">Console API</string>
+    <string name="dev_rt_vehicles" translatable="false">GTFS-RT vehicles</string>
+    <string name="dev_rt_trips" translatable="false">GTFS-RT trip updates</string>
+    <string name="dev_rt_alerts" translatable="false">GTFS-RT alerts</string>
+    <string name="dev_not_set" translatable="false">not set</string>
+    <string name="dev_fcm_token" translatable="false">FCM token</string>
+    <string name="dev_fcm_token_missing" translatable="false">No token — enable notifications first</string>
+    <string name="dev_fcm_token_copied" translatable="false">FCM token copied</string>
+    <string name="dev_reload_schedule" translatable="false">Force reload schedule</string>
+    <string name="dev_reload_schedule_sub" translatable="false">Drops the cache and re-fetches from the CDN</string>
+    <string name="dev_reload_running" translatable="false">Reloading…</string>
+    <string name="dev_reload_done" translatable="false">Schedule reloaded</string>
+    <string name="dev_reload_failed" translatable="false">Reload failed</string>
+    <string name="dev_replay_onboarding" translatable="false">Replay onboarding</string>
+    <string name="dev_disable" translatable="false">Disable developer mode</string>
 </resources>

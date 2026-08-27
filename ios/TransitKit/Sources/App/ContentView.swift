@@ -16,15 +16,19 @@ struct ContentView: View {
     @State private var selectedTab = 0
     @State private var toastPresenter = AlertToastPresenter()
     @State private var toastDetailAlert: GtfsRtAlert?
-    #if DEBUG
     @State private var showShaderPlayground = false
-    #endif
     @State private var deeplinkAlert: GtfsRtAlert?
     /// Impostazioni è presentata da qui e non da HomeTab perché il cover deve
     /// stare *fuori* dal `.id(localization.language)` del TabView: cambiando
     /// lingua i tab vengono ricreati sotto, ma la schermata Impostazioni resta
     /// aperta dov'è l'utente.
     @State private var showSettings = false
+    /// Il playground shader non è più escluso dal binario Release: era
+    /// `#if DEBUG`, cioè assente proprio su TestFlight, dove serve.
+    @AppStorage(DeveloperMode.storageKey) private var developerModeEnabled = false
+    /// Tab impostato dal router (deep link), non dal dito: serve a non far
+    /// vibrare un cambio di tab che l'utente non ha chiesto.
+    @State private var programmaticTab: Int?
     private let localization = LocalizationManager.shared
 
     /// Dimensione icone tab bar — gli asset Lucide sono 24pt intrinseci,
@@ -41,8 +45,12 @@ struct ContentView: View {
         .modifier(TabBarVisibilityModifier())
         .modifier(TabBarAppearanceModifier())
         .tint(.primary)
-        .onChange(of: selectedTab) { _, _ in
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        .onChange(of: selectedTab) { _, newTab in
+            guard programmaticTab != newTab else {
+                programmaticTab = nil
+                return
+            }
+            Haptics.selection()
         }
         .onChange(of: alertStore.activeAlerts.map(\.id)) { _, _ in
             evaluateNewAlerts()
@@ -79,17 +87,15 @@ struct ContentView: View {
             showSettings = true
         }
         .fullScreenCover(isPresented: $showSettings) { SettingsTab() }
-        #if DEBUG
         .onChange(of: router.showShaderPlayground) { _, requested in
-            if requested {
-                showShaderPlayground = true
-                router.showShaderPlayground = false
-            }
+            guard requested else { return }
+            router.showShaderPlayground = false
+            guard developerModeEnabled else { return }
+            showShaderPlayground = true
         }
         .fullScreenCover(isPresented: $showShaderPlayground) {
             ShaderPlaygroundView()
         }
-        #endif
     }
 
     /// Tab + routing dei deep link. Separata dal `body` (che si occupa di
@@ -102,22 +108,22 @@ struct ContentView: View {
         // gerarchia nella lingua nuova.
         .id(localization.language)
         .onChange(of: router.pendingRoute) { _, route in
-            if route != nil { selectedTab = 2 }
+            if route != nil { selectTab(2) }
         }
         .onChange(of: router.pendingStop) { _, stop in
-            if stop != nil { selectedTab = 1 }
+            if stop != nil { selectTab(1) }
         }
         .onChange(of: router.pendingTrip) { _, trip in
-            if trip != nil { selectedTab = 1 }
+            if trip != nil { selectTab(1) }
         }
         .onChange(of: router.pendingMapPreviewStop) { _, stop in
-            if stop != nil { selectedTab = 3 }
+            if stop != nil { selectTab(3) }
         }
         .onChange(of: router.pendingMapPreviewVehicleId) { _, vid in
-            if vid != nil { selectedTab = 3 }
+            if vid != nil { selectTab(3) }
         }
         .onChange(of: router.pendingMapPreviewRouteId) { _, rid in
-            if rid != nil { selectedTab = 3 }
+            if rid != nil { selectTab(3) }
         }
         .onChange(of: router.pendingMapOpen) { _, id in
             // Only switch tabs here — MappaTab consumes `pendingMapOpen` and
@@ -125,13 +131,13 @@ struct ContentView: View {
             // `.onChange(of:)` inside MappaTab could miss the trigger because
             // SwiftUI may collapse the UUID→nil transition into a single tick.
             if id != nil {
-                selectedTab = 3
+                selectTab(3)
                 showSettings = false
             }
         }
         .onChange(of: router.pendingTabSwitch) { _, switchReq in
             guard let switchReq else { return }
-            selectedTab = switchReq.index
+            selectTab(switchReq.index)
             router.pendingTabSwitch = nil
         }
         .onChange(of: router.pendingAlertId) { _, alertId in
@@ -142,8 +148,8 @@ struct ContentView: View {
             deeplinkAlert = alert
         }
         .onAppear {
-            if router.pendingMapPreviewStop != nil { selectedTab = 3 }
-            if router.pendingMapPreviewVehicleId != nil { selectedTab = 3 }
+            if router.pendingMapPreviewStop != nil { selectTab(3) }
+            if router.pendingMapPreviewVehicleId != nil { selectTab(3) }
         }
         .onChange(of: scenePhase) { _, phase in
             // Pause GTFS-RT polling when the app is not active to avoid
@@ -237,6 +243,16 @@ struct ContentView: View {
             .tag(4)
             .accessibilityIdentifier("tab_alerts")
     }
+    }
+
+    /// Cambio di tab richiesto dal router. Marcarlo prima di scriverlo è ciò
+    /// che permette a `.onChange(of: selectedTab)` di distinguerlo da un tap:
+    /// il guard sul valore corrente evita di lasciare la marcatura appesa
+    /// quando il tab è già quello giusto e l'`onChange` non scatterebbe.
+    private func selectTab(_ index: Int) {
+        guard selectedTab != index else { return }
+        programmaticTab = index
+        selectedTab = index
     }
 
     /// On every alert feed refresh, enqueue a toast for the first newly-active

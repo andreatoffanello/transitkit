@@ -2,3 +2,5 @@ local.properties
 *.keystore
 build/
 .gradle/
+# Session cache del compilatore Kotlin 2.x — artefatto di build, non sorgente.
+.kotlin/

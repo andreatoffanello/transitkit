@@ -97,13 +97,33 @@ struct MappaTab: View {
     @State var isFollowingVehicle = false
 
     // MARK: 3D toggle
-    @State var is3D: Bool = true
+    /// Intent dell'utente, NON lo stato a schermo: il pitch effettivo è
+    /// `intent && lo zoom lo consente` (vedi `is3DEffective`). Tenerli separati
+    /// serve a non perdere la preferenza quando si allarga la vista.
+    @State var is3D: Bool = MappaTab.default3DIntent
+    /// Ultimo pitch scritto in camera da noi. Distingue un'inclinazione fatta
+    /// a mano (gesto a due dita) da quella che abbiamo appena imposto.
+    @State var lastDrivenPitch: Double = 0
+    /// Zoom corrente come latDelta PIATTO-equivalente, derivato dalla distanza
+    /// camera. Il `region` riportato da MapKit si allarga quando la camera è
+    /// inclinata: misurare lo zoom da lì farebbe oscillare la soglia del 3D
+    /// (appiattisco → lo span rientra sotto soglia → ri-inclino → riesce).
+    /// La distanza, invece, del pitch non sa nulla.
+    @State var cameraLatDelta: Double
+    /// Heading vivo della camera, aggiornato dal gesto a due dita. Serve SOLO
+    /// alla bussola nei controlli: non entra nella chiave che pilota
+    /// `driveCamera`, o ruotare col dito ri-guiderebbe la camera a ogni frame.
+    @State var cameraHeading: Double = 0
     /// True when the active route overlay was auto-selected by tapping a vehicle
     /// (vs. manually via line picker). Determines whether closing the vehicle card
     /// should also tear down the route overlay.
     @State var routeSelectedByVehicle = false
 
     // MARK: Init
+
+    /// Preferenza 3D di partenza. Costante di tipo perché `init` la usa per
+    /// derivare il pitch d'ingresso e lì `is3D` non è ancora leggibile.
+    static let default3DIntent = true
 
     init(config: OperatorConfig) {
         self.config = config
@@ -113,12 +133,17 @@ struct MappaTab: View {
         )
         let span = Self.spanForZoom(config.map.defaultZoom)
         _mapRegion = State(initialValue: MKCoordinateRegion(center: center, span: span))
-        // is3D default true → entry 3D (pitch 45). La camera segue mapRegion via onChange.
+        // Il pitch d'ingresso esce dallo span, non dall'intent: `defaultZoom` è
+        // una vista cittadina, e aprire inclinati su una panoramica la rende
+        // solo illeggibile. Il 3D torna da sé appena si scende di zoom.
+        let entryPitch = MapZoomLevels.pitch(for: span.latitudeDelta, intent3D: Self.default3DIntent)
+        _lastDrivenPitch = State(initialValue: entryPitch)
+        _cameraLatDelta = State(initialValue: span.latitudeDelta)
         _cameraPosition = State(initialValue: .camera(MapCamera(
             centerCoordinate: center,
             distance: Self.distanceForSpan(span),
             heading: 0,
-            pitch: 45
+            pitch: CGFloat(entryPitch)
         )))
     }
 
@@ -134,7 +159,10 @@ struct MappaTab: View {
             // (the active-line chip below takes over) nor in fullscreen mode.
             if !isExpanded && selectedRoute == nil {
                 VStack {
-                    MapSearchPill { showLinePicker = true }
+                    MapSearchPill {
+                        Haptics.navigate()
+                        showLinePicker = true
+                    }
                         .padding(.top, 8)
                     Spacer()
                 }
@@ -151,6 +179,7 @@ struct MappaTab: View {
                             route: route,
                             liveCount: vehicleStore.liveCount(forRouteId: route.id),
                             onDismiss: {
+                                Haptics.navigate()
                                 selectedRoute = nil
                                 selectedDirectionId = nil
                                 isFollowingVehicle = false
@@ -174,13 +203,16 @@ struct MappaTab: View {
                 HStack {
                     Spacer()
                     MapControlsColumn(
-                        is3D: is3D,
-                        onToggle3D: { is3D.toggle() },
+                        // Stato EFFETTIVO, non l'intent: la pill non deve mai
+                        // dire "3D" sopra una mappa piatta.
+                        is3D: is3DEffective,
+                        onToggle3D: toggle3D,
                         showsRecenter: config.features.enableGeolocation,
                         onRecenter: recenterOnDefault,
-                        showsResetBearing: false,
-                        onResetBearing: resetToDefaultView,
+                        showsResetBearing: hasBearingToReset,
+                        onResetBearing: resetBearing,
                         onExpand: {
+                            Haptics.navigate()
                             withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
                                 isExpanded = true
                             }
@@ -193,12 +225,12 @@ struct MappaTab: View {
             // MARK: Expanded controls (right + close bottom-center)
             if isExpanded {
                 MapExpandedControls(
-                    is3D: is3D,
-                    onToggle3D: { is3D.toggle() },
+                    is3D: is3DEffective,
+                    onToggle3D: toggle3D,
                     showsRecenter: config.features.enableGeolocation,
                     onRecenter: recenterOnDefault,
-                    showsResetBearing: false,
-                    onResetBearing: resetToDefaultView,
+                    showsResetBearing: hasBearingToReset,
+                    onResetBearing: resetBearing,
                     onCollapse: {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.85)) {
                             isExpanded = false
@@ -215,10 +247,16 @@ struct MappaTab: View {
                     isFollowing: isFollowingVehicle,
                     onToggleFollow: {
                         isFollowingVehicle.toggle()
-                        if isFollowingVehicle { followSelectedVehicleIfNeeded() }
+                        if isFollowingVehicle {
+                            Haptics.toggleOn()
+                            followSelectedVehicleIfNeeded()
+                        } else {
+                            Haptics.toggleOff()
+                        }
                     },
                     onOpenLine: selection.route.map { route in
                         {
+                            Haptics.navigate()
                             // Navigation action (DoVe parity): push the line-detail
                             // screen for this vehicle's route, mirroring how the
                             // "Corsa" button opens TripDetailView via tripSheetTarget.
@@ -229,9 +267,11 @@ struct MappaTab: View {
                         }
                     },
                     onOpenTrip: {
+                        Haptics.navigate()
                         tripSheetTarget = makeTripTarget(for: selection)
                     },
                     onDismiss: {
+                        Haptics.navigate()
                         isFollowingVehicle = false
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                             selectedVehicle = nil
@@ -464,6 +504,7 @@ struct MappaTab: View {
     /// Fallback al centro operatore quando la posizione non è disponibile (o
     /// la geolocalizzazione è disattivata).
     private func recenterOnDefault() {
+        Haptics.selection()
         let center = locationManager.location?.coordinate
             ?? CLLocationCoordinate2D(
                 latitude: config.map.centerLat,
@@ -475,14 +516,21 @@ struct MappaTab: View {
         )
     }
 
-    /// Reset camera to the operator's default center and zoom.
-    private func resetToDefaultView() {
-        let center = CLLocationCoordinate2D(
-            latitude: config.map.centerLat,
-            longitude: config.map.centerLng
-        )
-        let span = Self.spanForZoom(config.map.defaultZoom)
+    /// Raddrizza la mappa a nord. Non ricentra e non cambia zoom: la bussola
+    /// promette solo di togliere la rotazione, e riportare l'utente al centro
+    /// operatore gli farebbe perdere il punto che stava guardando.
+    private func resetBearing() {
+        Haptics.selection()
+        // `mapRegion` è ferma all'ultima mossa programmatica: va riallineata
+        // alla vista live, o l'`onChange` rispedirebbe la camera lì. Lo zoom
+        // viene da `cameraLatDelta` (immune al pitch), non dallo span riportato.
+        let center = (visibleRegion ?? mapRegion).center
+        let span = MKCoordinateSpan(latitudeDelta: cameraLatDelta, longitudeDelta: cameraLatDelta)
+        cameraHeading = 0
         mapRegion = MKCoordinateRegion(center: center, span: span)
+        // Esplicito: se `mapRegion` era già identica l'`onChange` non scatta e
+        // la mappa resterebbe storta.
+        driveCamera(heading: 0)
     }
 
     // MARK: - Helpers
@@ -500,6 +548,12 @@ struct MappaTab: View {
     static func distanceForSpan(_ span: MKCoordinateSpan) -> CLLocationDistance {
         let viewportHeight = span.latitudeDelta * 111_000.0
         return viewportHeight / (2.0 * 0.2679)   // tan(15°) ≈ 0.2679
+    }
+
+    /// Inverso di `distanceForSpan`: lo zoom misurato in modo indipendente dal
+    /// pitch (vedi `cameraLatDelta`).
+    static func spanLatitudeDelta(forDistance distance: CLLocationDistance) -> Double {
+        distance * (2.0 * 0.2679) / 111_000.0
     }
 
     /// Rebinds the open vehicle card to the latest GtfsRtVehicle snapshot after

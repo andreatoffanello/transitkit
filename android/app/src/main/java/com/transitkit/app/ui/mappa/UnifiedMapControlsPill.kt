@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.transitkit.app.R
 import com.transitkit.app.config.LocalTransitColors
 import com.transitkit.app.config.LucideIcons
+import com.transitkit.app.ui.components.rememberHaptics
 import kotlin.math.abs
 
 /**
@@ -54,6 +55,9 @@ import kotlin.math.abs
  *  4. **Expand / Close** — `Maximize2`/`Minimize2`, mostrato solo se
  *     [onExpandToggle] non è null. Icona dipende da [expanded].
  *
+ * @param showsRecenter false nasconde la cella "centra" — parità con iOS
+ *   (`MapControlsColumn.showsRecenter`), che la lega al flag operatore
+ *   `enableGeolocation`: senza geolocalizzazione il mirino non ha bersaglio.
  * @param onResetBearing se null, il pulsante reset bearing è disabilitato del
  *   tutto (es. quando la mappa non supporta rotation gesture).
  * @param onExpandToggle se null, niente pulsante expand. In MappaTab non
@@ -66,12 +70,14 @@ internal fun UnifiedMapControlsPill(
     onToggle3D: () -> Unit,
     onRecenter: () -> Unit,
     modifier: Modifier = Modifier,
+    showsRecenter: Boolean = true,
     currentBearing: Double = 0.0,
     onResetBearing: (() -> Unit)? = null,
     expanded: Boolean = false,
     onExpandToggle: (() -> Unit)? = null,
 ) {
     val colors = LocalTransitColors.current
+    val haptics = rememberHaptics()
     val pillShape = RoundedCornerShape(22.dp)
     val dividerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
 
@@ -98,7 +104,7 @@ internal fun UnifiedMapControlsPill(
             Box(
                 modifier = Modifier
                     .size(44.dp)
-                    .clickable { onToggle3D() }
+                    .clickable { haptics.selection(); onToggle3D() }
                     .semantics {
                         testTag = "btn_map_toggle_3d"
                         contentDescription = if (is3D) cdVista2D else cdVista3D
@@ -106,7 +112,10 @@ internal fun UnifiedMapControlsPill(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = if (is3D) "2D" else "3D",
+                    // L'etichetta è lo stato EFFETTIVO della camera, non
+                    // l'azione del tap (parità iOS, MapControlsColumn.swift):
+                    // il `contentDescription` sopra resta invece l'azione.
+                    text = if (is3D) "3D" else "2D",
                     style = MaterialTheme.typography.labelMedium.copy(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 13.sp,
@@ -115,24 +124,26 @@ internal fun UnifiedMapControlsPill(
                 )
             }
 
-            PillDivider(dividerColor)
-
-            // Recenter
-            IconButton(
-                onClick = onRecenter,
-                modifier = Modifier
-                    .size(44.dp)
-                    .semantics {
-                        testTag = "btn_map_recenter"
-                        contentDescription = cdCentraMappa
-                    },
-            ) {
-                Icon(
-                    painter = painterResource(LucideIcons.Crosshair),
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = colors.textPrimary,
-                )
+            // Recenter — cella e divider stanno o cadono insieme, altrimenti
+            // resta una riga di separazione che non separa niente.
+            if (showsRecenter) {
+                PillDivider(dividerColor)
+                IconButton(
+                    onClick = { haptics.navigate(); onRecenter() },
+                    modifier = Modifier
+                        .size(44.dp)
+                        .semantics {
+                            testTag = "btn_map_recenter"
+                            contentDescription = cdCentraMappa
+                        },
+                ) {
+                    Icon(
+                        painter = painterResource(LucideIcons.Crosshair),
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = colors.textPrimary,
+                    )
+                }
             }
 
             // Reset bearing — conditional
@@ -144,7 +155,7 @@ internal fun UnifiedMapControlsPill(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     PillDivider(dividerColor)
                     IconButton(
-                        onClick = { onResetBearing?.invoke() },
+                        onClick = { haptics.navigate(); onResetBearing?.invoke() },
                         modifier = Modifier
                             .size(44.dp)
                             .semantics {
@@ -166,7 +177,7 @@ internal fun UnifiedMapControlsPill(
             if (onExpandToggle != null) {
                 PillDivider(dividerColor)
                 IconButton(
-                    onClick = onExpandToggle,
+                    onClick = { haptics.navigate(); onExpandToggle() },
                     modifier = Modifier
                         .size(44.dp)
                         .semantics {
@@ -209,6 +220,7 @@ internal fun MappaTabControlsPill(
     is3D: Boolean,
     onToggle3D: () -> Unit,
     onRecenter: () -> Unit,
+    showsRecenter: Boolean = true,
     currentBearing: Double = 0.0,
     onResetBearing: (() -> Unit)? = null,
 ) {
@@ -223,6 +235,7 @@ internal fun MappaTabControlsPill(
             is3D = is3D,
             onToggle3D = onToggle3D,
             onRecenter = onRecenter,
+            showsRecenter = showsRecenter,
             currentBearing = currentBearing,
             onResetBearing = onResetBearing,
         )

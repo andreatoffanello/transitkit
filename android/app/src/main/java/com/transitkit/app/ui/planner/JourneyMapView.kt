@@ -24,6 +24,7 @@ import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.GeoJsonSource
 import com.mapbox.maps.extension.style.sources.generated.geoJsonSource
 import com.mapbox.maps.extension.style.sources.getSourceAs
+import com.mapbox.maps.plugin.gestures.gestures
 import com.mapbox.maps.viewannotation.annotationAnchor
 import com.mapbox.maps.viewannotation.geometry
 import androidx.compose.ui.unit.dp
@@ -147,6 +148,14 @@ fun JourneyMapView(
         compass = {},
         scaleBar = {},
     ) {
+        // Overview 2D: senza spegnere pitch e rotate una gesture a due dita
+        // inclina o ruota la mappa e niente la riporta piatta — la camera qui
+        // non ha controlli e l'utente resterebbe con una vista storta.
+        MapEffect(Unit) { mapView ->
+            mapView.gestures.pitchEnabled = false
+            mapView.gestures.rotateEnabled = false
+        }
+
         // Native blue puck — always rendered above every other layer.
         com.transitkit.app.ui.mappa.UserLocationPuck()
 

@@ -33,6 +33,7 @@ import com.transitkit.app.config.LocalTransitColors
 import com.transitkit.app.config.LucideIcons
 import com.transitkit.app.data.model.ResolvedStop
 import com.transitkit.app.ui.mappa.MapOverlayButton
+import com.transitkit.app.ui.mappa.MapZoomLevels
 import com.transitkit.app.ui.mappa.StopSymbolLayer
 import com.transitkit.app.ui.mappa.applyTransitKitHeroStyleConfig
 import kotlinx.coroutines.delay
@@ -47,8 +48,11 @@ import kotlinx.coroutines.delay
  * come "selected" (1.28× scale = pin grande, glyph Signpost o "M" metro).
  *
  * **Style:** [applyTransitKitHeroStyleConfig] — abilita 3D buildings e road
- * labels (diverso dal main map che li disattiva). Camera entry a pitch ~50°
- * con fly-in cinematico (zoom 14.5 → 17) per dare il feel "wow" di Movete.
+ * labels (diverso dal main map che li disattiva). Camera entry PIATTA a zoom
+ * 14.5, poi fly-in cinematico a 17/50°: il tilt arriva INSIEME allo zoom
+ * invece di essere una condizione di partenza — a zoom cittadino Mapbox non
+ * estrude ancora nulla e un pitch iniziale darebbe solo una mappa piatta
+ * storta. Parità iOS.
  *
  * **Gestures:** disabilitate. La hero map è una preview tappabile, non si
  * può pannare/zoomare. Tap → onExpand a fullscreen overlay.
@@ -65,14 +69,14 @@ internal fun StopDetailMapHero(
     val isDark = isSystemInDarkTheme()
     val point = remember(stop.id) { Point.fromLngLat(stop.lon, stop.lat) }
 
-    // Fly-in cinematico (Movete parity): start a 14.5/35°, dopo 500ms fly a
+    // Fly-in cinematico (Movete parity): start piatto a 14.5, dopo 500ms fly a
     // 17/50° — 1200ms cinematic.
     val viewport = rememberMapViewportState {
         setCameraOptions(
             CameraOptions.Builder()
                 .center(point)
                 .zoom(14.5)
-                .pitch(35.0)
+                .pitch(0.0)
                 .bearing(0.0)
                 .build()
         )
@@ -83,7 +87,7 @@ internal fun StopDetailMapHero(
             CameraOptions.Builder()
                 .center(point)
                 .zoom(17.0)
-                .pitch(50.0)
+                .pitch(MapZoomLevels.pitch3DHero)
                 .bearing(0.0)
                 .build()
         )

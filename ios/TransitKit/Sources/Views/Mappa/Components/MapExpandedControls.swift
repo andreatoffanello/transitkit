@@ -25,18 +25,20 @@ struct MapExpandedControls: View {
 
             VStack {
                 Spacer()
-                Button(action: onCollapse) {
-                    LucideIcon.x.sized(20)
-                        .foregroundStyle(.primary)
-                        .frame(width: 56, height: 56)
-                        .background(.regularMaterial, in: Circle())
-                        .overlay(Circle().strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5))
-                        .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(Text(L("a11y_close_map")))
-                .accessibilityIdentifier("btn_map_collapse")
-                .padding(.bottom, 44)
+                // Trattamento canonico dei dischi su mappa: stesso materiale e
+                // stesso hairline del pill qui accanto. L'ombra resta la sua
+                // (8/4): è il controllo più grande e sta su tile non sfocate.
+                MapCircleButton(
+                    icon: .x,
+                    size: 56,
+                    iconSize: 20,
+                    shadowRadius: 8,
+                    shadowY: 4,
+                    action: onCollapse
+                )
+                    .accessibilityLabel(Text(L("a11y_close_map")))
+                    .accessibilityIdentifier("btn_map_collapse")
+                    .padding(.bottom, 44)
             }
         }
     }
@@ -67,7 +69,7 @@ struct MapExpandedControls: View {
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
+                .strokeBorder(MapChrome.hairline, lineWidth: MapChrome.hairlineWidth)
         )
         .shadow(color: .black.opacity(0.18), radius: 6, y: 2)
         .animation(.spring(response: 0.3, dampingFraction: 0.85), value: showsResetBearing)

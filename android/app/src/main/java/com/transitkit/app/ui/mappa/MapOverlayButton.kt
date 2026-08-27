@@ -15,6 +15,7 @@ import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.rememberHaptics
 
 /**
  * Token unici del chrome flottante su mappa — stessi materiali del
@@ -47,6 +48,7 @@ internal fun MapOverlayButton(
     buttonTestTag: String? = null,
     tint: Color = TransitTheme.colors.textPrimary,
 ) {
+    val haptics = rememberHaptics()
     val base = modifier
         .size(MapChromeTokens.buttonSize)
         .then(
@@ -65,7 +67,7 @@ internal fun MapOverlayButton(
     }
     if (onClick != null) {
         Surface(
-            onClick = onClick,
+            onClick = { haptics.navigate(); onClick() },
             modifier = base,
             shape = CircleShape,
             tonalElevation = MapChromeTokens.tonalElevation,

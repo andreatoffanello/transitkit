@@ -25,15 +25,16 @@ struct MapActiveRouteChip: View {
                             .foregroundStyle(.secondary)
                     }
                 }
+                // Niente disco sotto la X: la capsule di materiale con il suo
+                // hairline è già il contenitore, un cerchio dentro fa due bordi.
                 LucideIcon.x.sized(14)
                     .foregroundStyle(.secondary)
                     .frame(width: 18, height: 18)
-                    .background(Color.primary.opacity(0.08), in: Circle())
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .background(.regularMaterial, in: Capsule())
-            .overlay(Capsule().stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
+            .overlay(Capsule().stroke(MapChrome.hairline, lineWidth: MapChrome.hairlineWidth))
             .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
             // Hit-slop: expand tappable surface around the chip without
             // enlarging the visual pill. Guarantees a >=44x44pt target.

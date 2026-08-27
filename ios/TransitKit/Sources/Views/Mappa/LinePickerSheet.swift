@@ -113,6 +113,7 @@ struct LinePickerSheet: View {
                 }
                 ForEach(lineResults) { route in
                     Button {
+                        Haptics.selection()
                         onSelect(route)
                         dismiss()
                     } label: {
@@ -133,6 +134,7 @@ struct LinePickerSheet: View {
                         .padding(.top, lineResults.isEmpty ? 0 : 8)
                     ForEach(stopResults) { stop in
                         Button {
+                            Haptics.selection()
                             onSelectStop(stop)
                             dismiss()
                         } label: {

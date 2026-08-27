@@ -182,20 +182,20 @@ struct VehicleDetailSheet: View {
             }
 
             if vehicle.wheelchairAccessible == .accessible {
-                LucideIcon.accessibility.sized(24)
-                    .foregroundStyle(AppTheme.accent)
-                    .frame(width: 22, height: 22)
-                    .background(AppTheme.accent.opacity(0.12))
-                    .clipShape(Circle())
+                // Niente pastiglia: la glifa a 24pt era più grande del cerchio
+                // da 22 che avrebbe dovuto contenerla, e il bordo la tagliava.
+                LucideIcon.accessibility.sized(16)
+                    .foregroundStyle(AppTheme.accentReadable)
                     .accessibilityLabel(L("vehicle_accessible"))
             }
 
             Button(action: onDismiss) {
+                // Il materiale della card è già il contenitore: il dischetto
+                // sotto la X aggiungeva un secondo bordo. Restano i due frame
+                // (visual 26pt, hit-area 44pt come da HIG).
                 LucideIcon.x.sized(16)
                     .foregroundStyle(AppTheme.textSecondary)
                     .frame(width: 26, height: 26)
-                    .background(AppTheme.textPrimary.opacity(0.08))
-                    .clipShape(Circle())
                     .frame(width: 44, height: 44)
                     .contentShape(Circle())
             }
@@ -338,11 +338,14 @@ struct VehicleDetailSheet: View {
             // EN/IT localization length never causes truncation. A11y label is
             // mandatory because icon-only buttons must be discoverable by VoiceOver.
             Button(action: onToggleFollow) {
+                // Non selezionato = token secondari (bianco in dark): accent su
+                // accent-tint scendeva sotto 3:1 sul materiale della card.
+                // Selezionato = bianco su accent pieno, già corretto.
                 LucideIcon.navigation.sized(18)
-                    .foregroundStyle(isFollowing ? Color.white : AppTheme.accent)
+                    .foregroundStyle(isFollowing ? Color.white : AppTheme.secondaryFg)
                     .frame(width: 44, height: 44)
                     .background(
-                        isFollowing ? AppTheme.accent : AppTheme.accent.opacity(0.12),
+                        isFollowing ? AppTheme.accent : AppTheme.secondaryFill,
                         in: RoundedRectangle(cornerRadius: 12, style: .continuous)
                     )
             }

@@ -23,9 +23,18 @@ struct ExpandedMapOverlay: View {
     /// Span camera corrente — pilota i tier dot→pin delle fermate linea
     /// (stesse soglie della mappa principale, `MapZoomLevels`).
     @State private var currentLatDelta: Double = 0.005
+    /// Zoom come latDelta PIATTO-equivalente, derivato dalla distanza camera.
+    /// `ctx.region` si allarga quando la camera è inclinata: deciderci sopra il
+    /// 3D farebbe oscillare la soglia. La distanza del pitch non sa nulla.
+    @State private var cameraLatDelta: Double = ExpandedMapOverlay.focusLatDelta
     /// Region camera corrente — letta dagli overlay (mezzi/puck) per forzare
     /// il re-render via `proxy.convert` a ogni frame di pan/zoom.
     @State private var mapRegion: MKCoordinateRegion?
+    /// Ultimo pitch scritto DA NOI sulla camera. Senza, un appiattimento
+    /// programmatico (fit linea) è indistinguibile da un gesto a due dita e
+    /// l'intent 3D verrebbe azzerato da solo. Stesso ruolo di
+    /// `MappaTab.lastDrivenPitch`.
+    @State private var lastDrivenPitch: Double = MapZoomLevels.pitch3D
 
     @State private var selectedRouteId: String? = nil
     @State private var linePolylines: [CachedPolyline] = []
@@ -34,7 +43,23 @@ struct ExpandedMapOverlay: View {
         CLLocationCoordinate2D(latitude: stop.lat, longitude: stop.lng)
     }
 
-    private var pitch: CGFloat { is3D ? 65 : 0 }
+    /// Distanza della camera di focus sulla fermata. Lo span equivalente serve
+    /// a `MapZoomLevels`, che decide il 3D sullo zoom e non sulla distanza.
+    private static let focusDistance: CLLocationDistance = 350
+    private static let focusLatDelta = MappaTab.spanLatitudeDelta(forDistance: focusDistance)
+
+    /// Pitch delle camere di focus sulla fermata: 350 m è dentro la banda in cui
+    /// il 3D è consentito, quindi qui decide solo l'intent. Stesso angolo della
+    /// mappa principale — i 65° di prima erano un terzo valore senza ragione.
+    private var pitch: CGFloat {
+        CGFloat(MapZoomLevels.pitch(for: Self.focusLatDelta, intent3D: is3D))
+    }
+
+    /// Stato 3D EFFETTIVO (intent ∧ zoom): è questo che va nei controlli, o la
+    /// pill direbbe "3D" sull'overview piatto di una linea intera.
+    private var effective3D: Bool {
+        is3D && MapZoomLevels.allows3D(latitudeDelta: cameraLatDelta)
+    }
 
     /// Reset bearing compare solo se la mappa è davvero ruotata.
     /// Soglia 1° per evitare jitter da micro-movimenti di camera.
@@ -165,7 +190,11 @@ struct ExpandedMapOverlay: View {
                     .onMapCameraChange(frequency: .continuous) { ctx in
                         currentHeading = ctx.camera.heading
                         currentLatDelta = ctx.region.span.latitudeDelta
+                        cameraLatDelta = MappaTab.spanLatitudeDelta(forDistance: ctx.camera.distance)
                         mapRegion = ctx.region
+                    }
+                    .onMapCameraChange(frequency: .onEnd) { ctx in
+                        reconcilePitch(ctx.camera)
                     }
                 }
 
@@ -184,7 +213,7 @@ struct ExpandedMapOverlay: View {
                     )
 
                 MapExpandedControls(
-                    is3D: is3D,
+                    is3D: effective3D,
                     onToggle3D: toggle3D,
                     showsRecenter: true,
                     onRecenter: centerOnUser,
@@ -237,7 +266,7 @@ struct ExpandedMapOverlay: View {
     // MARK: - Actions
 
     private func toggleLine(_ route: APIRoute) {
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        Haptics.selection()
         if selectedRouteId == route.id {
             // Deselect: pulisci i layer linea e riporta la camera sulla fermata.
             selectedRouteId = nil
@@ -267,64 +296,114 @@ struct ExpandedMapOverlay: View {
                 longitudeDelta: max((maxLng - minLng) * 1.4, 0.01)
             )
         )
+        // `.region` implica pitch 0: registrarlo evita che il rientro in zoom
+        // stretto legga quello zero come "l'utente ha appiattito a mano".
+        lastDrivenPitch = 0
         withAnimation(.spring(response: 0.5, dampingFraction: 0.85)) {
             expandedMapPosition = .region(region)
         }
     }
 
+    /// Unico punto in cui si scrive la camera: registra il pitch che abbiamo
+    /// chiesto, così `reconcilePitch` sa distinguerlo da un gesto dell'utente.
+    private func driveCamera(_ camera: MapCamera) {
+        lastDrivenPitch = Double(camera.pitch)
+        withAnimation(.spring(response: 0.42, dampingFraction: 0.85)) {
+            expandedMapPosition = .camera(camera)
+        }
+    }
+
     /// Camera iniziale / al deselect linea: inquadra la FERMATA del dettaglio.
     private func recenter() {
-        withAnimation(.spring(response: 0.42, dampingFraction: 0.85)) {
-            expandedMapPosition = .camera(MapCamera(
-                centerCoordinate: stopCoordinate,
-                distance: 350,
-                heading: 0,
-                pitch: pitch
-            ))
-        }
+        driveCamera(MapCamera(
+            centerCoordinate: stopCoordinate,
+            distance: Self.focusDistance,
+            heading: 0,
+            pitch: pitch
+        ))
     }
 
     /// Bottone "centra posizione": va sulla posizione REALE dell'utente.
     /// Fallback alla fermata se la posizione non è ancora disponibile.
     private func centerOnUser() {
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        Haptics.selection()
         guard let coord = locationManager.location?.coordinate else {
             recenter()
             return
         }
-        withAnimation(.spring(response: 0.42, dampingFraction: 0.85)) {
-            expandedMapPosition = .camera(MapCamera(
-                centerCoordinate: coord,
-                distance: 350,
-                heading: 0,
-                pitch: pitch
-            ))
-        }
+        driveCamera(MapCamera(
+            centerCoordinate: coord,
+            distance: Self.focusDistance,
+            heading: 0,
+            pitch: pitch
+        ))
     }
 
+    /// Cambia SOLO l'inclinazione: la versione precedente ricostruiva la camera
+    /// sulla fermata a 350 m, quindi il toggle teletrasportava la mappa e
+    /// buttava via il pan dell'utente. Parte dallo stato EFFETTIVO, così il tap
+    /// fa sempre l'opposto di quello che la pill mostra; da lontano avvicina,
+    /// perché inclinare una vista d'insieme darebbe una mappa piatta storta.
     private func toggle3D() {
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        is3D.toggle()
-        withAnimation(.spring(response: 0.42, dampingFraction: 0.85)) {
-            expandedMapPosition = .camera(MapCamera(
-                centerCoordinate: stopCoordinate,
-                distance: 350,
-                heading: 0,
-                pitch: pitch
-            ))
+        Haptics.selection()
+        let willBe3D = !effective3D
+        is3D = willBe3D
+        let latDelta = (willBe3D && !MapZoomLevels.allows3D(latitudeDelta: cameraLatDelta))
+            ? MapZoomLevels.pitch3DEntryDelta
+            : cameraLatDelta
+        let span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: latDelta)
+        driveCamera(MapCamera(
+            centerCoordinate: mapRegion?.center ?? stopCoordinate,
+            distance: MappaTab.distanceForSpan(span),
+            heading: currentHeading,
+            pitch: CGFloat(MapZoomLevels.pitch(for: latDelta, intent3D: willBe3D))
+        ))
+    }
+
+    /// Riallinea intent e camera a fine gesto — stessa logica di
+    /// `MappaTab.reconcilePitch`, che qui mancava del tutto: la pill leggeva lo
+    /// stato effettivo ma nessuno riportava la camera a piatto uscendo dalla
+    /// banda 3D, e restava una mappa piatta storta con scritto "2D".
+    private func reconcilePitch(_ camera: MapCamera) {
+        // Lo zoom si legge dalla distanza, non da `ctx.region`: inclinata,
+        // la region si allarga e la soglia oscillerebbe.
+        let latDelta = MappaTab.spanLatitudeDelta(forDistance: camera.distance)
+        let cameraPitch = Double(camera.pitch)
+        let tilted = cameraPitch > 1
+        // Solo uno scostamento dal pitch che abbiamo chiesto NOI è un gesto a
+        // due dita; senza questo confronto un fit-linea appiattito farebbe
+        // perdere l'intent 3D al primo rientro in zoom stretto.
+        if MapZoomLevels.allows3D(latitudeDelta: latDelta),
+           abs(cameraPitch - lastDrivenPitch) > 2,
+           tilted != is3D {
+            is3D = tilted
+            lastDrivenPitch = cameraPitch
+            return
         }
+        // Zoom uscito (o rientrato) dalla banda del 3D → la camera si adegua.
+        // L'intent resta dov'è: è una preferenza, non uno stato di camera.
+        let desired = MapZoomLevels.pitch(for: latDelta, intent3D: is3D)
+        // `desired != lastDrivenPitch` protegge dal clamping di MapKit su una
+        // richiesta di tilt; l'appiattimento non viene mai clampato e va sempre
+        // lasciato passare, o è proprio il caso storto a non correggersi mai.
+        guard abs(cameraPitch - desired) > 2,
+              desired == 0 || desired != lastDrivenPitch else { return }
+        driveCamera(MapCamera(
+            centerCoordinate: camera.centerCoordinate,
+            distance: camera.distance,
+            heading: camera.heading,
+            pitch: CGFloat(desired)
+        ))
     }
 
     private func resetBearing() {
-        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        withAnimation(.spring(response: 0.42, dampingFraction: 0.85)) {
-            expandedMapPosition = .camera(MapCamera(
-                centerCoordinate: stopCoordinate,
-                distance: 350,
-                heading: 0,
-                pitch: pitch
-            ))
-        }
+        Haptics.selection()
+        driveCamera(MapCamera(
+            centerCoordinate: stopCoordinate,
+            distance: Self.focusDistance,
+            heading: 0,
+            pitch: pitch
+        ))
     }
 
     private func collapse() {

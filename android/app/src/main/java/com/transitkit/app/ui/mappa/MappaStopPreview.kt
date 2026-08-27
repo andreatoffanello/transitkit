@@ -49,6 +49,7 @@ import com.transitkit.app.data.model.ResolvedStop
 import com.transitkit.app.ui.components.LineBadge
 import com.transitkit.app.ui.components.LineBadgeSize
 import com.transitkit.app.ui.components.TimeDisplay
+import com.transitkit.app.ui.components.rememberHaptics
 import com.transitkit.app.ui.components.departureTimeState
 
 // ---------------------------------------------------------------------------
@@ -69,6 +70,10 @@ internal fun PreviewCardContainer(
             .windowInsetsPadding(WindowInsets.navigationBars)
             .shadow(elevation = 8.dp, shape = RoundedCornerShape(18.dp))
             .clip(RoundedCornerShape(18.dp))
+            // `surfaceOverMap` è OPACA ma in dark è velata di accent (vedi
+            // AppTheme): niente accent come foreground qui dentro — label,
+            // icone e spinner vanno su textPrimary / secondaryFg /
+            // accentReadable, mai su `accent` pieno.
             .background(colors.surfaceOverMap),
     ) {
         content()
@@ -88,6 +93,7 @@ internal fun StopPreviewContent(
     onClose: () -> Unit,
     onNavigateToStop: (stopId: String) -> Unit = {},
 ) {
+    val haptics = rememberHaptics()
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -174,7 +180,7 @@ internal fun StopPreviewContent(
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         strokeWidth = 2.5.dp,
-                        color = TransitTheme.colors.accent,
+                        color = TransitTheme.colors.accentReadable,
                     )
                 }
             }
@@ -199,7 +205,7 @@ internal fun StopPreviewContent(
         // alerts, mappa zoomata). "Open in Maps" rimosso — il preview card
         // è già una mappa, esportare a Google/Apple Maps è ridondante.
         Button(
-            onClick = { onNavigateToStop(stop.id) },
+            onClick = { haptics.navigate(); onNavigateToStop(stop.id) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 12.dp),

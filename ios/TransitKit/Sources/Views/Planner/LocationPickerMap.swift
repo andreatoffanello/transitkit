@@ -19,6 +19,10 @@ struct LocationPickerMap: View {
     @State private var isCameraMoving = false
     @State private var geocodeTask: Task<Void, Never>? = nil
     @State private var moveDebounce: Task<Void, Never>? = nil
+    /// `onMapCameraChange` scatta anche per le camera mosse da noi (init,
+    /// recenter): senza questo flag il settle di una fly-to programmatica
+    /// vibrerebbe senza che l'utente abbia toccato la mappa.
+    @State private var suppressSettleTick = false
 
     var body: some View {
         ZStack {
@@ -65,7 +69,11 @@ struct LocationPickerMap: View {
                     try? await Task.sleep(for: .milliseconds(200))
                     guard !Task.isCancelled else { return }
                     isCameraMoving = false
-                    UISelectionFeedbackGenerator().selectionChanged()
+                    if suppressSettleTick {
+                        suppressSettleTick = false
+                    } else {
+                        Haptics.selection()
+                    }
                     scheduleReverseGeocode(for: currentCenter)
                 }
             }
@@ -123,7 +131,8 @@ struct LocationPickerMap: View {
     private var centerOnUserButton: some View {
         Button {
             guard let loc = locationManager.location else { return }
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            Haptics.navigate()
+            suppressSettleTick = true
             withAnimation(.easeInOut(duration: 0.38)) {
                 cameraPosition = .region(MKCoordinateRegion(
                     center: loc.coordinate,
@@ -134,7 +143,7 @@ struct LocationPickerMap: View {
             // Stessa icona recenter del pill canonico (LucideIcon.navigation)
             // e token MapChrome — niente SF Symbol ad-hoc.
             LucideIcon.navigation.sized(MapChrome.iconSize)
-                .foregroundStyle(AppTheme.accent)
+                .foregroundStyle(AppTheme.accentReadable)
                 .frame(width: MapChrome.buttonSize, height: MapChrome.buttonSize)
                 .background(.regularMaterial, in: Circle())
                 .shadow(color: MapChrome.shadowColor, radius: MapChrome.shadowRadius, y: MapChrome.shadowY)
@@ -173,7 +182,7 @@ struct LocationPickerMap: View {
             Spacer(minLength: 8)
 
             Button {
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                Haptics.commit()
                 let displayName = resolvedName.isEmpty
                     ? String(format: "%.5f, %.5f", currentCenter.latitude, currentCenter.longitude)
                     : resolvedName
@@ -198,6 +207,7 @@ struct LocationPickerMap: View {
     // MARK: - Init camera
 
     private func initCamera() {
+        suppressSettleTick = true
         if let loc = locationManager.location {
             currentCenter = loc.coordinate
             cameraPosition = .region(MKCoordinateRegion(

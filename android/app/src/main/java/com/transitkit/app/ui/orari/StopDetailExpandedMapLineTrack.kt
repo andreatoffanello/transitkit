@@ -25,14 +25,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.data.model.ResolvedDeparture
 import com.transitkit.app.ui.components.LineBadge
 import com.transitkit.app.ui.components.LineBadgeSize
+import com.transitkit.app.ui.components.rememberHaptics
 
 /**
  * Track orizzontale di badge linea sopra la mappa espansa — selettore
@@ -49,7 +48,7 @@ internal fun ExpandedMapLineTrack(
     modifier: Modifier = Modifier,
 ) {
     val colors = TransitTheme.colors
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     val uniqueRoutes = remember(routes) { routes.distinctBy { it.routeId } }
     if (uniqueRoutes.isEmpty()) return
 
@@ -90,7 +89,7 @@ internal fun ExpandedMapLineTrack(
                     .alpha(badgeAlpha)
                     .border(
                         width = 2.dp,
-                        color = colors.accent.copy(alpha = ringAlpha),
+                        color = colors.accentReadable.copy(alpha = ringAlpha),
                         shape = RoundedCornerShape(13.dp),
                     )
                     .padding(3.dp)
@@ -99,7 +98,7 @@ internal fun ExpandedMapLineTrack(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
                     ) {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        haptics.selection()
                         onRouteTap(route.routeId)
                     }
                     .testTag("map_line_badge_${route.routeId}"),

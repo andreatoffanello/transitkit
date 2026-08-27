@@ -39,6 +39,7 @@ import com.transitkit.app.config.TransitTheme
 import com.transitkit.app.data.gtfsrt.VehiclePosition
 import com.transitkit.app.data.model.ScheduleRoute
 import com.transitkit.app.ui.components.LiveBadge
+import com.transitkit.app.ui.components.rememberHaptics
 
 @Composable
 internal fun VehiclePreviewContent(
@@ -55,6 +56,7 @@ internal fun VehiclePreviewContent(
     onDismiss: () -> Unit,
 ) {
     val colors = TransitTheme.colors
+    val haptics = rememberHaptics()
 
     // Tick every 15s so freshness + countdown stay live (matches feed cadence).
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
@@ -161,7 +163,7 @@ internal fun VehiclePreviewContent(
                     Icon(
                         painter = painterResource(LucideIcons.Accessibility),
                         contentDescription = stringResource(R.string.vehicle_accessible),
-                        tint = colors.accent,
+                        tint = colors.accentReadable,
                         modifier = Modifier.size(13.dp),
                     )
                 }
@@ -353,13 +355,19 @@ internal fun VehiclePreviewContent(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             // Follow — icon-only compact square. Accessibility label mandatory (no text label).
-            val followBg = if (isFollowing) colors.accent else colors.accent.copy(alpha = 0.12f)
-            val followFg = if (isFollowing) Color.White else colors.accent
+            // Da spento è secondario, mai accent: la card sta su `surfaceOverMap`,
+            // che in dark è volutamente velata di accent — accent su accent non
+            // si legge. Da acceso resta bianco su fill pieno.
+            val followBg = if (isFollowing) colors.accent else colors.secondaryFill
+            val followFg = if (isFollowing) Color.White else colors.secondaryFg
             Box(
                 modifier = Modifier
                     .size(44.dp)
                     .background(followBg, RoundedCornerShape(12.dp))
-                    .clickable(onClick = onToggleFollow)
+                    .clickable {
+                        if (isFollowing) haptics.toggleOff() else haptics.toggleOn()
+                        onToggleFollow()
+                    }
                     .semantics { testTag = "btn_vehicle_follow" },
                 contentAlignment = Alignment.Center,
             ) {
@@ -379,7 +387,7 @@ internal fun VehiclePreviewContent(
                     modifier = Modifier
                         .weight(1f)
                         .background(colors.textPrimary.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
-                        .clickable(onClick = onOpenLine)
+                        .clickable { haptics.navigate(); onOpenLine() }
                         .padding(vertical = 10.dp)
                         .semantics { testTag = "btn_vehicle_open_line" },
                     horizontalArrangement = Arrangement.Center,
@@ -407,7 +415,7 @@ internal fun VehiclePreviewContent(
                 modifier = Modifier
                     .weight(1f)
                     .background(colors.accent, RoundedCornerShape(12.dp))
-                    .clickable(onClick = onOpenTrip)
+                    .clickable { haptics.navigate(); onOpenTrip() }
                     .padding(vertical = 10.dp)
                     .semantics { testTag = "btn_vehicle_open_trip" },
                 horizontalArrangement = Arrangement.Center,

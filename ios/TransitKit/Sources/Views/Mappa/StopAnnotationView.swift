@@ -193,14 +193,16 @@ struct StopPreviewCard: View {
                     }
                 }
                 Spacer()
-                Button(action: onDismiss) {
+                Button {
+                    Haptics.navigate()
+                    onDismiss()
+                } label: {
                     // Pattern VehicleDetailSheet: visual compatto ma hit-area
-                    // 44pt (il vecchio 28×28 era sotto il minimo HIG).
+                    // 44pt (il vecchio 28×28 era sotto il minimo HIG). Niente
+                    // disco: il materiale della card è già il contenitore.
                     LucideIcon.x.sized(14)
                         .foregroundStyle(.secondary)
                         .frame(width: 28, height: 28)
-                        .background(AppTheme.textPrimary.opacity(0.08))
-                        .clipShape(Circle())
                         .frame(width: 44, height: 44)
                         .contentShape(Circle())
                 }
@@ -242,19 +244,28 @@ struct StopPreviewCard: View {
                         }
                     }
                 }
-
-                Divider()
-                    .padding(.horizontal, 14)
             }
 
-            // CTA
-            Button(action: onOpenStop) {
-                Text(L("map_open_stop"))
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(AppTheme.accent)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+            // CTA — azione principale della card: fill pieno, non testo
+            // accent nudo (su mappa scura stava sotto 3:1). Parità Android,
+            // dove la stessa card ha un bottone primario riempito.
+            Button {
+                Haptics.navigate()
+                onOpenStop()
+            } label: {
+                HStack(spacing: 8) {
+                    LucideIcon.clock.sized(16)
+                    Text(L("map_open_stop"))
+                        .font(.system(size: 14, weight: .semibold))
+                }
+                .foregroundStyle(Color.white)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .background(AppTheme.accent, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 14)
+            .padding(.top, 12)
+            .padding(.bottom, 14)
             .accessibilityIdentifier("btn_stop_preview_open")
         }
         .background(.regularMaterial)

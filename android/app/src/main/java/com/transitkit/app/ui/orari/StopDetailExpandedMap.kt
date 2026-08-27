@@ -38,6 +38,7 @@ import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.style.MapStyle
+import com.mapbox.maps.plugin.animation.MapAnimationOptions
 import kotlinx.coroutines.awaitCancellation
 import com.transitkit.app.config.LocalTransitColors
 import com.transitkit.app.data.model.ResolvedDeparture
@@ -56,7 +57,8 @@ import kotlinx.coroutines.launch
 /**
  * Mappa fermata espansa a fullscreen — iOS parity (item #2 + #5).
  *
- * Entry 3D (pitch 45°), pin singolo della fermata, user location puck, e
+ * Entry 3D (pitch 45° a zoom fermata), pin singolo della fermata, user
+ * location puck, e
  * [UnifiedMapControlsPill] con tutti i 4 pulsanti: 2D/3D, recenter, reset
  * bearing (cond.), close.
  *
@@ -107,27 +109,36 @@ internal fun StopDetailExpandedMap(
         setCameraOptions(
             CameraOptions.Builder()
                 .center(point)
-                .zoom(16.0)
-                .pitch(45.0)        // entry 3D, iOS parity
+                .zoom(MapZoomLevels.stopFocus)
+                .pitch(MapZoomLevels.pitch3D)   // entry 3D, iOS parity
                 .bearing(0.0)
                 .build()
         )
     }
 
-    // Camera state polling — pitch + bearing per il pill (uguale a MappaScreen).
-    var currentPitch by remember { mutableDoubleStateOf(45.0) }
+    // Camera state polling — pitch, bearing e zoom per il pill (uguale a MappaScreen).
+    var currentPitch by remember { mutableDoubleStateOf(MapZoomLevels.pitch3D) }
     var currentBearing by remember { mutableDoubleStateOf(0.0) }
+    var currentZoom by remember { mutableDoubleStateOf(MapZoomLevels.stopFocus) }
     LaunchedEffect(Unit) {
         while (true) {
             val cs = viewport.cameraState
             if (cs != null) {
                 currentPitch = cs.pitch
                 currentBearing = cs.bearing
+                currentZoom = cs.zoom
             }
             delay(200)
         }
     }
-    val is3D by remember { derivedStateOf { currentPitch > 10.0 } }
+    // Preferenza dell'utente: sopravvive ai cambi di zoom (l'overview di linea
+    // porta la camera piatta senza che l'utente abbia chiesto la 2D).
+    var intent3D by remember { mutableStateOf(true) }
+    // Stato EFFETTIVO — è quello che il pill mostra: senza il gate sullo zoom
+    // l'etichetta direbbe "3D" sopra una mappa piatta.
+    val is3D by remember {
+        derivedStateOf { currentPitch > 10.0 && MapZoomLevels.allows3D(currentZoom) }
+    }
 
     // True solo dopo che una linea è stata selezionata almeno una volta —
     // distingue il deselect (camera back to stop) dalla composizione iniziale.
@@ -160,10 +171,54 @@ internal fun StopDetailExpandedMap(
                             .build()
                     )
                 }
-                MapEffect(isDark) { mapView ->
-                    mapView.mapboxMap.style?.let { applyTransitKitHeroStyleConfig(it, isDark) }
+
+                // Correttivo pitch↔zoom — stesso di MappaScreen: senza, una
+                // pinch sotto `pitch3DMinZoom` lascia la camera inclinata su
+                // una vista d'insieme mentre il pill dice già "2D".
+                MapEffect(Unit) { mapView ->
+                    var wasAllowed3D = MapZoomLevels.allows3D(mapView.mapboxMap.cameraState.zoom)
+                    var lastDrivenPitch = mapView.mapboxMap.cameraState.pitch
+                    val cancelable = mapView.mapboxMap.subscribeMapIdle {
+                        val camera = mapView.mapboxMap.cameraState
+                        val allows = MapZoomLevels.allows3D(camera.zoom)
+                        val tilted = camera.pitch > 10.0
+                        val correction = MapAnimationOptions.mapAnimationOptions { duration(250) }
+                        when {
+                            !allows && camera.pitch > 1.0 -> {
+                                lastDrivenPitch = 0.0
+                                viewport.easeTo(
+                                    CameraOptions.Builder().pitch(0.0).build(),
+                                    correction,
+                                )
+                            }
+                            allows && !wasAllowed3D && intent3D && !tilted -> {
+                                lastDrivenPitch = MapZoomLevels.pitch3D
+                                viewport.easeTo(
+                                    CameraOptions.Builder().pitch(MapZoomLevels.pitch3D).build(),
+                                    correction,
+                                )
+                            }
+                            // Tilt cambiato a due dita da vicino: l'intent segue
+                            // il dito, altrimenti il primo fly-to successivo
+                            // rimette il tilt appena tolto.
+                            allows && tilted != intent3D &&
+                                kotlin.math.abs(camera.pitch - lastDrivenPitch) > 2.0 ->
+                                intent3D = tilted
+                        }
+                        wasAllowed3D = allows
+                    }
+                    try {
+                        awaitCancellation()
+                    } finally {
+                        cancelable.cancel()
+                    }
+                }
+                // Keyed anche su is3D: senza, gli edifici estrusi restavano
+                // accesi in "2D" e il pill cambiava solo il pitch.
+                MapEffect(isDark, is3D) { mapView ->
+                    mapView.mapboxMap.style?.let { applyTransitKitHeroStyleConfig(it, isDark, show3D = is3D) }
                     val cancelable = mapView.mapboxMap.subscribeStyleLoaded {
-                        mapView.mapboxMap.style?.let { applyTransitKitHeroStyleConfig(it, isDark) }
+                        mapView.mapboxMap.style?.let { applyTransitKitHeroStyleConfig(it, isDark, show3D = is3D) }
                     }
                     try {
                         awaitCancellation()
@@ -222,7 +277,9 @@ internal fun StopDetailExpandedMap(
                         CameraOptions.Builder()
                             .center(Point.fromLngLat((minLon + maxLon) / 2, (minLat + maxLat) / 2))
                             .zoom(MapZoomLevels.lineOverview)
-                            .pitch(0.0)      // overview → 2D per leggibilità
+                            // Overview → piatta per regola di zoom, non per una
+                            // modalità nascosta: l'intent 3D resta intatto.
+                            .pitch(MapZoomLevels.pitchFor(MapZoomLevels.lineOverview, intent3D))
                             .bearing(0.0)
                             .build()
                     )
@@ -240,8 +297,8 @@ internal fun StopDetailExpandedMap(
                     hadLineSelection = false
                     val stopCamera = CameraOptions.Builder()
                         .center(point)
-                        .zoom(16.0)
-                        .pitch(45.0)
+                        .zoom(MapZoomLevels.stopFocus)
+                        .pitch(MapZoomLevels.pitchFor(MapZoomLevels.stopFocus, intent3D))
                         .bearing(0.0)
                         .build()
                     viewport.flyTo(stopCamera)
@@ -310,12 +367,17 @@ internal fun StopDetailExpandedMap(
                 UnifiedMapControlsPill(
                     is3D = is3D,
                     onToggle3D = {
+                        val enabling = !is3D
+                        intent3D = enabling
                         scope.launch {
-                            viewport.flyTo(
-                                CameraOptions.Builder()
-                                    .pitch(if (is3D) 0.0 else 45.0)
-                                    .build()
-                            )
+                            val target = CameraOptions.Builder()
+                                .pitch(if (enabling) MapZoomLevels.pitch3D else 0.0)
+                            // Inclinare da lontano darebbe una mappa piatta storta:
+                            // il 3D si accende avvicinandosi.
+                            if (enabling && !MapZoomLevels.allows3D(currentZoom)) {
+                                target.zoom(MapZoomLevels.pitch3DEntryZoom)
+                            }
+                            viewport.flyTo(target.build())
                         }
                     },
                     onRecenter = {
@@ -323,7 +385,10 @@ internal fun StopDetailExpandedMap(
                             viewport.flyTo(
                                 CameraOptions.Builder()
                                     .center(point)
-                                    .zoom(16.0)
+                                    .zoom(MapZoomLevels.stopFocus)
+                                    // Un builder senza .pitch() lascia il tilt
+                                    // com'era: qui va detto, non ereditato.
+                                    .pitch(MapZoomLevels.pitchFor(MapZoomLevels.stopFocus, intent3D))
                                     .build()
                             )
                         }

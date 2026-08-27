@@ -45,10 +45,13 @@ import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.style.MapStyle
+import com.mapbox.maps.plugin.animation.MapAnimationOptions
 import androidx.compose.ui.res.stringResource
 import com.transitkit.app.R
 import com.transitkit.app.config.LocalTransitColors
 import com.transitkit.app.config.LucideIcons
+import com.transitkit.app.config.TransitTheme
+import com.transitkit.app.ui.components.rememberHaptics
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -119,6 +122,7 @@ fun MappaScreen(
 
     val scope = rememberCoroutineScope()
     val isDark = isSystemInDarkTheme()
+    val haptics = rememberHaptics()
 
     // Deeplink: `transitkit://map/stop/<stopId>` — apre la Mappa con la
     // fermata selezionata + camera fly-to a stopFocus zoom (Street tier).
@@ -145,34 +149,28 @@ fun MappaScreen(
             return@remember Triple(
                 Point.fromLngLat(deepLinkCam.longitude, deepLinkCam.latitude),
                 deepLinkCam.zoom,
-                deepLinkCam.pitch ?: 45.0,
+                MapZoomLevels.pitchFor(
+                    deepLinkCam.zoom,
+                    angle = deepLinkCam.pitch ?: MapZoomLevels.pitch3D,
+                ),
             )
         }
-        val hasPermission = context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
-            android.content.pm.PackageManager.PERMISSION_GRANTED
-        val userLoc = if (hasPermission) {
-            val lm = context.getSystemService(android.location.LocationManager::class.java)
-            try {
-                lm?.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
-                    ?: lm?.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER)
-            } catch (_: SecurityException) { null }
-        } else null
+        val userPoint = lastKnownUserPoint(context)
 
-        if (userLoc != null) {
-            // Utente localizzato → zoom alto + pitch 3D (Mapbox emette
-            // fill-extrusion da zoom ~16): vista scenica immediata.
+        // Il pitch di partenza lo decide lo zoom, non il ramo: sotto il LOD
+        // degli edifici estrusi una camera inclinata è solo una mappa piatta
+        // storta.
+        if (userPoint != null) {
             Triple(
-                Point.fromLngLat(userLoc.longitude, userLoc.latitude),
+                userPoint,
                 MapZoomLevels.userDefaultEntry,
-                50.0,
+                MapZoomLevels.pitchFor(MapZoomLevels.userDefaultEntry),
             )
         } else {
-            // Fallback city overview → pitch 0 perché a zoom 13 i building
-            // restano comunque 2D (LOD tile). Pitch alto sarebbe inutile.
             Triple(
                 Point.fromLngLat(mapCenter.longitude(), mapCenter.latitude()),
                 MapZoomLevels.cityDefaultEntry,
-                0.0,
+                MapZoomLevels.pitchFor(MapZoomLevels.cityDefaultEntry),
             )
         }
     }
@@ -185,6 +183,13 @@ fun MappaScreen(
         }
     }
 
+    // Preferenza 3D dell'utente. È INTENT e sopravvive ai cambi di zoom: il
+    // pitch effettivo è `intent && lo zoom lo consente` (MapZoomLevels.pitchFor),
+    // così allontanandosi la mappa si appiattisce senza dimenticare la scelta.
+    // Default acceso: il 3D è il carattere della mappa da vicino, non una
+    // modalità da attivare ogni volta.
+    var intent3D by remember { mutableStateOf(true) }
+
     // Deep link camera — `transitkit://map?lat=&lng=&zoom=&pitch=`. Lo store
     // viene popolato da MainActivity.handleMapDeepLink; qui osserviamo il Flow
     // e applichiamo + clear. Pattern portato da Movete.
@@ -193,10 +198,18 @@ fun MappaScreen(
     val pendingCamera by PendingMapCameraStore.pending.collectAsStateWithLifecycle()
     LaunchedEffect(pendingCamera) {
         val cam = pendingCamera ?: return@LaunchedEffect
+        // Il pitch va passato SEMPRE: un builder senza `.pitch(...)` lascia il
+        // tilt invariato, e un deep link a zoom cittadino erediterebbe il 3D.
         val builder = CameraOptions.Builder()
             .center(Point.fromLngLat(cam.longitude, cam.latitude))
             .zoom(cam.zoom)
-        cam.pitch?.let { builder.pitch(it) }
+            .pitch(
+                MapZoomLevels.pitchFor(
+                    cam.zoom,
+                    intent3D = cam.pitch != null || intent3D,
+                    angle = cam.pitch ?: MapZoomLevels.pitch3D,
+                )
+            )
         viewportState.flyTo(builder.build())
         PendingMapCameraStore.consume()
     }
@@ -239,7 +252,12 @@ fun MappaScreen(
     }
 
     val tier by remember { derivedStateOf { MapZoomLevels.tier(currentZoom) } }
-    val is3D by remember { derivedStateOf { currentPitch > 10.0 } }
+    // Stato 3D EFFETTIVO — letto dalla camera reale (zoom E pitch), mai
+    // dall'intent: il pill non deve poter annunciare "3D" sopra una mappa
+    // piatta, e gli edifici estrusi si spengono da soli quando si appiattisce.
+    val is3D by remember {
+        derivedStateOf { MapZoomLevels.allows3D(currentZoom) && currentPitch > 10.0 }
+    }
 
     // Follow selected vehicle — camera segue le posizioni aggiornate.
     var isFollowingVehicle by remember { mutableStateOf(false) }
@@ -272,10 +290,12 @@ fun MappaScreen(
         // prima, quel re-center partirebbe a metà della mia zoom-in e la
         // annullerebbe (la camera restava a livello città). Aspetto che la
         // zoom-in si assesti, poi aggancio il follow allo zoom giusto (16.5).
+        val followZoom = maxOf(currentZoom, MapZoomLevels.vehicleFocus)
         viewportState.flyTo(
             CameraOptions.Builder()
                 .center(Point.fromLngLat(sel.first.lon, sel.first.lat))
-                .zoom(maxOf(currentZoom, MapZoomLevels.vehicleFocus))
+                .zoom(followZoom)
+                .pitch(MapZoomLevels.pitchFor(followZoom, intent3D))
                 .build()
         )
         delay(700)
@@ -315,10 +335,12 @@ fun MappaScreen(
             )
             return@LaunchedEffect
         }
+        val stopZoom = maxOf(currentZoom, MapZoomLevels.stopFocus)
         viewportState.flyTo(
             CameraOptions.Builder()
                 .center(Point.fromLngLat(s.lon, s.lat))
-                .zoom(maxOf(currentZoom, MapZoomLevels.stopFocus))
+                .zoom(stopZoom)
+                .pitch(MapZoomLevels.pitchFor(stopZoom, intent3D))
                 .padding(EdgeInsets(0.0, 0.0, previewCardHeightPx, 0.0))
                 .build()
         )
@@ -338,6 +360,7 @@ fun MappaScreen(
             CameraOptions.Builder()
                 .center(center)
                 .zoom(MapZoomLevels.lineOverview)
+                .pitch(MapZoomLevels.pitchFor(MapZoomLevels.lineOverview, intent3D))
                 .build()
         )
     }
@@ -393,6 +416,9 @@ fun MappaScreen(
                 layerIds = listOf(VEHICLES_LAYER_ID, STOPS_LAYER_ID),
                 onPinTap = { feature, _ ->
                     lastAnnotationTapMs.set(System.currentTimeMillis())
+                    // Un marker centrato è l'unico feedback che il tap ha
+                    // preso: il pin è piccolo e il dito lo copre.
+                    haptics.navigate()
                     val vehicleId = feature.getStringProperty(PROP_VEHICLE_ID)
                     if (vehicleId != null) {
                         // Veicolo tappato
@@ -404,10 +430,12 @@ fun MappaScreen(
                         viewModel.selectVehicle(vehicle, routeColor)
                         isFollowingVehicle = true
                         scope.launch {
+                            val focusZoom = maxOf(currentZoom, MapZoomLevels.vehicleFocus)
                             viewportState.flyTo(
                                 CameraOptions.Builder()
                                     .center(Point.fromLngLat(vehicle.lon, vehicle.lat))
-                                    .zoom(maxOf(currentZoom, MapZoomLevels.vehicleFocus))
+                                    .zoom(focusZoom)
+                                    .pitch(MapZoomLevels.pitchFor(focusZoom, intent3D))
                                     .build()
                             )
                         }
@@ -438,13 +466,76 @@ fun MappaScreen(
                 )
             }
 
+            // Correttivo pitch↔zoom. Il tilt vale solo da vicino: se la camera
+            // si ferma sotto `pitch3DMinZoom` ancora inclinata la riportiamo
+            // piatta, e la ri-inclina rientrando se l'intent è ancora 3D.
+            //
+            // `subscribeMapIdle` e non il poll da 300ms: il poll lascia la
+            // mappa visibilmente storta dopo la fine della pinch e combatte le
+            // proprie animazioni. L'idle scatta a camera ferma — gesture E
+            // animazioni programmate incluse — quindi non c'è correzione a
+            // metà di un fly-to nostro e non serve alcuna guardia a timestamp.
+            // `easeTo` e non `flyTo`: l'arco zoom-out/zoom-in del fly è
+            // sbagliato per una correzione di solo pitch.
+            MapEffect(Unit) { mapView ->
+                var wasAllowed3D = MapZoomLevels.allows3D(mapView.mapboxMap.cameraState.zoom)
+                // Ultimo pitch scritto da QUESTO correttivo: l'idle che segue
+                // una nostra `easeTo` non è un gesto dell'utente e non deve
+                // riscrivergli l'intent.
+                var lastDrivenPitch = mapView.mapboxMap.cameraState.pitch
+                val cancelable = mapView.mapboxMap.subscribeMapIdle {
+                    val camera = mapView.mapboxMap.cameraState
+                    val allows = MapZoomLevels.allows3D(camera.zoom)
+                    val tilted = camera.pitch > 10.0
+                    val correction = MapAnimationOptions.mapAnimationOptions { duration(250) }
+                    when {
+                        !allows && camera.pitch > 1.0 -> {
+                            lastDrivenPitch = 0.0
+                            viewportState.easeTo(
+                                CameraOptions.Builder().pitch(0.0).build(),
+                                correction,
+                            )
+                        }
+                        // Solo alla RISALITA sopra soglia: da vicino il pitch
+                        // resta dell'utente (può inclinare a due dita), qui
+                        // stiamo solo restituendo quello che gli avevamo tolto.
+                        allows && !wasAllowed3D && intent3D && !tilted -> {
+                            lastDrivenPitch = MapZoomLevels.pitch3D
+                            viewportState.easeTo(
+                                CameraOptions.Builder().pitch(MapZoomLevels.pitch3D).build(),
+                                correction,
+                            )
+                        }
+                        // Tilt cambiato a due dita dove il 3D è consentito: è
+                        // l'INTENT a seguire il dito. Senza questo ramo l'intent
+                        // resta quello vecchio e il primo fly-to successivo
+                        // (tap fermata, recenter, rientro sopra soglia) rimette
+                        // il tilt che l'utente ha appena tolto — parità con
+                        // `reconcilePitch` su iOS.
+                        allows && tilted != intent3D &&
+                            kotlin.math.abs(camera.pitch - lastDrivenPitch) > 2.0 ->
+                            intent3D = tilted
+                    }
+                    wasAllowed3D = allows
+                }
+                try {
+                    kotlinx.coroutines.awaitCancellation()
+                } finally {
+                    cancelable.cancel()
+                }
+            }
+
             MapEffect(isDark, is3D) { mapView ->
                 val styleCancel = applyTransitKitStandardStyleConfig(
                     mapView,
                     isDark = isDark,
                     show3D = is3D,
                 )
-                kotlinx.coroutines.awaitCancellation().also { styleCancel.cancel() }
+                try {
+                    kotlinx.coroutines.awaitCancellation()
+                } finally {
+                    styleCancel.cancel()
+                }
             }
         }
 
@@ -490,27 +581,50 @@ fun MappaScreen(
 
         MappaTabControlsPill(
             is3D = is3D,
+            showsRecenter = TransitTheme.config.features.enableGeolocation,
             currentBearing = currentBearing,
             onRecenter = {
                 scope.launch {
+                    // Il simbolo della cella è un mirino, e su iOS lo stesso
+                    // bottone porta sulla posizione REALE dell'utente
+                    // (MappaTab.recenterOnDefault). Il centro operatore resta
+                    // il fallback quando la posizione non c'è: meglio di un
+                    // bottone che non fa niente.
+                    val userPoint = lastKnownUserPoint(context)
+                    val targetZoom =
+                        if (userPoint != null) MapZoomLevels.userDefaultEntry
+                        else defaultZoom.toDouble()
                     viewportState.flyTo(
                         CameraOptions.Builder()
-                            .center(Point.fromLngLat(mapCenter.longitude(), mapCenter.latitude()))
-                            .zoom(defaultZoom.toDouble())
+                            .center(
+                                userPoint
+                                    ?: Point.fromLngLat(mapCenter.longitude(), mapCenter.latitude())
+                            )
+                            .zoom(targetZoom)
+                            .pitch(MapZoomLevels.pitchFor(targetZoom, intent3D))
                             .build()
                     )
                 }
             },
             onToggle3D = {
                 scope.launch {
-                    // Going INTO 3D: ensure zoom ≥ 16.5 so Mapbox Standard emits
-                    // fill-extrusion (sotto zoom ~16 i building restano 2D anche
-                    // con show3dObjects=true — è un LOD del tile, non bug nostro).
-                    // Going OUT to 2D: lascia lo zoom corrente.
-                    val builder = CameraOptions.Builder()
-                        .pitch(if (is3D) 0.0 else 50.0)
-                    if (!is3D && currentZoom < 16.5) builder.zoom(16.5)
-                    viewportState.flyTo(builder.build())
+                    // Entrando in 3D ci si avvicina fino a `pitch3DEntryZoom`:
+                    // sotto quel LOD Mapbox non estrude gli edifici e si
+                    // otterrebbe una mappa piatta inclinata. Uscendo lo zoom
+                    // resta dov'è, ma va passato esplicitamente insieme al
+                    // pitch — così l'uscita è simmetrica all'entrata invece di
+                    // dipendere da cosa il builder lascia invariato.
+                    val next = !is3D
+                    intent3D = next
+                    val targetZoom =
+                        if (next) maxOf(currentZoom, MapZoomLevels.pitch3DEntryZoom)
+                        else currentZoom
+                    viewportState.flyTo(
+                        CameraOptions.Builder()
+                            .zoom(targetZoom)
+                            .pitch(MapZoomLevels.pitchFor(targetZoom, next))
+                            .build()
+                    )
                 }
             },
             onResetBearing = {
@@ -625,5 +739,26 @@ fun MappaScreen(
                 onSelectStop = { stop -> viewModel.selectStop(stop) },
             )
         }
+    }
+}
+
+/**
+ * Ultima posizione nota del dispositivo, o `null` se il permesso manca o il
+ * sistema non ne ha ancora una.
+ *
+ * Volutamente NON memoizzata: fra l'apertura della mappa e il tap su "centra"
+ * l'utente si è mosso, e il permesso può essere stato concesso nel frattempo.
+ */
+private fun lastKnownUserPoint(context: android.content.Context): Point? {
+    val granted = context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
+        android.content.pm.PackageManager.PERMISSION_GRANTED
+    if (!granted) return null
+    val lm = context.getSystemService(android.location.LocationManager::class.java)
+    return try {
+        (lm?.getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER)
+            ?: lm?.getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER))
+            ?.let { Point.fromLngLat(it.longitude, it.latitude) }
+    } catch (_: SecurityException) {
+        null
     }
 }

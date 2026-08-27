@@ -44,7 +44,7 @@ struct MapControlsColumn: View {
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
+                .strokeBorder(MapChrome.hairline, lineWidth: MapChrome.hairlineWidth)
         )
         .shadow(color: .black.opacity(0.18), radius: 6, y: 2)
         .animation(.spring(response: 0.3, dampingFraction: 0.85), value: showsResetBearing)

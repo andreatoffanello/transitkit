@@ -54,6 +54,31 @@ object MapZoomLevels {
      *  su iOS (MapZoomLevels.swift); quando aggiorni uno, aggiorna l'altro. */
     const val minUserZoom = 8.0
 
+    // ── Pitch (3D) ───────────────────────────────────────────────────────────
+    //
+    // Il 3D è una feature dello zoom vicino, non una modalità globale: tilt e
+    // panning prospettico hanno senso solo dove Mapbox estrude gli edifici
+    // (fill-extrusion dal LOD ~15.5-16). Sotto questa soglia la camera torna
+    // piatta, così la vista d'insieme resta leggibile. La preferenza utente NON
+    // viene persa: è intent, e il pitch effettivo è `intent && zoom lo consente`.
+    //
+    // Allineato a iOS `MapZoomLevels.pitch3DMaxDelta = 0.009`
+    // (zoom 15.5 ≈ latDelta 0.009); quando aggiorni uno, aggiorna l'altro.
+
+    /** Zoom ≥ questo valore → il 3D è consentito. Sotto → camera piatta. */
+    const val pitch3DMinZoom = 15.5
+
+    /** Zoom a cui portarsi quando l'utente chiede il 3D da troppo lontano:
+     *  entrare in 3D senza avvicinarsi darebbe una mappa piatta inclinata. */
+    const val pitch3DEntryZoom = 16.0
+
+    /** Angolo di tilt delle mappe interattive. Uno solo, ovunque. */
+    const val pitch3D = 45.0
+
+    /** Angolo di tilt delle hero map non interattive (header dettaglio fermata):
+     *  più cinematico perché non ci si naviga dentro. Parità con iOS. */
+    const val pitch3DHero = 50.0
+
     // ── Tier resolver ────────────────────────────────────────────────────────
 
     fun tier(zoom: Double): MapZoomTier = when {
@@ -61,4 +86,18 @@ object MapZoomLevels {
         zoom < neighborhoodMaxZoom -> MapZoomTier.Neighborhood
         else                       -> MapZoomTier.Street
     }
+
+    /** True se a questo zoom il 3D è consentito (per etichette e stato dei controlli). */
+    fun allows3D(zoom: Double): Boolean = zoom >= pitch3DMinZoom
+
+    /**
+     * Pitch effettivo per uno zoom dato l'intent dell'utente.
+     * Unico punto in cui si decide se la camera è inclinata o piatta.
+     *
+     * GOTCHA Mapbox: un `CameraOptions.Builder` che NON chiama `.pitch(...)`
+     * lascia il pitch INVARIATO. Ogni fly-to che può atterrare a zoom cittadino
+     * deve passare da qui, altrimenti eredita silenziosamente il tilt.
+     */
+    fun pitchFor(zoom: Double, intent3D: Boolean = true, angle: Double = pitch3D): Double =
+        if (intent3D && allows3D(zoom)) angle else 0.0
 }

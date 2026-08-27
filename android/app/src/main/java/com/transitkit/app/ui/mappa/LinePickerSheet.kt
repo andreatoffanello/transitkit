@@ -46,6 +46,7 @@ import com.transitkit.app.ui.components.LineBadgeSize
 import com.transitkit.app.ui.components.RouteRow
 import com.transitkit.app.ui.components.TransitSearchBar
 import com.transitkit.app.ui.components.fuzzyScore
+import com.transitkit.app.ui.components.rememberHaptics
 
 /**
  * Line + stop picker — full-screen overlay shown above the map. Lives inside
@@ -73,7 +74,22 @@ internal fun LinePickerSheet(
     BackHandler(onBack = onDismiss)
 
     val colors = LocalTransitColors.current
+    val haptics = rememberHaptics()
     var query by remember { mutableStateOf("") }
+
+    // Scegliere una linea o una fermata chiude il picker e ridisegna la mappa:
+    // è un tap che porta altrove. Unico punto per non far divergere le tre
+    // liste (blank state, "altro", ricerca).
+    fun pickRoute(routeId: String) {
+        haptics.navigate()
+        onSelectRoute(routeId)
+        onDismiss()
+    }
+    fun pickStop(stop: ResolvedStop) {
+        haptics.navigate()
+        onSelectStop(stop)
+        onDismiss()
+    }
 
     // Blank-state: live-first sort within each section.
     val sortedRoutes = remember(routes, liveCounts) {
@@ -121,7 +137,7 @@ internal fun LinePickerSheet(
                     .padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                IconButton(onClick = onDismiss) {
+                IconButton(onClick = { haptics.navigate(); onDismiss() }) {
                     Icon(
                         painter = painterResource(LucideIcons.ChevronLeft),
                         contentDescription = stringResource(R.string.cd_indietro),
@@ -165,10 +181,7 @@ internal fun LinePickerSheet(
                                     route = route,
                                     stopSequence = stopSequences[route.id],
                                     liveCount = liveCounts[route.id] ?: 0,
-                                    onClick = {
-                                        onSelectRoute(route.id)
-                                        onDismiss()
-                                    },
+                                    onClick = { pickRoute(route.id) },
                                 )
                             }
                         }
@@ -182,10 +195,7 @@ internal fun LinePickerSheet(
                                 route = route,
                                 stopSequence = stopSequences[route.id],
                                 liveCount = liveCounts[route.id] ?: 0,
-                                onClick = {
-                                    onSelectRoute(route.id)
-                                    onDismiss()
-                                },
+                                onClick = { pickRoute(route.id) },
                             )
                         }
                     }
@@ -204,10 +214,7 @@ internal fun LinePickerSheet(
                             route = route,
                             stopSequence = stopSequences[route.id],
                             liveCount = liveCounts[route.id] ?: 0,
-                            onClick = {
-                                onSelectRoute(route.id)
-                                onDismiss()
-                            },
+                            onClick = { pickRoute(route.id) },
                         )
                     }
                     if (hasStops) {
@@ -215,10 +222,7 @@ internal fun LinePickerSheet(
                             SectionHeader(type = null, label = stringResource(R.string.mappa_line_picker_section_stops))
                         }
                         items(stopResults, key = { "stop_${it.id}" }) { stop ->
-                            StopPickerRow(stop = stop, onClick = {
-                                onSelectStop(stop)
-                                onDismiss()
-                            })
+                            StopPickerRow(stop = stop, onClick = { pickStop(stop) })
                         }
                     }
                 }

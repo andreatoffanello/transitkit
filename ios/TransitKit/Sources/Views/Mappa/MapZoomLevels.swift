@@ -101,4 +101,40 @@ enum MapZoomLevels {
     /// allineato a `MapZoomLevels.minUserZoom` su Android; quando aggiorni
     /// uno, aggiorna l'altro.
     static let maxCameraDistance: Double = 250_000
+
+    // ── Pitch (3D) ───────────────────────────────────────────────────────────
+    //
+    // Il 3D è una feature dello zoom vicino, non una modalità globale: tilt e
+    // panning prospettico hanno senso solo quando gli edifici sono estrusi.
+    // Sopra questa soglia (= tier `.close`) la camera torna piatta, così la
+    // vista d'insieme resta leggibile. La preferenza dell'utente (`is3D`) NON
+    // viene persa: è intent, e il pitch effettivo è `intent && zoom lo consente`.
+    //
+    // Allineato ad Android `MapZoomLevels.pitch3DMinZoom = 15.5`
+    // (latDelta 0.009 ≈ zoom Mapbox 15.5); quando aggiorni uno, aggiorna l'altro.
+
+    /// latDelta < questo valore → il 3D è consentito. ≥ → camera piatta.
+    static let pitch3DMaxDelta = 0.009
+
+    /// Zoom (latDelta) a cui portarsi quando l'utente chiede il 3D da troppo
+    /// lontano: entrare in 3D senza avvicinarsi darebbe una mappa piatta inclinata.
+    static let pitch3DEntryDelta = 0.006
+
+    /// Angolo di tilt delle mappe interattive. Uno solo, ovunque.
+    static let pitch3D: Double = 45
+
+    /// Angolo di tilt delle hero map non interattive (header dettaglio fermata):
+    /// più cinematico perché non ci si naviga dentro. Parità con Android.
+    static let pitch3DHero: Double = 50
+
+    /// Pitch effettivo per uno span dato l'intent dell'utente.
+    /// Unico punto in cui si decide se la camera è inclinata o piatta.
+    static func pitch(for latitudeDelta: Double, intent3D: Bool, angle: Double = pitch3D) -> Double {
+        (intent3D && latitudeDelta < pitch3DMaxDelta) ? angle : 0
+    }
+
+    /// True se a questo span il 3D è consentito (per etichette e stato dei controlli).
+    static func allows3D(latitudeDelta: Double) -> Bool {
+        latitudeDelta < pitch3DMaxDelta
+    }
 }

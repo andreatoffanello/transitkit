@@ -25,7 +25,7 @@ struct MapSearchPill: View {
             .padding(.vertical, 12)
             .frame(maxWidth: 360)
             .background(.regularMaterial, in: Capsule())
-            .overlay(Capsule().stroke(Color.primary.opacity(0.08), lineWidth: 0.5))
+            .overlay(Capsule().stroke(MapChrome.hairline, lineWidth: MapChrome.hairlineWidth))
             .shadow(color: .black.opacity(0.18), radius: 8, y: 3)
         }
         .buttonStyle(.plain)

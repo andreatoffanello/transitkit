@@ -46,8 +46,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -61,6 +59,7 @@ import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.compose.style.MapStyle
+import com.mapbox.maps.plugin.gestures.gestures
 import com.transitkit.app.R
 import com.transitkit.app.config.LocalTransitColors
 import com.transitkit.app.config.LucideIcons
@@ -69,6 +68,7 @@ import com.transitkit.app.data.api.MapboxGeocodingService
 import com.transitkit.app.data.model.PlannerLocation
 import com.transitkit.app.data.model.ResolvedStop
 import com.transitkit.app.ui.mappa.StopSymbolLayer
+import com.transitkit.app.ui.components.rememberHaptics
 import com.transitkit.app.ui.mappa.applyTransitKitStandardStyleConfig
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -97,7 +97,7 @@ fun LocationPickerMapScreen(
     onBack: () -> Unit,
 ) {
     val colors = TransitTheme.colors
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     val scope = rememberCoroutineScope()
     val isDark = isSystemInDarkTheme()
 
@@ -179,7 +179,7 @@ fun LocationPickerMapScreen(
                 lon = centerLon,
             )
         }
-        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        haptics.commit()
         if (assignKey != null) {
             // Assign mode: save as casa/lavoro shortcut, don't touch the trip
             plannerViewModel.savedPlacesStore.setPlace(assignKey, pick.name, pick.lat, pick.lon)
@@ -196,7 +196,6 @@ fun LocationPickerMapScreen(
 
     fun centerOnUser() {
         val loc = currentLocation ?: return
-        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         scope.launch {
             viewportState.flyTo(
                 CameraOptions.Builder()
@@ -252,6 +251,14 @@ fun LocationPickerMapScreen(
             ) {
                 com.transitkit.app.ui.mappa.UserLocationPuck()
 
+                // Il pin centrale presuppone una mappa piatta e nord in alto:
+                // una gesture a due dita la inclinerebbe senza che nulla la
+                // riporti a posto.
+                MapEffect(Unit) { mapView ->
+                    mapView.gestures.pitchEnabled = false
+                    mapView.gestures.rotateEnabled = false
+                }
+
                 MapEffect(isDark) { mapView ->
                     val styleCancel = applyTransitKitStandardStyleConfig(
                         mapView,
@@ -293,7 +300,6 @@ fun LocationPickerMapScreen(
                     iconRes = LucideIcons.Crosshair,
                     contentDescription = stringResource(R.string.planner_picker_my_location),
                     onClick = ::centerOnUser,
-                    tint = colors.accent,
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
                         .padding(end = 16.dp),
@@ -351,7 +357,7 @@ private fun PickerBottomCard(
                         if (isStopPin) LucideIcons.BusFront else LucideIcons.MapPin
                     ),
                     contentDescription = null,
-                    tint = colors.accent,
+                    tint = colors.accentReadable,
                     modifier = Modifier.size(18.dp),
                 )
             }

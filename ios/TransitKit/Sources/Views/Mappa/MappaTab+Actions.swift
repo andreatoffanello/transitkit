@@ -39,9 +39,14 @@ extension MappaTab {
             .overlay(alignment: .topLeading) { userPuckMapOverlay(proxy: proxy) }
             .onMapCameraChange(frequency: .continuous) { ctx in
                 liveRegion = ctx.region   // re-render overlay a ogni frame
+                cameraHeading = ctx.camera.heading
             }
             .onMapCameraChange(frequency: .onEnd) { ctx in
-                handleRegionChange(ctx.region)
+                handleRegionChange(
+                    ctx.region,
+                    cameraDistance: ctx.camera.distance,
+                    cameraPitch: ctx.camera.pitch
+                )
             }
         }
         // mapRegion/is3D sono lo stato "comando": qui pilotiamo la camera della
@@ -84,7 +89,10 @@ extension MappaTab {
                     isSelected: selectedStop?.id == s.id,
                     routeColor: selectedRoute?.color
                 )
-                .onTapGesture { handleStopTap(s) }
+                .onTapGesture {
+                    Haptics.navigate()
+                    handleStopTap(s)
+                }
             }
         }
     }
@@ -108,7 +116,10 @@ extension MappaTab {
                     route: route,
                     tier: currentTier,
                     isSelected: selectedVehicle?.vehicle.id == v.id,
-                    onTap: { handleVehicleTap(v) }
+                    onTap: {
+                        Haptics.navigate()
+                        handleVehicleTap(v)
+                    }
                 )
             }
         }
@@ -130,14 +141,38 @@ extension MappaTab {
 
     // MARK: - Camera driver + region change
 
+    /// Stato 3D EFFETTIVO: intent dell'utente ∧ zoom che lo consente. È questo
+    /// che va mostrato nei controlli e usato come punto di partenza del toggle.
+    var is3DEffective: Bool {
+        is3D && MapZoomLevels.allows3D(latitudeDelta: cameraLatDelta)
+    }
+
+    /// Mappa ruotata a sufficienza da meritare la bussola. La soglia di 1° tiene
+    /// fuori il rumore del gesto, e la distanza angolare da nord evita che un
+    /// heading di 359° (mappa di fatto dritta) la lasci accesa.
+    var hasBearingToReset: Bool {
+        let angle = abs(cameraHeading.truncatingRemainder(dividingBy: 360))
+        return min(angle, 360 - angle) > 1
+    }
+
     /// Pilota la camera SwiftUI dalla region "comando" `mapRegion` + `is3D`.
-    func driveCamera() {
+    /// Unico punto in cui si scrive il pitch per le mosse programmatiche
+    /// (recenter, fit linea, tap fermata/mezzo, follow, deep link).
+    ///
+    /// Lo heading di default è quello CORRENTE: forzare 0 qui buttava via la
+    /// rotazione dell'utente a ogni tap fermata, fit linea, tick del follow o
+    /// deep link. Solo il reset bussola passa un valore esplicito.
+    func driveCamera(heading: Double? = nil) {
         let region = mapRegion
+        let pitch = MapZoomLevels.pitch(for: region.span.latitudeDelta, intent3D: is3D)
+        lastDrivenPitch = pitch
+        // Sincrono, non dal debounce: la pill 3D/2D deve cambiare col tap.
+        cameraLatDelta = region.span.latitudeDelta
         let cam = MapCamera(
             centerCoordinate: region.center,
             distance: MappaTab.distanceForSpan(region.span),
-            heading: 0,
-            pitch: is3D ? 45 : 0
+            heading: heading ?? cameraHeading,
+            pitch: CGFloat(pitch)
         )
         withAnimation(.easeInOut(duration: 0.35)) {
             cameraPosition = .camera(cam)
@@ -145,11 +180,41 @@ extension MappaTab {
         // iOS NON fa fire affidabilmente `onMapCameraChange` per le mosse
         // programmatiche (gotcha noto, parità Movete) → senza questo le fermate
         // visibili non verrebbero ricalcolate dopo recenter/fit/tap/follow.
-        handleRegionChange(region)
+        handleRegionChange(
+            region,
+            cameraDistance: MappaTab.distanceForSpan(region.span),
+            cameraPitch: pitch
+        )
     }
 
-    /// Debounce 150ms a fine gesto: zoom tier, fermate visibili, mezzi.
-    func handleRegionChange(_ region: MKCoordinateRegion) {
+    /// Toggle 3D dei controlli mappa. Parte dallo stato EFFETTIVO, così il tap
+    /// fa sempre l'opposto di quello che la pill mostra. Chiedere il 3D da
+    /// lontano avvicina anche la camera: inclinare una vista d'insieme darebbe
+    /// una mappa piatta storta, e il bottone sembrerebbe rotto. Parità Android.
+    func toggle3D() {
+        Haptics.selection()
+        // Region LIVE come base, non `mapRegion`: quest'ultima è ferma
+        // all'ultima mossa programmatica e ripartire da lì butterebbe via il pan.
+        let center = (visibleRegion ?? mapRegion).center
+        let willBe3D = !is3DEffective
+        // Lo zoom di partenza è `cameraLatDelta`, non lo span riportato: se la
+        // camera è inclinata quello è gonfiato e riusarlo allargherebbe la vista.
+        let latDelta = (willBe3D && !MapZoomLevels.allows3D(latitudeDelta: cameraLatDelta))
+            ? MapZoomLevels.pitch3DEntryDelta
+            : cameraLatDelta
+        mapRegion = MKCoordinateRegion(
+            center: center,
+            span: MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: latDelta)
+        )
+        is3D = willBe3D
+    }
+
+    /// Debounce 150ms a fine gesto: zoom tier, fermate visibili, mezzi, pitch.
+    func handleRegionChange(
+        _ region: MKCoordinateRegion,
+        cameraDistance: CLLocationDistance,
+        cameraPitch: Double
+    ) {
         cameraTask?.cancel()
         cameraTask = Task {
             try? await Task.sleep(for: .milliseconds(150))
@@ -157,9 +222,55 @@ extension MappaTab {
             let newZoom = MapZoomLevel(latitudeDelta: region.span.latitudeDelta)
             if newZoom != zoomLevel { zoomLevel = newZoom }
             visibleRegion = region
+            cameraLatDelta = MappaTab.spanLatitudeDelta(forDistance: cameraDistance)
             updateAnnotations()
             refreshDisplayedVehicles()
+            reconcilePitch(center: region.center, cameraPitch: cameraPitch)
         }
+    }
+
+    /// Riallinea camera e intent a fine gesto. Il pitch è l'unico pezzo di
+    /// stato che l'utente può muovere senza passare dai controlli (gesto a due
+    /// dita) e che lo zoom può rendere non più consentito.
+    ///
+    /// Il `guard` finale è quello che impedisce il loop: la correzione ri-scrive
+    /// `mapRegion`, che ri-chiama `driveCamera` → `handleRegionChange`, e senza
+    /// il confronto con `lastDrivenPitch` la mappa vibrerebbe sulla soglia.
+    private func reconcilePitch(center: CLLocationCoordinate2D, cameraPitch: Double) {
+        let latDelta = cameraLatDelta
+        let tilted = cameraPitch > 1
+        // Riallineare `mapRegion` prima di toccare intent/camera è obbligatorio:
+        // è ferma all'ultima mossa programmatica, e ri-driverebbe la camera
+        // buttando via il pan che l'utente ha appena fatto.
+        let live = MKCoordinateRegion(
+            center: center,
+            span: MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: latDelta)
+        )
+        // Inclinazione cambiata a mano dove il 3D è consentito → è l'INTENT a
+        // seguire il dito, o la pill mentirebbe sullo stato della mappa.
+        if MapZoomLevels.allows3D(latitudeDelta: latDelta),
+           abs(cameraPitch - lastDrivenPitch) > 2,
+           tilted != is3D {
+            mapRegion = live
+            is3D = tilted
+            return
+        }
+        // Zoom uscito (o rientrato) dalla banda del 3D → la camera si adegua da
+        // sola. L'intent resta dov'è: è una preferenza, non uno stato di camera.
+        let desired = MapZoomLevels.pitch(for: latDelta, intent3D: is3D)
+        // `desired != lastDrivenPitch` serve solo contro il clamping di MapKit
+        // (chiediamo 45, ne concede 30, e ri-chiederemmo 45 all'infinito):
+        // vale quindi solo per le richieste di TILT. L'appiattimento non viene
+        // mai clampato, e sommarci quel confronto lo bloccherebbe proprio nel
+        // caso per cui esiste — camera già portata a 0 da noi, utente che
+        // inclina a due dita fuori dalla banda 3D.
+        guard abs(cameraPitch - desired) > 2,
+              desired == 0 || desired != lastDrivenPitch else { return }
+        mapRegion = live
+        // `driveCamera` esplicito: un tilt a due dita non muove né centro né
+        // distanza, quindi `live` può essere identica a `mapRegion` e
+        // l'`onChange` non scatterebbe — la camera resterebbe storta.
+        driveCamera()
     }
 
     // MARK: - Tap handlers (ex onStopTap / onVehicleTap)
@@ -402,12 +513,16 @@ extension MappaTab {
             isFollowingVehicle = false
             return
         }
+        // Solo il CENTRO: lo span fisso di prima risucchiava dentro l'utente
+        // che aveva allargato per capire dove stesse andando il mezzo, a ogni
+        // refresh del feed. L'avvicinamento resta al primo aggancio (tap sul
+        // marker / deep link), dove è l'utente ad averlo chiesto.
         mapRegion = MKCoordinateRegion(
             center: CLLocationCoordinate2D(
                 latitude: Double(updated.latitude),
                 longitude: Double(updated.longitude)
             ),
-            span: MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
+            span: MKCoordinateSpan(latitudeDelta: cameraLatDelta, longitudeDelta: cameraLatDelta)
         )
     }
 }

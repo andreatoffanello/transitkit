@@ -28,6 +28,7 @@ import com.transitkit.app.data.model.ScheduleRoute
 import com.transitkit.app.ui.components.LineBadge
 import com.transitkit.app.ui.components.LineBadgeSize
 import com.transitkit.app.ui.components.LiveIndicator
+import com.transitkit.app.ui.components.rememberHaptics
 
 // ---------------------------------------------------------------------------
 // Search pill — "Cerca linea"
@@ -36,11 +37,12 @@ import com.transitkit.app.ui.components.LiveIndicator
 @Composable
 internal fun SearchLinePill(onClick: () -> Unit) {
     val colors = LocalTransitColors.current
+    val haptics = rememberHaptics()
     Surface(
         shape = RoundedCornerShape(22.dp),
         color = colors.surfaceOverMap,
         shadowElevation = 4.dp,
-        onClick = onClick,
+        onClick = { haptics.navigate(); onClick() },
         modifier = Modifier.semantics { testTag = "map_line_picker_pill" },
     ) {
         Row(
@@ -75,6 +77,7 @@ internal fun RouteDismissChip(
     onDismiss: () -> Unit,
 ) {
     val colors = LocalTransitColors.current
+    val haptics = rememberHaptics()
     val cdDismiss = stringResource(R.string.mappa_rimuovi_overlay)
 
     Surface(
@@ -104,7 +107,7 @@ internal fun RouteDismissChip(
                 }
             }
             IconButton(
-                onClick = onDismiss,
+                onClick = { haptics.selection(); onDismiss() },
                 modifier = Modifier
                     .size(28.dp)
                     .semantics {

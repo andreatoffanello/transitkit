@@ -5,7 +5,7 @@
 # Legge shared/operators/<op>/config.json → map.centerLat / map.centerLng,
 # poi imposta:
 #   - iOS sim transitkit-ios18    (UDID 4302AFD9-…, iOS 18.5)
-#   - iOS sim transitkit-ios26 (UDID 1E7E7611-…, iOS 26.3)
+#   - iOS sim transitkit-ios26 (UDID 72896A69-…, iOS 26.5)
 #   - Android emulator AVD transitkit-android (se in esecuzione)
 #
 # UDID/AVD sono *pinned* al CLAUDE.md root del progetto. Idempotente:
@@ -38,7 +38,7 @@ echo "==> operator=$OPERATOR_ID  center=$LAT,$LON"
 
 IOS_UDIDS=(
     "4302AFD9-496E-4586-A5D0-D6BAC735FFFD"   # transitkit-ios18    (iOS 18.5)
-    "1E7E7611-FB05-4BFD-8F50-8E7F0963E0A6"   # transitkit-ios26 (iOS 26.3)
+    "72896A69-5555-420B-BE63-B672BE0F4C95"   # transitkit-ios26 (iOS 26.5)
 )
 
 for UDID in "${IOS_UDIDS[@]}"; do

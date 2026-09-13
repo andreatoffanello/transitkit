@@ -1,5 +1,31 @@
 # transit-engine / TransitKit
 
+Framework iOS/Android white-label per app di trasporto pubblico. I CLAUDE.md
+annidati `ios/`, `android/`, `web/` coprono le rispettive piattaforme.
+
+## IDENTIFICATIVI PROGETTO (pinned — non toccare senza aggiornare la macchina)
+
+- Scheme: `TransitKit`
+- Bundle ID: `com.transitkit.{OPERATOR_ID}` (white-label: es. `com.transitkit.appalcart`)
+- iOS xcodeproj: `ios/TransitKit.xcodeproj`
+- UDID simulatore iOS 18: `4302AFD9-496E-4586-A5D0-D6BAC735FFFD` (`transitkit-ios18`, iPhone 16 Pro)
+- UDID simulatore iOS 26: `72896A69-5555-420B-BE63-B672BE0F4C95` (`transitkit-ios26`, iPhone 16 Pro)
+- Location simulatori/emulatore: applicata da `scripts/setup-dev.sh [operator_id]` leggendo `shared/operators/<op>/config.json` → `map.centerLat/centerLng`. Default `appalcart` → Boone, NC (`36.2168,-81.6746`). Su iOS la posizione `simctl location set` è in-memory: rilanciare lo script dopo ogni reboot del simulatore.
+- AVD Android: `transitkit-android` (Pixel 6, API 34 — white-label: es. com.transitkit.appalcart)
+- AVD Android test Android 15: `transitkit-android-api35` (Pixel 6, API 35 — SOLO per verificare edge-to-edge / window insets su Android 15, che l'API 34 non riproduce). Porta console `5602` → serial `emulator-5602`. Avviare con `-port 5602`.
+- **Porta console Android PINNED: `5600`** → serial deterministico `emulator-5600`. Avviare SEMPRE con `-port 5600`. La porta è riservata a transitkit: nessun altro progetto deve usarla.
+- Package Android: `com.transitkit.{OPERATOR_ID}`
+
+**Regole ferree:**
+- MAI lanciare/installare app su simulatori diversi da `transitkit-ios18` e `transitkit-ios26`.
+- MAI usare `booted` come target simctl — sempre `$UDID`.
+- Il Bundle ID cambia per operatore: verificare sempre `{OPERATOR_ID}` prima di `simctl launch`.
+- MAI lanciare/installare app su emulatori Android diversi da `transitkit-android`.
+- MAI usare `adb` senza `-s emulator-5600` esplicito.
+- MAI usare `emulator -avd <name>` con `<name>` diverso da `transitkit-android`, e SEMPRE con `-port 5600`.
+- **STERILITÀ TOTALE tra progetti**: `transitkit-android` ospita SOLO `com.transitkit.appalcart`. Mai installarci app di altri progetti (DoVe `app.dove.venezia`, Alilaguna `com.veniceairportwaterbus.app`, ACTV `it.actv.orari`, Movete, ecc.). Prima di lavorare, verificare i 3rd-party package e disinstallare qualsiasi residuo estraneo: `adb -s emulator-5600 shell pm list packages -3`. La porta fissa elimina l'ambiguità del serial (le porte sono assegnate per ordine di avvio, NON per AVD).
+
+---
 
 ## BRAND PIPELINE (aggiornare loghi/icone/sfondo di un operatore)
 
@@ -70,78 +96,28 @@ Documentazione tecnica completa con mapping iOS/Android: `scripts/deploy-brand.s
 
 ## LINGUA DELL'APP — picker in Impostazioni (ago 2026)
 
-L'utente sceglie la lingua dell'interfaccia da Impostazioni → Lingua: **Sistema**
-(default), English, Español, Italiano. Non è una preferenza cosmetica: gli utenti
-di un operatore US sono in larga parte ispanofoni e il device è in inglese.
+L'utente sceglie la lingua da Impostazioni → Lingua: Sistema (default), English,
+Español, Italiano. Non è cosmetica: molti utenti di un operatore US sono
+ispanofoni con il device in inglese. Storia completa, con i tre bug già pagati:
+[`docs/i18n.md`](docs/i18n.md).
 
-**iOS — `L()` è l'UNICO modo di leggere una stringa. Mai `String(localized:)`.**
+Tre regole, non negoziabili:
 
-| | |
-|---|---|
-| Lookup | `L("chiave")` — e `L("chiave", comment: "")` per i format/plurali |
-| Fonte di verità | `AppleLanguages` nel dominio persistente dell'app (la stessa chiave che scrive Impostazioni iOS → App → Lingua: le due strade restano allineate) |
-| Redraw | `.id(localization.language)` sul TabView in `ContentView` |
+1. **iOS — `L()` è l'UNICO modo di leggere una stringa.** Mai `String(localized:)`
+   né `NSLocalizedString`: risolvono su `Bundle.main`, la cui localizzazione è
+   fissata al lancio. Una schermata che le usa non cambia lingua e non lo segnala
+   nessuno.
+2. **Ogni `DateFormatter` usa `LocalizationManager.formattingLocale`** (regione del
+   device + lingua scelta), mai `Locale.current`, e la cache dei formatter va
+   chiavata anche sul locale.
+3. **Il `fullScreenCover` di Impostazioni sta FUORI dal `.id(localization.language)`**,
+   e ogni vista dentro il cover ha il proprio `.id(...)`.
 
-`String(localized:)` e `NSLocalizedString` risolvono su `Bundle.main`, la cui
-localizzazione è **fissata al lancio**: né il re-classing di `Bundle.main` né
-`\.locale` nell'environment la spostano (provati entrambi, ago 2026 — la
-selezione si salvava e l'app restava in inglese). L'unica cosa che funziona è
-passare il bundle esplicitamente, ed è quello che fa `L()`
-(`Services/LocalizationManager.swift`). Una schermata nuova che usa
-`String(localized:)` non cambia lingua e non lo segnala nessuno.
-
-Il controllo va fatto **tollerando gli a capo**, non con un grep riga per riga:
+Verifica (tollera gli a capo — un grep secco dà falsi negativi):
 
 ```bash
 python3 -c "import re,pathlib;print([str(p) for p in pathlib.Path('ios/TransitKit/Sources').rglob('*.swift') if re.search(r'String\(\s*localized:|NSLocalizedString\s*\(', p.read_text()) and 'LocalizationManager' not in p.name])"
 ```
-
-Un `grep "String(localized:"` secco dà **falsi negativi**: due chiamate scritte
-come `String(` a fine riga e `localized:` sulla successiva sono sfuggite alla
-conversione e la schermata Avvisi è uscita in italiano su app in spagnolo,
-mentre il grep di verifica diceva zero (ago 2026).
-
-**I `DateFormatter` sono un secondo canale di lingua, indipendente da `L()`.**
-`LocalizationManager.formattingLocale` = **regione del dispositivo + lingua
-scelta**, e ogni formatter deve usarlo (`ClockTime`, `AlertDetailView`,
-`WhenChipsRow`). Le due metà vengono da impostazioni diverse e vanno tenute
-separate: ciclo 12/24h, ordine dei campi e primo giorno della settimana sono
-**regione**; nomi di giorni/mesi e simboli AM/PM sono **lingua**. Con
-`Locale.current` la data di validità di un avviso usciva in italiano su app in
-inglese; sostituendo l'intero `languageComponents` invece della sola
-`languageCode` il locale collassa su `it` puro e un iPhone americano in italiano
-mostra 16:45 invece di 4:45 PM. Entrambi visti e corretti ad ago 2026.
-La cache dei formatter va chiavata **anche sul locale** — in spagnolo i simboli
-sono `a. m.`/`p. m.` e un formatter in cache continuerebbe a dare i vecchi.
-(Su Android il problema non esiste: `DateFormat.is24HourFormat(context)` prende
-il ciclo orario dall'impostazione di sistema, non dal locale.)
-
-Due conseguenze non ovvie:
-- **Impostazioni è presentata da `ContentView`, non da `HomeTab`**: il
-  `fullScreenCover` deve stare *fuori* dal `.id()`, altrimenti cambiare lingua
-  chiude la schermata in cui l'utente sta scegliendo. In cambio, tutto ciò che
-  vive dentro quel cover ha bisogno del **proprio** `.id(localization.language)`
-  (`SettingsTab`, `LanguagePickerView`): senza, SwiftUI ridisegna solo i rami
-  che leggono `localization.language` — si vedeva la riga "Lingua/Italiano"
-  tradotta e i titoli di sezione ancora in inglese finché non si usciva e
-  rientrava. Il bottone in Home passa
-  da `router.pendingSettingsOpen`.
-- **Anche "Sistema" risolve a un `.lproj` concreto** (non ricade su
-  `Bundle.main`): tornare a "Sistema" dopo aver scelto l'italiano lascerebbe
-  l'app in italiano fino al riavvio.
-
-**Android** — `config/AppLocaleManager.kt`. Da Android 13 la fonte di verità è
-`LocaleManager.applicationLocales` (stessa di Impostazioni di sistema → App →
-Lingua; l'activity la ricrea il sistema, il back stack è ripristinato e l'utente
-resta dov'è). Sotto la 13 quell'API non esiste: `SharedPreferences` +
-`attachBaseContext` in `MainActivity` + `recreate()`. `res/xml/locales_config.xml`
-elenca en/es/it. **Il ramo pre-13 non è coperto dagli emulatori pinnati** (34/35):
-se lo tocchi, verificalo a mano.
-
-Aggiungere una lingua = un caso in `AppLanguage` (iOS + Android) + la
-localizzazione (`Localizable.xcstrings` / `values-<tag>`) + una riga in
-`locales_config.xml`. Il nome della lingua nella lista è l'**endonimo**
-("Español", non "Spagnolo"): non si localizza.
 
 ---
 
@@ -200,108 +176,19 @@ Documentazione completa: [`transitkit-console/CLAUDE.md`](https://github.com/and
 
 ---
 
-## IDENTIFICATIVI PROGETTO (pinned — non toccare senza aggiornare la macchina)
-
-- Scheme: `TransitKit`
-- Bundle ID: `com.transitkit.{OPERATOR_ID}` (white-label: es. `com.transitkit.appalcart`)
-- iOS xcodeproj: `ios/TransitKit.xcodeproj`
-- UDID simulatore iOS 18: `4302AFD9-496E-4586-A5D0-D6BAC735FFFD` (`transitkit-ios18`, iPhone 16 Pro)
-- UDID simulatore iOS 26: `1E7E7611-FB05-4BFD-8F50-8E7F0963E0A6` (`transitkit-ios26`, iPhone 16 Pro)
-- Location simulatori/emulatore: applicata da `scripts/setup-dev.sh [operator_id]` leggendo `shared/operators/<op>/config.json` → `map.centerLat/centerLng`. Default `appalcart` → Boone, NC (`36.2168,-81.6746`). Su iOS la posizione `simctl location set` è in-memory: rilanciare lo script dopo ogni reboot del simulatore.
-- AVD Android: `transitkit-android` (Pixel 6, API 34 — white-label: es. com.transitkit.appalcart)
-- AVD Android test Android 15: `transitkit-android-api35` (Pixel 6, API 35 — SOLO per verificare edge-to-edge / window insets su Android 15, che l'API 34 non riproduce). Porta console `5602` → serial `emulator-5602`. Avviare con `-port 5602`.
-- **Porta console Android PINNED: `5600`** → serial deterministico `emulator-5600`. Avviare SEMPRE con `-port 5600`. La porta è riservata a transitkit: nessun altro progetto deve usarla.
-- Package Android: `com.transitkit.{OPERATOR_ID}`
-
-**Regole ferree:**
-- MAI lanciare/installare app su simulatori diversi da `transitkit-ios18` e `transitkit-ios26`.
-- MAI usare `booted` come target simctl — sempre `$UDID`.
-- Il Bundle ID cambia per operatore: verificare sempre `{OPERATOR_ID}` prima di `simctl launch`.
-- MAI lanciare/installare app su emulatori Android diversi da `transitkit-android`.
-- MAI usare `adb` senza `-s emulator-5600` esplicito.
-- MAI usare `emulator -avd <name>` con `<name>` diverso da `transitkit-android`, e SEMPRE con `-port 5600`.
-- **STERILITÀ TOTALE tra progetti**: `transitkit-android` ospita SOLO `com.transitkit.appalcart`. Mai installarci app di altri progetti (DoVe `app.dove.venezia`, Alilaguna `com.veniceairportwaterbus.app`, ACTV `it.actv.orari`, Movete, ecc.). Prima di lavorare, verificare i 3rd-party package e disinstallare qualsiasi residuo estraneo: `adb -s emulator-5600 shell pm list packages -3`. La porta fissa elimina l'ambiguità del serial (le porte sono assegnate per ordine di avvio, NON per AVD).
-
----
-
 ## REGOLE AGENTE — OBBLIGATORIE
 
 Queste regole hanno priorità su qualsiasi skill o plugin caricato nella sessione.
 
-### Qualità visiva
+Qualità visiva, gotcha UI, strumento giusto per il task, screenshot e definition
+of done generali sono nel CLAUDE.md globale e in `ios-workflow` /
+`android-workflow`: qui solo ciò che è specifico di TransitKit.
 
-Livello di riferimento: Airbnb, Uber, Spotify, Telegram. La UI di sistema è il pavimento, non il soffitto.
+### Definition of done — in aggiunta a quella generale
 
-**Sì:**
-- Spring animations con damping studiato — mai linear o ease generico
-- Shader/Metal backgrounds per profondità e atmosfera — parte del prodotto, non un template
-- Micro-interazioni su ogni elemento interattivo: tap feedback, stato pressed, transizioni di stato
-- Blur e vibrancy per gerarchia spaziale — non decorazione
-- Haptic feedback calibrato — non su ogni tap, solo dove aggiunge significato
-- Transizioni tra schermate con logica di continuità visiva
-
-**NEVER:**
-- Animazioni decorative senza trigger funzionale
-- Lottie/GIF al posto di animazioni native
-- Gradienti saturi o combinazioni cromatiche senza ragione
-- Effetti che rallentano la percezione di velocità dell'app
-- Shimmer/skeleton quando i dati arrivano in meno di 300ms
-- Contatori, badge statistici, filler UI — ogni pixel risponde a una domanda reale dell'utente
-
-**Tipografia e layout:** gerarchia intenzionale, allineamento ottico (non solo matematico). Spacing da sistema (4/8/16/24/32). Contrasto WCAG AA minimo, AA+ preferito per testo body.
-
-### Gotcha implementazione UI
-
-**Icone SVG da librerie** (Heroicons, Lucide, SF Symbols custom, ecc.):
-**ALWAYS** `width` e `height` espliciti — **NEVER** `font-size` o `em`. Le dimensioni intrinseche SVG ignorano i valori font-based.
-
-**Safe area e edge-to-edge:**
-- iOS: ok per mappe e immagini hero — testare SEMPRE su iOS 18 oltre che iOS 26
-
-**Mappe:**
-- Dettaglio luogo (fermata, POI, indirizzo): default **3D** — su iOS il rendering è scenico
-- Overview (città, percorso): 2D per leggibilità
-- Controlli mappa: verticalmente al **centro** dell'area mappa — mai vicino ai bordi (collidono con nav bar e tab bar)
-
-### Strumento giusto per il task giusto
-
-| Task | Strumento |
-|------|-----------|
-| Flusso E2E / smoke / regressione | `maestro test flows/<nome>.yaml` |
-| Ispezione elemento singolo / debug | `idb ui describe-all --udid $UDID` |
-| Tap / input / swipe puntuali | `idb ui tap` / `idb ui text` |
-| Verifica estetica / design review | Screenshot compresso + crop |
-
-**NEVER** sequenze manuali idb per simulare un flusso che esiste in `flows/`.
-**NEVER** screenshot per verificare navigazione o logica.
-
-### Screenshot — solo per design review
-
-```bash
-# Full screen compresso
-xcrun simctl io $UDID screenshot /tmp/s.png && sips -Z 800 /tmp/s.png --out /tmp/s_small.png
-# Crop componente singolo
-xcrun simctl io $UDID screenshot /tmp/s.png && sips -c <H> <W> /tmp/s.png --out /tmp/component.png
-```
-Allega sempre "prima" e "dopo" con descrizione esplicita. Per animazioni/shader: descrivi il comportamento dinamico, non il frame statico.
-
-### Definition of done — feature UI
-
-- [ ] Build senza errori né warning nuovi
-- [ ] Elementi interattivi nuovi: `.accessibilityIdentifier()`
-- [ ] Screenshot "prima" e "dopo" allegati e commentati
 - [ ] Flow Maestro in `flows/` aggiornato se il flusso utente è cambiato
-- [ ] Se tocca safe area, edge-to-edge, o mappa: testato su simulatore iOS 18
 - [ ] Nessun crash: `xcrun simctl spawn $UDID log stream --level error`
-
----
-
-Framework iOS white-label per app di trasporto pubblico.
-
-- Progetto Xcode: `ios/TransitKit.xcodeproj`
-- Scheme: `TransitKit`
-- Bundle ID: `com.transitkit.{OPERATOR_ID}` — es. `com.transitkit.appalcart`
-- Build con OPERATOR_ID: `xcodebuild ... OPERATOR_ID=appalcart`
+- [ ] Build white-label: `OPERATOR_ID` esplicito (`xcodebuild … OPERATOR_ID=appalcart`) e Bundle ID coerente
 
 ## SIMULATORI DI RIFERIMENTO
 
@@ -310,18 +197,12 @@ Framework iOS white-label per app di trasporto pubblico.
 | Ruolo | Nome progetto | Modello | iOS |
 |-------|--------------|---------|-----|
 | Principale | `transitkit-ios18` | iPhone 16 Pro | 18.5 |
-| iOS 26 test | `transitkit-ios26` | iPhone 16 Pro | 26.3 |
+| iOS 26 test | `transitkit-ios26` | iPhone 16 Pro | 26.5 |
 
 ```bash
-# Setup tramite script (una volta per Mac) — usa questo
-bash scripts/setup-dev.sh
-
-# Oppure manuale con identifier completi:
-xcrun simctl create "transitkit-ios18" "com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro" "com.apple.CoreSimulator.SimRuntime.iOS-18-5"
-
-# Lookup UDID
+# UDID pinned (creazione simulatori una-tantum: docs/dev-setup.md)
 UDID="4302AFD9-496E-4586-A5D0-D6BAC735FFFD"      # transitkit-ios18 (iOS 18.5 — pinned)
-UDID26="1E7E7611-FB05-4BFD-8F50-8E7F0963E0A6"    # transitkit-ios26 (iOS 26.3 — pinned)
+UDID26="72896A69-5555-420B-BE63-B672BE0F4C95"    # transitkit-ios26 (iOS 26.5 — pinned)
 ```
 
 ### Android
@@ -331,16 +212,12 @@ UDID26="1E7E7611-FB05-4BFD-8F50-8E7F0963E0A6"    # transitkit-ios26 (iOS 26.3 �
 | Principale | `transitkit-android` | Pixel 6 | 34 |
 
 ```bash
-# Crea AVD (una volta per Mac)
-JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home" \
-avdmanager create avd --name "transitkit-android" --device "pixel_6" \
-  --package "system-images;android-34;google_apis;arm64-v8a" --sdcard "512M"
-
-ADB=/Users/andreatoffanello/Library/Android/sdk/platform-tools/adb
+# Creazione AVD una-tantum: docs/dev-setup.md
+ADB=$HOME/Library/Android/sdk/platform-tools/adb
 ANDROID_SERIAL=emulator-5600   # PINNED — porta fissa, sempre questo serial
 
 # Avvia emulatore SEMPRE su porta fissa 5600 (serial deterministico)
-/Users/andreatoffanello/Library/Android/sdk/emulator/emulator \
+$HOME/Library/Android/sdk/emulator/emulator \
   -avd transitkit-android -port 5600 -no-snapshot-load -no-audio &
 
 # Verifica difensiva PRIMA di ogni adb: il serial deve essere transitkit-android
@@ -362,7 +239,13 @@ xcodebuild -project ios/TransitKit.xcodeproj -scheme TransitKit \
   -sdk iphonesimulator \
   -destination "platform=iOS Simulator,id=$UDID" \
   build OPERATOR_ID=appalcart CODE_SIGNING_ALLOWED=NO 2>&1 | tail -5
-xcrun simctl install $UDID $(find ~/Library/Developer/Xcode/DerivedData -name "TransitKit.app" -path "*/Debug-iphonesimulator/*" | head -1)
+# .app da BUILT_PRODUCTS_DIR, mai da un glob su DerivedData (scheme omonimi tra progetti → installi un build vecchio)
+APP="$(xcodebuild -project ios/TransitKit.xcodeproj -scheme TransitKit -sdk iphonesimulator \
+  -destination "platform=iOS Simulator,id=$UDID" -showBuildSettings OPERATOR_ID=appalcart 2>/dev/null \
+  | awk '/ BUILT_PRODUCTS_DIR =/{print $3}')/TransitKit.app"
+# terminate PRIMA di install: install sopra un'app in esecuzione la lascia non lanciabile (SBMainWorkspace)
+xcrun simctl terminate $UDID com.transitkit.appalcart 2>/dev/null
+xcrun simctl install $UDID "$APP"
 xcrun simctl launch $UDID com.transitkit.appalcart
 ```
 
@@ -436,7 +319,7 @@ di sbagliare è identico.
 ```bash
 export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"  # maestro non trova Java da solo
 maestro --udid=4302AFD9-496E-4586-A5D0-D6BAC735FFFD test flows/ios_smoke.yaml   # iOS 18
-maestro --udid=1E7E7611-FB05-4BFD-8F50-8E7F0963E0A6 test flows/ios_smoke.yaml   # iOS 26
+maestro --udid=72896A69-5555-420B-BE63-B672BE0F4C95 test flows/ios_smoke.yaml   # iOS 26
 maestro --udid=emulator-5600 test flows/android_smoke.yaml                      # Android
 ```
 

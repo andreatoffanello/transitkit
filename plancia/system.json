@@ -1,0 +1,1180 @@
+{
+  "$comment": "Modello canonico del sistema TransitKit per la Plancia multi-progetto. Schema in civici/plancia/README.md, convenzioni in plancia/CONVENZIONI.md. Si aggiorna nello stesso commit di ogni cambio a infrastruttura, pipeline, endpoint, operatori.",
+  "version": 1,
+  "updated": "2026-10-10",
+  "repo": "andreatoffanello/transitkit",
+  "project": {
+    "id": "transitkit",
+    "label": "TransitKit",
+    "summary": "Piattaforma white-label di trasporto pubblico: un motore GTFS, un'app iOS/Android per operatore, proxy tempo reale, gateway di routing e console. Gli operatori sono i flussi.",
+    "repos": [
+      "andreatoffanello/transitkit",
+      "andreatoffanello/transitkit-console",
+      "andreatoffanello/transitkit-realtime-proxy",
+      "andreatoffanello/motis-gateway",
+      "andreatoffanello/transitkit-data"
+    ],
+    "status": "live"
+  },
+  "lanes": [
+    {
+      "id": "fonti",
+      "label": "Fonti esterne",
+      "hint": "Da dove arrivano i dati: open data, siti, canali, servizi AI"
+    },
+    {
+      "id": "ingest",
+      "label": "Ingestione",
+      "hint": "Chi li prende e li trasforma: GitHub Actions, worker VPS, routine sul Mac, editing CMS"
+    },
+    {
+      "id": "dati",
+      "label": "Dati",
+      "hint": "Dove restano: repo Git, Postgres Neon, bucket R2"
+    },
+    {
+      "id": "servizio",
+      "label": "Servizio",
+      "hint": "Da dove li leggono i prodotti: API, CDN, proxy, store"
+    },
+    {
+      "id": "prodotti",
+      "label": "Prodotti",
+      "hint": "Chi li usa: app iOS, app Android, sito"
+    },
+    {
+      "id": "controllo",
+      "label": "Controllo",
+      "hint": "Chi sorveglia e avvisa: monitor, watchdog, plancia, bot Telegram"
+    }
+  ],
+  "hosts": [
+    {
+      "id": "esterni",
+      "label": "Fonti esterne",
+      "hint": "Feed GTFS e GTFS-RT degli operatori: sola lettura"
+    },
+    {
+      "id": "github",
+      "label": "GitHub",
+      "hint": "Repo andreatoffanello/transitkit: codice, pipeline, ramo gh-pages come CDN"
+    },
+    {
+      "id": "vps",
+      "label": "VPS Hetzner",
+      "hint": "46.225.162.38, container Docker utente claude, Caddy condiviso. Skill andrea-vps"
+    },
+    {
+      "id": "vercel",
+      "label": "Vercel",
+      "hint": "Progetti transitkit (web PWA), transitkit-console e landing, deploy al push di main"
+    },
+    {
+      "id": "supabase",
+      "label": "Supabase",
+      "hint": "Progetto transitkit-console (ref yzztrtaipukzesrdiwwt): Postgres + Auth della console"
+    },
+    {
+      "id": "mac",
+      "label": "Mac di Andrea",
+      "hint": "Build e rilascio app per operatore"
+    },
+    {
+      "id": "store",
+      "label": "Store",
+      "hint": "App Store Connect e Google Play"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "src-gtfs-appalcart",
+      "lane": "fonti",
+      "host": "esterni",
+      "order": 1,
+      "type": "source",
+      "label": "GTFS statico AppalCART",
+      "summary": "Feed GTFS statico di AppalCART (Boone, NC).",
+      "details": "Scaricato da https://s3.amazonaws.com/etatransit.gtfs/appalcart.etaspot.net/gtfs.zip. Dichiarato in shared/operators/appalcart/config.json (gtfs_url).",
+      "where": {
+        "url": "https://s3.amazonaws.com/etatransit.gtfs/appalcart.etaspot.net/gtfs.zip",
+        "repo": [
+          "shared/operators/appalcart/config.json"
+        ]
+      }
+    },
+    {
+      "id": "src-gtfs-rfta",
+      "lane": "fonti",
+      "host": "esterni",
+      "order": 2,
+      "type": "source",
+      "label": "GTFS statico RFTA",
+      "summary": "Feed GTFS statico di RFTA (Aspen / Glenwood Springs, CO).",
+      "details": "Scaricato da https://www.rfta.com/RFTAGTFSExport.zip. Dichiarato in shared/operators/rfta/config.json (gtfs_url).",
+      "where": {
+        "url": "https://www.rfta.com/RFTAGTFSExport.zip",
+        "repo": [
+          "shared/operators/rfta/config.json"
+        ]
+      }
+    },
+    {
+      "id": "src-gtfs-tcat",
+      "lane": "fonti",
+      "host": "esterni",
+      "order": 3,
+      "type": "source",
+      "label": "GTFS statico TCAT",
+      "summary": "Feed GTFS statico di TCAT (Ithaca, NY).",
+      "details": "Scaricato da https://s3.amazonaws.com/tcat-gtfs/tcat-ny-us.zip. Dichiarato in shared/operators/tcat/config.json (gtfs_url).",
+      "where": {
+        "url": "https://s3.amazonaws.com/tcat-gtfs/tcat-ny-us.zip",
+        "repo": [
+          "shared/operators/tcat/config.json"
+        ]
+      }
+    },
+    {
+      "id": "src-gtfs-charlottesville",
+      "lane": "fonti",
+      "host": "esterni",
+      "order": 4,
+      "type": "source",
+      "label": "GTFS statico CAT",
+      "summary": "Feed GTFS statico di CAT (Charlottesville, VA).",
+      "details": "Scaricato da https://s3.amazonaws.com/etatransit.gtfs/catpublic.etaspot.net/gtfs.zip. Dichiarato in shared/operators/charlottesville/config.json (gtfs_url).",
+      "where": {
+        "url": "https://s3.amazonaws.com/etatransit.gtfs/catpublic.etaspot.net/gtfs.zip",
+        "repo": [
+          "shared/operators/charlottesville/config.json"
+        ]
+      }
+    },
+    {
+      "id": "src-rt-appalcart",
+      "lane": "fonti",
+      "host": "esterni",
+      "order": 5,
+      "type": "source",
+      "label": "GTFS-RT AppalCART (ETA Transit)",
+      "summary": "Posizioni veicoli, aggiornamenti corse e avvisi GTFS-RT di AppalCART.",
+      "details": "Protobuf su S3 etatransit.gtfs/appalcart.etaspot.net (position_updates.pb, trip_updates.pb, alerts.pb). Registrato in operators.yaml del proxy. AppalCART oggi pubblica feed vuoti (15 byte): normale fuori servizio o senza veicoli.",
+      "where": {
+        "repo": [
+          "operators.yaml"
+        ]
+      }
+    },
+    {
+      "id": "src-rt-charlottesville",
+      "lane": "fonti",
+      "host": "esterni",
+      "order": 6,
+      "type": "source",
+      "label": "GTFS-RT CAT (ETA Transit)",
+      "summary": "Posizioni veicoli, aggiornamenti corse e avvisi GTFS-RT di CAT.",
+      "details": "Protobuf su S3 etatransit.gtfs/catpublic.etaspot.net (position_updates.pb, trip_updates.pb, alerts.pb). Registrato in operators.yaml del proxy. AppalCART oggi pubblica feed vuoti (15 byte): normale fuori servizio o senza veicoli.",
+      "where": {
+        "repo": [
+          "operators.yaml"
+        ]
+      }
+    },
+    {
+      "id": "gh-data-pipeline",
+      "lane": "ingest",
+      "host": "github",
+      "order": 1,
+      "type": "job",
+      "label": "Pipeline dati GTFS (data.yml)",
+      "summary": "Ogni giorno scarica il GTFS di ogni operatore, lo normalizza, valida e pubblica schedules/config sul ramo gh-pages.",
+      "details": "Workflow data.yml del repo andreatoffanello/transitkit (locale: ~/GitHub/transit-engine): pytest pipeline, pipeline/build.py per ogni cartella in shared/operators/, validazione (id/name/cdnUrl, stops con departures), peaceiris/actions-gh-pages con keep_files false. Parte anche al push su pipeline/** o shared/operators/**. Un operatore nuovo = una cartella in shared/operators/.",
+      "schedule": "ogni giorno 04:00 UTC + push su pipeline/** e shared/operators/**",
+      "where": {
+        "repo": [
+          ".github/workflows/data.yml",
+          "pipeline/build.py",
+          "pipeline/validate.py",
+          "shared/operators/"
+        ]
+      },
+      "checks": [
+        {
+          "id": "run-data-pipeline",
+          "label": "Workflow data.yml girato di recente",
+          "kind": "github",
+          "workflow": "data.yml",
+          "repo": "andreatoffanello/transitkit",
+          "expectEveryHours": 30,
+          "severity": "warn"
+        }
+      ]
+    },
+    {
+      "id": "vps-motis-refresh",
+      "lane": "ingest",
+      "host": "vps",
+      "order": 2,
+      "type": "job",
+      "label": "Refresh GTFS istanze MOTIS (cron)",
+      "summary": "Ogni domenica ogni istanza MOTIS US riscarica il GTFS dell'operatore e ricostruisce l'indice di routing.",
+      "details": "Cron utente claude sul VPS: rfta 04:00, tcat 05:00, appalcart 06:00, charlottesville 07:00 UTC (domenica); Roma ogni giorno 04:00 (è di MoVeTe). Script /opt/motis-<op>/scripts/refresh-gtfs.sh + sanitize-gtfs.py. Nessun CI, nessun controllo pubblico: verificare con ssh transitkit-vps 'crontab -l' e docker ps.",
+      "schedule": "settimanale (domenica UTC), scaglionato",
+      "where": {
+        "host": "46.225.162.38:/opt/motis-<op>/scripts"
+      }
+    },
+    {
+      "id": "mac-release",
+      "lane": "ingest",
+      "host": "mac",
+      "order": 3,
+      "type": "job",
+      "state": "manual",
+      "label": "Build e rilascio app per operatore",
+      "summary": "Build iOS/Android white-label di un operatore e caricamento sugli store.",
+      "details": "scripts/build-ios.sh <op>, build-android.sh <op>, upload-ios.sh; brand con scripts/deploy-brand.sh <op>. Bundle com.transitkit.<op>. Un solo codice, un'app per operatore.",
+      "where": {
+        "repo": [
+          "scripts/build-ios.sh",
+          "scripts/build-android.sh",
+          "scripts/upload-ios.sh",
+          "scripts/deploy-brand.sh",
+          "ios/",
+          "android/"
+        ]
+      }
+    },
+    {
+      "id": "gh-engine-repo",
+      "lane": "fonti",
+      "host": "github",
+      "order": 7,
+      "type": "source",
+      "label": "Repo engine (transitkit)",
+      "summary": "Codice di app iOS, Android, web PWA, pipeline e configurazione degli operatori (shared/operators/<op>/).",
+      "details": "Repo GitHub andreatoffanello/transitkit (cartella locale transit-engine). Il ramo gh-pages è il CDN dei dati. ~/GitHub/transitkit è un checkout di gh-pages, non il codice.",
+      "where": {
+        "repo": [
+          "shared/operators/",
+          "pipeline/",
+          "ios/",
+          "android/",
+          "web/",
+          "landing/"
+        ]
+      }
+    },
+    {
+      "id": "supabase-db",
+      "lane": "dati",
+      "host": "supabase",
+      "order": 2,
+      "type": "store",
+      "label": "Supabase (console)",
+      "summary": "Postgres con RLS multi-tenant della console: organizzazioni (una per operatore), utenti, campagne push.",
+      "details": "Progetto transitkit-console (ref yzztrtaipukzesrdiwwt). Migrazioni in supabase/migrations. Un cron sul VPS (06:17 UTC) lo pinga per evitare la pausa del piano free. Skill transitkit-supabase.",
+      "schedule": "keepalive giornaliero 06:17 UTC dal VPS",
+      "where": {
+        "repo": [
+          "supabase/migrations/"
+        ],
+        "host": "46.225.162.38:/home/claude/supabase-keepalive"
+      }
+    },
+    {
+      "id": "cdn-pages",
+      "lane": "servizio",
+      "host": "github",
+      "order": 1,
+      "type": "service",
+      "label": "CDN dati (GitHub Pages)",
+      "summary": "config.json e schedules(-compact).json di ogni operatore, letti dalle app all'avvio.",
+      "details": "https://andreatoffanello.github.io/transitkit/<op>/ (ramo gh-pages, ricreato a ogni giro di data.yml). Il last-modified cambia a ogni pubblicazione. Anche https://andreatoffanello.github.io/transitkit-data/ è un repo vecchio, solo appalcart: non più la fonte.",
+      "where": {
+        "url": "https://andreatoffanello.github.io/transitkit/appalcart/config.json"
+      },
+      "checks": [
+        {
+          "id": "cdn-appalcart",
+          "label": "Dati AppalCART presenti e pubblicati di recente",
+          "kind": "json",
+          "url": "https://andreatoffanello.github.io/transitkit/appalcart/config.json",
+          "method": "GET",
+          "severity": "critical",
+          "rules": [
+            {
+              "op": "status",
+              "eq": 200
+            },
+            {
+              "op": "eq",
+              "path": "id",
+              "value": "appalcart"
+            },
+            {
+              "op": "headerAge",
+              "header": "last-modified",
+              "warnMinutes": 2160,
+              "failMinutes": 4320
+            }
+          ]
+        },
+        {
+          "id": "cdn-rfta",
+          "label": "Dati RFTA presenti e pubblicati di recente",
+          "kind": "json",
+          "url": "https://andreatoffanello.github.io/transitkit/rfta/config.json",
+          "method": "GET",
+          "severity": "warn",
+          "rules": [
+            {
+              "op": "status",
+              "eq": 200
+            },
+            {
+              "op": "eq",
+              "path": "id",
+              "value": "rfta"
+            },
+            {
+              "op": "headerAge",
+              "header": "last-modified",
+              "warnMinutes": 2160,
+              "failMinutes": 4320
+            }
+          ]
+        },
+        {
+          "id": "cdn-tcat",
+          "label": "Dati TCAT presenti e pubblicati di recente",
+          "kind": "json",
+          "url": "https://andreatoffanello.github.io/transitkit/tcat/config.json",
+          "method": "GET",
+          "severity": "warn",
+          "rules": [
+            {
+              "op": "status",
+              "eq": 200
+            },
+            {
+              "op": "eq",
+              "path": "id",
+              "value": "tcat"
+            },
+            {
+              "op": "headerAge",
+              "header": "last-modified",
+              "warnMinutes": 2160,
+              "failMinutes": 4320
+            }
+          ]
+        },
+        {
+          "id": "cdn-charlottesville",
+          "label": "Dati CAT presenti e pubblicati di recente",
+          "kind": "json",
+          "url": "https://andreatoffanello.github.io/transitkit/charlottesville/config.json",
+          "method": "GET",
+          "severity": "warn",
+          "rules": [
+            {
+              "op": "status",
+              "eq": 200
+            },
+            {
+              "op": "eq",
+              "path": "id",
+              "value": "charlottesville"
+            },
+            {
+              "op": "headerAge",
+              "header": "last-modified",
+              "warnMinutes": 2160,
+              "failMinutes": 4320
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rt-proxy",
+      "lane": "servizio",
+      "host": "vps",
+      "order": 2,
+      "type": "service",
+      "label": "Proxy GTFS-RT (rt.transitkit.app)",
+      "summary": "Go proxy che mette in cache i feed GTFS-RT degli operatori e li serve come /<operatore>/<feed>.pb.",
+      "details": "Repo transitkit-realtime-proxy, deploy su push di main (GitHub Actions → GHCR → SSH, tag pinnato in .env). Registro feed in operators.yaml con TTL (15s posizioni, 30s corse, 60s avvisi). Serve anche altri progetti (actv-*, romamobilita). Soglie di freschezza scelte qui: warn 5 min, fail 15 min sul last-modified. /status elenca età e byte di ogni feed.",
+      "schedule": "fetch continuo, TTL 15-60 s",
+      "where": {
+        "url": "https://rt.transitkit.app/healthz",
+        "host": "46.225.162.38:/opt/transitkit-realtime-proxy",
+        "repo": [
+          "operators.yaml",
+          "cmd/",
+          "internal/"
+        ]
+      },
+      "checks": [
+        {
+          "id": "rt-healthz",
+          "label": "Proxy vivo (almeno un feed fresco)",
+          "kind": "http",
+          "url": "https://rt.transitkit.app/healthz",
+          "severity": "critical",
+          "rules": [
+            {
+              "op": "status",
+              "eq": 200
+            },
+            {
+              "op": "maxMs",
+              "value": 2000
+            }
+          ]
+        },
+        {
+          "id": "rt-appalcart-vp",
+          "label": "Feed AppalCART posizioni fresco",
+          "kind": "http",
+          "method": "HEAD",
+          "url": "https://rt.transitkit.app/appalcart/vehicle-positions.pb",
+          "severity": "warn",
+          "rules": [
+            {
+              "op": "status",
+              "eq": 200
+            },
+            {
+              "op": "headerAge",
+              "header": "last-modified",
+              "warnMinutes": 5,
+              "failMinutes": 15
+            }
+          ]
+        },
+        {
+          "id": "rt-appalcart-tu",
+          "label": "Feed AppalCART corse fresco",
+          "kind": "http",
+          "method": "HEAD",
+          "url": "https://rt.transitkit.app/appalcart/trip-updates.pb",
+          "severity": "warn",
+          "rules": [
+            {
+              "op": "status",
+              "eq": 200
+            },
+            {
+              "op": "headerAge",
+              "header": "last-modified",
+              "warnMinutes": 5,
+              "failMinutes": 15
+            }
+          ]
+        },
+        {
+          "id": "rt-charlottesville-vp",
+          "label": "Feed CAT posizioni fresco",
+          "kind": "http",
+          "url": "https://rt.transitkit.app/charlottesville/vehicle-positions.pb",
+          "severity": "warn",
+          "rules": [
+            {
+              "op": "status",
+              "eq": 200
+            },
+            {
+              "op": "minBytes",
+              "value": 100
+            },
+            {
+              "op": "headerAge",
+              "header": "last-modified",
+              "warnMinutes": 5,
+              "failMinutes": 15
+            }
+          ]
+        },
+        {
+          "id": "rt-charlottesville-tu",
+          "label": "Feed CAT corse fresco",
+          "kind": "http",
+          "url": "https://rt.transitkit.app/charlottesville/trip-updates.pb",
+          "severity": "warn",
+          "rules": [
+            {
+              "op": "status",
+              "eq": 200
+            },
+            {
+              "op": "minBytes",
+              "value": 100
+            },
+            {
+              "op": "headerAge",
+              "header": "last-modified",
+              "warnMinutes": 5,
+              "failMinutes": 15
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "motis-gateway",
+      "lane": "servizio",
+      "host": "vps",
+      "order": 3,
+      "type": "service",
+      "label": "Gateway MOTIS (api.transitkit.app)",
+      "summary": "BFF davanti alle istanze MOTIS: chiave API per tenant, cache LRU 15 min, rate limit, default per tenant. /v1/route, /v1/geocode, /v1/reverse-geocode.",
+      "details": "Repo motis-gateway, deploy su push di main (GHCR + SSH). Config /opt/motis-gateway/config.yaml con una regione per istanza (6) e 7 tenant. Serve anche DoVe, MoVeTe, Alilaguna. Le app TransitKit lo chiamano da routing_endpoint nel config dell'operatore.",
+      "where": {
+        "url": "https://api.transitkit.app/healthz",
+        "host": "46.225.162.38:/opt/motis-gateway",
+        "repo": [
+          "cmd/",
+          "internal/",
+          "config.example.yaml"
+        ]
+      },
+      "checks": [
+        {
+          "id": "gateway-healthz",
+          "label": "Gateway vivo",
+          "kind": "json",
+          "url": "https://api.transitkit.app/healthz",
+          "severity": "critical",
+          "rules": [
+            {
+              "op": "status",
+              "eq": 200
+            },
+            {
+              "op": "eq",
+              "path": "status",
+              "value": "ok"
+            },
+            {
+              "op": "show",
+              "path": "tenants",
+              "label": "tenant"
+            },
+            {
+              "op": "show",
+              "path": "regions",
+              "label": "regioni"
+            },
+            {
+              "op": "show",
+              "path": "build_sha",
+              "label": "build"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "motis-appalcart",
+      "lane": "servizio",
+      "host": "vps",
+      "order": 4,
+      "type": "service",
+      "label": "MOTIS AppalCART",
+      "summary": "Motore di routing MOTIS di AppalCART (Boone, NC), dietro il gateway.",
+      "details": "Container motis-appalcart (ghcr.io/motis-project/motis:latest) in /opt/motis-appalcart, mantenuto in place senza CI. Refresh GTFS 06:00 UTC dom. Non esposto: si raggiunge solo dal gateway, nessun controllo pubblico.",
+      "where": {
+        "host": "46.225.162.38:/opt/motis-appalcart"
+      }
+    },
+    {
+      "id": "motis-rfta",
+      "lane": "servizio",
+      "host": "vps",
+      "order": 5,
+      "type": "service",
+      "label": "MOTIS RFTA",
+      "summary": "Motore di routing MOTIS di RFTA (Aspen / Glenwood Springs, CO), dietro il gateway.",
+      "details": "Container motis-rfta (ghcr.io/motis-project/motis:latest) in /opt/motis-rfta, mantenuto in place senza CI. Refresh GTFS 04:00 UTC dom. Non esposto: si raggiunge solo dal gateway, nessun controllo pubblico.",
+      "where": {
+        "host": "46.225.162.38:/opt/motis-rfta"
+      }
+    },
+    {
+      "id": "motis-tcat",
+      "lane": "servizio",
+      "host": "vps",
+      "order": 6,
+      "type": "service",
+      "label": "MOTIS TCAT",
+      "summary": "Motore di routing MOTIS di TCAT (Ithaca, NY), dietro il gateway.",
+      "details": "Container motis-tcat (ghcr.io/motis-project/motis:latest) in /opt/motis-tcat, mantenuto in place senza CI. Refresh GTFS 05:00 UTC dom. Non esposto: si raggiunge solo dal gateway, nessun controllo pubblico.",
+      "where": {
+        "host": "46.225.162.38:/opt/motis-tcat"
+      }
+    },
+    {
+      "id": "motis-charlottesville",
+      "lane": "servizio",
+      "host": "vps",
+      "order": 7,
+      "type": "service",
+      "label": "MOTIS CAT",
+      "summary": "Motore di routing MOTIS di CAT (Charlottesville, VA), dietro il gateway.",
+      "details": "Container motis-charlottesville (ghcr.io/motis-project/motis:latest) in /opt/motis-charlottesville, mantenuto in place senza CI. Refresh GTFS 07:00 UTC dom. Non esposto: si raggiunge solo dal gateway, nessun controllo pubblico.",
+      "where": {
+        "host": "46.225.162.38:/opt/motis-charlottesville"
+      }
+    },
+    {
+      "id": "motis-roma",
+      "lane": "servizio",
+      "host": "vps",
+      "order": 8,
+      "type": "service",
+      "label": "MOTIS Roma",
+      "summary": "Istanza MOTIS di Roma, usata da MoVeTe tramite il gateway.",
+      "details": "Container motis-roma in /opt/motis-roma, refresh GTFS giornaliero 04:00 UTC. Qui solo perché il gateway è condiviso.",
+      "where": {
+        "host": "46.225.162.38:/opt/motis-roma"
+      }
+    },
+    {
+      "id": "fcm",
+      "lane": "servizio",
+      "host": "esterni",
+      "order": 9,
+      "type": "service",
+      "label": "Firebase Cloud Messaging",
+      "summary": "Consegna le push alle app: topic per operatore (<op>) e <op>_preview per le build Debug.",
+      "details": "Usato dalla console tramite server/api/notifications/send e preview.",
+      "where": {}
+    },
+    {
+      "id": "app-ios",
+      "lane": "prodotti",
+      "host": "store",
+      "order": 1,
+      "type": "client",
+      "label": "App iOS per operatore",
+      "summary": "Una app iOS white-label per operatore (com.transitkit.<op>), config e orari dal CDN, tempo reale dal proxy, percorsi dal gateway.",
+      "details": "Oggi in store: AppalCART (com.transitkit.appalcart). RFTA, TCAT e Charlottesville non risultano nello store US. Lo stato di ogni store si controlla con il lookup iTunes.",
+      "where": {
+        "repo": [
+          "ios/"
+        ]
+      },
+      "checks": [
+        {
+          "id": "store-appalcart",
+          "label": "AppalRider (AppalCART) presente su App Store",
+          "kind": "json",
+          "url": "https://itunes.apple.com/lookup?bundleId=com.transitkit.appalcart&country=us",
+          "severity": "info",
+          "rules": [
+            {
+              "op": "eq",
+              "path": "resultCount",
+              "value": 1
+            },
+            {
+              "op": "show",
+              "path": "results.0.version",
+              "label": "versione"
+            },
+            {
+              "op": "show",
+              "path": "results.0.trackName",
+              "label": "nome"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "app-android",
+      "lane": "prodotti",
+      "host": "store",
+      "order": 2,
+      "type": "client",
+      "label": "App Android per operatore",
+      "summary": "Una app Android white-label per operatore (com.transitkit.<op>), stesse sorgenti dati dell'iOS.",
+      "details": "Emulatore di sviluppo transitkit-android su emulator-5600. Stato Play non verificabile da URL pubblico.",
+      "where": {
+        "repo": [
+          "android/"
+        ]
+      }
+    },
+    {
+      "id": "web-pwa",
+      "lane": "prodotti",
+      "host": "vercel",
+      "order": 3,
+      "type": "client",
+      "label": "Web PWA fermate (QR)",
+      "summary": "Dal QR della palina: pagina fermata con partenze, svolgimento corsa, tabellone. White-label per hostname.",
+      "details": "Nuxt 4 su Vercel (progetto transitkit, deploy.yml su push di main), ISR 60 s su /stop. Dominio di produzione non verificato: transitkit.vercel.app risponde 404 alla radice.",
+      "where": {
+        "repo": [
+          "web/",
+          ".github/workflows/deploy.yml"
+        ]
+      }
+    },
+    {
+      "id": "console",
+      "lane": "servizio",
+      "host": "vercel",
+      "order": 10,
+      "type": "service",
+      "label": "Console operatori (console.transitkit.app)",
+      "summary": "CMS multi-tenant: gli operatori compongono e inviano push ai propri passeggeri, con picker linee dal GTFS.",
+      "details": "Repo transitkit-console (Nuxt 3), progetto Vercel transitkit-console, deploy al push di main. Auth e RLS su Supabase. Dalla mia rete Vercel risponde 429 (verifica anti-bot): il controllo è informativo.",
+      "where": {
+        "url": "https://console.transitkit.app",
+        "repo": [
+          "app/",
+          "server/api/",
+          "supabase/"
+        ]
+      },
+      "checks": [
+        {
+          "id": "console-up",
+          "label": "Console raggiungibile (visto da un crawler di anteprima: Bot Protection Vercel blocca i client non-browser)",
+          "kind": "http",
+          "url": "https://console.transitkit.app",
+          "severity": "info",
+          "rules": [
+            {
+              "op": "status",
+              "eq": 200
+            }
+          ],
+          "ua": "facebookexternalhit/1.1"
+        }
+      ]
+    },
+    {
+      "id": "landing",
+      "lane": "prodotti",
+      "host": "vercel",
+      "order": 5,
+      "type": "client",
+      "label": "Landing transitkit.app",
+      "summary": "Sito commerciale della piattaforma (Nuxt Content, i18n).",
+      "details": "Cartella landing/ del repo engine, progetto Vercel landing. Dalla mia rete risponde 429 (anti-bot): controllo informativo.",
+      "where": {
+        "url": "https://transitkit.app",
+        "repo": [
+          "landing/"
+        ]
+      },
+      "checks": [
+        {
+          "id": "landing-up",
+          "label": "Landing raggiungibile (visto da un crawler di anteprima: Bot Protection Vercel blocca i client non-browser)",
+          "kind": "http",
+          "url": "https://transitkit.app",
+          "severity": "info",
+          "rules": [
+            {
+              "op": "status",
+              "eq": 200
+            }
+          ],
+          "ua": "facebookexternalhit/1.1"
+        }
+      ]
+    },
+    {
+      "id": "vps-uptime",
+      "lane": "controllo",
+      "host": "vps",
+      "order": 1,
+      "type": "monitor",
+      "label": "Uptime monitor web (VPS)",
+      "summary": "Ogni 5 minuti sonda i punti pubblici di TransitKit e avvisa su Telegram.",
+      "details": "Script /home/claude/uptime-monitor/check.sh da cron. Contenuto delle sonde non ispezionato. UptimeRobot controlla anche /healthz del proxy.",
+      "schedule": "ogni 5 min",
+      "where": {
+        "host": "46.225.162.38:/home/claude/uptime-monitor"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "src-gtfs-appalcart",
+      "to": "gh-data-pipeline",
+      "kind": "data",
+      "label": "GTFS statico"
+    },
+    {
+      "from": "src-gtfs-appalcart",
+      "to": "vps-motis-refresh",
+      "kind": "data",
+      "label": "GTFS statico"
+    },
+    {
+      "from": "vps-motis-refresh",
+      "to": "motis-appalcart",
+      "kind": "data",
+      "label": "indice di routing"
+    },
+    {
+      "from": "motis-appalcart",
+      "to": "motis-gateway",
+      "kind": "data",
+      "label": "routing"
+    },
+    {
+      "from": "src-gtfs-rfta",
+      "to": "gh-data-pipeline",
+      "kind": "data",
+      "label": "GTFS statico"
+    },
+    {
+      "from": "src-gtfs-rfta",
+      "to": "vps-motis-refresh",
+      "kind": "data",
+      "label": "GTFS statico"
+    },
+    {
+      "from": "vps-motis-refresh",
+      "to": "motis-rfta",
+      "kind": "data",
+      "label": "indice di routing"
+    },
+    {
+      "from": "motis-rfta",
+      "to": "motis-gateway",
+      "kind": "data",
+      "label": "routing"
+    },
+    {
+      "from": "src-gtfs-tcat",
+      "to": "gh-data-pipeline",
+      "kind": "data",
+      "label": "GTFS statico"
+    },
+    {
+      "from": "src-gtfs-tcat",
+      "to": "vps-motis-refresh",
+      "kind": "data",
+      "label": "GTFS statico"
+    },
+    {
+      "from": "vps-motis-refresh",
+      "to": "motis-tcat",
+      "kind": "data",
+      "label": "indice di routing"
+    },
+    {
+      "from": "motis-tcat",
+      "to": "motis-gateway",
+      "kind": "data",
+      "label": "routing"
+    },
+    {
+      "from": "src-gtfs-charlottesville",
+      "to": "gh-data-pipeline",
+      "kind": "data",
+      "label": "GTFS statico"
+    },
+    {
+      "from": "src-gtfs-charlottesville",
+      "to": "vps-motis-refresh",
+      "kind": "data",
+      "label": "GTFS statico"
+    },
+    {
+      "from": "vps-motis-refresh",
+      "to": "motis-charlottesville",
+      "kind": "data",
+      "label": "indice di routing"
+    },
+    {
+      "from": "motis-charlottesville",
+      "to": "motis-gateway",
+      "kind": "data",
+      "label": "routing"
+    },
+    {
+      "from": "src-rt-appalcart",
+      "to": "rt-proxy",
+      "kind": "data",
+      "label": "GTFS-RT"
+    },
+    {
+      "from": "src-rt-charlottesville",
+      "to": "rt-proxy",
+      "kind": "data",
+      "label": "GTFS-RT"
+    },
+    {
+      "from": "gh-engine-repo",
+      "to": "gh-data-pipeline",
+      "kind": "control",
+      "label": "config operatori"
+    },
+    {
+      "from": "gh-data-pipeline",
+      "to": "cdn-pages",
+      "kind": "deploy",
+      "label": "gh-pages"
+    },
+    {
+      "from": "motis-roma",
+      "to": "motis-gateway",
+      "kind": "data",
+      "label": "routing (MoVeTe)"
+    },
+    {
+      "from": "rt-proxy",
+      "to": "app-ios",
+      "kind": "data",
+      "label": "tempo reale"
+    },
+    {
+      "from": "rt-proxy",
+      "to": "app-android",
+      "kind": "data",
+      "label": "tempo reale"
+    },
+    {
+      "from": "rt-proxy",
+      "to": "web-pwa",
+      "kind": "data",
+      "label": "tempo reale"
+    },
+    {
+      "from": "cdn-pages",
+      "to": "app-ios",
+      "kind": "data",
+      "label": "config e orari"
+    },
+    {
+      "from": "cdn-pages",
+      "to": "app-android",
+      "kind": "data",
+      "label": "config e orari"
+    },
+    {
+      "from": "cdn-pages",
+      "to": "web-pwa",
+      "kind": "data",
+      "label": "config e orari"
+    },
+    {
+      "from": "cdn-pages",
+      "to": "console",
+      "kind": "data",
+      "label": "catalogo linee/fermate"
+    },
+    {
+      "from": "motis-gateway",
+      "to": "app-ios",
+      "kind": "data",
+      "label": "percorsi"
+    },
+    {
+      "from": "motis-gateway",
+      "to": "app-android",
+      "kind": "data",
+      "label": "percorsi"
+    },
+    {
+      "from": "supabase-db",
+      "to": "console",
+      "kind": "data",
+      "label": "utenti e campagne"
+    },
+    {
+      "from": "console",
+      "to": "fcm",
+      "kind": "data",
+      "label": "invio push"
+    },
+    {
+      "from": "fcm",
+      "to": "app-ios",
+      "kind": "data",
+      "label": "push"
+    },
+    {
+      "from": "fcm",
+      "to": "app-android",
+      "kind": "data",
+      "label": "push"
+    },
+    {
+      "from": "mac-release",
+      "to": "app-ios",
+      "kind": "deploy",
+      "label": "build"
+    },
+    {
+      "from": "mac-release",
+      "to": "app-android",
+      "kind": "deploy",
+      "label": "build"
+    },
+    {
+      "from": "vps-uptime",
+      "to": "rt-proxy",
+      "kind": "probe",
+      "label": "healthz"
+    },
+    {
+      "from": "vps-uptime",
+      "to": "motis-gateway",
+      "kind": "probe",
+      "label": "healthz"
+    }
+  ],
+  "flows": [
+    {
+      "id": "orari-appalcart",
+      "label": "Orari AppalCART",
+      "summary": "GTFS AppalCART → pipeline giornaliera → CDN → app/web.",
+      "path": [
+        "src-gtfs-appalcart",
+        "gh-data-pipeline",
+        "cdn-pages",
+        "app-ios",
+        "app-android",
+        "web-pwa"
+      ]
+    },
+    {
+      "id": "orari-rfta",
+      "label": "Orari RFTA",
+      "summary": "GTFS RFTA → pipeline giornaliera → CDN → app/web.",
+      "path": [
+        "src-gtfs-rfta",
+        "gh-data-pipeline",
+        "cdn-pages",
+        "app-ios",
+        "app-android",
+        "web-pwa"
+      ]
+    },
+    {
+      "id": "orari-tcat",
+      "label": "Orari TCAT",
+      "summary": "GTFS TCAT → pipeline giornaliera → CDN → app/web.",
+      "path": [
+        "src-gtfs-tcat",
+        "gh-data-pipeline",
+        "cdn-pages",
+        "app-ios",
+        "app-android",
+        "web-pwa"
+      ]
+    },
+    {
+      "id": "orari-charlottesville",
+      "label": "Orari CAT",
+      "summary": "GTFS CAT → pipeline giornaliera → CDN → app/web.",
+      "path": [
+        "src-gtfs-charlottesville",
+        "gh-data-pipeline",
+        "cdn-pages",
+        "app-ios",
+        "app-android",
+        "web-pwa"
+      ]
+    },
+    {
+      "id": "tempo-reale-appalcart",
+      "label": "Tempo reale AppalCART",
+      "summary": "Feed GTFS-RT AppalCART → proxy → app/web.",
+      "path": [
+        "src-rt-appalcart",
+        "rt-proxy",
+        "app-ios",
+        "app-android",
+        "web-pwa"
+      ]
+    },
+    {
+      "id": "tempo-reale-charlottesville",
+      "label": "Tempo reale CAT",
+      "summary": "Feed GTFS-RT CAT → proxy → app/web.",
+      "path": [
+        "src-rt-charlottesville",
+        "rt-proxy",
+        "app-ios",
+        "app-android",
+        "web-pwa"
+      ]
+    },
+    {
+      "id": "percorsi-appalcart",
+      "label": "Percorsi AppalCART",
+      "summary": "GTFS → istanza MOTIS → gateway → app.",
+      "path": [
+        "src-gtfs-appalcart",
+        "vps-motis-refresh",
+        "motis-appalcart",
+        "motis-gateway",
+        "app-ios",
+        "app-android"
+      ]
+    },
+    {
+      "id": "percorsi-rfta",
+      "label": "Percorsi RFTA",
+      "summary": "GTFS → istanza MOTIS → gateway → app.",
+      "path": [
+        "src-gtfs-rfta",
+        "vps-motis-refresh",
+        "motis-rfta",
+        "motis-gateway",
+        "app-ios",
+        "app-android"
+      ]
+    },
+    {
+      "id": "percorsi-tcat",
+      "label": "Percorsi TCAT",
+      "summary": "GTFS → istanza MOTIS → gateway → app.",
+      "path": [
+        "src-gtfs-tcat",
+        "vps-motis-refresh",
+        "motis-tcat",
+        "motis-gateway",
+        "app-ios",
+        "app-android"
+      ]
+    },
+    {
+      "id": "percorsi-charlottesville",
+      "label": "Percorsi CAT",
+      "summary": "GTFS → istanza MOTIS → gateway → app.",
+      "path": [
+        "src-gtfs-charlottesville",
+        "vps-motis-refresh",
+        "motis-charlottesville",
+        "motis-gateway",
+        "app-ios",
+        "app-android"
+      ]
+    },
+    {
+      "id": "push-operatori",
+      "label": "Push degli operatori",
+      "summary": "Operatore → console → FCM → app.",
+      "path": [
+        "supabase-db",
+        "console",
+        "fcm",
+        "app-ios",
+        "app-android"
+      ]
+    }
+  ]
+}

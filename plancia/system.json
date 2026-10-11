@@ -659,7 +659,7 @@
         ]
       },
       "checks": [
-{
+        {
           "id": "review-alert",
           "label": "Review App Store AppalRider: respinta o ferma (status.json orario)",
           "kind": "json",

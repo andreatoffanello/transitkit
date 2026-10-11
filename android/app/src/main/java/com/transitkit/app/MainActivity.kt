@@ -246,6 +246,8 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val currentRoute = currentDestination?.route
+    // Statistiche d'uso anonime: schermata corrente (no-op se l'operatore non partecipa).
+    androidx.compose.runtime.LaunchedEffect(currentRoute) { com.transitkit.app.data.stats.UsageStats.screenForRoute(currentRoute) }
     // Full-screen overlays inside a tab destination can request the tab bar
     // be hidden (see [HideBottomBarWhileVisible]). Counter, not boolean,
     // so multiple overlays compose without races on dismiss.

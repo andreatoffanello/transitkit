@@ -202,6 +202,11 @@
     <!-- Settings — notifications -->
     <string name="settings_notifiche_desc">Recibe avisos para tus paradas favoritas.</string>
 
+    <!-- Settings — usage statistics -->
+    <string name="settings_stats_section">Estadísticas de uso</string>
+    <string name="settings_stats_title">Estadísticas de uso anónimas</string>
+    <string name="settings_stats_desc">Anónimas, sin seguimiento. Solo sirven para mejorar la app.</string>
+
     <!-- Settings — language -->
     <string name="settings_language_system">Sistema</string>
 

@@ -202,6 +202,11 @@
     <!-- Settings — notifications -->
     <string name="settings_notifiche_desc">Ricevi avvisi per le fermate preferite.</string>
 
+    <!-- Settings — usage statistics -->
+    <string name="settings_stats_section">Statistiche d\'uso</string>
+    <string name="settings_stats_title">Statistiche d\'uso anonime</string>
+    <string name="settings_stats_desc">Anonime, nessun tracciamento. Servono solo a migliorare l\'app.</string>
+
     <!-- Settings — language -->
     <string name="settings_language_system">Sistema</string>
 

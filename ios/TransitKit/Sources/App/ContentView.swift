@@ -35,6 +35,18 @@ struct ContentView: View {
     /// leggermente ridotti per proporzione con le label.
     private let tabIconPt: CGFloat = 22
 
+    /// Nomi schermata per le statistiche d'uso: snake_case, identici su Android.
+    private static func screenName(forTab index: Int) -> String {
+        switch index {
+        case 0: "home"
+        case 1: "stops"
+        case 2: "lines"
+        case 3: "map"
+        case 4: "alerts"
+        default: "home"
+        }
+    }
+
     private func tabIcon(_ icon: LucideIcon) -> Image {
         Image(uiImage: icon.uiImage(pt: tabIconPt))
     }
@@ -46,6 +58,8 @@ struct ContentView: View {
         .modifier(TabBarAppearanceModifier())
         .tint(.primary)
         .onChange(of: selectedTab) { _, newTab in
+            UsageStats.initialScreen = Self.screenName(forTab: newTab)
+            UsageStats.screen(Self.screenName(forTab: newTab))
             guard programmaticTab != newTab else {
                 programmaticTab = nil
                 return
@@ -87,6 +101,9 @@ struct ContentView: View {
             showSettings = true
         }
         .fullScreenCover(isPresented: $showSettings) { SettingsTab() }
+        .onChange(of: showSettings) { _, shown in
+            UsageStats.screen(shown ? "settings" : Self.screenName(forTab: selectedTab))
+        }
         .onChange(of: router.showShaderPlayground) { _, requested in
             guard requested else { return }
             router.showShaderPlayground = false

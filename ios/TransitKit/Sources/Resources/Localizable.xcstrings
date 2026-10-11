@@ -8170,6 +8170,75 @@
         }
       }
     },
+    "settings_stats_desc": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anonymous, no tracking. They only help us improve the app."
+          }
+        },
+        "es-419": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anónimas, sin seguimiento. Solo sirven para mejorar la app."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anonime, nessun tracciamento. Servono solo a migliorare l’app."
+          }
+        }
+      }
+    },
+    "settings_stats_section": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage statistics"
+          }
+        },
+        "es-419": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estadísticas de uso"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistiche d’uso"
+          }
+        }
+      }
+    },
+    "settings_stats_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anonymous usage statistics"
+          }
+        },
+        "es-419": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estadísticas de uso anónimas"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistiche d’uso anonime"
+          }
+        }
+      }
+    },
     "settings_location_title": {
       "extractionState": "manual",
       "localizations": {

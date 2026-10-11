@@ -550,6 +550,43 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
+        // ── Statistiche d'uso anonime (solo operatori in allowlist) ───────────
+        if (com.transitkit.app.data.stats.UsageStats.isAvailable) {
+            item {
+                SectionLabel(text = stringResource(R.string.settings_stats_section))
+            }
+
+            item {
+                var statsOn by remember { mutableStateOf(com.transitkit.app.data.stats.UsageStats.isEnabled()) }
+                CardContainer {
+                    SettingsRow(
+                        icon = LucideIcons.Shield,
+                        title = stringResource(R.string.settings_stats_title),
+                        subtitle = stringResource(R.string.settings_stats_desc),
+                        trailing = {
+                            Switch(
+                                checked = statsOn,
+                                onCheckedChange = { on ->
+                                    if (on) haptics.toggleOn() else haptics.toggleOff()
+                                    statsOn = on
+                                    com.transitkit.app.data.stats.UsageStats.setEnabled(on)
+                                },
+                                modifier = Modifier.semantics { testTag = "settings_usage_stats_toggle" },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Color.White,
+                                    checkedTrackColor = colors.accent,
+                                    uncheckedThumbColor = Color.White,
+                                    uncheckedTrackColor = colors.textTertiary.copy(alpha = 0.3f),
+                                    uncheckedBorderColor = Color.Transparent,
+                                ),
+                            )
+                        },
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+
         // ── Info ─────────────────────────────────────────────────────────────
         item {
             SectionLabel(text = stringResource(R.string.settings_section_info))

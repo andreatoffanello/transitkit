@@ -25,11 +25,24 @@ class TransitKitApp : Application() {
         // Mapbox raccoglie eventi di telemetria di default (Device IDs, App
         // interactions, crash metrics verso Mapbox). Disabilitato per allineare
         // il binary al Data safety form ("Precise location only") e alla privacy
-        // policy che dichiara "no tracking, no analytics". Va eseguito PRIMA di
+        // policy (le uniche statistiche sono le nostre, anonime e spegnibili da
+        // Impostazioni, vedi UsageStats). Va eseguito PRIMA di
         // istanziare qualunque MapView.
         TelemetryUtils.setEventsCollectionState(false) { /* no-op */ }
 
         registerDefaultNotificationChannel()
+        initUsageStats()
+    }
+
+    /** Statistiche d'uso anonime: l'id e il fuso dell'operatore si leggono da
+     *  config.json (stessa fonte di OperatorConfig) prima di qualunque DI. */
+    private fun initUsageStats() {
+        runCatching {
+            val json = org.json.JSONObject(assets.open("config.json").bufferedReader().use { it.readText() })
+            com.transitkit.app.data.stats.UsageStats.init(
+                this, json.getString("id"), json.optString("timezone", "UTC"),
+            )
+        }
     }
 
     /**

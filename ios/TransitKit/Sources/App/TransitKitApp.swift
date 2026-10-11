@@ -72,6 +72,9 @@ struct TransitKitApp: App {
             .onChange(of: scenePhase) { _, newPhase in
                 if newPhase == .active {
                     updateChecker.check(config: operatorConfig)
+                    UsageStats.appDidBecomeActive()
+                } else if newPhase == .background {
+                    UsageStats.appDidEnterBackground()
                 }
             }
         }
@@ -320,6 +323,7 @@ struct TransitKitApp: App {
         do {
             let config = try ConfigLoader.load()
             AppTheme.configure(from: config)
+            UsageStats.configure(operatorId: config.id, timeZoneId: config.timezone)
             loadingConfig = config
             let scheduleStore = ScheduleStore(operatorId: config.id, apiUrl: config.apiUrl)
             scheduleStore.configure(with: config)

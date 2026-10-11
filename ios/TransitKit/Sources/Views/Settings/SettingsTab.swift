@@ -13,6 +13,8 @@ struct SettingsTab: View {
 
     @AppStorage("notificationsEnabled") private var notificationsEnabled = false
     @State private var notificationsBusy = false
+    /// Statistiche d'uso anonime (solo operatori in `UsageStats.allowlist`).
+    @State private var usageStatsOn = UsageStats.isEnabled
 
     @AppStorage(DeveloperMode.storageKey) private var developerModeEnabled = false
     /// Tap consecutivi sulla riga versione. Finestra mobile di 2s (vedi
@@ -108,6 +110,15 @@ struct SettingsTab: View {
                         section(title: L("settings_location_section")) {
                             GlassCard(cornerRadius: 16) {
                                 locationRow
+                            }
+                        }
+
+                        // MARK: Usage statistics (solo operatori in allowlist)
+                        if UsageStats.isAvailable {
+                            section(title: L("settings_stats_section")) {
+                                GlassCard(cornerRadius: 16) {
+                                    usageStatsRow
+                                }
                             }
                         }
 
@@ -410,6 +421,40 @@ struct SettingsTab: View {
                 .labelsHidden()
                 .tint(AppTheme.accent)
                 .disabled(notificationsBusy || !pushManager.firebaseConfigured)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+    }
+
+    // MARK: - Usage Stats Row
+
+    private var usageStatsRow: some View {
+        HStack(spacing: 14) {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(AppTheme.accentReadable.opacity(0.12))
+                .frame(width: 40, height: 40)
+                .overlay(LucideIcon.shield.sized(16).foregroundStyle(AppTheme.accentReadable))
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(L("settings_stats_title"))
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(AppTheme.textPrimary)
+                Text(L("settings_stats_desc"))
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 12)
+
+            Toggle("", isOn: $usageStatsOn)
+                .labelsHidden()
+                .tint(AppTheme.accent)
+                .accessibilityIdentifier("settings_usage_stats_toggle")
+                .onChange(of: usageStatsOn) { _, on in
+                    Haptics.selection()
+                    UsageStats.setEnabled(on)
+                }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)

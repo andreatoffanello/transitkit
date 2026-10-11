@@ -203,6 +203,11 @@
     <!-- Settings — notifications -->
     <string name="settings_notifiche_desc">Receive alerts for your favorite stops.</string>
 
+    <!-- Settings — usage statistics -->
+    <string name="settings_stats_section">Usage statistics</string>
+    <string name="settings_stats_title">Anonymous usage statistics</string>
+    <string name="settings_stats_desc">Anonymous, no tracking. They only help us improve the app.</string>
+
     <!-- Settings — language -->
     <string name="settings_language_system">System</string>
 

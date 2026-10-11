@@ -690,6 +690,66 @@
               "label": "nome"
             }
           ]
+        },
+        {
+          "id": "review-alert",
+          "label": "Review App Store AppalRider: respinta o ferma (status.json orario)",
+          "kind": "json",
+          "url": "https://rt.transitkit.app/stats/status.json",
+          "severity": "critical",
+          "notify": true,
+          "rules": [
+            {
+              "op": "status",
+              "eq": 200
+            },
+            {
+              "op": "nonEmpty",
+              "path": "apps.appalrider.name"
+            },
+            {
+              "op": "falsy",
+              "path": "apps.appalrider.alert",
+              "label": "alert review"
+            },
+            {
+              "op": "show",
+              "path": "apps.appalrider.ios.version",
+              "label": "versione"
+            },
+            {
+              "op": "show",
+              "path": "apps.appalrider.ios.state",
+              "label": "stato"
+            },
+            {
+              "op": "show",
+              "path": "apps.appalrider.ios.state_since",
+              "label": "da"
+            },
+            {
+              "op": "show",
+              "path": "apps.appalrider.ios.review.state",
+              "label": "submission"
+            }
+          ]
+        },
+        {
+          "id": "review-data",
+          "label": "Stato review iOS AppalRider leggibile (status.json)",
+          "kind": "json",
+          "url": "https://rt.transitkit.app/stats/status.json",
+          "severity": "warn",
+          "rules": [
+            {
+              "op": "status",
+              "eq": 200
+            },
+            {
+              "op": "nonEmpty",
+              "path": "apps.appalrider.ios.version"
+            }
+          ]
         }
       ]
     },
@@ -706,7 +766,41 @@
         "repo": [
           "android/"
         ]
-      }
+      },
+      "checks": [
+        {
+          "id": "play-release",
+          "label": "Release Play AppalRider: traccia production (status.json orario)",
+          "kind": "json",
+          "url": "https://rt.transitkit.app/stats/status.json",
+          "severity": "warn",
+          "rules": [
+            {
+              "op": "status",
+              "eq": 200
+            },
+            {
+              "op": "nonEmpty",
+              "path": "apps.appalrider.android.tracks.production"
+            },
+            {
+              "op": "show",
+              "path": "apps.appalrider.android.tracks.production.name",
+              "label": "versione"
+            },
+            {
+              "op": "show",
+              "path": "apps.appalrider.android.tracks.production.version_code",
+              "label": "versionCode"
+            },
+            {
+              "op": "show",
+              "path": "apps.appalrider.android.tracks.production.status",
+              "label": "stato"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "web-pwa",
@@ -1033,6 +1127,18 @@
       "to": "motis-gateway",
       "kind": "probe",
       "label": "healthz"
+    },
+    {
+      "from": "infra:store-stats",
+      "to": "app-ios",
+      "kind": "data",
+      "label": "stato review (status.json orario)"
+    },
+    {
+      "from": "infra:store-stats",
+      "to": "app-android",
+      "kind": "data",
+      "label": "stato review (status.json orario)"
     }
   ],
   "flows": [

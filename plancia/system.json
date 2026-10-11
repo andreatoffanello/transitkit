@@ -476,7 +476,7 @@
         },
         {
           "id": "rt-charlottesville-vp",
-          "label": "Feed CAT posizioni fresco",
+          "label": "Feed CAT posizioni fresco (un feed vuoto è valido senza servizio: conta solo la freschezza)",
           "kind": "http",
           "url": "https://rt.transitkit.app/charlottesville/vehicle-positions.pb",
           "severity": "warn",
@@ -484,10 +484,6 @@
             {
               "op": "status",
               "eq": 200
-            },
-            {
-              "op": "minBytes",
-              "value": 100
             },
             {
               "op": "headerAge",
@@ -499,7 +495,7 @@
         },
         {
           "id": "rt-charlottesville-tu",
-          "label": "Feed CAT corse fresco",
+          "label": "Feed CAT corse fresco (un feed vuoto è valido senza servizio: conta solo la freschezza)",
           "kind": "http",
           "url": "https://rt.transitkit.app/charlottesville/trip-updates.pb",
           "severity": "warn",
@@ -507,10 +503,6 @@
             {
               "op": "status",
               "eq": 200
-            },
-            {
-              "op": "minBytes",
-              "value": 100
             },
             {
               "op": "headerAge",
@@ -667,31 +659,7 @@
         ]
       },
       "checks": [
-        {
-          "id": "store-appalcart",
-          "label": "AppalRider (AppalCART) presente su App Store",
-          "kind": "json",
-          "url": "https://itunes.apple.com/lookup?bundleId=com.transitkit.appalcart&country=us",
-          "severity": "info",
-          "rules": [
-            {
-              "op": "eq",
-              "path": "resultCount",
-              "value": 1
-            },
-            {
-              "op": "show",
-              "path": "results.0.version",
-              "label": "versione"
-            },
-            {
-              "op": "show",
-              "path": "results.0.trackName",
-              "label": "nome"
-            }
-          ]
-        },
-        {
+{
           "id": "review-alert",
           "label": "Review App Store AppalRider: respinta o ferma (status.json orario)",
           "kind": "json",
@@ -748,6 +716,11 @@
             {
               "op": "nonEmpty",
               "path": "apps.appalrider.ios.version"
+            },
+            {
+              "op": "show",
+              "path": "apps.appalrider.ios.version",
+              "label": "iOS in store"
             }
           ]
         }

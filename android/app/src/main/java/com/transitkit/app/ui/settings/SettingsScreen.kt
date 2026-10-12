@@ -499,13 +499,7 @@ fun SettingsScreen(
                                         }
                                     }
                                 },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = Color.White,
-                                    checkedTrackColor = colors.accent,
-                                    uncheckedThumbColor = Color.White,
-                                    uncheckedTrackColor = colors.textTertiary.copy(alpha = 0.3f),
-                                    uncheckedBorderColor = Color.Transparent,
-                                ),
+                                colors = settingsSwitchColors(),
                             )
                         },
                     )
@@ -572,13 +566,7 @@ fun SettingsScreen(
                                     com.transitkit.app.data.stats.UsageStats.setEnabled(on)
                                 },
                                 modifier = Modifier.semantics { testTag = "settings_usage_stats_toggle" },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = Color.White,
-                                    checkedTrackColor = colors.accent,
-                                    uncheckedThumbColor = Color.White,
-                                    uncheckedTrackColor = colors.textTertiary.copy(alpha = 0.3f),
-                                    uncheckedBorderColor = Color.Transparent,
-                                ),
+                                colors = settingsSwitchColors(),
                             )
                         },
                     )
@@ -768,3 +756,16 @@ private fun PrivacyLocationCard() {
         }
     }
 }
+
+// WHY: da spento il track era textTertiary al 30% senza bordo: ~1.3:1 sulla card
+// (bgSecondary) in chiaro e in scuro, interruttore quasi invisibile. Pallino e
+// bordo in textSecondary su track trasparente (la card sotto): 5.7:1 in chiaro,
+// ~5:1 in scuro (WCAG 1.4.11 chiede 3:1). Da acceso resta pallino bianco su accent.
+@Composable
+private fun settingsSwitchColors() = SwitchDefaults.colors(
+    checkedThumbColor = Color.White,
+    checkedTrackColor = TransitTheme.colors.accent,
+    uncheckedThumbColor = TransitTheme.colors.textSecondary,
+    uncheckedTrackColor = Color.Transparent,
+    uncheckedBorderColor = TransitTheme.colors.textSecondary,
+)

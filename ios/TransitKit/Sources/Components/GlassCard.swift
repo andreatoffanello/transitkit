@@ -44,22 +44,13 @@ struct GlassCard<Content: View>: View {
 
 extension View {
     /// Applies glass morphism background with adaptive light/dark mode support.
-    /// On iOS 26+ uses native `glassEffect`; older versions use material + fill + border.
+    /// Native `glassEffect` (deployment target 26.0).
     @ViewBuilder
     func adaptiveGlass(
         in shape: some Shape = RoundedRectangle(cornerRadius: 12),
         withShadow: Bool = false
     ) -> some View {
-        let base = Group {
-            if #available(iOS 26, *) {
-                self.glassEffect(.regular, in: shape)
-            } else {
-                self
-                    .background(AppTheme.glassFill, in: shape)
-                    .background(.thinMaterial, in: shape)
-                    .overlay(shape.stroke(AppTheme.glassBorder, lineWidth: 1))
-            }
-        }
+        let base = self.glassEffect(.regular, in: shape)
         if withShadow {
             base.shadow(color: .black.opacity(0.04), radius: 8, y: 4)
         } else {

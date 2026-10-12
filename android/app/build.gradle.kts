@@ -41,14 +41,14 @@ val brandName = (operatorConfig["brandName"] as? String) ?: operatorName
 
 android {
     namespace = "com.transitkit.app"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.transitkit.$operatorId"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 18
-        versionName = "1.2.9"
+        targetSdk = 36
+        versionCode = 20
+        versionName = "1.2.11"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // Etichetta sotto l'icona. Definita qui e NON in strings.xml: era

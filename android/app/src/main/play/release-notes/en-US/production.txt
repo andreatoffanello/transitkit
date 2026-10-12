@@ -1,3 +1,2 @@
-• Spanish is now complete across the whole app
-
-Plus improvements and bug fixes.
+• Anonymous usage statistics to help improve the app. You can turn them off anytime in Settings
+• Switches in Settings are easier to see when off

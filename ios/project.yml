@@ -2,7 +2,7 @@ name: TransitKit
 options:
   bundleIdPrefix: com.transitkit
   deploymentTarget:
-    iOS: "17.0"
+    iOS: "26.0"
   xcodeVersion: "16.0"
   groupSortPosition: top
   generateEmptyDirectories: true
@@ -25,7 +25,7 @@ targets:
   TransitKit:
     type: application
     platform: iOS
-    deploymentTarget: "17.0"
+    deploymentTarget: "26.0"
     sources:
       - path: TransitKit/Sources
         excludes:
@@ -88,8 +88,8 @@ targets:
         # ios/InfoPlist.template.xcstrings. Il valore qui è il fallback
         # English usato se la xcstrings non risolve.
         CFBundleDisplayName: "$(BRAND_NAME)"
-        CFBundleShortVersionString: "1.2.9"
-        CFBundleVersion: "19"
+        CFBundleShortVersionString: "1.2.11"
+        CFBundleVersion: "20"
         # Apple HIG: la usage description deve spiegare il beneficio per
         # l'utente in modo specifico, distinguere chiaramente chi accede
         # alla posizione (l'app) da chi fornisce i dati (l'operatore), e
@@ -123,7 +123,7 @@ targets:
   TransitKitTests:
     type: bundle.unit-test
     platform: iOS
-    deploymentTarget: "17.0"
+    deploymentTarget: "26.0"
     sources:
       - path: TransitKit/Tests
     dependencies:

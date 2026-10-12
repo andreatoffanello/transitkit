@@ -384,18 +384,15 @@ fun TransitKitTheme(
     val colorScheme = if (darkTheme) buildDarkColorScheme(accentColor, primaryColor)
     else buildLightColorScheme(accentColor, primaryColor)
 
-    // System bars coerenti col tema, aggiornate a ogni cambio light/dark
-    // (anche runtime, senza dipendere dalla ricreazione dell'Activity):
-    // status bar = background della schermata, gesture bar = superficie
-    // della tab bar che le sta sopra (opaca — l'alpha 0.9 del token è per
-    // il blur della NavigationBar, non per il chrome di sistema).
+    // Icone delle system bar coerenti col tema, aggiornate a ogni cambio
+    // light/dark. I COLORI delle fasce non passano più da statusBarColor /
+    // navigationBarColor (ignorati da API 35 in edge-to-edge): li disegna
+    // SystemBarsInsetFrame qui sotto.
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as? Activity)?.window
             if (window != null) {
-                window.statusBarColor = transitColors.background.toArgb()
-                window.navigationBarColor = transitColors.tabBarBg.copy(alpha = 1f).toArgb()
                 WindowCompat.getInsetsController(window, view).apply {
                     isAppearanceLightStatusBars = !darkTheme
                     isAppearanceLightNavigationBars = !darkTheme

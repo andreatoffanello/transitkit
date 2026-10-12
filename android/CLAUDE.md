@@ -98,7 +98,7 @@ Tutti i feed GTFS-RT passano da `https://rt.transitkit.app/{operator}/{feed}.pb`
 
 ## Regole non negoziabili Android
 
-- NON edge-to-edge — Play Console lo segnala come warning. Status bar / navigation bar configurate in `MainActivity.kt`, non toccare senza motivo
+- NIENTE edge-to-edge VISIVO (regola di Andrea): contenuto mai sotto status/navigation bar, barre colorate dal tema. Tecnicamente però l'edge-to-edge è OBBLIGATO da targetSdk 36 (Android 16 ignora `windowOptOutEdgeToEdgeEnforcement`), quindi: `enableEdgeToEdge()` in `MainActivity.kt` + inset consumati in un punto solo da `ui/components/SystemBarsInsetFrame.kt` (fasce status/nav colorate, contenuto in `safeDrawing`). Resa = vecchio layout non edge-to-edge. NON aggiungere padding di inset nelle schermate (sotto il frame valgono 0) e NON usare `statusBarColor`/`navigationBarColor` (ignorati da API 35)
 - `adb` sempre con `-s emulator-5600`, mai nudo. Porta console PINNED 5600 → serial deterministico. Boot SEMPRE con `emulator -avd transitkit-dev -port 5600 ...` — vedi CLAUDE.md root
 - AVD `transitkit-dev` unico consentito + STERILE: solo `com.transitkit.appalcart` installato. Disinstalla qualsiasi app di altri progetti (`pm list packages -3`)
 - Moshi: KSP già configurato (`moshi-kotlin-codegen`). Le data class usano `@JsonClass(generateAdapter = true)` — NON aggiungere `KotlinJsonAdapterFactory` a runtime
@@ -110,7 +110,7 @@ Tutti i feed GTFS-RT passano da `https://rt.transitkit.app/{operator}/{feed}.pb`
 - Non usare `KotlinJsonAdapterFactory` con riflessione — Moshi KSP è la strada
 - Non collezionare Flow in Composable senza lifecycle (`collectAsStateWithLifecycle`)
 - Non usare `LiveData` — tutto `StateFlow`/`SharedFlow`
-- Non abilitare edge-to-edge "per simmetria con iOS"
+- Non far disegnare contenuto sotto le system bar "per simmetria con iOS": il frame inset resta la radice unica
 - Non bypassare `GtfsRtFetcher` con chiamate dirette a URL upstream
 - Non creare un secondo Hilt module senza motivo — `AppModule` è unico, tienilo tale finché non diventa ingestibile
 - Non inserire pathData SVG inventati — icone solo da `LucideIcons` o risorse ufficiali

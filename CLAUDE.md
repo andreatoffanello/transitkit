@@ -8,8 +8,8 @@ annidati `ios/`, `android/`, `web/` coprono le rispettive piattaforme.
 - Scheme: `TransitKit`
 - Bundle ID: `com.transitkit.{OPERATOR_ID}` (white-label: es. `com.transitkit.appalcart`)
 - iOS xcodeproj: `ios/TransitKit.xcodeproj`
-- UDID simulatore iOS 18: `4302AFD9-496E-4586-A5D0-D6BAC735FFFD` (`transitkit-ios18`, iPhone 16 Pro)
-- UDID simulatore iOS 26: `72896A69-5555-420B-BE63-B672BE0F4C95` (`transitkit-ios26`, iPhone 16 Pro)
+- ~~UDID simulatore iOS 18 `4302AFD9-496E-4586-A5D0-D6BAC735FFFD` (`transitkit-ios18`)~~ — **ritirato il 12/10/2026**: deployment target 26.0 (dalla 1.2.11), l'app non si installa più su iOS 18. Non usarlo.
+- UDID simulatore iOS 26: `72896A69-5555-420B-BE63-B672BE0F4C95` (`transitkit-ios26`, iPhone 16 Pro) — **principale** dal 12/10/2026
 - Location simulatori/emulatore: applicata da `scripts/setup-dev.sh [operator_id]` leggendo `shared/operators/<op>/config.json` → `map.centerLat/centerLng`. Default `appalcart` → Boone, NC (`36.2168,-81.6746`). Su iOS la posizione `simctl location set` è in-memory: rilanciare lo script dopo ogni reboot del simulatore.
 - AVD Android: `transitkit-android` (Pixel 6, API 34 — white-label: es. com.transitkit.appalcart)
 - AVD Android test Android 15: `transitkit-android-api35` (Pixel 6, API 35 — SOLO per verificare edge-to-edge / window insets su Android 15, che l'API 34 non riproduce). Porta console `5602` → serial `emulator-5602`. Avviare con `-port 5602`.

@@ -283,15 +283,11 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Tab Bar Glass Visibility (iOS 18+)
+// MARK: - Tab Bar Glass Visibility
 
 private struct TabBarVisibilityModifier: ViewModifier {
     func body(content: Content) -> some View {
-        if #available(iOS 18.0, *) {
-            content.toolbarBackgroundVisibility(.visible, for: .tabBar)
-        } else {
-            content
-        }
+        content.toolbarBackgroundVisibility(.visible, for: .tabBar)
     }
 }
 

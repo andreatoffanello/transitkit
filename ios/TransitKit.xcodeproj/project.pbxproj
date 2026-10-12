@@ -38,6 +38,7 @@
 		3235692E84FBACB998E5BBE7 /* AccessibilityInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F88B38614D3B793B28879C77 /* AccessibilityInfoView.swift */; };
 		35FDAB23947D090227ED347E /* config.json in Resources */ = {isa = PBXBuildFile; fileRef = CC677A39447A949F646FA8DF /* config.json */; };
 		379B6C3D2E804EEE3E5257C7 /* TimeDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3298ECC36B6DC09D4139EC06 /* TimeDisplay.swift */; };
+		37F05D5400EAB66BCEFD15B4 /* UsageStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5059CA03A50D3744A3805760 /* UsageStats.swift */; };
 		403398E0C0270E51F50F67A8 /* LocationPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B3052C8C0D90F67B899028A /* LocationPickerView.swift */; };
 		406C239A45ADF598DD5F88BC /* ServiceDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9B060B8A74782E4B03194E6 /* ServiceDetailView.swift */; };
 		41D7758909CF2E3B14B6EB55 /* AlertStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20A26A36C7CE3B4E8EEF7069 /* AlertStore.swift */; };
@@ -190,6 +191,7 @@
 		4D713C24D42DB86C1C7593BE /* VehicleDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VehicleDetailSheet.swift; sourceTree = "<group>"; };
 		4F2E86DB57CB4E4F5166871B /* MapCircleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapCircleButton.swift; sourceTree = "<group>"; };
 		5058C4F2340AA7BEB6085B6A /* MapLineFocusContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapLineFocusContent.swift; sourceTree = "<group>"; };
+		5059CA03A50D3744A3805760 /* UsageStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UsageStats.swift; sourceTree = "<group>"; };
 		50FF8B27808C0B5F4F797E8A /* MapExpandedControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapExpandedControls.swift; sourceTree = "<group>"; };
 		5158654F497CBC93092E23BD /* SoftUpdateBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoftUpdateBanner.swift; sourceTree = "<group>"; };
 		5481BF9847C559057368FA6B /* StopAnnotationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StopAnnotationView.swift; sourceTree = "<group>"; };
@@ -317,6 +319,7 @@
 				24740CAB0ACE9045D18AE42A /* RemoteRoutingProvider.swift */,
 				F64B8B11F2D7D9CAE4F81E2B /* ScheduleLoader.swift */,
 				0CFE1A3C3B1313A7B5790B4D /* TransitKitSecrets.swift */,
+				5059CA03A50D3744A3805760 /* UsageStats.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -844,6 +847,7 @@
 				A651F455DD5D78C38E388882 /* TransitKitApp.swift in Sources */,
 				98DE59309962AC1F29836503 /* TransitKitSecrets.swift in Sources */,
 				7F5F190ECED7C0E360386483 /* TripDetailView.swift in Sources */,
+				37F05D5400EAB66BCEFD15B4 /* UsageStats.swift in Sources */,
 				522D52776600CC2D56493829 /* VehicleAnnotationView.swift in Sources */,
 				253B8533C1701FFDED93A5D0 /* VehicleDetailSheet.swift in Sources */,
 				26367F96010FDBB436444C96 /* VehicleLiveCard.swift in Sources */,
@@ -869,7 +873,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -895,7 +899,7 @@
 				DEVELOPMENT_TEAM = R56VCP5L45;
 				ENABLE_TESTABILITY = NO;
 				INFOPLIST_FILE = TransitKit/Sources/App/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -915,7 +919,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -940,7 +944,7 @@
 				DEVELOPMENT_TEAM = R56VCP5L45;
 				ENABLE_TESTABILITY = YES;
 				INFOPLIST_FILE = TransitKit/Sources/App/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1007,7 +1011,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1066,7 +1070,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";

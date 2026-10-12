@@ -2,7 +2,9 @@ package com.transitkit.app
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -118,10 +120,30 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Edge-to-edge esplicito e uniforme su tutte le API: con targetSdk 36
+        // Android 16 lo impone (windowOptOutEdgeToEdgeEnforcement ignorato) e
+        // statusBarColor/navigationBarColor non hanno più effetto. Barre
+        // trasparenti senza scrim di sistema: i colori delle fasce li disegna
+        // SystemBarsInsetFrame (TransitKitTheme), che consuma anche gli inset
+        // in un punto solo → resa identica al vecchio layout non edge-to-edge.
+        // Appearance delle icone: auto qui, poi riallineata al tema dal
+        // SideEffect in AppTheme.kt.
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.auto(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT,
+            ),
+            navigationBarStyle = SystemBarStyle.auto(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT,
+            ),
+        )
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            // Niente scrim traslucido sulla navigation bar a 3 tasti: la fascia
+            // opaca tabBarBg è già disegnata in Compose.
+            window.isNavigationBarContrastEnforced = false
+        }
         super.onCreate(savedInstanceState)
-        // Status/gesture bar: colori e appearance sono gestiti theme-aware
-        // (light + dark) dal SideEffect in TransitKitTheme (AppTheme.kt).
-        // NOT edge-to-edge (project rule).
         handleMapDeepLink(intent)
         handlePlannerDeepLink(intent)
         handleSearchDeepLink(intent)
@@ -133,7 +155,9 @@ class MainActivity : ComponentActivity() {
         )
         setContent {
             TransitKitTheme(config = operatorConfig) {
-                TransitKitNavigation(operatorConfig = operatorConfig)
+                com.transitkit.app.ui.components.SystemBarsInsetFrame {
+                    TransitKitNavigation(operatorConfig = operatorConfig)
+                }
             }
         }
     }
@@ -283,6 +307,9 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
         modifier = Modifier
             .fillMaxSize()
             .semantics { testTagsAsResourceId = true },
+        // Inset già consumati alla radice (SystemBarsInsetFrame): lo Scaffold
+        // non deve riaggiungerli → niente inset doppi.
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
         bottomBar = {
             if (showBottomBar) {
                 // Stacco dal contenuto (iOS parity: la UITabBar ha material +
@@ -295,8 +322,8 @@ fun TransitKitNavigation(operatorConfig: OperatorConfig) {
                         thickness = 0.5.dp,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f),
                     )
-                // windowInsets = WindowInsets(0) forces the bar to not reserve
-                // extra bottom inset (we're not edge-to-edge). Without this the
+                // windowInsets = WindowInsets(0): gli inset di sistema sono già
+                // consumati da SystemBarsInsetFrame alla radice. Without this the
                 // last ~30px of the item's visual area sits below the bar's
                 // own gesture region and Material3 silently drops taps there
                 // — the symptom QA hit on label "Routes"/"Schedules".

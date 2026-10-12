@@ -17,8 +17,8 @@ lifecycle = "2.9.0"
 coroutines = "1.10.2"
 moshi = "1.15.2"
 accompanist = "0.37.3"
-mapbox = "11.9.0"
-mapboxCompose = "11.9.0"
+mapbox = "11.22.3"
+mapboxCompose = "11.22.3"
 firebase-bom = "33.7.0"
 google-services = "4.4.2"
 
@@ -66,8 +66,8 @@ room-compiler = { group = "androidx.room", name = "room-compiler", version.ref =
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "play-services-location" }
 
 # Mapbox (copia da movete)
-mapbox-maps = { group = "com.mapbox.maps", name = "android", version.ref = "mapbox" }
-mapbox-compose = { group = "com.mapbox.extension", name = "maps-compose", version.ref = "mapboxCompose" }
+mapbox-maps = { group = "com.mapbox.maps", name = "android-ndk27", version.ref = "mapbox" }
+mapbox-compose = { group = "com.mapbox.extension", name = "maps-compose-ndk27", version.ref = "mapboxCompose" }
 
 # DataStore
 datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
